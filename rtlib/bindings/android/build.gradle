@@ -1,0 +1,68 @@
+buildscript {
+    
+    repositories {
+        google()
+        jcenter()
+	//maven {
+	//	url 'https://maven.google.com'
+	//}
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+        
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+apply plugin: 'com.android.library'
+
+def bbqueLibFolder='/media/mzanella/slibutti_archive1/Research/BOSP/out/lib/bbque'
+
+android {
+    compileSdkVersion 26
+
+
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
+    }
+
+    buildTypes {
+        release {
+            postprocessing {
+                removeUnusedCode false
+                removeUnusedResources false
+                obfuscate false
+                optimizeCode false
+                proguardFile 'proguard-rules.pro'
+            }
+        }
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs '/media/mzanella/slibutti_archive1/Research/BOSP-Android/deployment/android-arm/update_zip/lib/bbque/bindings/java/',
+                    '/media/mzanella/slibutti_archive1/Research/BOSP-Android/deployment/android-arm/update_zip/lib/bbque/'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation fileTree(dir: bbqueLibFolder + '/bindings/java', include: ['*.jar'])
+}
