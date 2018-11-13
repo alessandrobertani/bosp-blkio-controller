@@ -8,3 +8,7 @@ if (CONFIG_BBQUE_BINDINGS_JAVA)
 else()
 endif (CONFIG_BBQUE_BINDINGS_JAVA)
 
+if (CONFIG_BBQUE_BINDINGS_ANDROID)
+  add_subdirectory (android)
+else()
+endif (CONFIG_BBQUE_BINDINGS_ANDROID)
