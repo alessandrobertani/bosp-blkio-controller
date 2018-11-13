@@ -13,3 +13,10 @@ config BBQUE_BINDINGS_JAVA
   ---help---
   Build the module to provide the Java wrapper of the RTLib
 
+config BBQUE_BINDINGS_ANDROID
+  bool "Android API"
+  depends on BBQUE_BINDINGS_JAVA
+  depends on TARGET_ANDROID
+  default y
+  ---help---
+  Build the module to provide the Android Archive API of the RTLib
