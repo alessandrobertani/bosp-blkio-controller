@@ -1,0 +1,6 @@
+set(GRADLE "gradle")
+set(GRADLE_OPTS "-p ${CMAKE_CURRENT_SOURCE_DIR}") 
+set(GRADLE_ARGS "properties")
+message("==== Building bbque_service AAR ====")
+message("Executing: ${GRADLE} ${GRADLE_OPTS} ${GRADLE_ARGS}")
+execute_process(COMMAND ${GRADLE} "${GRADLE_OPTS} ${GRADLE_ARGS}")

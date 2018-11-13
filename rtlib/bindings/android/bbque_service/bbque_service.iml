@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="bbque_service" external.linked.project.path="/media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service" external.root.project.path="$MODULE_DIR$" external.system.id="GRADLE" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="android-gradle" name="Android-Gradle">
+      <configuration>
+        <option name="GRADLE_PROJECT_PATH" value=":" />
+      </configuration>
+    </facet>
+    <facet type="android" name="Android">
+      <configuration>
+        <option name="SELECTED_BUILD_VARIANT" value="debug" />
+        <option name="ASSEMBLE_TASK_NAME" value="assembleDebug" />
+        <option name="COMPILE_JAVA_TASK_NAME" value="compileDebugSources" />
+        <afterSyncTasks>
+          <task>generateDebugSources</task>
+        </afterSyncTasks>
+        <option name="ALLOW_USER_CONFIGURATION" value="false" />
+        <option name="MANIFEST_FILE_RELATIVE_PATH" value="/src/main/AndroidManifest.xml" />
+        <option name="RES_FOLDER_RELATIVE_PATH" value="/src/main/res" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/res" />
+        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/src/main/assets" />
+        <option name="PROJECT_TYPE" value="1" />
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_7">
+    <output url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes" />
+    <output-test url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/javac/debugUnitTest/compileDebugUnitTestJavaWithJavac/classes" />
+    <exclude-output />
+    <content url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service">
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/apt/debug" isTestSource="false" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/not_namespaced_r_class_sources/debug/generateDebugRFile/out" isTestSource="false" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/aidl/debug" isTestSource="false" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/buildConfig/debug" isTestSource="false" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/rs/debug" isTestSource="false" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/res/rs/debug" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/res/resValues/debug" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/apt/androidTest/debug" isTestSource="true" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/not_namespaced_r_class_sources/debugAndroidTest/processDebugAndroidTestResources/r" isTestSource="true" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/aidl/androidTest/debug" isTestSource="true" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/buildConfig/androidTest/debug" isTestSource="true" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/rs/androidTest/debug" isTestSource="true" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/res/rs/androidTest/debug" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/res/resValues/androidTest/debug" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/generated/source/apt/test/debug" isTestSource="true" generated="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/debug/res" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/debug/resources" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/debug/assets" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/debug/aidl" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/debug/java" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/debug/rs" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/debug/shaders" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTestDebug/res" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTestDebug/resources" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTestDebug/assets" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTestDebug/aidl" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTestDebug/java" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTestDebug/rs" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTestDebug/shaders" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/testDebug/res" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/testDebug/resources" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/testDebug/assets" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/testDebug/aidl" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/testDebug/java" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/testDebug/rs" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/testDebug/shaders" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/res" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/resources" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/assets" type="java-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/aidl" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/java" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/rs" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/main/shaders" isTestSource="false" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTest/res" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTest/resources" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTest/assets" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTest/aidl" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTest/java" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTest/rs" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/androidTest/shaders" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/test/res" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/test/resources" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/test/assets" type="java-test-resource" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/test/aidl" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/test/java" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/test/rs" isTestSource="true" />
+      <sourceFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/src/test/shaders" isTestSource="true" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/aapt_friendly_merged_manifests" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/annotation_processor_list" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/annotations_typedef_file" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/annotations_zip" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/apk_list" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/blame" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/check-manifest" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/consumer_proguard_file" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/incremental" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/intermediate-jars" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/javac" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/jniLibs" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/library_and_local_jars_jni" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/library_assets" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/lint-cache" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/lint_jar" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/merged_manifests" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/packaged-classes" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/packaged_res" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/processed_res" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/public_res" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/res" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/rs" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/shader_assets" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/shaders" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/symbols" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/tmp" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/intermediates/transforms" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/outputs" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/reports" />
+      <excludeFolder url="file:///media/mzanella/slibutti_archive1/Research/BOSP-Android/barbeque/rtlib/bindings/android/bbque_service/build/tmp" />
+    </content>
+    <orderEntry type="jdk" jdkName="Android API 26 Platform" jdkType="Android SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="__local_aars__:/media/mzanella/slibutti_archive1/Research/BOSP/out/lib/bbque/bindings/java/RTLibJavaSdk.jar:unspecified@jar" level="project" />
+    <orderEntry type="library" name="com.android.support:support-media-compat-26.1.0" level="project" />
+    <orderEntry type="library" name="com.android.support:support-compat-26.1.0" level="project" />
+    <orderEntry type="library" name="android.arch.lifecycle:common:1.0.0@jar" level="project" />
+    <orderEntry type="library" name="android.arch.core:common:1.0.0@jar" level="project" />
+    <orderEntry type="library" name="org.codehaus.groovy:groovy-all:2.4.12@jar" level="project" />
+    <orderEntry type="library" name="com.android.support:support-fragment-26.1.0" level="project" />
+    <orderEntry type="library" name="com.android.support:support-vector-drawable-26.1.0" level="project" />
+    <orderEntry type="library" name="com.android.support:support-v4-26.1.0" level="project" />
+    <orderEntry type="library" name="android.arch.lifecycle:runtime-1.0.0" level="project" />
+    <orderEntry type="library" name="com.android.support:appcompat-v7-26.1.0" level="project" />
+    <orderEntry type="library" name="com.android.support:animated-vector-drawable-26.1.0" level="project" />
+    <orderEntry type="library" name="com.android.support:support-annotations:26.1.0@jar" level="project" />
+    <orderEntry type="library" name="com.android.support:support-core-utils-26.1.0" level="project" />
+    <orderEntry type="library" name="com.android.support:support-core-ui-26.1.0" level="project" />
+  </component>
+</module>
