@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system id="0" hostname="hikey_960" address="10.79.4.236">
+    <cpu arch="armv8l" id="0" socket_id="0" mem_id="0">
+        <pe id="0" core_id="0" share="100" partition="host"/>
+        <pe id="1" core_id="1" share="100" partition="mdev"/>
+        <pe id="2" core_id="2" share="100" partition="mdev"/>
+        <pe id="3" core_id="3" share="100" partition="mdev"/>
+    </cpu>
+    <cpu arch="armv8b" id="1" socket_id="1" mem_id="0">
+        <pe id="4" core_id="1" share="100" partition="mdev"/>
+        <pe id="5" core_id="2" share="100" partition="mdev"/>
+        <pe id="6" core_id="3" share="100" partition="mdev"/>
+        <pe id="7" core_id="4" share="100" partition="mdev"/>
+    </cpu>
+    <mem id="0" quantity="3145728" unit="KB"/>
+</system>

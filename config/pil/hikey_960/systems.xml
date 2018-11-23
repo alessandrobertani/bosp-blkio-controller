@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<systems version="1.0">
+    <include local="true">hikey_960.xml</include>
+</systems>
