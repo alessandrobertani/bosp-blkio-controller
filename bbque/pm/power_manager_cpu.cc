@@ -666,6 +666,18 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyBoundaries(
 	return PMResult::OK;
 }
 
+PowerManager::PMResult CPUPowerManager::SetOn(br::ResourcePathPtr_t const & rp) {
+
+}
+
+PowerManager::PMResult CPUPowerManager::SetOff(br::ResourcePathPtr_t const & rp) {
+
+}
+
+bool CPUPowerManager::IsOn(br::ResourcePathPtr_t const & rp) const{
+
+}
+
 /**********************************************************************
  * Performance states                                                 *
  **********************************************************************/

@@ -133,6 +133,14 @@ public:
 			int pe_id,
 			std::string const & governor);
 
+	/**  On/off status */
+
+	PMResult SetOn(br::ResourcePathPtr_t const & rp);
+
+	PMResult SetOff(br::ResourcePathPtr_t const & rp);
+
+	bool IsOn(br::ResourcePathPtr_t const & rp) const;
+
 
 	/* ===========   Power consumption  =========== */
 
