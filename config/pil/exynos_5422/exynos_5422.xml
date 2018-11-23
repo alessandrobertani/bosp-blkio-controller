@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<system hostname="odroid" address="10.79.4.236">
+<system id="0" hostname="odroid" address="10.79.4.236">
     <cpu arch="armv7l" id="0" socket_id="1" mem_id="0">
         <pe id="0" core_id="0" share="100" partition="host"/>
         <pe id="1" core_id="1" share="100" partition="shared"/>
