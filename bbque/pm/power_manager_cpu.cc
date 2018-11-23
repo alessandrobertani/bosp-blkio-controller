@@ -527,6 +527,7 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 	if (core_freqs[pe_id] == nullptr) {
 		logger->Warn("List of frequencies not available for PE %d",
 				pe_id);
+		return PowerManager::PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 	freqs = *(core_freqs[pe_id]);
 
