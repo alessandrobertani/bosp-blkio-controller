@@ -12,8 +12,11 @@ AndroidPlatformProxy * AndroidPlatformProxy::GetInstance() {
 }
 
 
-AndroidPlatformProxy::AndroidPlatformProxy(){
-
+AndroidPlatformProxy::AndroidPlatformProxy()
+#ifdef CONFIG_BBQUE_PM
+	:
+	pm(PowerManager::GetInstance())
+#endif
 	this->logger = bu::Logger::GetLogger(ANDROID_PP_NAMESPACE);
 	assert(logger);
 

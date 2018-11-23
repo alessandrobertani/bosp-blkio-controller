@@ -3,6 +3,7 @@
 
 #include "bbque/platform_proxy.h"
 
+#include "bbque/pm/power_manager.h"
 #define ANDROID_PP_NAMESPACE "bq.pp.android"
 
 namespace bbque {
@@ -73,6 +74,10 @@ public:
 
 private:
 
+
+#ifdef CONFIG_BBQUE_PM
+    PowerManager & pm;
+#endif
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	/**
