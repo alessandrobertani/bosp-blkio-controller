@@ -7,7 +7,7 @@
 #ifdef CONFIG_TARGET_LINUX
 #include "bbque/pp/linux_platform_proxy.h"
 #elif defined CONFIG_TARGET_ANDROID
-#include "bbque/pp/test_platform_proxy.h"
+#include "bbque/pp/android_platform_proxy.h"
 #elif defined CONFIG_TARGET_LINUX_MANGO
 #include "bbque/pp/mango_platform_proxy.h"
 #else
@@ -30,8 +30,8 @@ LocalPlatformProxy::LocalPlatformProxy() {
 #elif defined CONFIG_TARGET_LINUX
 	this->host = std::unique_ptr<LinuxPlatformProxy>(LinuxPlatformProxy::GetInstance());
 #elif defined CONFIG_TARGET_ANDROID
-	//this->host = std::unique_ptr<AndroidPlatformProxy>(AndroidPlatformProxy()::GetInstance());
-	this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy()::GetInstance());
+	this->host = std::unique_ptr<AndroidPlatformProxy>(AndroidPlatformProxy::GetInstance());
+	//this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy()::GetInstance());
 #else
 #error "No suitable PlatformProxy for host found."
 #endif
