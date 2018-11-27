@@ -4,6 +4,8 @@
 #include "bbque/platform_proxy.h"
 
 #include "bbque/pm/power_manager.h"
+#include "bbque/pp/proc_listener.h"
+
 #define ANDROID_PP_NAMESPACE "bq.pp.android"
 
 namespace bbque {
@@ -73,6 +75,10 @@ public:
 			bbque::res::ResourcePathPtr_t const & path) const override;
 
 private:
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	ProcessListener & proc_listener;
+#endif
 
 
 #ifdef CONFIG_BBQUE_PM

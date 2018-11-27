@@ -17,8 +17,16 @@ AndroidPlatformProxy::AndroidPlatformProxy()
 	:
 	pm(PowerManager::GetInstance())
 #endif
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	, proc_listener(ProcessListener::GetInstance())
+#endif 
+{
 	this->logger = bu::Logger::GetLogger(ANDROID_PP_NAMESPACE);
 	assert(logger);
+#ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
+	proc_listener.Start();
+#endif
+
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	InitCoresType();
