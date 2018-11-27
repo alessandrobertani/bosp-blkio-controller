@@ -91,6 +91,11 @@ CPUPowerManager::CPUPowerManager():
 	}
 
 	InitFrequencyGovernors();
+
+	if (InitCPUFreq() != PowerManager::PMResult::OK){
+		logger->Error("Error during cpufreq initialization");
+	}
+
 }
 
 CPUPowerManager::~CPUPowerManager() {
@@ -219,6 +224,33 @@ void CPUPowerManager::InitFrequencyGovernors() {
 				br::ResourcePathUtils::SplitAndPop(govs, " "));
 	for (std::string & g: cpufreq_governors)
 		logger->Info("---> %s", g.c_str());
+}
+
+PowerManager::PMResult CPUPowerManager::InitCPUFreq(){
+
+	PowerManager::PMResult result;
+
+	for (auto pe_id_info : cpufreq_restore) {
+		logger->Notice("Init PE %d cpufreq bound: [%u - %u] kHz",
+				pe_id_info.first,
+				core_freqs[pe_id_info.first]->front(),
+				core_freqs[pe_id_info.first]->back());
+		result = SetClockFrequencyBoundaries(pe_id_info.first,
+				core_freqs[pe_id_info.first]->front(),
+				core_freqs[pe_id_info.first]->back());
+		if(result!=PowerManager::PMResult::OK)
+			return result;
+
+
+		logger->Notice("Init PE %d cpufreq governor: userspace",
+				pe_id_info.first);
+		result = SetClockFrequencyGovernor(pe_id_info.first, "userspace");
+
+		if(result!=PowerManager::PMResult::OK)
+			return result;
+	}
+
+	return PowerManager::PMResult::OK;
 }
 
 

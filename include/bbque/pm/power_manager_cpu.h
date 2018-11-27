@@ -227,6 +227,7 @@ protected:
 
 	void InitFrequencyGovernors();
 
+	PMResult InitCPUFreq();
 
 	PMResult GetTemperaturePerCore(int pe_id, uint32_t & celsius);
 
@@ -246,6 +247,7 @@ protected:
 	 *  Set Cpufreq scaling governor for PE pe_id
 	 */
 	PMResult GetClockFrequencyGovernor(int pe_id, std::string & governor);
+
 };
 
 }
