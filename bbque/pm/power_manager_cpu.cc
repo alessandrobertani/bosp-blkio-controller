@@ -490,27 +490,37 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 
 
 PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &khz_min,
-		uint32_t &khz_max,
-		uint32_t &khz_step) {
-	int pe_id;
-	GET_PROC_ELEMENT_ID(rp, pe_id);
-	if (pe_id < 0) {
-		logger->Warn("<%s> does not reference a valid processing element",
-			rp->ToString().c_str());
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	}
+		int pe_id,
+		uint32_t & khz_min,
+		uint32_t & khz_max) {
 
 	// Max and min frequency values
 	auto edges = std::minmax_element(
 			core_freqs[pe_id]->begin(), core_freqs[pe_id]->end());
 	khz_min  = core_freqs[pe_id]->at(edges.first  - core_freqs[pe_id]->begin());
 	khz_max  = core_freqs[pe_id]->at(edges.second - core_freqs[pe_id]->begin());
+
+	return PMResult::OK;
+}
+
+PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
+		br::ResourcePathPtr_t const & rp,
+		uint32_t & khz_min,
+		uint32_t & khz_max,
+		uint32_t & khz_step) {
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
+
+	if (pe_id < 0) {
+		logger->Warn("<%s> does not reference a valid processing element",
+			rp->ToString().c_str());
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
 	// '0' to represent not fixed step value
 	khz_step = 0;
 
-	return PMResult::OK;
+	return GetClockFrequencyInfo(pe_id, khz_min, khz_max);
 }
 
 PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(

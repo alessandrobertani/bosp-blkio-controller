@@ -104,6 +104,9 @@ public:
 			uint32_t &khz_max,
 			uint32_t &khz_step);
 
+	PMResult GetClockFrequencyInfo(
+		int pe_id, uint32_t & khz_min, uint32_t & khz_max);
+	
 	/**
 	 * @see class PowerManager
 	 */
