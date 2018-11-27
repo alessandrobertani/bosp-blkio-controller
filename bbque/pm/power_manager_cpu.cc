@@ -802,8 +802,8 @@ PowerManager::PMResult CPUPowerManager::SetPerformanceState(
 	if (result != PMResult::OK)
 		return result;
 
-	logger->Info("<%s> performance state set: %d",
-		rp->ToString().c_str(), value);
+	logger->Info("<%s> performance state set: %d:%d",
+		rp->ToString().c_str(), value, freqs[value]);
 
 	return PMResult::OK;
 }
