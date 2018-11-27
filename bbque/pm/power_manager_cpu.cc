@@ -505,8 +505,8 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
 	// Max and min frequency values
 	auto edges = std::minmax_element(
 			core_freqs[pe_id]->begin(), core_freqs[pe_id]->end());
-	khz_min  = edges.first  - core_freqs[pe_id]->begin();
-	khz_max  = edges.second - core_freqs[pe_id]->begin();
+	khz_min  = core_freqs[pe_id]->at(edges.first  - core_freqs[pe_id]->begin());
+	khz_max  = core_freqs[pe_id]->at(edges.second - core_freqs[pe_id]->begin());
 	// '0' to represent not fixed step value
 	khz_step = 0;
 
