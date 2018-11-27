@@ -98,11 +98,11 @@ CPUPowerManager::~CPUPowerManager() {
 	for (auto pe_id_info : cpufreq_restore) {
 		logger->Notice("Restoring PE %d cpufreq bound: [%u - %u] kHz",
 				pe_id_info.first,
-				core_freqs[pe_id_info.first]->back(),
-				core_freqs[pe_id_info.first]->front());
+				core_freqs[pe_id_info.first]->front(),
+				core_freqs[pe_id_info.first]->back());
 		SetClockFrequencyBoundaries(pe_id_info.first,
-				core_freqs[pe_id_info.first]->back(),
-				core_freqs[pe_id_info.first]->front());
+				core_freqs[pe_id_info.first]->front(),
+				core_freqs[pe_id_info.first]->back());
 
 		logger->Notice("Restoring PE %d cpufreq governor: %s",
 				pe_id_info.first, pe_id_info.second.c_str());
