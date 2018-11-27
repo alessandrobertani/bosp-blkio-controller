@@ -473,18 +473,60 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 	logger->Error("SetClockFrequency: <%s> (cpu%d) set to range [%d, %d] KHz",
 		rp->ToString().c_str(), pe_id, khz_min, khz_max);
 
-	result = bu::IoFs::WriteValueTo<uint32_t>(
-			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_min_freq", min_khz);
-	if (result != bu::IoFs::ExitCode_t::OK)
-		return PMResult::ERR_SENSORS_ERROR;
 
-	result = bu::IoFs::WriteValueTo<uint32_t>(
-			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_max_freq", max_khz);
-	if (result != bu::IoFs::ExitCode_t::OK)
-		return PMResult::ERR_SENSORS_ERROR;
+	return SetClockFrequencyBoundaries(pe_id, khz_min, khz_max);
+}
 
+
+PowerManager::PMResult CPUPowerManager::SetClockFrequencyBoundaries(
+		int pe_id, uint32_t khz_min, uint32_t khz_max) {
+	uint32_t cur_khz_max, cur_khz_min;
+
+	bu::IoFs::ExitCode_t result;
+	if (pe_id < 0) {
+		logger->Warn("Frequency setting not available for PE %d",
+				pe_id);
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+	}
+
+	if(khz_min > khz_max){
+		uint32_t khz_tmp = khz_max;
+		khz_max = khz_min;
+		khz_min = khz_tmp;
+	}
+
+	GetClockFrequencyInfo(pe_id, cur_khz_min, cur_khz_max);
+
+	if(khz_min>cur_khz_max){
+		logger->Warn("Frequency setting [%d,%d]", khz_min, khz_max);
+		result = bu::IoFs::WriteValueTo<uint32_t>(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/cpufreq/scaling_max_freq", khz_max);
+		if (result != bu::IoFs::ExitCode_t::OK)
+			return PMResult::ERR_SENSORS_ERROR;
+
+		result = bu::IoFs::WriteValueTo<uint32_t>(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/cpufreq/scaling_min_freq", khz_min);
+		if (result != bu::IoFs::ExitCode_t::OK)
+			return PMResult::ERR_SENSORS_ERROR;
+
+	} else {
+
+		result = bu::IoFs::WriteValueTo<uint32_t>(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/cpufreq/scaling_min_freq", khz_min);
+		if (result != bu::IoFs::ExitCode_t::OK)
+			return PMResult::ERR_SENSORS_ERROR;
+
+		result = bu::IoFs::WriteValueTo<uint32_t>(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/cpufreq/scaling_max_freq", khz_max);
+		if (result != bu::IoFs::ExitCode_t::OK)
+			return PMResult::ERR_SENSORS_ERROR;
+
+	}
+	
 	return PMResult::OK;
 }
 
@@ -649,32 +691,6 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
 	logger->Debug("SetGovernor: '%s' > %s",
 		governor.c_str(), cpufreq_path.c_str());
 	return PowerManager::PMResult::OK;
-}
-
-
-PowerManager::PMResult CPUPowerManager::SetClockFrequencyBoundaries(
-		int pe_id, uint32_t khz_min, uint32_t khz_max) {
-
-	bu::IoFs::ExitCode_t result;
-	if (pe_id < 0) {
-		logger->Warn("Frequency setting not available for PE %d",
-				pe_id);
-		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
-	}
-
-	result = bu::IoFs::WriteValueTo<uint32_t>(
-			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_min_freq", khz_min);
-	if (result != bu::IoFs::ExitCode_t::OK)
-		return PMResult::ERR_SENSORS_ERROR;
-
-	result = bu::IoFs::WriteValueTo<uint32_t>(
-			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			"/cpufreq/scaling_max_freq", khz_max);
-	if (result != bu::IoFs::ExitCode_t::OK)
-		return PMResult::ERR_SENSORS_ERROR;
-
-	return PMResult::OK;
 }
 
 PowerManager::PMResult CPUPowerManager::SetOn(br::ResourcePathPtr_t const & rp) {
