@@ -459,9 +459,9 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 
 PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 		ResourcePathPtr_t const & rp,
-		uint32_t min_khz,
-		uint32_t max_khz) {
-	bu::IoFs::ExitCode_t result;
+		uint32_t khz_min,
+		uint32_t khz_max) {
+
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 	if (pe_id < 0) {
@@ -470,8 +470,8 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequency(
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
-	logger->Debug("SetClockFrequency: <%s> (cpu%d) set to range [%d, %d] KHz",
-		rp->ToString().c_str(), pe_id, min_khz, max_khz);
+	logger->Error("SetClockFrequency: <%s> (cpu%d) set to range [%d, %d] KHz",
+		rp->ToString().c_str(), pe_id, khz_min, khz_max);
 
 	result = bu::IoFs::WriteValueTo<uint32_t>(
 			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
