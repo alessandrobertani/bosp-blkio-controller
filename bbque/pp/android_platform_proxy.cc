@@ -95,7 +95,7 @@ const char* AndroidPlatformProxy::GetHardwareID(int16_t system_id) const {
 	return "device";
 }
 
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Setup(AppPtr_t papp) {
+AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Setup(SchedPtr_t papp) {
 	logger->Info("Setup: %s", papp->StrId());
 	return PLATFORM_OK;
 }
@@ -194,18 +194,18 @@ AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Refresh() {
 	return PLATFORM_OK;
 }
 
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Release(AppPtr_t papp) {
+AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Release(SchedPtr_t papp) {
 	logger->Info("Release: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::ReclaimResources(AppPtr_t papp) {
+AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::ReclaimResources(SchedPtr_t papp) {
 	logger->Info("ReclaimResources: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
 AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::MapResources(
-		AppPtr_t papp,
+		SchedPtr_t papp,
 		ResourceAssignmentMapPtr_t pres,bool excl) {
 
 	(void) pres;
