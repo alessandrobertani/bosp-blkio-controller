@@ -100,6 +100,16 @@ CPUPowerManager::CPUPowerManager():
 
 CPUPowerManager::~CPUPowerManager() {
 
+	for (auto pe_id_info : online_restore) {
+		logger->Notice("Restorig PE %d online status: %d",
+				pe_id_info.first, pe_id_info.second);
+		if(pe_id_info.second) {
+			SetOn(pe_id_info.first);
+		} else {
+			SetOff(pe_id_info.first);
+		}
+	}
+
 	for (auto pe_id_info : cpufreq_restore) {
 		logger->Notice("Restoring PE %d cpufreq bound: [%u - %u] kHz",
 				pe_id_info.first,
@@ -119,6 +129,8 @@ CPUPowerManager::~CPUPowerManager() {
 	core_therms.clear();
 	core_freqs.clear();
 	cpufreq_governors.clear();
+	core_online.clear();
+	online_restore.clear();
 }
 
 
@@ -773,7 +785,9 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
 PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
 		int pe_id,
 		std::string const & governor) {
+	
 	bu::IoFs::ExitCode_t result;
+
 	std::string cpufreq_path(prefix_sys_cpu + std::to_string(pe_id) +
 			"/cpufreq/scaling_governor");
 	result = bu::IoFs::WriteValueTo<std::string>(cpufreq_path, governor);
