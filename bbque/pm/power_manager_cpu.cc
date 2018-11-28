@@ -726,15 +726,71 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
 }
 
 PowerManager::PMResult CPUPowerManager::SetOn(br::ResourcePathPtr_t const & rp) {
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
 
+	return SetOn(pe_id);	
 }
 
-PowerManager::PMResult CPUPowerManager::SetOff(br::ResourcePathPtr_t const & rp) {
+PowerManager::PMResult CPUPowerManager::SetOn(int pe_id){
+	bu::IoFs::ExitCode_t result;
+	std::string online_path(prefix_sys_cpu + std::to_string(pe_id) +
+			"/online");
 
+	result = bu::IoFs::WriteValueTo<int>(online_path, 1);
+	if (result != bu::IoFs::ExitCode_t::OK)
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+
+	core_online[pe_id] = true;
+
+	logger->Debug("SetOn: '1' > %s", online_path.c_str());
+
+	return PowerManager::PMResult::OK;
+} 
+
+PowerManager::PMResult CPUPowerManager::SetOff(br::ResourcePathPtr_t const & rp) {
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
+
+	return SetOff(pe_id);
+}
+
+PowerManager::PMResult CPUPowerManager::SetOff(int pe_id){
+	bu::IoFs::ExitCode_t result;
+	std::string online_path(prefix_sys_cpu + std::to_string(pe_id) +
+			"/online");
+
+	result = bu::IoFs::WriteValueTo<int>(online_path, 0);
+	if (result != bu::IoFs::ExitCode_t::OK)		
+		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
+
+	core_online[pe_id] = false;
+
+	logger->Debug("SetOff: '0' > %s", online_path.c_str());
+
+	return PowerManager::PMResult::OK;
 }
 
 bool CPUPowerManager::IsOn(br::ResourcePathPtr_t const & rp) const{
+	int pe_id;
+	GET_PROC_ELEMENT_ID(rp, pe_id);
 
+	return IsOn(pe_id);
+}
+
+bool CPUPowerManager::IsOn(int pe_id) const{
+	bu::IoFs::ExitCode_t result;
+	int online;
+
+	std::string online_path(prefix_sys_cpu + std::to_string(pe_id) +
+			"/online");
+
+	result = bu::IoFs::ReadIntValueFrom<int>(online_path, online);
+	if (result != bu::IoFs::ExitCode_t::OK)
+		return false;
+
+	logger->Debug("Res %s: %d", online_path.c_str(), online);
+	return (online == 1);
 }
 
 /**********************************************************************

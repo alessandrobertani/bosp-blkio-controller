@@ -144,6 +144,12 @@ public:
 
 	bool IsOn(br::ResourcePathPtr_t const & rp) const;
 
+	PMResult SetOn(int pe_id);
+
+	PMResult SetOff(int pe_id);
+
+	bool IsOn(int pe_id) const;
+
 
 	/* ===========   Power consumption  =========== */
 
