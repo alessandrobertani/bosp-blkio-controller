@@ -24,6 +24,7 @@
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resources.h"
 
+#define BBQUE_LINUX_SYS_CORE_PREFIX   "/sys/devices/system/cpu"
 #define BBQUE_LINUX_SYS_CPU_PREFIX   "/sys/devices/system/cpu/cpu"
 
 #ifndef CONFIG_BBQUE_PM_NOACPI
@@ -210,8 +211,14 @@ protected:
 	/*** Available clock frequencies for each processing element (core) */
 	std::map<int, std::shared_ptr<std::vector<uint32_t>> > core_freqs;
 
+	/*** Online status for each processing element (core) */
+	std::map<int, bool> core_online;
+
 	/*** Original clock frequencies, to be restored when bbque stops */
 	std::map<int, std::string> cpufreq_restore;
+
+	/*** Original online status, to be restored when bbque stops */
+	std::map<int, bool> online_restore;
 
 	/*** SysFS CPU prefix path ***/
 	std::string prefix_sys_cpu;

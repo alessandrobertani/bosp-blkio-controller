@@ -124,8 +124,10 @@ CPUPowerManager::~CPUPowerManager() {
 
 void CPUPowerManager::InitCoreIdMapping() {
 	bu::IoFs::ExitCode_t result;
+	std::string cpu_av;
 	int cpu_id = 0;
 	int pe_id  = 0;
+	int id_bound[2]; // id_bound[0]=min_id, id_bound[1]=max_id
 	// CPU <--> Core id mapping:
 	// CPU is commonly used to reference the cores while in the BarbequeRTRM
 	// 'core' is referenced as 'processing element', thus it needs a unique id
@@ -140,22 +142,77 @@ void CPUPowerManager::InitCoreIdMapping() {
 	// Therefore we consider "processing element" what Linux calls CPU and "cpu"
 	// what Linux calls "Core"
 	//-------------------------------------------------------------------------
-	while (1) {
-		std::string freq_av_filepath(
+
+	std::string core_av_filepath(
+				BBQUE_LINUX_SYS_CORE_PREFIX + std::string("/present"));
+
+	// Taking the min and max pe_id available
+	result = bu::IoFs::ReadValueFrom(core_av_filepath, cpu_av);
+
+	if (result != bu::IoFs::OK) {
+		logger->Error("Failed in reading %s", core_av_filepath.c_str());
+		return;
+	}
+
+	int i = 0;
+	while (cpu_av.size() > 1){
+		id_bound[i] = std::stoi(br::ResourcePathUtils::SplitAndPop(cpu_av, "-"));
+		i++;
+	}
+
+	pe_id = id_bound[0];
+
+	while (pe_id <= id_bound[1]) {
+
+		// Online status per core
+		online_restore[pe_id] = IsOn(pe_id);
+		core_online[pe_id] = online_restore[pe_id];
+
+#ifdef CONFIG_TARGET_ANDROID
+	
+		// CoreID not supported
+
+#else
+		int siblings[2];
+		if(core_online[pe_id]){
+			std::string core_sibl;
+			std::string core_sibl_filepath(
+				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/topology/core_siblings_list");
+
+			// Taking the min and max pe_id available
+			result = bu::IoFs::ReadValueFrom(core_sibl_filepath, core_sibl);
+
+			if (result != bu::IoFs::OK) {
+				logger->Error("Failed in reading %s", core_sibl_filepath.c_str());
+				break;
+			}
+
+			i = 0;
+			while (cpu_av.size() > 1){
+				siblings[i] = std::stoi(br::ResourcePathUtils::SplitAndPop(core_sibl, "-"));
+				i++;
+			}
+
+			std::string freq_av_filepath(
 				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
 				"/topology/core_id");
-		if (!boost::filesystem::exists(freq_av_filepath)) break;
 
-		// Processing element <-> CPU id
-		logger->Debug("Reading... %s", freq_av_filepath.c_str());
-		result = bu::IoFs::ReadIntValueFrom<int>(freq_av_filepath, cpu_id);
-		if (result != bu::IoFs::OK) {
-			logger->Error("Failed in reading %s", freq_av_filepath.c_str());
-			break;
+			// Processing element <-> CPU id
+			logger->Debug("Reading... %s", freq_av_filepath.c_str());
+			result = bu::IoFs::ReadIntValueFrom<int>(freq_av_filepath, cpu_id);
+			if (result != bu::IoFs::OK) {
+				logger->Error("Failed in reading %s", freq_av_filepath.c_str());
+				break;
+			}
+
+			for(i = siblings[0]; i < siblings[1]; i++){
+				core_ids[i] = cpu_id;
+				logger->Debug("<sys.cpu%d.pe%d> cpufreq reference found", cpu_id, pe_id);
+			}
+
 		}
-		logger->Debug("<sys.cpu%d.pe%d> cpufreq reference found", cpu_id, pe_id);
-		core_ids[pe_id] = cpu_id;
-
+#endif
 		// Available frequencies per core
 		core_freqs[pe_id] = std::make_shared<std::vector<uint32_t>>();
 		_GetAvailableFrequencies(pe_id, core_freqs[pe_id]);
@@ -630,6 +687,9 @@ void CPUPowerManager::_GetAvailableFrequencies(
 				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
 				"/cpufreq/scaling_available_frequencies",
 				cpu_available_freqs);
+	std::string path_string(BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+				"/cpufreq/scaling_available_frequencies");
+	logger->Error("%s:%s",path_string.c_str(),cpu_available_freqs.c_str());
 	if (result != bu::IoFs::OK) {
 		logger->Warn("List of frequencies not available for <...pe%d>", pe_id);
 		return;
