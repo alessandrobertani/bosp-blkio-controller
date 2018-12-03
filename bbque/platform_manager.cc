@@ -443,7 +443,11 @@ void PlatformManager::Exit()
 
 bool PlatformManager::IsHighPerformance(
 		bbque::res::ResourcePathPtr_t const & path) const {
+#ifdef CONFIG_TARGET_ARM_BIG_LITTLE
+	return lpp->IsHighPerformance(path);
+#else	
 	UNUSED(path);
+#endif
 	return false;
 }
 
