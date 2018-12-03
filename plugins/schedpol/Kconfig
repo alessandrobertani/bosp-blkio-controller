@@ -93,6 +93,11 @@ choice
     bool "ManGAv2"
     select BBQUE_SCHEDPOL_MANGAV2
 
+  config BBQUE_SCHEDPOL_DEFAULT_THROTTLE
+    depends on BBQUE_SCHEDPOL_THROTTLE
+    bool "Throttle"
+    select BBQUE_SCHEDPOL_THROTTLE
+
 endchoice
 
 source barbeque/plugins/schedpol/random/Kconfig
@@ -104,3 +109,4 @@ source barbeque/plugins/schedpol/contrex/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
 source barbeque/plugins/schedpol/manga/Kconfig
 source barbeque/plugins/schedpol/mangav2/Kconfig
+source barbeque/plugins/schedpol/throttle/Kconfig
