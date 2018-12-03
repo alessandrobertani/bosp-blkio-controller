@@ -118,6 +118,10 @@ public:
 	 *
 	 * @brief Power settings as of required via recipe or set by scheduling
 	 * policy.
+	 * freq_governor is the specific governor to set
+	 * freq_khz is the operating frequency in KHz
+	 * perf_state is a number [0,inf) to indicate the operating state of the
+	 * resource
 	 */
 	class PowerSettings {
 	public:
