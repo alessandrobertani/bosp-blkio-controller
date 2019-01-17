@@ -1302,8 +1302,10 @@ void ApplicationProxy::RpcExcRuntimeProfileNotify(prqsSn_t prqs) {
 	assert(pchMsg);
 	// Looking for a valid connection context
 	pcon = GetConnectionContext(pmsg_hdr);
-	if (!pcon)
+	if (!pcon){
+		logger->Error("RpcExcRuntimeProfileNotify: No connection context");
 		return;
+	}
 
 	logger->Info("RpcExcRuntimeProfileNotify: Profile received for EXC "
 			"[app: %s, pid: %d, exc: %d]",
