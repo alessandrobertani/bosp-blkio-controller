@@ -34,6 +34,9 @@
 
 #define MODULE_NAMESPACE SCHEDULER_POLICY_NAMESPACE "." SCHEDULER_POLICY_NAME
 
+/** The type to identify if a resource is High Performance */
+typedef bool BBQUE_HP_TYPE;
+
 using bbque::res::RViewToken_t;
 using bbque::utils::MetricsCollector;
 using bbque::utils::Timer;
@@ -54,6 +57,8 @@ struct ApplicationInfo {
 	ba::AwmPtr_t cur_awm;
 	/* Runtime Profiling data */
 	app::RuntimeProfiling_t runtime;
+	/* The ID of the allocated CPU */
+	BBQUE_RID_TYPE allocated_cpu = 0;
 
 	ApplicationInfo(ba::AppCPtr_t papp) {
 
@@ -116,6 +121,11 @@ private:
 	/** Resource accounter instance */
 	ResourceAccounter & ra;
 
+	/** Platform manager instance */
+	PowerManager & wm;
+
+	PlatformManager & plm;
+
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
 
@@ -132,6 +142,18 @@ private:
 	 * high-performance.
 	 */
 	std::map<BBQUE_RID_TYPE, bool> high_perf_cpus;
+
+	uint32_t high_perf_states_count = 0;
+
+	uint32_t low_perf_states_count = 0;
+
+	std::vector<BBQUE_HP_TYPE> perf_states;
+
+	std::set<BBQUE_RID_TYPE> TakeCPUsType(bool IsHighPerformance);
+
+	void InitPerfState(
+	uint32_t perf_states_count, 
+	BBQUE_HP_TYPE IsHighPerformance);
 #endif // CONFIG_TARGET_ARM_BIG_LITTLE
 
 	/**
@@ -162,13 +184,12 @@ private:
 
 	int32_t DoCPUBinding(bbque::app::AwmPtr_t pawm, BBQUE_RID_TYPE id);
 
+	float ComputeBoost(
+		int ggap_percent, 
+		uint32_t ps_count, 
+		uint32_t current_ps);
+
 	void DumpRuntimeProfileStats(ApplicationInfo &app);
-
-#ifdef CONFIG_BBQUE_TG_PROG_MODEL
-
-	void MapTaskGraph(bbque::app::AppCPtr_t papp);
-
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 };
 

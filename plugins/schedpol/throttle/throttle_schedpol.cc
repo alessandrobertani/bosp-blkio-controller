@@ -26,6 +26,7 @@
 #include "bbque/binding_manager.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/platform_manager.h"
+#include "bbque/pm/power_manager.h"
 
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
@@ -36,6 +37,12 @@
 
 #define CPU_QUOTA_TO_ALLOCATE 100
 #define MAX_CPU_QUOTA		  400
+
+#define MIN_GAP_CPU_CHANGE	   50
+#define GAP_THRESHOLD	        5
+
+#define BBQUE_RP_TYPE_LP	false
+#define BBQUE_RP_TYPE_HP	 true
 
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
@@ -63,7 +70,9 @@ char const * ThrottleSchedPol::Name() {
 
 ThrottleSchedPol::ThrottleSchedPol():
 		cm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()) {
+		ra(ResourceAccounter::GetInstance()),
+		wm(PowerManager::GetInstance()),
+		plm(PlatformManager::GetInstance()) {
 	logger = bu::Logger::GetLogger("bq.sp.throttle");
 	assert(logger);
 	if (logger)
@@ -97,41 +106,53 @@ SchedulerPolicyIF::ExitCode_t ThrottleSchedPol::Init() {
 	logger->Debug("Init: resources state view token: %ld", sched_status_view);
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
-	// Retriveing High Performance CPUs
+	// Retrieving High Performance CPUs type
 	auto & resource_types = sys->ResourceTypes();
 	auto const & r_cpu_ids_entry = resource_types.find(br::ResourceType::CPU);
 	cpu_ids = r_cpu_ids_entry->second;
 
-	PlatformManager & plm(PlatformManager::GetInstance());
+	//PlatformManager & plm(PlatformManager::GetInstance());
+	//PowerManager & wm(PowerManager::GetInstance());
 
 	for(auto cpu_id : cpu_ids){
 		auto cpu_path = ra.GetPath("sys.cpu"+std::to_string(cpu_id)+".pe");
 		auto pe_list = ra.GetResources(cpu_path);
 		uint32_t pe_count = 0;
+		uint32_t perf_states_count = 0;
 		for(auto pe : pe_list){
 			auto pe_path = ra.GetPath(pe->Path());
 			if(plm.IsHighPerformance(pe_path)){
 				pe_count++;
+				wm.GetPerformanceStatesCount(pe_path, perf_states_count);
 			}
 		}
+		// If all the pes are HP then the CPU is HP
 		if (pe_count == pe_list.size()){
 			logger->Debug("Init: %s is High Performance\n", cpu_path->ToString().c_str());
 			high_perf_cpus[cpu_id] = true;
+			high_perf_states_count = perf_states_count;
 		} else {
 			high_perf_cpus[cpu_id] = false;
+			low_perf_states_count = perf_states_count;
 		}
-	}
-#endif // CONFIG_TARGET_ARM_BIG_LITTLE
 
-#ifdef CONFIG_BBQUE_TG_PROG_MODEL
-	// Load all the applications task graphs
-	logger->Debug("Init: loading the applications task graphs");
-	fut_tg = std::async(std::launch::async, &System::LoadTaskGraphs, sys);
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
+		//perf_states_count = wm.GetPerformanceStatesCount(pe_path);
+		//InitPerfState(perf_states_count, high_perf_cpus[cpu_id]);
+	}
+
+	//logger->Info("Total performance states: %d", perf_states.size());
+#endif // CONFIG_TARGET_ARM_BIG_LITTLE
 
 	return SCHED_OK;
 }
 
+void ThrottleSchedPol::InitPerfState(
+	uint32_t perf_states_count, 
+	BBQUE_HP_TYPE IsHighPerformance){
+	for (uint32_t i = 0; i<perf_states_count; i++){
+		perf_states.push_back(IsHighPerformance);
+	}
+}
 
 SchedulerPolicyIF::ExitCode_t ThrottleSchedPol::Schedule(
 		System & system,
@@ -145,15 +166,22 @@ SchedulerPolicyIF::ExitCode_t ThrottleSchedPol::Schedule(
 		return result;
 
 	/** INSERT YOUR CODE HERE **/
-#ifdef CONFIG_BBQUE_TG_PROG_MODEL
-	fut_tg.get();
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 	result = ScheduleApplications();
+	if (result != SCHED_OK){
+		logger->Debug("Schedule: error in application scheduling");
+		return result;
+	}
+
 	logger->Debug("Schedule: done with applications");
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	result = ScheduleProcesses();
+	if (result != SCHED_OK){
+		logger->Debug("Schedule: error in processes scheduling");
+		return result;
+	}
+
 	logger->Debug("Schedule: done with processes");
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
@@ -172,8 +200,8 @@ SchedulerPolicyIF::ExitCode_t ThrottleSchedPol::ScheduleApplications() {
 	// Ready applications
 	papp = sys->GetFirstReady(app_it);
 	for (; papp; papp = sys->GetNextReady(app_it)) {
-		ApplicationInfo app(papp);
-		DumpRuntimeProfileStats(app);
+		ApplicationInfo app_info(papp);
+		DumpRuntimeProfileStats(app_info);
 
 		ret = AssignWorkingMode(papp);
 		if (ret != SCHED_OK) {
@@ -186,7 +214,9 @@ SchedulerPolicyIF::ExitCode_t ThrottleSchedPol::ScheduleApplications() {
 	papp = sys->GetFirstRunning(app_it);
 	for (; papp; papp = sys->GetNextRunning(app_it)) {
 		//papp->CurrentAWM()->ClearResourceRequests();
-		AssignWorkingMode(papp);
+		ret = AssignWorkingMode(papp);
+		ApplicationInfo app_info(papp);
+		DumpRuntimeProfileStats(app_info);
 		if (ret != SCHED_OK) {
 			logger->Error("ScheduleApplications: error in RUNNING");
 			return ret;
@@ -243,9 +273,10 @@ ThrottleSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 	}
 
 	// Resource request addition
-	pawm->AddResourceRequest(
-		"sys.cpu.pe", MAX_CPU_QUOTA,
-		br::ResourceAssignment::Policy::BALANCED);
+	auto res_ass; 
+	res_ass = pawm->AddResourceRequest(
+				"sys.cpu.pe", MAX_CPU_QUOTA,
+				br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
 	BindingManager & bdm(BindingManager::GetInstance());
@@ -286,23 +317,139 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		return SCHED_ERROR;
 	}
 
+	std::set<BBQUE_RID_TYPE> available_cpu_ids;
+	ApplicationManager & am(ApplicationManager::GetInstance());
+	ApplicationManager::ExitCode_t am_ret;
+
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
+	// First case: new Application
 	if (pawm == nullptr) {
+		logger->Info("AssignWorkingMode: Case 1: [%d] is a new application...", papp->StrId());
 		pawm = std::make_shared<ba::WorkingMode>(
 				papp->WorkingModes().size(),"Run-time", 1, papp);
+
+		// Resource request addition
+		auto res_ass = pawm->AddResourceRequest(
+					"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+					br::ResourceAssignment::Policy::BALANCED);
+
+		available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_LP);
+		logger->Debug("AssignWorkingMode: available cpus size %d", available_cpu_ids.size());
+
+		br::ResourceAssignment::PowerSettings new_settings;
+		new_settings.perf_state = 0;
+		pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
+		logger->Debug("AssignWorkingMode: resource request added for [%d]", papp->StrId());
 	}
 
-	// Resource request addition
-	pawm->AddResourceRequest(
-		"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-		br::ResourceAssignment::Policy::BALANCED);
+	ApplicationInfo app_info(papp);
+
+	if(app_info.runtime.is_valid){ 
+		logger->Debug("AssignWorkingMode: app info is valid");
+		// Second case: the ggap is negligible
+		if (abs(app_info.runtime.ggap_percent) < GAP_THRESHOLD){
+			logger->Info("AssignWorkingMode: Case 2: Ggap negligible -> Scheduled as previous");
+			br::RViewToken_t ref_num;
+
+			am_ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
+			if (am_ret != ApplicationManager::AM_SUCCESS) {
+				logger->Error("AssignWorkingMode: schedule request failed for [%d]",
+					papp->StrId());
+				return SCHED_ERROR;
+			}
+
+			return SCHED_OK;
+
+		} else { // Third case: the ggap triggers a performance change
+			logger->Info("AssignWorkingMode: Case 3: Ggap correction");
+			// Computing CPU type and boost value
+			float boost;
+			bool CPUChange = false;
+
+			logger->Debug("AssignWorkingMode: papp [%s] current AWM [%s]", 
+				papp->StrId(), papp->CurrentAWM()->StrId());
+			auto prev_assignment = pawm->GetResourceRequest("sys.cpu.pe");
+			logger->Debug("AssignWorkingMode: prev_assignment res list size: %d",
+				prev_assignment->GetResourcesList().size());
+			//papp->CurrentAWM()->ClearResourceRequests();
+
+			// Resource request addition
+			//auto res_ass = pawm->AddResourceRequest(
+			//				"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+			//				br::ResourceAssignment::Policy::BALANCED);
+			for(auto prev_res : prev_assignment->GetResourcesList()){
+				//auto prev_res_path = ra.GetPath(prev_assignment->ResourcesList().front().Path());
+				auto prev_res_path = ra.GetPath(prev_res->Path());
+				logger->Debug("AssignWorkingMode: Computing PS for res: [%s]", 
+					prev_res_path->ToString().c_str());
+				uint32_t ps_count;
+				
+				uint32_t current_ps, next_ps;
+				
+
+				// Checking if the ggap required a change in the CPU type (LP-->HP)
+				if(app_info.runtime.ggap_percent >= MIN_GAP_CPU_CHANGE && 
+					!plm.IsHighPerformance(prev_res_path)){
+						available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_HP);
+						next_ps = high_perf_states_count / 2;
+						CPUChange = true;
+						logger->Debug("AssingWorkingMode: changing CPU type to HP");
+				}
+
+				// Checking if the ggap required a change in the CPU type (HP-->LP)
+				if(app_info.runtime.ggap_percent <= (0-MIN_GAP_CPU_CHANGE) && 
+					plm.IsHighPerformance(prev_res_path)){
+						available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_LP);
+						next_ps = low_perf_states_count / 2;
+						CPUChange = true;
+						logger->Debug("AssingWorkingMode: changing CPU type to LP");
+				}
+
+				if(!CPUChange){
+					wm.GetPerformanceStatesCount(prev_res_path, ps_count);
+					logger->Debug("AssingWorkingMode: Res [%s] has %d perf states", 
+						prev_res_path->ToString().c_str(), ps_count);
+					wm.GetPerformanceState(prev_res_path, current_ps);
+					logger->Debug("AssingWorkingMode: Current PS is %d", current_ps);
+
+					// Avoiding division by zero
+					current_ps++;
+
+					// Computing the boost value
+					boost = ComputeBoost(app_info.runtime.ggap_percent, 
+						ps_count, 
+						current_ps);
+					logger->Debug("AssingWorkingMode: Computed boost for [%s]: %f.2",
+						prev_res_path->ToString().c_str(), boost);
+
+					// Computing the next perf state
+					next_ps = current_ps * (1 + boost);
+					if(next_ps > ps_count)
+						next_ps = ps_count;
+					if(next_ps < 1)
+						next_ps = 1;
+					logger->Debug("AssingWorkingMode: Computed next ps for [%s]: %d-->%d",
+						prev_res_path->ToString().c_str(), current_ps, next_ps);
+
+					// Select the available cpu type cluster
+					available_cpu_ids = TakeCPUsType(plm.IsHighPerformance(prev_res_path));
+				}
+
+				br::ResourceAssignment::PowerSettings new_settings;
+				new_settings.perf_state = next_ps - 1;
+				pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
+			}
+		}
+	}
+	
 
 	// Look for the first available CPU
 	BindingManager & bdm(BindingManager::GetInstance());
 	BindingMap_t & bindings(bdm.GetBindingDomains());
-	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
-	for (BBQUE_RID_TYPE cpu_id: cpu_ids) {
+
+	//auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
+	for (BBQUE_RID_TYPE cpu_id: available_cpu_ids) {
 		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
 
 		// CPU binding
@@ -312,9 +459,9 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 			continue;
 		}
 
+		// Assign 
+
 		// Schedule request
-		ApplicationManager & am(ApplicationManager::GetInstance());
-		ApplicationManager::ExitCode_t am_ret;
 		am_ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
 		if (am_ret != ApplicationManager::AM_SUCCESS) {
 			logger->Error("AssignWorkingMode: schedule request failed for [%d]",
@@ -322,15 +469,44 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 			continue;
 		}
 
-#ifdef CONFIG_BBQUE_TG_PROG_MODEL
-		MapTaskGraph(papp); // Task level mapping
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
+		//app_info.allocated_cpu = cpu_id;
+
 		return SCHED_OK;
 	}
 
 	return SCHED_ERROR;
 }
 
+float ThrottleSchedPol::ComputeBoost(int ggap_percent, 
+	uint32_t ps_count, 
+	uint32_t current_ps){
+
+	int pgap = ps_count - current_ps;
+	if (ggap_percent > 0){
+		if (pgap != 0)
+			return ((ggap_percent / 100) * ps_count) / pgap;
+		else
+			return 0.0;
+	} else {
+		if (ps_count - pgap)
+			return ((ggap_percent / 100) * ps_count) / (ps_count - pgap);
+		else
+			return 0.0;
+	} 
+}
+
+std::set<BBQUE_RID_TYPE> ThrottleSchedPol::TakeCPUsType(bool IsHighPerformance){
+	std::set<BBQUE_RID_TYPE> res_set;
+
+	for (auto cpu_info : high_perf_cpus){
+		if (!(cpu_info.second ^ IsHighPerformance)){
+			logger->Debug("TakeCPUsType: adding available CPU [%d]", cpu_info.first);
+			res_set.insert(cpu_info.first);
+		}
+	}
+
+	return res_set;
+}
 
 int32_t ThrottleSchedPol::DoCPUBinding(
 		bbque::app::AwmPtr_t pawm,
@@ -338,11 +514,11 @@ int32_t ThrottleSchedPol::DoCPUBinding(
 	// CPU-level binding: the processing elements are in the scope of the CPU 'cpu_id'
 	int32_t ref_num = -1;
 	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, cpu_id, ref_num);
-	auto resource_path = ra.GetPath("sys0.cpu" + std::to_string(cpu_id) + ".pe");
+	//auto resource_path = ra.GetPath("sys0.cpu" + std::to_string(cpu_id) + ".pe");
 
 	// The ResourceBitset object is used for the processing elements binding
 	// (CPU core mapping)
-	br::ResourceBitset pes;
+/*	br::ResourceBitset pes;
 	uint16_t pe_count = 0;
 	for (auto & pe_id: pe_ids) {
 		pes.Set(pe_id);
@@ -351,7 +527,7 @@ int32_t ThrottleSchedPol::DoCPUBinding(
 		++pe_count;
 		if (pe_count == CPU_QUOTA_TO_ALLOCATE / 100) break;
 	}
-
+*/
 	return ref_num;
 }
 
@@ -370,42 +546,6 @@ void ThrottleSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app){
 	logger->Debug("  Last measured CPU Usage: %d", app.runtime.cpu_usage);
 	logger->Debug("  Last allocated CPU Usage: %d", app.runtime.cpu_usage_prediction);
 }
-
-#ifdef CONFIG_BBQUE_TG_PROG_MODEL
-
-void ThrottleSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
-	auto task_graph = papp->GetTaskGraph();
-	if (task_graph == nullptr) {
-		logger->Warn("[%s] No task-graph to map", papp->StrId());
-		return;
-	}
-
-	uint16_t throughput;
-	uint32_t c_time;
-	int unit_id = 3; // An arbitrary device id number
-
-	for (auto t_entry: task_graph->Tasks()) {
-		unit_id++;
-		auto & task(t_entry.second);
-		auto const & tr(papp->GetTaskRequirements(task->Id()));
-
-		task->SetMappedProcessor(unit_id);
-		task->GetProfiling(throughput, c_time);
-		logger->Info("[%s] <T %d> throughput: %.2f/%.2f  ctime: %d/%d [ms]",
-			papp->StrId(), t_entry.first,
-			static_cast<float>(throughput)/100.0, tr.Throughput(),
-			c_time, tr.CompletionTime());
-	}
-
-	task_graph->GetProfiling(throughput, c_time);
-	logger->Info("[%s] Task-graph throughput: %d  ctime: %d [app=%p]",
-		papp->StrId(), throughput, c_time, papp.get());
-
-	papp->SetTaskGraph(task_graph);
-	logger->Info("[%s] Task-graph updated", papp->StrId());
-}
-
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 } // namespace plugins
 
