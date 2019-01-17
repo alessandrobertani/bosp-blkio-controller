@@ -128,13 +128,13 @@ public:
 		PowerSettings():
 			freq_governor(""),
 			freq_khz(0),
-			perf_state(0) {
+			perf_state(-1) {
 		}
 
 		PowerSettings(
 			std::string const & gov,
 			uint32_t freq,
-			uint32_t pstate):
+			int32_t pstate):
 
 			freq_governor(gov),
 			freq_khz(freq),
@@ -143,7 +143,7 @@ public:
 
 		std::string freq_governor;
 		uint32_t freq_khz;
-		uint32_t perf_state;
+		int32_t perf_state;
 	};
 
 	/**
