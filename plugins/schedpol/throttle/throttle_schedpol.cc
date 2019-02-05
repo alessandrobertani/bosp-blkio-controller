@@ -283,7 +283,7 @@ ThrottleSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 	BindingMap_t & bindings(bdm.GetBindingDomains());
 	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
 	for (BBQUE_RID_TYPE cpu_id: cpu_ids) {
-		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
+		logger->Info("AssingWorkingMode: binding attempt CPU id = <%d>", cpu_id);
 
 		// CPU binding
 		auto ref_num = DoCPUBinding(pawm, cpu_id);
@@ -320,6 +320,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	std::set<BBQUE_RID_TYPE> available_cpu_ids;
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	ApplicationManager::ExitCode_t am_ret;
+	bool new_application = false;
 
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
@@ -335,12 +336,13 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 					br::ResourceAssignment::Policy::BALANCED);
 
 		available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_LP);
-		logger->Debug("AssignWorkingMode: available cpus size %d", available_cpu_ids.size());
+		logger->Debug("AssignWorkingMode: available cpus size <%d>", available_cpu_ids.size());
 
 		br::ResourceAssignment::PowerSettings new_settings;
 		new_settings.perf_state = 0;
 		pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
 		logger->Debug("AssignWorkingMode: resource request added for [%d]", papp->StrId());
+		new_application = true;
 	}
 
 	ApplicationInfo app_info(papp);
@@ -349,7 +351,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		logger->Debug("AssignWorkingMode: app info is valid");
 		// Second case: the ggap is negligible
 		if (abs(app_info.runtime.ggap_percent) < GAP_THRESHOLD){
-			logger->Info("AssignWorkingMode: Case 2: Ggap negligible -> Scheduled as previous");
+			logger->Info("AssignWorkingMode: Case 3: Ggap negligible -> Scheduled as previous");
 			br::RViewToken_t ref_num;
 
 			am_ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
@@ -362,85 +364,105 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 			return SCHED_OK;
 
 		} else { // Third case: the ggap triggers a performance change
-			logger->Info("AssignWorkingMode: Case 3: Ggap correction");
+			logger->Info("AssignWorkingMode: Case 4: Ggap correction");
 			// Computing CPU type and boost value
 			float boost;
 			bool CPUChange = false;
 
 			logger->Debug("AssignWorkingMode: papp [%s] current AWM [%s]", 
 				papp->StrId(), papp->CurrentAWM()->StrId());
-			auto prev_assignment = pawm->GetResourceRequest("sys.cpu.pe");
-			logger->Debug("AssignWorkingMode: prev_assignment res list size: %d",
-				prev_assignment->GetResourcesList().size());
-			//papp->CurrentAWM()->ClearResourceRequests();
+			//auto prev_binding = pawm->GetResourceRequest("sys.cpu.pe");
+			res::ResourceAssignmentMapPtr_t prev_binding_ptr = pawm->GetResourceBinding();
+			auto & prev_binding = *(prev_binding_ptr.get());
+			logger->Debug("AssignWorkingMode: prev_binding res map size = <%d>",
+				prev_binding.size());
+			
+			//papp->CurrentAWM()->ClearResourceRequests()
+			for(auto bind : prev_binding){
+				for(auto prev_res : bind.second->GetResourcesList()){
 
-			// Resource request addition
-			//auto res_ass = pawm->AddResourceRequest(
-			//				"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-			//				br::ResourceAssignment::Policy::BALANCED);
-			for(auto prev_res : prev_assignment->GetResourcesList()){
-				//auto prev_res_path = ra.GetPath(prev_assignment->ResourcesList().front().Path());
-				auto prev_res_path = ra.GetPath(prev_res->Path());
-				logger->Debug("AssignWorkingMode: Computing PS for res: [%s]", 
-					prev_res_path->ToString().c_str());
-				uint32_t ps_count;
-				
-				uint32_t current_ps, next_ps;
-				
+					auto prev_res_path = ra.GetPath(prev_res->Path());
+					logger->Debug("AssignWorkingMode: Computing PS for res: [%s]", 
+						prev_res_path->ToString().c_str());
+					uint32_t ps_count;
+					
+					uint32_t current_ps, next_ps;
+					int ggap_percent = 0-(app_info.runtime.ggap_percent);
+					
 
-				// Checking if the ggap required a change in the CPU type (LP-->HP)
-				if(app_info.runtime.ggap_percent >= MIN_GAP_CPU_CHANGE && 
-					!plm.IsHighPerformance(prev_res_path)){
-						available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_HP);
-						next_ps = high_perf_states_count / 2;
-						CPUChange = true;
-						logger->Debug("AssingWorkingMode: changing CPU type to HP");
+					// Checking if the ggap required a change in the CPU type (LP-->HP)
+					if(ggap_percent >= MIN_GAP_CPU_CHANGE && 
+						!plm.IsHighPerformance(prev_res_path)){
+							available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_HP);
+							next_ps = high_perf_states_count / 2;
+							CPUChange = true;
+							logger->Debug("AssingWorkingMode: changing CPU type to HP");
+							logger->Debug("AssignWorkingMode: Computed next PS = <%d>", next_ps);
+					}
+
+					// Checking if the ggap required a change in the CPU type (HP-->LP)
+					if(ggap_percent <= (0-MIN_GAP_CPU_CHANGE) && 
+						plm.IsHighPerformance(prev_res_path)){
+							available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_LP);
+							next_ps = low_perf_states_count / 2;
+							CPUChange = true;
+							logger->Debug("AssingWorkingMode: changing CPU type to LP");
+					}
+
+					if(!CPUChange){
+						wm.GetPerformanceStatesCount(prev_res_path, ps_count);
+						logger->Debug("AssingWorkingMode: Res [%s] has <%d> perf states", 
+							prev_res_path->ToString().c_str(), ps_count);
+						wm.GetPerformanceState(prev_res_path, current_ps);
+						logger->Debug("AssingWorkingMode: Current PS = <%d>", current_ps);
+
+						// Avoiding division by zero
+						current_ps++;
+
+						// Computing the boost value
+						boost = ComputeBoost(ggap_percent, 
+							ps_count, 
+							current_ps);
+						logger->Debug("AssingWorkingMode: Computed boost for [%s] = <%.2f>",
+							prev_res_path->ToString().c_str(), boost);
+
+						// Computing the next perf state
+						next_ps = current_ps * (1 + boost);
+						if(next_ps > ps_count)
+							next_ps = ps_count;
+						if(next_ps < 1)
+							next_ps = 1;
+						logger->Debug("AssingWorkingMode: Computed next PS for [%s] = [%d -> %d]",
+							prev_res_path->ToString().c_str(), current_ps, next_ps);
+
+						// Select the available cpu type cluster
+						available_cpu_ids = TakeCPUsType(plm.IsHighPerformance(prev_res_path));
+					}
+
+					br::ResourceAssignment::PowerSettings new_settings;
+					new_settings.perf_state = next_ps - 1;
+					pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
+					auto power_settings = 
+						pawm->GetResourceRequest("sys.cpu.pe")->GetPowerSettings();
+					logger->Debug("AssignWorkingMode: Updated PowerSettings "
+								"[GOV = %s, FREQ = %d, PERF_STATE = %d",
+								power_settings.freq_governor.c_str(),
+								power_settings.freq_khz,
+								power_settings.perf_state);
+
 				}
-
-				// Checking if the ggap required a change in the CPU type (HP-->LP)
-				if(app_info.runtime.ggap_percent <= (0-MIN_GAP_CPU_CHANGE) && 
-					plm.IsHighPerformance(prev_res_path)){
-						available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_LP);
-						next_ps = low_perf_states_count / 2;
-						CPUChange = true;
-						logger->Debug("AssingWorkingMode: changing CPU type to LP");
-				}
-
-				if(!CPUChange){
-					wm.GetPerformanceStatesCount(prev_res_path, ps_count);
-					logger->Debug("AssingWorkingMode: Res [%s] has %d perf states", 
-						prev_res_path->ToString().c_str(), ps_count);
-					wm.GetPerformanceState(prev_res_path, current_ps);
-					logger->Debug("AssingWorkingMode: Current PS is %d", current_ps);
-
-					// Avoiding division by zero
-					current_ps++;
-
-					// Computing the boost value
-					boost = ComputeBoost(app_info.runtime.ggap_percent, 
-						ps_count, 
-						current_ps);
-					logger->Debug("AssingWorkingMode: Computed boost for [%s]: %f.2",
-						prev_res_path->ToString().c_str(), boost);
-
-					// Computing the next perf state
-					next_ps = current_ps * (1 + boost);
-					if(next_ps > ps_count)
-						next_ps = ps_count;
-					if(next_ps < 1)
-						next_ps = 1;
-					logger->Debug("AssingWorkingMode: Computed next ps for [%s]: %d-->%d",
-						prev_res_path->ToString().c_str(), current_ps, next_ps);
-
-					// Select the available cpu type cluster
-					available_cpu_ids = TakeCPUsType(plm.IsHighPerformance(prev_res_path));
-				}
-
-				br::ResourceAssignment::PowerSettings new_settings;
-				new_settings.perf_state = next_ps - 1;
-				pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
 			}
 		}
+	} else if (!new_application) {
+		logger->Info("AssignWorkingMode: Case 2: No RT profile -> Scheduled as previous");
+		am_ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
+		if (am_ret != ApplicationManager::AM_SUCCESS) {
+			logger->Error("AssignWorkingMode: schedule request failed for [%d]",
+				papp->StrId());
+			return SCHED_ERROR;
+		}
+
+		return SCHED_OK;
 	}
 	
 
@@ -448,9 +470,8 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	BindingManager & bdm(BindingManager::GetInstance());
 	BindingMap_t & bindings(bdm.GetBindingDomains());
 
-	//auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
 	for (BBQUE_RID_TYPE cpu_id: available_cpu_ids) {
-		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
+		logger->Info("AssingWorkingMode: binding attempt CPU id = <%d>", cpu_id);
 
 		// CPU binding
 		auto ref_num = DoCPUBinding(pawm, cpu_id);
@@ -469,8 +490,6 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 			continue;
 		}
 
-		//app_info.allocated_cpu = cpu_id;
-
 		return SCHED_OK;
 	}
 
@@ -480,18 +499,30 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 float ThrottleSchedPol::ComputeBoost(int ggap_percent, 
 	uint32_t ps_count, 
 	uint32_t current_ps){
+	float boost = 0.0;
+
+	logger->Debug("ComputeBoost: ggap_percent = <%d>, ps_count = <%d>, current_ps = <%d>",
+		ggap_percent, ps_count, current_ps); 
 
 	int pgap = ps_count - current_ps;
 	if (ggap_percent > 0){
-		if (pgap != 0)
-			return ((ggap_percent / 100) * ps_count) / pgap;
-		else
+		if (pgap != 0){
+			boost = ((ggap_percent / 100.0 ) * ps_count) / pgap; 
+			logger->Debug("ComputeBoost:: ggap = <positive>, pgap = <%d>, boost = <%.2f>",
+				pgap, boost);
+			return boost;
+		} else {
 			return 0.0;
+		}
 	} else {
-		if (ps_count - pgap)
-			return ((ggap_percent / 100) * ps_count) / (ps_count - pgap);
-		else
+		if (ps_count - pgap){
+			boost = ((ggap_percent / 100.0) * ps_count) / (ps_count - pgap);
+			logger->Debug("ComputeBoost:: ggap = <negative>, pgap = <%d>, boost = <%.2f>", 
+				pgap, boost);
+			return boost;
+		} else {
 			return 0.0;
+		}
 	} 
 }
 
@@ -535,16 +566,16 @@ void ThrottleSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app){
 	logger->Debug("[APP %s] Runtime Profile", app.name.c_str());
 	logger->Debug("Runtime valid: %s", app.runtime.is_valid ? "yes" : "no");
 	logger->Debug("  Goal Gap: %d", app.runtime.ggap_percent);
-	logger->Debug("  Lower allocation boundary: [CPU: %d, exp GGAP: %d], ETA %d",
+	logger->Debug("  Lower allocation boundary: [CPU: <%d>, exp GGAP: <%d>], ETA <%d>",
 				app.runtime.gap_history.lower_cpu,
 				app.runtime.gap_history.lower_gap,
 				app.runtime.gap_history.lower_age);
-	logger->Debug("  Upper allocation boundary: [CPU: %d, exp GGAP: %d], ETA %d",
+	logger->Debug("  Upper allocation boundary: [CPU: <%d>, exp GGAP: <%d>], ETA <%d>",
 				app.runtime.gap_history.upper_cpu,
 				app.runtime.gap_history.upper_gap,
 				app.runtime.gap_history.upper_age);
-	logger->Debug("  Last measured CPU Usage: %d", app.runtime.cpu_usage);
-	logger->Debug("  Last allocated CPU Usage: %d", app.runtime.cpu_usage_prediction);
+	logger->Debug("  Last measured CPU Usage: <%d>", app.runtime.cpu_usage);
+	logger->Debug("  Last allocated CPU Usage: <%d>", app.runtime.cpu_usage_prediction);
 }
 
 } // namespace plugins
