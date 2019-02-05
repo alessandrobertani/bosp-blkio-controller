@@ -333,7 +333,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		// Resource request addition
 		auto res_ass = pawm->AddResourceRequest(
 					"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-					br::ResourceAssignment::Policy::BALANCED);
+					br::ResourceAssignment::Policy::SEQUENTIAL);
 
 		available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_LP);
 		logger->Debug("AssignWorkingMode: available cpus size <%d>", available_cpu_ids.size());
