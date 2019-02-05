@@ -288,16 +288,13 @@ bool SasbSyncPol::DoSync(AppPtr_t papp) {
 	// reconfigure just apps which lower their AWM value since,
 	// in general, the lower the AWM value => the lower the resources
 	case STEP21:
-		reconf &= (papp->SyncState() == ba::Schedulable::MIGRATE);
-		reconf &= (papp->NextAWM()->Value() < papp->CurrentAWM()->Value());
+		reconf &= (papp->SyncState() == ApplicationStatusIF::MIGRATE);
 		break;
 	case STEP22:
-		reconf &= (papp->SyncState() == ba::Schedulable::MIGREC);
-		reconf &= (papp->NextAWM()->Value() < papp->CurrentAWM()->Value());
+		reconf &= (papp->SyncState() == ApplicationStatusIF::MIGREC);
 		break;
 	case STEP23:
-		reconf &= (papp->SyncState() == ba::Schedulable::RECONF);
-		reconf &= (papp->NextAWM()->Value() < papp->CurrentAWM()->Value());
+		reconf &= (papp->SyncState() == ApplicationStatusIF::RECONF);
 		break;
 
 	// STEP 3
