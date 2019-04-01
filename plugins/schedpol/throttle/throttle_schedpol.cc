@@ -324,14 +324,24 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
-	// First case: new Application
+	ba::AwmPtr_t next_pawm;
+				//papp->WorkingModes().size()+1,"Run-time", 1, papp);
+	//assert(next_pawm);
+	/* 1 case: new Application */
 	if (pawm == nullptr) {
+		//AssignWorkingModeCase1(papp, next_pawm);
 		logger->Info("AssignWorkingMode: Case 1: [%d] is a new application...", papp->StrId());
-		pawm = std::make_shared<ba::WorkingMode>(
-				papp->WorkingModes().size(),"Run-time", 1, papp);
+		//pawm = std::make_shared<ba::WorkingMode>(
+		//		papp->WorkingModes().size(),"Run-time", 1, papp);
 
+		app_awm_map[papp->Pid()] = 0;
+		next_pawm  = std::make_shared<ba::WorkingMode>(
+				app_awm_map[papp->Pid()],"Run-time", 1, papp);
+		assert(next_pawm);
+		logger->Error("AssignWorkingMode: Added to map [%d:%d]",
+			papp->Pid(), app_awm_map[papp->Pid()]);
 		// Resource request addition
-		auto res_ass = pawm->AddResourceRequest(
+		auto res_ass = next_pawm->AddResourceRequest(
 					"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
 					br::ResourceAssignment::Policy::SEQUENTIAL);
 
@@ -339,8 +349,8 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		logger->Debug("AssignWorkingMode: available cpus size <%d>", available_cpu_ids.size());
 
 		br::ResourceAssignment::PowerSettings new_settings;
-		new_settings.perf_state = 0;
-		pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
+		new_settings.perf_state = low_perf_states_count / 2;
+		next_pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
 		logger->Debug("AssignWorkingMode: resource request added for [%d]", papp->StrId());
 		new_application = true;
 	}
@@ -349,7 +359,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
 	if(app_info.runtime.is_valid){ 
 		logger->Debug("AssignWorkingMode: app info is valid");
-		// Second case: the ggap is negligible
+		/* 3 case: the ggap is negligible */
 		if (abs(app_info.runtime.ggap_percent) < GAP_THRESHOLD){
 			logger->Info("AssignWorkingMode: Case 3: Ggap negligible -> Scheduled as previous");
 			br::RViewToken_t ref_num;
@@ -363,20 +373,28 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
 			return SCHED_OK;
 
-		} else { // Third case: the ggap triggers a performance change
+		} else { /* 4 case: the ggap triggers a performance change */
+			//AssignWorkingModeCase4(papp, next_pawm, pawm, app_info, available_cpu_ids);
 			logger->Info("AssignWorkingMode: Case 4: Ggap correction");
 			// Computing CPU type and boost value
 			float boost;
 			bool CPUChange = false;
 
-			logger->Debug("AssignWorkingMode: papp [%s] current AWM [%s]", 
-				papp->StrId(), papp->CurrentAWM()->StrId());
+			// Creating the new AWM
+			app_awm_map[papp->Pid()] = app_awm_map[papp->Pid()] + 1;
+			next_pawm  = std::make_shared<ba::WorkingMode>(
+				app_awm_map[papp->Pid()],"Run-time", 1, papp);
+			assert(next_pawm);
+			logger->Error("AssignWorkingMode: Updated map [%d:%d]",
+				papp->Pid(), app_awm_map[papp->Pid()]);
+
+			logger->Debug("AssignWorkingMode: papp [%s] current AWM [%s] next AWM [%s]", 
+				papp->StrId(), papp->CurrentAWM()->StrId(), next_pawm->StrId());
 			//auto prev_binding = pawm->GetResourceRequest("sys.cpu.pe");
 			res::ResourceAssignmentMapPtr_t prev_binding_ptr = pawm->GetResourceBinding();
 			auto & prev_binding = *(prev_binding_ptr.get());
 			logger->Debug("AssignWorkingMode: prev_binding res map size = <%d>",
 				prev_binding.size());
-			
 			//papp->CurrentAWM()->ClearResourceRequests()
 			for(auto bind : prev_binding){
 				for(auto prev_res : bind.second->GetResourcesList()){
@@ -423,37 +441,47 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 						boost = ComputeBoost(ggap_percent, 
 							ps_count, 
 							current_ps);
-						logger->Debug("AssingWorkingMode: Computed boost for [%s] = <%.2f>",
+						logger->Error("AssingWorkingMode: Computed boost for [%s] = <%.2f>",
 							prev_res_path->ToString().c_str(), boost);
 
 						// Computing the next perf state
 						next_ps = current_ps * (1 + boost);
+						next_ps--;
 						if(next_ps > ps_count)
 							next_ps = ps_count;
 						if(next_ps < 1)
 							next_ps = 1;
 						logger->Debug("AssingWorkingMode: Computed next PS for [%s] = [%d -> %d]",
-							prev_res_path->ToString().c_str(), current_ps, next_ps);
+							prev_res_path->ToString().c_str(), current_ps-1, next_ps-1);
 
 						// Select the available cpu type cluster
 						available_cpu_ids = TakeCPUsType(plm.IsHighPerformance(prev_res_path));
 					}
 
 					br::ResourceAssignment::PowerSettings new_settings;
-					new_settings.perf_state = next_ps - 1;
-					pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
+					new_settings.perf_state = next_ps;
+					next_pawm->AddResourceRequest(
+							"sys.cpu.pe",
+							CPU_QUOTA_TO_ALLOCATE,
+							br::ResourceAssignment::Policy::SEQUENTIAL);
+					next_pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
 					auto power_settings = 
 						pawm->GetResourceRequest("sys.cpu.pe")->GetPowerSettings();
-					logger->Debug("AssignWorkingMode: Updated PowerSettings "
-								"[GOV = %s, FREQ = %d, PERF_STATE = %d",
+					auto next_power_settings = 
+						next_pawm->GetResourceRequest("sys.cpu.pe")->GetPowerSettings();
+					logger->Error("AssignWorkingMode: Updated PowerSettings "
+								"[GOV = [%s->%s], FREQ = [%d->%d], PERF_STATE = [%d->%d]",
 								power_settings.freq_governor.c_str(),
+								next_power_settings.freq_governor.c_str(),
 								power_settings.freq_khz,
-								power_settings.perf_state);
+								next_power_settings.freq_khz,
+								power_settings.perf_state,
+								next_power_settings.perf_state);
 
 				}
 			}
 		}
-	} else if (!new_application) {
+	} else if (!new_application) { /* 2 case: No RT profile */
 		logger->Info("AssignWorkingMode: Case 2: No RT profile -> Scheduled as previous");
 		am_ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
 		if (am_ret != ApplicationManager::AM_SUCCESS) {
@@ -474,7 +502,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		logger->Info("AssingWorkingMode: binding attempt CPU id = <%d>", cpu_id);
 
 		// CPU binding
-		auto ref_num = DoCPUBinding(pawm, cpu_id);
+		auto ref_num = DoCPUBinding(next_pawm, cpu_id);
 		if (ref_num < 0) {
 			logger->Error("AssingWorkingMode: CPU binding to [%d] failed", cpu_id);
 			continue;
@@ -483,7 +511,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		// Assign 
 
 		// Schedule request
-		am_ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
+		am_ret = am.ScheduleRequest(papp, next_pawm, sched_status_view, ref_num);
 		if (am_ret != ApplicationManager::AM_SUCCESS) {
 			logger->Error("AssignWorkingMode: schedule request failed for [%d]",
 				papp->StrId());

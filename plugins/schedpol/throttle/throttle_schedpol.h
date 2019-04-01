@@ -131,6 +131,8 @@ private:
 
 	std::future<void> fut_tg;
 
+	std::map<AppPid_t, int8_t> app_awm_map;
+
 	std::set<BBQUE_RID_TYPE> pe_ids;
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	std::set<BBQUE_RID_TYPE> cpu_ids;
