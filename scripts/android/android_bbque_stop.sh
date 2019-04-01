@@ -4,6 +4,7 @@ then
 	echo "Stopping BarbequeRTRM gracefully..."
 	kill -SIGINT $(ps -a | grep 'barbeque' | awk '{print $2}') 
 else
+	killall barbeque
 	echo "BarbequeRTRM is not running"
 	echo "To start the BarbequeRTRM launch android_bbque_start.sh script"
 fi
