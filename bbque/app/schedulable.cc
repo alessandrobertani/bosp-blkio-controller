@@ -18,7 +18,7 @@
 #include "bbque/app/schedulable.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/resource_accounter.h"
-
+#include "bbque/utils/logging/logger.h"
 
 namespace bbque { namespace app {
 
@@ -126,6 +126,10 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 		return STARTING;
 
 	// Changing assigned resources: RECONF|MIGREC|MIGRATE
+	if (IsPowerChanged(schedule.awm, next_awm)){
+		return RECONF;
+	}
+
 	if ((schedule.awm->Id() != next_awm->Id()) &&
 			(schedule.awm->BindingSet(br::ResourceType::CPU) !=
 			           next_awm->BindingSet(br::ResourceType::CPU))) {
@@ -149,6 +153,32 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 	// NOTE: By default no reconfiguration is assumed to be required, thus we
 	// return the SYNC_STATE_COUNT which must be read as false values
 	return SYNC_NONE;
+}
+
+bool Schedulable::IsPowerChanged(AwmPtr_t cur_awm, AwmPtr_t next_awm) const{
+	// Get a logger
+	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger("Sc");
+	assert(logger);
+	res::ResourceAssignmentMapPtr_t current_binding_ptr = cur_awm->GetResourceBinding();
+	auto & current_binding = *(current_binding_ptr.get());
+
+	res::ResourceAssignmentMapPtr_t next_binding_ptr = next_awm->GetResourceBinding();
+	auto & next_binding = *(next_binding_ptr.get());
+
+	for (auto cur_bind: current_binding){
+		for (auto next_bind: next_binding){
+			// Verify the power change only for same resource paths
+			if (cur_bind.first == next_bind.first){
+				logger->Error("Current = %d | Next = %d", 
+					cur_bind.second->GetPowerSettings().perf_state,
+					next_bind.second->GetPowerSettings().perf_state);
+				return !(cur_bind.second->GetPowerSettings() == 
+						next_bind.second->GetPowerSettings());
+			}
+		}
+	}
+	logger->Error("Power not changed");
+	return false;
 }
 
 void Schedulable::SetNextAWM(AwmPtr_t awm) {

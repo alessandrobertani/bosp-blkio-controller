@@ -141,6 +141,12 @@ public:
 			perf_state(pstate) {
 		}
 
+		bool operator==(const PowerSettings & other) const noexcept {
+			return ((this->freq_governor.compare(other.freq_governor) == 0)
+					&& this->freq_khz == other.freq_khz
+					&& this->perf_state == other.perf_state);
+		}
+
 		std::string freq_governor;
 		uint32_t freq_khz;
 		int32_t perf_state;
