@@ -741,7 +741,7 @@ SynchronizationManager::SyncSchedule() {
 	// to decide if a synchronization should be run or not, e.g. based on
 	// the kind of applications in SYNC state or considering stability
 	// problems and synchronization overheads.
-	// The role of the SynchronizationManager it quite simple: it calls a
+	// The role of the SynchronizationManager is quite simple: it calls a
 	// policy provided method which should decide what applications must be
 	// synched. As soon as the queue of apps to sync returned is empty, the
 	// syncronization is considered terminated and will start again only at
