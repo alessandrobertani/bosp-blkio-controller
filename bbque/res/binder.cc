@@ -111,6 +111,9 @@ void ResourceBinder::Bind(
 			out_path->ToString().c_str(),
 			(*out_map)[out_path]->GetAmount(),
 			(*out_map)[out_path]->GetResourcesList().size());
+
+		// Forward power settings
+		out_assign->SetPowerSettings(ru_entry.second->GetPowerSettings());
 	}
 
 	for (auto & m: *out_map) {
