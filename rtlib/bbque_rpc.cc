@@ -1172,8 +1172,9 @@ RTLIB_ExitCode_t BbqueRPC::UpdateCPUBandwidthStats(pRegisteredEXC_t exc)
 
 void BbqueRPC::InitCPUBandwidthStats(pRegisteredEXC_t exc)
 {
-	exc->cpu_usage_info.current_time = times(&exc->cpu_usage_info.time_sample);
-	exc->cpu_usage_info.previous_time = exc->cpu_usage_info.current_time;
+	//exc->cpu_usage_info.current_time = times(&exc->cpu_usage_info.time_sample);
+	//exc->cpu_usage_info.previous_time = exc->cpu_usage_info.current_time;
+	exc->cpu_usage_info.previous_time = times(&exc->cpu_usage_info.time_sample);
 	exc->cpu_usage_info.previous_tms_stime =
 		exc->cpu_usage_info.time_sample.tms_stime;
 	exc->cpu_usage_info.previous_tms_utime =
@@ -2174,9 +2175,12 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 		if (bad_allocation) {
 			// Goal gap [%] = (real performance - ideal performance) / ideal performance
 			goal_gap = (current_cps - target_cps) / target_cps;
+			logger->Debug("UpdateAllocation: goal gap prev is %f", 100.0f * goal_gap);
+#ifndef CONFIG_TARGET_ANDROID
 			// Constraining gap to avoid harsh allocation changes:
 			// Never request less than half the budget
 			goal_gap = std::max(-0.33f, goal_gap);
+#endif
 		}
 
 		logger->Debug("Performance goal gap is %f", 100.0f * goal_gap);
@@ -2231,13 +2235,13 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 			100.0f * exc->cg_budget.cpu_budget_shared);
 		CGroupCommitAllocation(exc);
 	}
-
+#ifndef CONFIG_TARGET_ANDROID
 	// Check that I have enough samples for CPU stats computing
 	if (exc->cpu_usage_analyser.GetWindowSize() < 10) {
 		logger->Debug("Not enough samples to compute CPU usage stats.");
 		return RTLIB_OK;
 	}
-
+#endif
 	// Set Runtime Profile Forwarding flag if saturated ////////////////////
 	// Reset the flag
 	exc->runtime_profiling.rtp_forward = false;
@@ -2313,11 +2317,13 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
 	// Forward is inhibited for some ms after a RTP has been forwarded.
 	exc->waiting_sync_timeout_ms -= exc->cycletime_analyser_user.GetLastValue();
 
+#ifndef CONFIG_TARGET_ANDROID
 	if (exc->waiting_sync_timeout_ms > 0) {
 		logger->Info("RTP forward SKIPPED (waiting sync for %d more ms)",
 					  exc->waiting_sync_timeout_ms);
 		return RTLIB_OK;
 	}
+#endif
 
 	// Real CPU usage according to the statistical analysis
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
