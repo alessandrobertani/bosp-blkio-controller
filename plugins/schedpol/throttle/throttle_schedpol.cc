@@ -308,7 +308,6 @@ ThrottleSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
-
 SchedulerPolicyIF::ExitCode_t
 ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
@@ -447,12 +446,12 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 						// Computing the next perf state
 						next_ps = current_ps * (1 + boost);
 						next_ps--;
-						if(next_ps > ps_count)
-							next_ps = ps_count;
-						if(next_ps < 1)
-							next_ps = 1;
+						if(next_ps > ps_count - 1)
+							next_ps = ps_count - 1;
+						if(next_ps < 0)
+							next_ps = 0;
 						logger->Debug("AssingWorkingMode: Computed next PS for [%s] = [%d -> %d]",
-							prev_res_path->ToString().c_str(), current_ps-1, next_ps-1);
+							prev_res_path->ToString().c_str(), current_ps-1, next_ps);
 
 						// Select the available cpu type cluster
 						available_cpu_ids = TakeCPUsType(plm.IsHighPerformance(prev_res_path));
