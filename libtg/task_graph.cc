@@ -83,7 +83,7 @@ void TaskGraph::Print() const noexcept {
 		std::cerr << "Tasks: ";
 		for (auto & t_entry: tasks ) {
 			auto & t(t_entry.second);
-			std::cerr << t->Id() << "[unit=" << t->GetMappedProcessor() << "] ";
+			std::cerr << t->Id() << "[unit=" << t->GetAssignedProcessor() << "] ";
 		}
 		std::cerr << std::endl;
 		std::cerr << "Buffers: ";

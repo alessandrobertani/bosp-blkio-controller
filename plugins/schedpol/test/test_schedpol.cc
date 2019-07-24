@@ -353,7 +353,7 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 		auto & task(t_entry.second);
 		auto const & tr(papp->GetTaskRequirements(task->Id()));
 
-		task->SetMappedProcessor(unit_id);
+		task->SetAssignedProcessor(unit_id);
 		task->GetProfiling(throughput, c_time);
 		logger->Info("[%s] <T %d> throughput: %.2f/%.2f  ctime: %d/%d [ms]",
 			papp->StrId(), t_entry.first,

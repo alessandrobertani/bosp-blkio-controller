@@ -113,7 +113,7 @@ static void FindUnitsSets(
 		                        t.second->GetAssignedArch(),
 		                        t.second->GetThreadCount());
 
-		int mapped_processor = t.second->GetMappedProcessor();
+		int mapped_processor = t.second->GetAssignedProcessor();
 		if (mapped_processor >= 0) {
 			logger->Debug("FindUnitsSets: task=%d mapped_processor=%d",
 				t.second->Id(), mapped_processor);
@@ -427,7 +427,7 @@ static bool ReserveMemory(const TaskGraph &tg)
 		auto stack_size = task->Targets()[arch]->StackSize();
 
 		// find...
-		uint32_t tile_id = task->GetMappedProcessor();
+		uint32_t tile_id = task->GetAssignedProcessor();
 		logger->Debug("ReserveMemory: task=%d finding space for binary and stack",
 		              t.first);
 		int ret = hn_find_memory(
@@ -565,9 +565,9 @@ static int GetCoherentUnitSet(
 					set_id,
 					task_id,
 					unit_sets[set_id][tile_index],
-					task->GetMappedProcessor());
+					task->GetAssignedProcessor());
 
-				if (unit_sets[set_id][tile_index] == (uint32_t) task->GetMappedProcessor()) {
+				if (unit_sets[set_id][tile_index] == (uint32_t) task->GetAssignedProcessor()) {
 					mapping_matched = true;
 					++matching_count;
 					logger->Debug("GetCoherentUnitSet: [set=%d] task=%d mapping matched",
@@ -608,7 +608,7 @@ static int ReserveProcessingUnits(TaskGraph & tg)
 		auto task_id = task_entry.first;
 		auto & task  = task_entry.second;
 
-		units_set[i] = task->GetMappedProcessor();
+		units_set[i] = task->GetAssignedProcessor();
 		logger->Debug("ReserveProcessingUnits: task=%d to map onto unit=%d",
 			task_id, units_set[i]);
 		i++;
@@ -636,7 +636,7 @@ static bool ReleaseProcessingUnits(const TaskGraph & tg)
 	unsigned int i = 0;
 	for (auto task : tg.Tasks()) {
 		auto arch = task.second->GetAssignedArch();
-		units[i]  = task.second->GetMappedProcessor();
+		units[i]  = task.second->GetAssignedProcessor();
 		logger->Debug("ReleaseProcessingUnits: task %d released tile %u for kernel %s",
 		              task.second->Id(), units[i], GetStringFromArchType(arch));
 		i++;
@@ -875,7 +875,7 @@ MangoPlatformProxy::SetProcessorArchInfo(TaskGraph & tg) noexcept {
 	for (auto task_entry : tg.Tasks()) {
 		hn_tile_info_t tile_info;
 		int err = hn_get_tile_info(
-		    task_entry.second->GetMappedProcessor(),
+		    task_entry.second->GetAssignedProcessor(),
 		    &tile_info,
 		    cluster_id);
 		if (err != HN_SUCCEEDED) {
@@ -1408,7 +1408,7 @@ MangoPlatformProxy::MangoPartitionSkimmer::SetPartition(
 	// Set the assigned processor (for each task)
 	for ( auto task : tg.Tasks()) {
 		auto tile_id = partition.GetUnit(task.second);
-		task.second->SetMappedProcessor(tile_id);
+		task.second->SetAssignedProcessor(tile_id);
 		logger->Debug("SetPartition: task %d mapped to processor (tile) %d",
 		task.second->Id(), tile_id);
 	}

@@ -363,7 +363,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 				}
 
 				// assign the processor
-				task->SetMappedProcessor(mapping_info.id);
+				task->SetAssignedProcessor(mapping_info.id);
 				task_mapping_succeeded = true;
 
 				// TODO: frequency setting ...
@@ -493,7 +493,7 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 		logger->Debug("SelectWorkingMode: [%s] task=%d thread_count=%d",
 		              papp->StrId(), task.first, task.second->GetThreadCount());
 
-		int tile_id = task.second->GetMappedProcessor();
+		int tile_id = task.second->GetAssignedProcessor();
 		if (tile_id < 0) {
 			logger->Error("SelectWorkingMode: [%s] task=%d mapping missing",
 			              papp->StrId(), task.first);

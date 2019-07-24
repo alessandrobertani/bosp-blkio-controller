@@ -409,7 +409,7 @@ RTLIB_ExitCode_t ExecutionSynchronizer::onConfigure(int8_t awm_id) {
 			std::thread(&ExecutionSynchronizer::TaskProfiler, this, task_id));
 		tasks.start_queue.pop();
 		logger->Info("onConfigure: [Task %2d] started on processor %d", task_id,
-				task_graph->GetTask(task_id)->GetMappedProcessor());
+				task_graph->GetTask(task_id)->GetAssignedProcessor());
 	}
 
 	logger->Info("onConfigure: All tasks have been launched");

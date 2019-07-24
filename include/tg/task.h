@@ -105,11 +105,14 @@ public:
 	 * \brief Set the processor assigned to the task
 	 * \param p_id Identification number of the processing unit
 	 */
-	inline void SetMappedProcessor(int p_id) { processor_id = p_id; }
+	inline void SetAssignedProcessor(int p_id) { processor_id = p_id; }
 
 	/**
 	 * \brief Get the processor assigned to the task
-	 * \return The identification number of the processing unit
+	 * \return The identification number of the processing unit (-1 if not
+	 * assigned)
+	 */
+	inline int GetAssignedProcessor() const { return processor_id; }
 	 */
 	inline int GetMappedProcessor() const { return processor_id; }
 
