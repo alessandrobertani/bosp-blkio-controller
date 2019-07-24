@@ -49,7 +49,7 @@ public:
 	 * \param _name Task name (optional)
 	 */
 	Task(uint32_t _id, int _nthreads = 1, std::string const & _name = ""):
-		id(_id), thread_count(_nthreads), name(_name) { }
+		id(_id), name(_name), thread_count(_nthreads) { }
 
 	/**
 	 * \brief Task constructor
@@ -62,7 +62,7 @@ public:
 	Task(uint32_t _id,
 			std::list<uint32_t> & _inb, std::list<uint32_t> & _outb,
 			int _nthreads = 1, std::string const & _name = ""):
-		id(_id), thread_count(_nthreads), name(_name),
+		id(_id), name(_name), thread_count(_nthreads),
 		in_buffers(_inb), out_buffers(_outb) { }
 
 	/**
@@ -121,6 +121,22 @@ public:
 	 * \todo TODO
 	 */
 	inline int GetMappedCores() const { return thread_count; }
+	/**
+	 * \brief Set the amount of interconnect bandwidth reserved to this task
+	 * \param bw data structure including in/out bandwidth information
+	 */
+	inline void SetAssignedBandwidth(Bandwidth_t bw) {
+		assigned_bandwidth = bw;
+	}
+
+	/**
+	 * \brief Get the amount of interconnect bandwidth reserved to this task
+	 * \return data structure including in/out bandwidth information
+	 */
+	inline Bandwidth_t GetAssignedBandwidth() const {
+		return assigned_bandwidth;
+	}
+
 
 	/**
 	 * \brief Add a buffer (id) to which read from
@@ -216,28 +232,16 @@ public:
 		return assigned_arch;
 	}
 
-	/**
-	 * \brief Set the selected HW architecture for this task  by the policy
-	 * \param arch Type of HW architecture
-	 */
-	inline void SetAssignedBandwidth(Bandwidth_t bw) {
-		assigned_bandwidth = bw;
-	}
 
-	/**
-	 * \brief Get the selected HW architecture for this task  by the policy
-	 */
-	inline Bandwidth_t GetAssignedBandwidth() const {
-		return assigned_bandwidth;
-	}
 
 private:
 
 	uint32_t id = 0;
 
+	std::string name;
+
 	int thread_count = 0;
 
-	std::string name;
 
 	int processor_id = -1;
 
