@@ -579,18 +579,30 @@ MangASchedPol::SelectWorkingMode(
 	auto tg = papp->GetTaskGraph();
 	uint32_t cluster_id = selected_partition.GetClusterId();
 
-	for (auto task : tg->Tasks()) {
-		// Tile id
-		uint32_t tile_id = selected_partition.GetUnit(task.second);
+	for (auto & task_entry: tg->Tasks()) {
+		auto & task(task_entry.second);
 
-		// if thread count not specified, assign all the available cores
+		// System node id
+		auto sys_rsrc = ra.GetResources("sys");
+		task->SetAssignedSystem(sys_rsrc.front()->ID());
+		logger->Debug("SelectWorkingMode: task=%d system=%d",
+			task->Id(),
+			task->GetAssignedSystem());
+
+		// Tile id
+		uint32_t tile_id = selected_partition.GetUnit(task);
+
+		// Nr. cores: if thread count not specified, assign all the
+		// available cores
 		logger->Debug("SelectWorkingMode: task=%d thread_count=%d",
-			task.first, task.second->GetThreadCount());
-		if (task.second->GetThreadCount() <= 0) {
+			task->Id(),
+			task->GetThreadCount());
+		if (task->GetThreadCount() <= 0) {
 			nr_cores = pe_per_acc[cluster_id][tile_id];
 			logger->Debug("SelectWorkingMode: task=%d nr_cores=%d",
-			task.first, nr_cores);
+				task->Id(), nr_cores);
 		}
+		task->SetAssignedCoresCount(nr_cores);
 
 		// Resource request of processing resources (cluster binding
 		// already set in)
@@ -602,12 +614,12 @@ MangASchedPol::SelectWorkingMode(
 				100 * nr_cores,
 				br::ResourceAssignment::Policy::BALANCED);
 		logger->Debug("SelectWorkingMode: [%s] task=%d add accelerator requested...",
-		              papp->StrId(), task.first);
+		              papp->StrId(), task->Id());
 
 		// Resource binding: HN tile (accelerator)
 		logger->Debug("SelectWorkingMode: [%s] task=%d bind accelerator request to "
 		              "tile=%d",
-		              papp->StrId(), task.first, tile_id);
+		              papp->StrId(), task->Id(), tile_id);
 		ref_num = pawm->BindResource(
 		              br::ResourceType::ACCELERATOR,
 			      tile_id,
@@ -615,7 +627,7 @@ MangASchedPol::SelectWorkingMode(
 		              ref_num);
 
 		logger->Debug("SelectWorkingMode: [%s] task=%d -> cluster=<%d> tile=<%d>",
-		              papp->StrId(), task.first,
+		              papp->StrId(), task->Id(),
 		              cluster_id,
 		              tile_id);
 	}
