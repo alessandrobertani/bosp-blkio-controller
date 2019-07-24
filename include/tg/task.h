@@ -113,14 +113,19 @@ public:
 	 * assigned)
 	 */
 	inline int GetAssignedProcessor() const { return processor_id; }
-	 */
-	inline int GetMappedProcessor() const { return processor_id; }
 
 	/**
 	 * \brief Get the number of assigned cores
-	 * \todo TODO
+	 * \param The number of assigned cores
 	 */
-	inline int GetMappedCores() const { return thread_count; }
+	inline void SetAssignedCoresCount(int nr) { nr_cores = nr; }
+
+	/**
+	 * \brief Get the number of assigned cores
+	 * \return The number of assigned cores (0 if not assigned)
+	 */
+	inline int GetAssignedCoresCount() const { return nr_cores; }
+
 	/**
 	 * \brief Set the amount of interconnect bandwidth reserved to this task
 	 * \param bw data structure including in/out bandwidth information
@@ -245,6 +250,10 @@ private:
 
 	int processor_id = -1;
 
+
+	int nr_cores = 0;
+
+
 	ArchType assigned_arch;
 
 	Bandwidth_t assigned_bandwidth;
@@ -269,6 +278,7 @@ private:
 		ar & name;
 		ar & thread_count;
 		ar & processor_id;
+		ar & nr_cores;
 		ar & assigned_arch;
 		ar & in_buffers;
 		ar & out_buffers;
