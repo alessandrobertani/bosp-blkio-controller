@@ -347,12 +347,14 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 	uint16_t throughput;
 	uint32_t c_time;
 	int unit_id = 3; // An arbitrary device id number
+	int sys_id  = 0; // An arbitrary system id number
 
 	for (auto t_entry: task_graph->Tasks()) {
 		unit_id++;
 		auto & task(t_entry.second);
 		auto const & tr(papp->GetTaskRequirements(task->Id()));
 
+		task->SetAssignedSystem(sys_id);
 		task->SetAssignedProcessor(unit_id);
 		task->GetProfiling(throughput, c_time);
 		logger->Info("[%s] <T %d> throughput: %.2f/%.2f  ctime: %d/%d [ms]",
