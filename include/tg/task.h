@@ -100,6 +100,19 @@ public:
 	 */
 	inline void SetThreadCount(int nr_threads) { thread_count = nr_threads; }
 
+	/**
+	 * \brief Set the system node assigned to the task
+	 * \param p_id Identification number of the processing unit
+	 */
+	inline void SetAssignedSystem(int sys_id) { system_node_id = sys_id; }
+
+	/**
+	 * \brief Get the system node assigned to the task
+	 * \return The identification number of the system node (-1 if not
+	 * assigned)
+	 */
+	inline int GetAssignedSystem() const { return system_node_id; }
+
 
 	/**
 	 * \brief Set the processor assigned to the task
@@ -250,6 +263,7 @@ private:
 
 	int processor_id = -1;
 
+	int system_node_id = -1;
 
 	int nr_cores = 0;
 
@@ -257,6 +271,7 @@ private:
 	ArchType assigned_arch;
 
 	Bandwidth_t assigned_bandwidth;
+
 
 	std::list<uint32_t> in_buffers;
 
@@ -278,6 +293,7 @@ private:
 		ar & name;
 		ar & thread_count;
 		ar & processor_id;
+		ar & system_node_id;
 		ar & nr_cores;
 		ar & assigned_arch;
 		ar & in_buffers;
