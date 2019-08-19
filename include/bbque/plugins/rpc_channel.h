@@ -18,7 +18,8 @@
 #ifndef BBQUE_RPC_CHANNEL_H_
 #define BBQUE_RPC_CHANNEL_H_
 
-#include "bbque/rtlib/rpc_messages.h"
+#include "bbque/rtlib/rpc/rpc_messages.h"
+// TODO include protobuf generated header
 
 #include <memory>
 

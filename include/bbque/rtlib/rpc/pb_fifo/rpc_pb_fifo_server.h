@@ -15,14 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_RPC_FIFO_SERVER_H_
-#define BBQUE_RPC_FIFO_SERVER_H_
+#ifndef BBQUE_RPC_PB_FIFO_SERVER_H_
+#define BBQUE_RPC_PB_FIFO_SERVER_H_
 
 #include "bbque/rtlib.h"
 
 #include "bbque/config.h"
-#include "bbque/rtlib/rpc_messages.h"
+#include "bbque/rtlib/rpc/rpc_messages.h"
 #include "bbque/utils/utility.h"
+
+#include "rpc_messages.pb.h"
 
 #include <cstdio>
 #include <cstddef>
@@ -56,19 +58,23 @@ typedef struct rpc_fifo_header {
 	uint8_t rpc_msg_offset;
 	/** The type of the RPC message */
 	uint8_t rpc_msg_type;
+    /** The payload size */
+    int32_t pyl_size;
 } rpc_fifo_header_t;
+
+#define RPC_PB_FIFO_PAYLOAD_SIZE 1024
 
 typedef struct rpc_fifo_GENERIC {
 	/** The RPC fifo command header */
 	rpc_fifo_header_t hdr;
 	/** The RPC message payload */
-	rpc_msg_header_t pyl;
+	unsigned char pyl[RPC_PB_FIFO_PAYLOAD_SIZE];
 } rpc_fifo_GENERIC_t;
 
 #define RPC_FIFO_DEFINE_MESSAGE(RPC_TYPE)\
 typedef struct rpc_fifo_ ## RPC_TYPE {\
 	rpc_fifo_header_t hdr;\
-	rpc_msg_ ## RPC_TYPE ## _t pyl;\
+	unsigned char pyl[RPC_PB_FIFO_PAYLOAD_SIZE];\
 } rpc_fifo_ ## RPC_TYPE ## _t
 
 
@@ -94,7 +100,7 @@ typedef struct rpc_fifo_APP_PAIR {
 	/** The name of the application private fifo */
 	char rpc_fifo[BBQUE_FIFO_NAME_LENGTH];
 	/** The RPC message payload */
-	rpc_msg_APP_PAIR_t pyl;
+	unsigned char pyl[RPC_PB_FIFO_PAYLOAD_SIZE];
 } rpc_fifo_APP_PAIR_t;
 
 RPC_FIFO_DEFINE_MESSAGE(APP_EXIT);
@@ -159,5 +165,5 @@ fprintf(stderr, "\n");\
 
 } // namespace bbque
 
-#endif // BBQUE_RPC_FIFO_SERVER_H_
+#endif // BBQUE_RPC_PB_FIFO_SERVER_H_
 

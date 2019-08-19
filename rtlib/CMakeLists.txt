@@ -1,4 +1,3 @@
-
 ## Add package version definition
 configure_file (
 	"${PROJECT_SOURCE_DIR}/bbque/version.cc.in"
@@ -38,6 +37,19 @@ if (CONFIG_BBQUE_RPC_FIFO)
 	set (RTLIB_SRC rpc_fifo_client ${RTLIB_SRC})
 endif (CONFIG_BBQUE_RPC_FIFO)
 
+if (CONFIG_BBQUE_RPC_PB_FIFO)
+    find_package(Protobuf REQUIRED)
+    include_directories(${Protobuf_INCLUDE_DIR})
+    protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_messages.proto)
+    message(STATUS "PROTO_HDRS ${PROTO_HDRS}")
+    message(STATUS "PROTO_SRCS ${PROTO_SRCS}")
+    include_directories(${CMAKE_CURRENT_BINARY_DIR})
+    message(STATUS "BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}")
+    set (RTLIB_SRC rpc_pb_message_factory ${RTLIB_SRC})
+    set (RTLIB_SRC rpc_pb_fifo_client ${RTLIB_SRC})
+    set (RTLIB_SRC ${PROTO_SRCS} ${PROTO_HDRS} ${RTLIB_SRC})
+endif (CONFIG_BBQUE_RPC_PB_FIFO)
+
 # Monitoring library subdirectory
 if (CONFIG_BBQUE_RTLIB_MONITORS)
 	add_subdirectory(monitors)
@@ -47,10 +59,18 @@ endif (CONFIG_BBQUE_RTLIB_MONITORS)
 add_library(bbque_rtlib SHARED ${RTLIB_SRC})
 
 # Linking dependencies
-target_link_libraries(bbque_rtlib
-	bbque_utils
-	${Boost_LIBRARIES}
-)
+if (CONFIG_BBQUE_RPC_PB_FIFO)
+    target_link_libraries(bbque_rtlib
+	    bbque_utils
+	    ${Boost_LIBRARIES}
+        ${PROTOBUF_LIBRARY}
+    )
+else()
+    target_link_libraries(bbque_rtlib
+	    bbque_utils
+	    ${Boost_LIBRARIES}
+    )
+endif (CONFIG_BBQUE_RPC_PB_FIFO)
 
 # Add "Generic-Linux" specific flags
 if (CONFIG_TARGET_LINUX)
@@ -74,7 +94,9 @@ set_property (TARGET bbque_rtlib PROPERTY
 
 set_property (TARGET bbque_rtlib PROPERTY PUBLIC_HEADER
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h
-		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h)
+		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h
+        ${PROTO_HDRS}
+        ${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_pb_message_factory.h)
 
 # Install the RTLib
 install (TARGETS bbque_rtlib LIBRARY

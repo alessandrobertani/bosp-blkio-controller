@@ -19,8 +19,16 @@
 
 #include "bbque/config.h"
 #include "bbque/rtlib/bbque_rpc.h"
-#include "bbque/rtlib/rpc_fifo_client.h"
-#include "bbque/rtlib/rpc_unmanaged_client.h"
+
+#if defined(CONFIG_BBQUE_RPC_FIFO)
+#include "bbque/rtlib/rpc/fifo/rpc_fifo_client.h"
+#elif defined(CONFIG_BBQUE_RPC_PB_FIFO)
+#include "bbque/rtlib/rpc/pb_fifo/rpc_pb_fifo_client.h"
+#else
+#error "RPC CHANNEL NOT SPECIFIED"
+#endif
+
+#include "bbque/rtlib/rpc/rpc_unmanaged_client.h"
 #include "bbque/app/application.h"
 #include "bbque/utils/cgroups.h"
 #include "bbque/utils/logging/console_logger.h"
@@ -91,12 +99,16 @@ BbqueRPC * BbqueRPC::GetInstance()
 	}
 
 #endif
-#ifdef CONFIG_BBQUE_RPC_FIFO
+
+#if defined(CONFIG_BBQUE_RPC_FIFO)
 	logger->Debug("Using FIFO RPC channel");
 	instance = new BbqueRPC_FIFO_Client();
+#elif defined(CONFIG_BBQUE_RPC_PB_FIFO)
+	logger->Debug("Using PROTOBUF FIFO RPC channel");
+	instance = new BbqueRPC_PB_FIFO_Client();
 #else
-#error RPC Channel NOT defined
-#endif // CONFIG_BBQUE_RPC_FIFO
+#error "RPC CHANNEL NOT SPECIFIED"
+#endif
 
 	return instance;
 }

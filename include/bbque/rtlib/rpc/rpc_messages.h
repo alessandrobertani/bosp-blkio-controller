@@ -45,12 +45,12 @@ typedef enum rpc_msg_type {
 
 //--- Execution Context Originated Messages
 	RPC_EXC_SCHEDULE,
-	RPC_EXC_START,
+	RPC_EXC_START,     // 5
 	RPC_EXC_SET,
 	RPC_EXC_CLEAR,
 	RPC_EXC_STOP,
 	RPC_EXC_REGISTER,
-	RPC_EXC_RTNOTIFY,
+	RPC_EXC_RTNOTIFY,  // 10
 	RPC_EXC_UNREGISTER,
 
 	RPC_EXC_RESP, ///< Response to an EXC request
@@ -59,7 +59,7 @@ typedef enum rpc_msg_type {
 
 //--- Barbeque Originated Messages
 	RPC_BBQ_SYNCP_POSTCHANGE,
-	RPC_BBQ_SYNCP_DOCHANGE,
+	RPC_BBQ_SYNCP_DOCHANGE,    // 15
 	RPC_BBQ_SYNCP_SYNCCHANGE,
 	RPC_BBQ_SYNCP_PRECHANGE,
 
@@ -405,4 +405,3 @@ typedef struct rpc_msg_BBQ_GET_PROFILE_RESP {
 } // namespace bbque
 
 #endif // BBQUE_RPC_MESSAGES_H_
-

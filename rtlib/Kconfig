@@ -5,6 +5,11 @@ choice
     bool "FIFO based"
     ---help---
     Use the FIFO based RPC channel
+    
+  config BBQUE_RPC_PB_FIFO
+    bool "PROTOBUF and FIFO based"
+    ---help---
+    Use the PROTOBUF and FIFO based RPC channel
 endchoice
 
 

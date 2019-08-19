@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/rtlib/rpc_messages.h"
+#include "bbque/rtlib/rpc/rpc_messages.h"
 #include "bbque/utils/utility.h"
 
 namespace bbque { namespace rtlib {

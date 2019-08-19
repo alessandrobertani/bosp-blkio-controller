@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+//package bbque.rtlib;
+
+import "google/protobuf/timestamp.proto";
+
+
+enum BBQ_RESP_TYPE {
+    UNDEF = 0;
+    PB_BBQ_SYNCP_PRECHANGE_RESP = 1;
+    PB_BBQ_GET_PROFILE_RESP = 2;
+}
+
+
+message PB_rpc_msg_header {
+    uint32 typ = 1;
+    uint32 token = 2;
+    int32 app_pid = 3;
+    uint32 exc_id = 4;
+    BBQ_RESP_TYPE resp_type = 5;
+}
+
+
+message PB_rpc_msg {
+    PB_rpc_msg_header hdr = 1;
+    uint32 result = 2;
+    uint32 sync_latency = 3;
+    uint32 mjr_version = 4;
+    uint32 mnr_version = 5;
+    string app_name = 6;
+    string exc_name = 7;
+    string recipe = 8;
+    uint32 lang = 9;
+    repeated PB_constraint constraints = 10;
+    sint32 gap = 11;
+    sint32 cusage = 12;
+    sint32 ctime_ms = 13;
+    uint32 event = 14;
+    sint32 awm = 15;
+    uint64 cpu_ids = 16;
+    uint64 cpu_ids_isolation = 17;
+    uint64 mem_ids = 18;
+    uint32 nr_sys = 19;
+    google.protobuf.Timestamp timeout = 20;
+    bool is_ocl = 21;
+    uint32 exec_time = 22;
+    uint32 mem_time = 23;
+}
+
+
+message PB_constraint {
+    uint32 awm = 1;
+    uint32 operation = 2;
+    uint32 type = 3;
+};
+
+
+message PB_rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM {
+    /** The system number */
+    sint32 sys_id = 1;
+    /** Number of CPU (processors) assigned */
+    sint32 nr_cpus = 2;
+    /** Number of processing elements assigned */
+    sint32 nr_procs = 3;
+    /** Amount of processing quota assigned */
+    sint32 r_proc = 4;
+    /** Amount of memory assigned */
+    sint32 r_mem = 5;
+    /** CONFIG_BBQUE_OPENCL */
+    sint32 r_gpu = 6;
+    sint32 r_acc = 7;
+    /** Assigned OpenCL device */
+    sint32 dev = 8;
+}

@@ -20,7 +20,7 @@
 
 #include "bbque/rtlib.h"
 #include "bbque/config.h"
-#include "bbque/rtlib/rpc_messages.h"
+#include "bbque/rtlib/rpc/rpc_messages.h"
 #include "bbque/utils/stats.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"

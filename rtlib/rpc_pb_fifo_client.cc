@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/rtlib/rpc/fifo/rpc_fifo_client.h"
+#include "bbque/rtlib/rpc/pb_fifo/rpc_pb_fifo_client.h"
 
 #include "bbque/rtlib/rpc/rpc_messages.h"
+#include "bbque/rtlib/rpc/pb_fifo/rpc_pb_message_factory.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/logging/console_logger.h"
 #include "bbque/config.h"
@@ -37,13 +38,10 @@ namespace bu = bbque::utils;
 #define RPC_FIFO_SEND_SIZE(RPC_MSG, SIZE)\
 logger->Debug("Tx [" #RPC_MSG "] Request "\
 				"FIFO_HDR [sze: %hd, off: %hd, typ: %hd], "\
-				"RPC_HDR [typ: %d, pid: %d, eid: %" PRIu8 "], Bytes: %" PRIu32 "...\n",\
+				"Bytes: %" PRIu32 "...\n",\
 	rf_ ## RPC_MSG.hdr.fifo_msg_size,\
 	rf_ ## RPC_MSG.hdr.rpc_msg_offset,\
 	rf_ ## RPC_MSG.hdr.rpc_msg_type,\
-	rf_ ## RPC_MSG.pyl.hdr.typ,\
-	rf_ ## RPC_MSG.pyl.hdr.app_pid,\
-	rf_ ## RPC_MSG.pyl.hdr.exc_id,\
 	(uint32_t)SIZE\
 );\
 if(::write(server_fifo_fd, (void*)&rf_ ## RPC_MSG, SIZE) <= 0) {\
@@ -55,41 +53,42 @@ if(::write(server_fifo_fd, (void*)&rf_ ## RPC_MSG, SIZE) <= 0) {\
 #define RPC_FIFO_SEND(RPC_MSG)\
 	RPC_FIFO_SEND_SIZE(RPC_MSG, FIFO_PKT_SIZE(RPC_MSG))
 
+#undef RPC_PKT_SIZE
+#define RPC_PKT_SIZE RPC_PB_FIFO_PAYLOAD_SIZE
+
 namespace bbque
 {
 namespace rtlib
 {
 
-BbqueRPC_FIFO_Client::BbqueRPC_FIFO_Client() :
+BbqueRPC_PB_FIFO_Client::BbqueRPC_PB_FIFO_Client() :
 BbqueRPC()
 {
-	logger->Debug("Building FIFO RPC channel");
+	logger->Debug("Building PROTOBUF FIFO RPC channel");
 }
 
-BbqueRPC_FIFO_Client::~ BbqueRPC_FIFO_Client()
+BbqueRPC_PB_FIFO_Client::~ BbqueRPC_PB_FIFO_Client()
 {
 	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
-	logger->Debug("BbqueRPC_FIFO_Client dtor");
+	logger->Debug("BbqueRPC_PB_FIFO_Client dtor");
 	ChannelRelease();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelRelease()
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::ChannelRelease()
 {
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_APP_EXIT, RpcMsgToken(), channel_thread_pid, 0);
 	rpc_fifo_APP_EXIT_t rf_APP_EXIT = {
 		{
 			FIFO_PKT_SIZE(APP_EXIT),
 			FIFO_PYL_OFFSET(APP_EXIT),
-			RPC_APP_EXIT
+			RPC_APP_EXIT,
+            msg.ByteSize()
 		},
-		{
-			{
-				RPC_APP_EXIT,
-				RpcMsgToken(),
-				channel_thread_pid,
-				0
-			}
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+    msg.SerializeToArray(rf_APP_EXIT.pyl, msg.ByteSize());
 	int error;
 	logger->Debug("Releasing FIFO RPC channel");
 	// Sending RPC Request
@@ -117,25 +116,27 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelRelease()
 	return RTLIB_OK;
 }
 
-void BbqueRPC_FIFO_Client::RpcBbqResp()
+void BbqueRPC_PB_FIFO_Client::RpcBbqResp(unsigned int pyl_size)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
 	size_t bytes;
 	// Read response RPC header
-	bytes = ::read(client_fifo_fd, (void *) &chResp, RPC_PKT_SIZE(resp));
+    uint8_t buffer[RPC_PKT_SIZE] = {0};
+	bytes = ::read(client_fifo_fd, buffer, RPC_PKT_SIZE);
+    chResp.ParseFromArray(buffer, pyl_size);
 
 	if (bytes <= 0) {
 		logger->Error("FAILED read from app fifo [%s] (Error %d: %s)",
 			app_fifo_path.c_str(), errno, strerror(errno));
-		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+        chResp.set_result(RTLIB_BBQUE_CHANNEL_READ_FAILED);
 	}
 
 	// Notify about reception of a new response
-	logger->Debug("Notify response [%d]", chResp.result);
+	logger->Debug("Notify response [%d]", chResp.result());
 	chResp_cv.notify_one();
 }
 
-void BbqueRPC_FIFO_Client::ChannelFetch()
+void BbqueRPC_PB_FIFO_Client::ChannelFetch()
 {
 	rpc_fifo_header_t hdr;
 	size_t bytes;
@@ -153,8 +154,8 @@ void BbqueRPC_FIFO_Client::ChannelFetch()
 		return;
 	}
 
-	logger->Debug("Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd]",
-		hdr.fifo_msg_size, hdr.rpc_msg_offset, hdr.rpc_msg_type);
+	logger->Debug("Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd, pyl_size: %u]",
+		hdr.fifo_msg_size, hdr.rpc_msg_offset, hdr.rpc_msg_type, hdr.pyl_size);
 
 	// Dispatching the received message
 	switch (hdr.rpc_msg_type) {
@@ -165,13 +166,13 @@ void BbqueRPC_FIFO_Client::ChannelFetch()
 		//--- Application Originated Messages
 	case RPC_APP_RESP:
 		logger->Debug("APP_RESP");
-		RpcBbqResp();
+		RpcBbqResp(hdr.pyl_size);
 		break;
 
 		//--- Execution Context Originated Messages
 	case RPC_EXC_RESP:
 		logger->Debug("EXC_RESP");
-		RpcBbqResp();
+		RpcBbqResp(hdr.pyl_size);
 		break;
 
 		//--- Barbeque Originated Messages
@@ -181,27 +182,27 @@ void BbqueRPC_FIFO_Client::ChannelFetch()
 
 	case RPC_BBQ_GET_PROFILE:
 		logger->Debug("BBQ_STOP_EXECUTION");
-		RpcBbqGetRuntimeProfile();
+		RpcBbqGetRuntimeProfile(hdr.pyl_size);
 		break;
 
 	case RPC_BBQ_SYNCP_PRECHANGE:
 		logger->Debug("BBQ_SYNCP_PRECHANGE");
-		RpcBbqSyncpPreChange();
+		RpcBbqSyncpPreChange(hdr.pyl_size);
 		break;
 
 	case RPC_BBQ_SYNCP_SYNCCHANGE:
 		logger->Debug("BBQ_SYNCP_SYNCCHANGE");
-		RpcBbqSyncpSyncChange();
+		RpcBbqSyncpSyncChange(hdr.pyl_size);
 		break;
 
 	case RPC_BBQ_SYNCP_DOCHANGE:
 		logger->Debug("BBQ_SYNCP_DOCHANGE");
-		RpcBbqSyncpDoChange();
+		RpcBbqSyncpDoChange(hdr.pyl_size);
 		break;
 
 	case RPC_BBQ_SYNCP_POSTCHANGE:
 		logger->Debug("BBQ_SYNCP_POSTCHANGE");
-		RpcBbqSyncpPostChange();
+		RpcBbqSyncpPostChange(hdr.pyl_size);
 		break;
 
 	default:
@@ -211,7 +212,7 @@ void BbqueRPC_FIFO_Client::ChannelFetch()
 	}
 }
 
-void BbqueRPC_FIFO_Client::ChannelTrd(const char * name)
+void BbqueRPC_PB_FIFO_Client::ChannelTrd(const char * name)
 {
 	std::unique_lock<std::mutex> trdStatus_ul(trdStatus_mtx);
 
@@ -238,47 +239,44 @@ void BbqueRPC_FIFO_Client::ChannelTrd(const char * name)
 }
 
 #define WAIT_RPC_RESP \
-	chResp.result = RTLIB_BBQUE_CHANNEL_TIMEOUT; \
+    chResp.set_result(RTLIB_BBQUE_CHANNEL_TIMEOUT); \
 	chResp_cv.wait_for(chCommand_ul, \
 			std::chrono::milliseconds(BBQUE_RPC_TIMEOUT)); \
-	if (chResp.result == RTLIB_BBQUE_CHANNEL_TIMEOUT) {\
+	if (chResp.result() == RTLIB_BBQUE_CHANNEL_TIMEOUT) {\
 		logger->Warn("RTLIB response TIMEOUT"); \
 	}
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char * name)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::ChannelPair(const char * name)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_APP_PAIR, RpcMsgToken(), channel_thread_pid, 0);
+    msg.set_mjr_version(BBQUE_RPC_FIFO_MAJOR_VERSION);
+    msg.set_mnr_version(BBQUE_RPC_FIFO_MINOR_VERSION);
+    msg.set_app_name(name);
 	rpc_fifo_APP_PAIR_t rf_APP_PAIR = {
 		{
 			FIFO_PKT_SIZE(APP_PAIR),
 			FIFO_PYL_OFFSET(APP_PAIR),
-			RPC_APP_PAIR
+			RPC_APP_PAIR,
+            msg.ByteSize()
 		},
-		"\0",
-		{
-			{
-				RPC_APP_PAIR,
-				RpcMsgToken(),
-				channel_thread_pid,
-				0
-			},
-			BBQUE_RPC_FIFO_MAJOR_VERSION,
-			BBQUE_RPC_FIFO_MINOR_VERSION,
-			"\0"
-		}
+        "\0",
+        {0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+    msg.SerializeToArray(rf_APP_PAIR.pyl, msg.ByteSize());
 	::strncpy(rf_APP_PAIR.rpc_fifo, app_fifo_filename, BBQUE_FIFO_NAME_LENGTH);
-	::strncpy(rf_APP_PAIR.pyl.app_name, name, RTLIB_APP_NAME_LENGTH);
 	logger->Debug("Pairing FIFO channels [app: %s, pid: %d]", name,
 		channel_thread_pid);
 	// Sending RPC Request
 	RPC_FIFO_SEND(APP_PAIR);
 	logger->Debug("Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup()
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::ChannelSetup()
 {
 	int error;
 	logger->Debug("Initializing channel");
@@ -330,7 +328,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup()
 
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Init(
 					     const char * name)
 {
 	std::unique_lock<std::mutex> trdStatus_ul(trdStatus_mtx);
@@ -338,7 +336,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(
 	// Starting the communication thread
 	done = false;
 	running = false;
-	ChTrd = std::thread(&BbqueRPC_FIFO_Client::ChannelTrd, this, name);
+	ChTrd = std::thread(&BbqueRPC_PB_FIFO_Client::ChannelTrd, this, name);
 	trdStatus_cv.wait(trdStatus_ul);
 	// Setting up application FIFO filename
 	snprintf(app_fifo_filename, BBQUE_FIFO_NAME_LENGTH,
@@ -365,234 +363,207 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Register(pRegisteredEXC_t prec)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Register(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_REGISTER, RpcMsgToken(), channel_thread_pid, prec->id);
+    msg.set_exc_name(prec->name);
+    msg.set_recipe(prec->parameters.recipe);
+    msg.set_lang(prec->parameters.language);
 	rpc_fifo_EXC_REGISTER_t rf_EXC_REGISTER = {
 		{
 			FIFO_PKT_SIZE(EXC_REGISTER),
 			FIFO_PYL_OFFSET(EXC_REGISTER),
-			RPC_EXC_REGISTER
+			RPC_EXC_REGISTER,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_EXC_REGISTER,
-				RpcMsgToken(),
-				channel_thread_pid,
-				prec->id
-			},
-			"\0",
-			"\0",
-			RTLIB_LANG_UNDEF
-		}
+		{0}
 	};
-	// EXC and Recipe name: we need a null-termination character to
-	// properly separate two char[] fields
-	memset(rf_EXC_REGISTER.pyl.exc_name, '\0', RTLIB_EXC_NAME_LENGTH);
-	strncpy(rf_EXC_REGISTER.pyl.exc_name, prec->name.c_str(),
-		RTLIB_EXC_NAME_LENGTH-1);
-	memset(rf_EXC_REGISTER.pyl.recipe, '\0', RTLIB_EXC_NAME_LENGTH);
-	strncpy(rf_EXC_REGISTER.pyl.recipe, prec->parameters.recipe,
-		RTLIB_EXC_NAME_LENGTH-1);
-	rf_EXC_REGISTER.pyl.lang = prec->parameters.language;
+    logger->Debug("msg_size = %d", msg.ByteSize());
+    msg.SerializeToArray(rf_EXC_REGISTER.pyl, msg.ByteSize());
 	logger->Debug("Registering EXC [%d:%d:%s:%d]...",
-		rf_EXC_REGISTER.pyl.hdr.app_pid,
-		rf_EXC_REGISTER.pyl.hdr.exc_id,
-		rf_EXC_REGISTER.pyl.exc_name,
-		rf_EXC_REGISTER.pyl.lang);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id(),
+        msg.exc_name(),
+        msg.lang());
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_REGISTER);
 	logger->Debug("Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Unregister(pRegisteredEXC_t prec)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Unregister(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_UNREGISTER, RpcMsgToken(), channel_thread_pid, prec->id);
+    msg.set_exc_name(prec->name);
 	rpc_fifo_EXC_UNREGISTER_t rf_EXC_UNREGISTER = {
 		{
 			FIFO_PKT_SIZE(EXC_UNREGISTER),
 			FIFO_PYL_OFFSET(EXC_UNREGISTER),
-			RPC_EXC_UNREGISTER
+			RPC_EXC_UNREGISTER,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_EXC_UNREGISTER,
-				RpcMsgToken(),
-				channel_thread_pid,
-				prec->id
-			},
-			"\0"
-		}
+        {0}
 	};
-	::strncpy(rf_EXC_UNREGISTER.pyl.exc_name, prec->name.c_str(),
-		RTLIB_EXC_NAME_LENGTH);
+	logger->Debug("msg_size = %d", msg.ByteSize());
+    msg.SerializeToArray(rf_EXC_UNREGISTER.pyl, msg.ByteSize());
 	logger->Debug("Unregistering EXC [%d:%d:%s]...",
-		rf_EXC_UNREGISTER.pyl.hdr.app_pid,
-		rf_EXC_UNREGISTER.pyl.hdr.exc_id,
-		rf_EXC_UNREGISTER.pyl.exc_name);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id(),
+        msg.exc_name());
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_UNREGISTER);
 	logger->Debug("Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Enable(pRegisteredEXC_t prec)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Enable(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_START, RpcMsgToken(), channel_thread_pid, prec->id);
 	rpc_fifo_EXC_START_t rf_EXC_START = {
 		{
 			FIFO_PKT_SIZE(EXC_START),
 			FIFO_PYL_OFFSET(EXC_START),
-			RPC_EXC_START
+			RPC_EXC_START,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_EXC_START,
-				RpcMsgToken(),
-				channel_thread_pid,
-				prec->id
-			},
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+    msg.SerializeToArray(rf_EXC_START.pyl, msg.ByteSize());
 	logger->Debug("Enabling EXC [%d:%d]...",
-		rf_EXC_START.pyl.hdr.app_pid,
-		rf_EXC_START.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_START);
 	logger->Debug("Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Disable(pRegisteredEXC_t prec)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Disable(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_STOP, RpcMsgToken(), channel_thread_pid, prec->id);
 	rpc_fifo_EXC_STOP_t rf_EXC_STOP = {
 		{
 			FIFO_PKT_SIZE(EXC_STOP),
 			FIFO_PYL_OFFSET(EXC_STOP),
-			RPC_EXC_STOP
+			RPC_EXC_STOP,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_EXC_STOP,
-				RpcMsgToken(),
-				channel_thread_pid,
-				prec->id
-			},
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_EXC_STOP.pyl, msg.ByteSize());
 	logger->Debug("Disabling EXC [%d:%d]...",
-		rf_EXC_STOP.pyl.hdr.app_pid,
-		rf_EXC_STOP.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_STOP);
 	logger->Debug("Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Set(pRegisteredEXC_t prec,
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Set(pRegisteredEXC_t prec,
 					    RTLIB_Constraint_t * constraints, uint8_t count)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-	// Here the message is dynamically allocate to make room for a variable
-	// number of constraints...
-	rpc_fifo_EXC_SET_t * prf_EXC_SET;
-	size_t msg_size;
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_SET, RpcMsgToken(), channel_thread_pid, prec->id);
 	// At least 1 constraint it is expected
 	assert(count);
-	// Allocate the buffer to hold all the contraints
-	msg_size = FIFO_PKT_SIZE(EXC_SET) +
-		((count - 1) * sizeof (RTLIB_Constraint_t));
-	prf_EXC_SET = (rpc_fifo_EXC_SET_t *)::malloc(msg_size);
-	// Init FIFO header
-	prf_EXC_SET->hdr.fifo_msg_size = msg_size;
-	prf_EXC_SET->hdr.rpc_msg_offset = FIFO_PYL_OFFSET(EXC_SET);
-	prf_EXC_SET->hdr.rpc_msg_type = RPC_EXC_SET;
-	// Init RPC header
-	prf_EXC_SET->pyl.hdr.typ = RPC_EXC_SET;
-	prf_EXC_SET->pyl.hdr.token = RpcMsgToken();
-	prf_EXC_SET->pyl.hdr.app_pid = channel_thread_pid;
-	prf_EXC_SET->pyl.hdr.exc_id = prec->id;
-	logger->Debug("_Set: Copying [%d] constraints using buffer @%p "
-		"of [%" PRIu64 "] Bytes...",
-		count, (void *) & (prf_EXC_SET->pyl.constraints),
-		(count) * sizeof (RTLIB_Constraint_t));
-	// Init RPC header
-	prf_EXC_SET->pyl.count = count;
-	::memcpy(&(prf_EXC_SET->pyl.constraints), constraints,
-		(count) * sizeof (RTLIB_Constraint_t));
+    RTLIB_Constraint_t *c;
+    // Copy constraints
+    for (uint16_t i = 0; i < count; i++) {
+        c = constraints + i;
+        PB_constraint *pb_c = msg.add_constraints();
+        pb_c->set_awm(c->awm);
+        pb_c->set_operation(c->operation);
+        pb_c->set_type(c->type);
+    }
+    assert(count == msg.constraints_size());
+	rpc_fifo_EXC_SET_t rf_EXC_SET = {
+        {
+            FIFO_PKT_SIZE(EXC_SET),
+            FIFO_PYL_OFFSET(EXC_SET),
+            RPC_EXC_SET,
+			msg.ByteSize()
+        },
+        {0}
+    };
+    logger->Debug("msg_size = %d", msg.ByteSize());
+    msg.SerializeToArray(rf_EXC_SET.pyl, msg.ByteSize());
 	// Sending RPC Request
-	volatile rpc_fifo_EXC_SET_t & rf_EXC_SET = (*prf_EXC_SET);
 	logger->Debug("_Set: Set [%d] constraints on EXC [%d:%d]...",
 		count,
-		rf_EXC_SET.pyl.hdr.app_pid,
-		rf_EXC_SET.pyl.hdr.exc_id);
-	RPC_FIFO_SEND_SIZE(EXC_SET, msg_size);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
+	RPC_FIFO_SEND(EXC_SET);
 	// Clean-up the FIFO message
-	::free(prf_EXC_SET);
 	logger->Debug("_Set: Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Clear(pRegisteredEXC_t prec)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Clear(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_CLEAR, RpcMsgToken(), channel_thread_pid, prec->id);
 	rpc_fifo_EXC_CLEAR_t rf_EXC_CLEAR = {
 		{
 			FIFO_PKT_SIZE(EXC_CLEAR),
 			FIFO_PYL_OFFSET(EXC_CLEAR),
-			RPC_EXC_CLEAR
+			RPC_EXC_CLEAR,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_EXC_CLEAR,
-				RpcMsgToken(),
-				channel_thread_pid,
-				prec->id
-			},
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_EXC_CLEAR.pyl, msg.ByteSize());
 	logger->Debug("_Clear: Remove constraints for EXC [%d:%d]...",
-		rf_EXC_CLEAR.pyl.hdr.app_pid,
-		rf_EXC_CLEAR.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_CLEAR);
 	logger->Debug("_Clear: Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int gap,
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int gap,
 						 int cpu_usage, int cycle_time_ms)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_RTNOTIFY, RpcMsgToken(), channel_thread_pid, prec->id);
+    msg.set_gap(gap);
+    msg.set_cusage(cpu_usage);
+    msg.set_ctime_ms(cycle_time_ms);
 	rpc_fifo_EXC_RTNOTIFY_t rf_EXC_RTNOTIFY = {
 		{
 			FIFO_PKT_SIZE(EXC_RTNOTIFY),
 			FIFO_PYL_OFFSET(EXC_RTNOTIFY),
-			RPC_EXC_RTNOTIFY
+			RPC_EXC_RTNOTIFY,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_EXC_RTNOTIFY,
-				RpcMsgToken(),
-				channel_thread_pid,
-				prec->id
-			},
-			gap,
-			cpu_usage,
-			cycle_time_ms,
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_EXC_RTNOTIFY.pyl, msg.ByteSize());
 	logger->Debug("_RTNotify: Set Goal-Gap for EXC [%d:%d]...",
-		rf_EXC_RTNOTIFY.pyl.hdr.app_pid,
-		rf_EXC_RTNOTIFY.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 
 	// Sending RPC Request
 	if (! isSyncMode(prec))
@@ -604,35 +575,33 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int gap,
 	//return (RTLIB_ExitCode_t)chResp.result;
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_ScheduleRequest(pRegisteredEXC_t prec)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_ScheduleRequest(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_EXC_SCHEDULE, RpcMsgToken(), channel_thread_pid, prec->id);
 	rpc_fifo_EXC_SCHEDULE_t rf_EXC_SCHEDULE = {
 		{
 			FIFO_PKT_SIZE(EXC_SCHEDULE),
 			FIFO_PYL_OFFSET(EXC_SCHEDULE),
-			RPC_EXC_SCHEDULE
+			RPC_EXC_SCHEDULE,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_EXC_SCHEDULE,
-				RpcMsgToken(),
-				channel_thread_pid,
-				prec->id
-			},
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_EXC_SCHEDULE.pyl, msg.ByteSize());
 	logger->Debug("_ScheduleRequest: Schedule request for EXC [%d:%d]...",
-		rf_EXC_SCHEDULE.pyl.hdr.app_pid,
-		rf_EXC_SCHEDULE.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_SCHEDULE);
 	logger->Debug("_ScheduleRequest: Waiting BBQUE response...");
 	WAIT_RPC_RESP;
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-void BbqueRPC_FIFO_Client::_Exit()
+void BbqueRPC_PB_FIFO_Client::_Exit()
 {
 	ChannelRelease();
 }
@@ -641,54 +610,55 @@ void BbqueRPC_FIFO_Client::_Exit()
  * Synchronization Protocol Messages - PreChange
  ******************************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPreChangeResp(
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_SyncpPreChangeResp(
 							   rpc_msg_token_t token, pRegisteredEXC_t prec, uint32_t syncLatency)
 {
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
+    msg.mutable_hdr()->set_resp_type(PB_BBQ_SYNCP_PRECHANGE_RESP);
+    msg.set_sync_latency(syncLatency);
+    msg.set_result(RTLIB_OK);
 	rpc_fifo_BBQ_SYNCP_PRECHANGE_RESP_t rf_BBQ_SYNCP_PRECHANGE_RESP = {
 		{
 			FIFO_PKT_SIZE(BBQ_SYNCP_PRECHANGE_RESP),
 			FIFO_PYL_OFFSET(BBQ_SYNCP_PRECHANGE_RESP),
-			RPC_BBQ_RESP
+			RPC_BBQ_RESP,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_BBQ_RESP,
-				token,
-				channel_thread_pid,
-				prec->id
-			},
-			syncLatency,
-			RTLIB_OK
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_BBQ_SYNCP_PRECHANGE_RESP.pyl, msg.ByteSize());
 	logger->Debug("PreChange response EXC [%d:%d] "
 		"latency [%d]...",
-		rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.hdr.app_pid,
-		rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.hdr.exc_id,
-		rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.syncLatency);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id(),
+        msg.sync_latency());
 	// Sending RPC Request
 	RPC_FIFO_SEND(BBQ_SYNCP_PRECHANGE_RESP);
 	return RTLIB_OK;
 }
 
-void BbqueRPC_FIFO_Client::RpcBbqSyncpPreChange()
+void BbqueRPC_PB_FIFO_Client::RpcBbqSyncpPreChange(unsigned int pyl_size)
 {
-	rpc_msg_BBQ_SYNCP_PRECHANGE_t msg;
+    PB_rpc_msg msg;
 	size_t bytes;
 	// Read response RPC header
-	bytes = ::read(client_fifo_fd, (void *) &msg,
-		RPC_PKT_SIZE(BBQ_SYNCP_PRECHANGE));
+    uint8_t buffer[RPC_PKT_SIZE] = {0};
+	bytes = ::read(client_fifo_fd, buffer, RPC_PKT_SIZE);
+    msg.ParseFromArray(buffer, pyl_size);
+
 
 	if (bytes <= 0) {
 		logger->Error("RpcBbqSyncpPreChange: FAILED read from [%s] (Error %d: %s)",
 			app_fifo_path.c_str(), errno, strerror(errno));
-		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+        chResp.set_result(RTLIB_BBQUE_CHANNEL_READ_FAILED);
 	}
 
 	std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> messages;
 
-	for (uint_fast16_t i = 0; i < msg.nr_sys; i ++) {
-		rpc_fifo_header_t hdr;
+	for (uint16_t i = 0; i < msg.nr_sys(); i++) {
+        rpc_fifo_header_t hdr;
 		size_t bytes;
 		// Read FIFO header
 		bytes = ::read(client_fifo_fd, (void *) &hdr, FIFO_PKT_SIZE(header));
@@ -701,200 +671,260 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpPreChange()
 		}
 
 		// Read the message
-		rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t msg_sys;
-		bytes = ::read(client_fifo_fd, (void *) &msg_sys,
-			RPC_PKT_SIZE(BBQ_SYNCP_PRECHANGE_SYSTEM));
+        void *pyl_buffer = ::malloc(RPC_PKT_SIZE);
+		bytes = ::read(client_fifo_fd, pyl_buffer, RPC_PKT_SIZE);
 
 		if (bytes <= 0) {
 			logger->Error("RpcBbqSyncpPreChange: FAILED read from [%s] (Error %d: %s)",
 				app_fifo_path.c_str(), errno, strerror(errno));
-			chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+            chResp.set_result(RTLIB_BBQUE_CHANNEL_READ_FAILED);
 		}
 
-		messages.push_back(msg_sys);
+        PB_rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM sys;
+        sys.ParseFromArray(pyl_buffer, hdr.pyl_size);
+        rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t struct_sys = {
+            (int16_t)sys.sys_id(),
+            (int16_t)sys.nr_cpus(),
+            (int16_t)sys.nr_procs(),
+            sys.r_proc(),
+            sys.r_mem(),
+    #ifdef CONFIG_BBQUE_OPENCL
+            sys.r_gpu(),sys
+            sys.r_acc(),
+            (int8_t)sys.>dev()
+    #endif // CONFIG_BBQUE_OPENCL
+        };
+		messages.push_back(struct_sys);
 	}
 
+    assert(messages.size() == msg.nr_sys());
+
 	// Notify the Pre-Change
-	SyncP_PreChangeNotify(msg, messages);
+    rpc_msg_BBQ_SYNCP_PRECHANGE_t struct_msg = {
+        {
+            RPC_STRUCT_HDR(msg)
+        },
+        (uint8_t)msg.event(),
+        (int8_t)msg.awm(),
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+        msg.cpu_ids(),
+        msg.cpu_ids_isolation(),
+        msg.mem_ids(),
+#endif // CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+        (uint16_t)msg.nr_sys()
+    };
+	SyncP_PreChangeNotify(struct_msg, messages);
 }
 
 /******************************************************************************
  * Synchronization Protocol Messages - SyncChange
  ******************************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpSyncChangeResp(
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_SyncpSyncChangeResp(
 							    rpc_msg_token_t token, pRegisteredEXC_t prec, RTLIB_ExitCode_t sync)
 {
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
+    msg.set_result(sync);
 	rpc_fifo_BBQ_SYNCP_SYNCCHANGE_RESP_t rf_BBQ_SYNCP_SYNCCHANGE_RESP = {
 		{
 			FIFO_PKT_SIZE(BBQ_SYNCP_SYNCCHANGE_RESP),
 			FIFO_PYL_OFFSET(BBQ_SYNCP_SYNCCHANGE_RESP),
-			RPC_BBQ_RESP
+			RPC_BBQ_RESP,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_BBQ_RESP,
-				token,
-				channel_thread_pid,
-				prec->id
-			},
-			(uint8_t) sync
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_BBQ_SYNCP_SYNCCHANGE_RESP.pyl, msg.ByteSize());
 	// Check that the ExitCode can be represented by the response message
 	assert(sync < 256);
 	logger->Debug("_SyncpSyncChangeResp: response EXC [%d:%d]...",
-		rf_BBQ_SYNCP_SYNCCHANGE_RESP.pyl.hdr.app_pid,
-		rf_BBQ_SYNCP_SYNCCHANGE_RESP.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 	// Sending RPC Request
 	RPC_FIFO_SEND(BBQ_SYNCP_SYNCCHANGE_RESP);
 	return RTLIB_OK;
 }
 
-void BbqueRPC_FIFO_Client::RpcBbqSyncpSyncChange()
+void BbqueRPC_PB_FIFO_Client::RpcBbqSyncpSyncChange(unsigned int pyl_size)
 {
-	rpc_msg_BBQ_SYNCP_SYNCCHANGE_t msg;
+	PB_rpc_msg msg;
 	size_t bytes;
 	// Read response RPC header
-	bytes = ::read(client_fifo_fd, (void *) &msg,
-		RPC_PKT_SIZE(BBQ_SYNCP_SYNCCHANGE));
+    uint8_t buffer[RPC_PKT_SIZE] = {0};
+	bytes = ::read(client_fifo_fd, buffer, RPC_PKT_SIZE);
+    msg.ParseFromArray(buffer, pyl_size);
 
 	if (bytes <= 0) {
 		logger->Error("RpcBbqSyncpSyncChange: FAILED read from [%s] (Error %d: %s)",
 			app_fifo_path.c_str(), errno, strerror(errno));
-		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+        chResp.set_result(RTLIB_BBQUE_CHANNEL_READ_FAILED);
 	}
 
 	// Notify the Sync-Change
-	SyncP_SyncChangeNotify(msg);
+    rpc_msg_BBQ_SYNCP_SYNCCHANGE_t struct_msg = {
+        {
+            (uint8_t)msg.hdr().typ(),
+            msg.hdr().token(),
+            msg.hdr().app_pid(),
+            (uint8_t)msg.hdr().exc_id()
+        }
+    };
+	SyncP_SyncChangeNotify(struct_msg);
 }
 
 /******************************************************************************
  * Synchronization Protocol Messages - SyncChange
  ******************************************************************************/
 
-void BbqueRPC_FIFO_Client::RpcBbqSyncpDoChange()
+void BbqueRPC_PB_FIFO_Client::RpcBbqSyncpDoChange(unsigned int pyl_size)
 {
-	rpc_msg_BBQ_SYNCP_DOCHANGE_t msg;
+	PB_rpc_msg msg;
 	size_t bytes;
 	// Read response RPC header
-	bytes = ::read(client_fifo_fd, (void *) &msg,
-		RPC_PKT_SIZE(BBQ_SYNCP_DOCHANGE));
+    uint8_t buffer[RPC_PKT_SIZE] = {0};
+	bytes = ::read(client_fifo_fd, buffer, RPC_PKT_SIZE);
+    msg.ParseFromArray(buffer, pyl_size);
 
 	if (bytes <= 0) {
 		logger->Error("RpcBbqSyncpDoChange: FAILED read from [%s] (Error %d: %s)",
 			app_fifo_path.c_str(), errno, strerror(errno));
-		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+        chResp.set_result(RTLIB_BBQUE_CHANNEL_READ_FAILED);
 	}
 
 	// Notify the Sync-Change
-	SyncP_DoChangeNotify(msg);
+    rpc_msg_BBQ_SYNCP_DOCHANGE_t struct_msg = {
+        {
+            (uint8_t)msg.hdr().typ(),
+            msg.hdr().token(),
+            msg.hdr().app_pid(),
+            (uint8_t)msg.hdr().exc_id()
+        }
+    };
+	SyncP_DoChangeNotify(struct_msg);
 }
 
 /******************************************************************************
  * Synchronization Protocol Messages - PostChange
  ******************************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPostChangeResp(
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_SyncpPostChangeResp(
 							    rpc_msg_token_t token, pRegisteredEXC_t prec,
 							    RTLIB_ExitCode_t result)
 {
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
+    msg.set_result(result);
 	rpc_fifo_BBQ_SYNCP_POSTCHANGE_RESP_t rf_BBQ_SYNCP_POSTCHANGE_RESP = {
 		{
 			FIFO_PKT_SIZE(BBQ_SYNCP_POSTCHANGE_RESP),
 			FIFO_PYL_OFFSET(BBQ_SYNCP_POSTCHANGE_RESP),
-			RPC_BBQ_RESP
+			RPC_BBQ_RESP,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_BBQ_RESP,
-				token,
-				channel_thread_pid,
-				prec->id
-			},
-			(uint8_t) result
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_BBQ_SYNCP_POSTCHANGE_RESP.pyl, msg.ByteSize());
 	// Check that the ExitCode can be represented by the response message
 	assert(result < 256);
 	logger->Debug("_SyncpPostChangeResp: response EXC [%d:%d]...",
-		rf_BBQ_SYNCP_POSTCHANGE_RESP.pyl.hdr.app_pid,
-		rf_BBQ_SYNCP_POSTCHANGE_RESP.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 	// Sending RPC Request
 	RPC_FIFO_SEND(BBQ_SYNCP_POSTCHANGE_RESP);
 	return RTLIB_OK;
 }
 
-void BbqueRPC_FIFO_Client::RpcBbqSyncpPostChange()
+void BbqueRPC_PB_FIFO_Client::RpcBbqSyncpPostChange(unsigned int pyl_size)
 {
-	rpc_msg_BBQ_SYNCP_POSTCHANGE_t msg;
+	PB_rpc_msg msg;
 	size_t bytes;
 	// Read response RPC header
-	bytes = ::read(client_fifo_fd, (void *) &msg,
-		RPC_PKT_SIZE(BBQ_SYNCP_POSTCHANGE));
+    uint8_t buffer[RPC_PKT_SIZE] = {0};
+	bytes = ::read(client_fifo_fd, buffer, RPC_PKT_SIZE);
+    msg.ParseFromArray(buffer, pyl_size);
 
 	if (bytes <= 0) {
 		logger->Error("RpcBbqSyncpPostChange: FAILED read from [%s] (Error %d: %s)",
 			app_fifo_path.c_str(), errno, strerror(errno));
-		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+        chResp.set_result(RTLIB_BBQUE_CHANNEL_READ_FAILED);
 	}
 
 	// Notify the Sync-Change
-	SyncP_PostChangeNotify(msg);
+    rpc_msg_BBQ_SYNCP_POSTCHANGE_t struct_msg = {
+        {
+            (uint8_t)msg.hdr().typ(),
+            msg.hdr().token(),
+            msg.hdr().app_pid(),
+            (uint8_t)msg.hdr().exc_id()
+        }
+    };
+	SyncP_PostChangeNotify(struct_msg);
 }
 
 /*******************************************************************************
  * Runtime profiling
  ******************************************************************************/
 
-void BbqueRPC_FIFO_Client::RpcBbqGetRuntimeProfile()
+void BbqueRPC_PB_FIFO_Client::RpcBbqGetRuntimeProfile(unsigned int pyl_size)
 {
-	rpc_msg_BBQ_GET_PROFILE_t msg;
+	PB_rpc_msg msg;
 	size_t bytes;
 	// Read RPC request
-	bytes = ::read(client_fifo_fd, (void *) &msg,
-		RPC_PKT_SIZE(BBQ_GET_PROFILE));
+    uint8_t buffer[RPC_PKT_SIZE] = {0};
+	bytes = ::read(client_fifo_fd, buffer, RPC_PKT_SIZE);
+    msg.ParseFromArray(buffer, pyl_size);
 
 	if (bytes <= 0) {
 		logger->Error("RpcBbqGetRuntimeProfile: FAILED read from [%s] (Error %d: %s)",
 			app_fifo_path.c_str(), errno, strerror(errno));
-		chResp.result = RTLIB_BBQUE_CHANNEL_READ_FAILED;
+        chResp.set_result(RTLIB_BBQUE_CHANNEL_READ_FAILED);
 	}
 
 	// Get runtime profile
-	GetRuntimeProfile(msg);
+    rpc_msg_BBQ_GET_PROFILE_t struct_msg = {
+        {
+            (uint8_t)msg.hdr().typ(),
+            msg.hdr().token(),
+            msg.hdr().app_pid(),
+            (uint8_t)msg.hdr().exc_id()
+        },
+        msg.is_ocl()
+    };
+	GetRuntimeProfile(struct_msg);
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GetRuntimeProfileResp(
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_GetRuntimeProfileResp(
 							      rpc_msg_token_t token,
 							      pRegisteredEXC_t prec,
 							      uint32_t exc_time,
 							      uint32_t mem_time)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+    PB_rpc_msg msg;
+    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
+    msg.mutable_hdr()->set_resp_type(PB_BBQ_GET_PROFILE_RESP);
+    msg.set_exec_time(exc_time);
+    msg.set_mem_time(mem_time);
 	rpc_fifo_BBQ_GET_PROFILE_RESP_t rf_BBQ_GET_PROFILE_RESP = {
 		{
 			FIFO_PKT_SIZE(BBQ_GET_PROFILE_RESP),
 			FIFO_PYL_OFFSET(BBQ_GET_PROFILE_RESP),
-			RPC_BBQ_RESP
+			RPC_BBQ_RESP,
+			msg.ByteSize()
 		},
-		{
-			{
-				RPC_BBQ_RESP,
-				token,
-				channel_thread_pid,
-				prec->id
-			},
-			exc_time,
-			mem_time
-		}
+		{0}
 	};
+    logger->Debug("msg_size = %d", msg.ByteSize());
+	msg.SerializeToArray(rf_BBQ_GET_PROFILE_RESP.pyl, msg.ByteSize());
 	// Sending RPC response
 	logger->Debug("_GetRuntimeProfileResp: Setting runtime profile info for EXC [%d:%d]...",
-		rf_BBQ_GET_PROFILE_RESP.pyl.hdr.app_pid,
-		rf_BBQ_GET_PROFILE_RESP.pyl.hdr.exc_id);
+        msg.hdr().app_pid(),
+        msg.hdr().exc_id());
 	RPC_FIFO_SEND(BBQ_GET_PROFILE_RESP);
-	return (RTLIB_ExitCode_t) chResp.result;
+	return (RTLIB_ExitCode_t) chResp.result();
 }
 
 } // namespace rtlib

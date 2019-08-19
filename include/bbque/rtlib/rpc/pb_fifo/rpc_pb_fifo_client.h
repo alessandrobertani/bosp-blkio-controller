@@ -15,14 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BBQUE_RPC_FIFO_CLIENT_H_
-#define BBQUE_RPC_FIFO_CLIENT_H_
+#ifndef BBQUE_RPC_PB_FIFO_CLIENT_H_
+#define BBQUE_RPC_PB_FIFO_CLIENT_H_
 
 #include "bbque/rtlib.h"
 
 #include "bbque/rtlib/bbque_rpc.h"
-#include "bbque/rtlib/rpc_messages.h"
-#include "bbque/rtlib/rpc_fifo_server.h"
+#include "bbque/rtlib/rpc/rpc_messages.h"
+#include "rpc_messages.pb.h"
+#include "bbque/rtlib/rpc/pb_fifo/rpc_pb_fifo_server.h"
 #include "bbque/cpp11/condition_variable.h"
 #include "bbque/cpp11/thread.h"
 
@@ -34,9 +35,9 @@ namespace rtlib
 {
 
 /**
- * @class BbqueRPC_FIFO_Client
+ * @class BbqueRPC_PB_FIFO_Client
  *
- * @brief Client side of the RPC FIFO channel
+ * @brief Client side of the RPC PROTOBUF FIFO channel
  *
  * Definition of the RPC protocol based on UNIX FIFOs to implement the
  * Barbeque communication channel. This defines the communication protocol in
@@ -45,16 +46,16 @@ namespace rtlib
  * services.
  *
  * @see bbque/rtlib.h
- * @see bbque/rtlib/rpc_messages.h
+ * @see bbque/rtlib/rpc/rpc_messages.proto
  */
-class BbqueRPC_FIFO_Client : public BbqueRPC
+class BbqueRPC_PB_FIFO_Client : public BbqueRPC
 {
 
 public:
 
-	BbqueRPC_FIFO_Client();
+	BbqueRPC_PB_FIFO_Client();
 
-	~BbqueRPC_FIFO_Client();
+	~BbqueRPC_PB_FIFO_Client();
 
 protected:
 
@@ -163,7 +164,7 @@ private:
 	 *
 	 * This attribute should be always protected by the chCommand_mtx
 	 */
-	rpc_msg_resp_t chResp;
+	PB_rpc_msg chResp;
 
 	RTLIB_ExitCode_t ChannelRelease();
 
@@ -175,32 +176,32 @@ private:
 
 	void ChannelTrd(const char * name);
 
-	void RpcBbqResp();
+	void RpcBbqResp(unsigned int pyl_size);
 
 	/**
 	 * @brief Get from FIFO a PreChange RPC message
 	 */
-	void RpcBbqSyncpPreChange();
+	void RpcBbqSyncpPreChange(unsigned int pyl_size);
 
 	/**
 	 * @brief Get from FIFO a SyncChange RPC message
 	 */
-	void RpcBbqSyncpSyncChange();
+	void RpcBbqSyncpSyncChange(unsigned int pyl_size);
 
 	/**
 	 * @brief Get from FIFO a DoChange RPC message
 	 */
-	void RpcBbqSyncpDoChange();
+	void RpcBbqSyncpDoChange(unsigned int pyl_size);
 
 	/**
 	 * @brief Get from FIFO a PostChange RPC message
 	 */
-	void RpcBbqSyncpPostChange();
+	void RpcBbqSyncpPostChange(unsigned int pyl_size);
 
 	/**
 	 * @brief Get from FIFO a runtime profile request RPC message
 	 */
-	void RpcBbqGetRuntimeProfile();
+	void RpcBbqGetRuntimeProfile(unsigned int pyl_size);
 
 };
 

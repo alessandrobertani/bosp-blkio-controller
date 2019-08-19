@@ -150,6 +150,7 @@
 
 /** Use FIFO based RPC channel */
 #cmakedefine CONFIG_BBQUE_RPC_FIFO
+#cmakedefine CONFIG_BBQUE_RPC_PB_FIFO
 
 /** Use Test Platform Data */
 #cmakedefine CONFIG_BBQUE_TEST_PLATFORM_DATA

@@ -18,7 +18,8 @@
 #ifndef BBQUE_PLUGINS_FIFO_RPC_H_
 #define BBQUE_PLUGINS_FIFO_RPC_H_
 
-#include "bbque/rtlib/rpc/fifo/rpc_fifo_server.h"
+#include "bbque/rtlib/rpc/pb_fifo/rpc_pb_fifo_server.h"
+#include "bbque/rtlib/rpc/pb_fifo/rpc_pb_message_factory.h"
 
 #include "bbque/plugins/rpc_channel.h"
 #include "bbque/plugins/plugin.h"
@@ -36,13 +37,13 @@ namespace bu = bbque::utils;
 namespace bbque { namespace plugins {
 
 /**
- * @class FifoRPC
+ * @class PBFifoRPC
  * @brief A FIFO based implementation of the RPCChannelIF interface.
  * @details
  * This class provide a FIFO based communication channel between the Barbque
  * RTRM and the applications.
  */
-class FifoRPC : public RPCChannelIF {
+class PBFifoRPC : public RPCChannelIF {
 
 typedef struct fifo_data : ChannelData {
 	/** The handler to the application FIFO */
@@ -66,7 +67,7 @@ public:
 	 */
 	static int32_t Destroy(void *);
 
-	virtual ~FifoRPC();
+	virtual ~PBFifoRPC();
 
 //----- RPCChannelIF module interface
 
@@ -114,7 +115,7 @@ private:
 	 * @param
 	 * @return
 	 */
-	FifoRPC(std::string const & fifo_dir);
+	PBFifoRPC(std::string const & fifo_dir);
 
 	int Init();
 
