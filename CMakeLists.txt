@@ -266,7 +266,7 @@ if (CONFIG_BBQUE_PM_NVIDIA)
 endif (CONFIG_BBQUE_PM_NVIDIA)
 
 # Add compilation dependencies
-include_directories(
+include_directories(SYSTEM
 	${Boost_INCLUDE_DIRS}
 	${CGroup_INCLUDE_DIRS}
 	${OPENCL_INCLUDE_DIR}
