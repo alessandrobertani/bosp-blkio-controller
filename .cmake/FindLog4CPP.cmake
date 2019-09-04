@@ -8,14 +8,20 @@
 # LOG4CPP_LIBRARIES, the libraries to link against to use pwlib.
 # LOG4CPP_FOUND, If false, don't try to use pwlib.
 
+set(LIB_PATH ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_LIBS})
+#message(STATUS "Log4CPP looking into: " ${LIB_PATH})
+
 find_path(LOG4CPP_INCLUDE_DIR log4cpp/Category.hh)
-find_library(LOG4CPP_LIBRARIES log4cpp)
+find_library(LOG4CPP_LIBRARIES log4cpp
+	PATHS ${LIB_PATH}
+	HINTS ${LIB_PATH}
+)
 
 set(LOG4CPP_FOUND 0)
 if (LOG4CPP_INCLUDE_DIR)
   if (LOG4CPP_LIBRARIES)
     set(LOG4CPP_FOUND 1)
-    message(STATUS "Found Log4CPP: ${LOG4CPP_LIBRARIES}")
+    message(STATUS "Log4CPP location: ${LOG4CPP_LIBRARIES}")
   endif (LOG4CPP_LIBRARIES)
 endif (LOG4CPP_INCLUDE_DIR)
 
