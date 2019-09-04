@@ -38,13 +38,15 @@ endif (CONFIG_BBQUE_RPC_FIFO)
 
 # FIFO based with Protocols Buffers
 if (CONFIG_BBQUE_RPC_PB_FIFO)
+    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
+    set (CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} ${CMAKE_PREFIX_PATH})
     find_package(Protobuf REQUIRED)
-    include_directories(${Protobuf_INCLUDE_DIR})
-    protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_messages.proto)
-    message(STATUS "PROTO_HDRS ${PROTO_HDRS}")
-    message(STATUS "PROTO_SRCS ${PROTO_SRCS}")
+    message(STATUS "Protobuf compiler: " ${PROTOBUF_PROTOC_EXECUTABLE})
+    include_directories(SYSTEM ${Protobuf_INCLUDE_DIR})
+    protobuf_generate_cpp(
+	PROTO_SRCS PROTO_HDRS
+	${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_messages.proto)
     include_directories(${CMAKE_CURRENT_BINARY_DIR})
-    message(STATUS "BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}")
     set (RTLIB_SRC rpc_pb_message_factory ${RTLIB_SRC})
     set (RTLIB_SRC rpc_pb_fifo_client ${RTLIB_SRC})
     set (RTLIB_SRC ${PROTO_SRCS} ${PROTO_HDRS} ${RTLIB_SRC})
