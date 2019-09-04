@@ -10,7 +10,7 @@ configure_file (
 	"${PROJECT_BINARY_DIR}/include/bbque/bbque_exc.h" COPYONLY
 )
 
-# Add "barbeque" specific flags
+# Compilation flags
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBBQUE_RTLIB")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
@@ -21,22 +21,22 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set (BBQUE_DEBUG ON)
 endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
-
-if (CONFIG_BBQUE_OPENCL)
-	include_directories(${OPENCL_INCLUDE_DIR})
-endif (CONFIG_BBQUE_OPENCL)
-
+# Source files
 set (RTLIB_SRC bbque_rtlib bbque_rpc ${PROJECT_BINARY_DIR}/bbque/version.cc)
 set (RTLIB_SRC bbque_exc ${RTLIB_SRC})
 
+# OpenCL support
 if (CONFIG_BBQUE_OPENCL)
+	include_directories(${OPENCL_INCLUDE_DIR})
 	set (RTLIB_SRC bbque_ocl ${RTLIB_SRC})
 endif (CONFIG_BBQUE_OPENCL)
 
+# FIFO based RPC channel
 if (CONFIG_BBQUE_RPC_FIFO)
 	set (RTLIB_SRC rpc_fifo_client ${RTLIB_SRC})
 endif (CONFIG_BBQUE_RPC_FIFO)
 
+# FIFO based with Protocols Buffers
 if (CONFIG_BBQUE_RPC_PB_FIFO)
     find_package(Protobuf REQUIRED)
     include_directories(${Protobuf_INCLUDE_DIR})
