@@ -42,19 +42,22 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadPlatformData() {
 }
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadAgentProxy() {
+	std::string plugin_name(AGENT_PROXY_NAMESPACE ".grpc");
+	logger->Debug("LoadAgentProxy: loading %s", plugin_name.c_str());
 
 	agent_proxy = std::unique_ptr<bbque::plugins::AgentProxyIF>(
 		ModulesFactory::GetModule<bbque::plugins::AgentProxyIF>(
-			std::string(AGENT_PROXY_NAMESPACE) + ".grpc"));
+			plugin_name));
 
 	if (agent_proxy == nullptr) {
 		logger->Fatal("Agent Proxy plugin loading failed!");
 		return PLATFORM_AGENT_PROXY_ERROR;
 	}
 
-	logger->Debug("Providing the platform description to Agent Proxy...");
+	logger->Debug("LoadAgentProxy: passing the platform description to"
+		"the agent proxy...");
 	agent_proxy->SetPlatformDescription(&GetPlatformDescription());
-	logger->Info("Agent Proxy plugin ready");
+	logger->Info("LoadAgentProxy: agent proxy plugin ready");
 
 	return PLATFORM_OK;
 }
