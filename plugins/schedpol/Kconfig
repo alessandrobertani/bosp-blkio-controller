@@ -85,18 +85,17 @@ choice
 
   config BBQUE_SCHEDPOL_DEFAULT_MANGA
     depends on TARGET_LINUX_MANGO
+    depends on BBQUE_SCHEDPOL_MANGA
     bool "ManGA"
-    select BBQUE_SCHEDPOL_MANGA
 
   config BBQUE_SCHEDPOL_DEFAULT_MANGAV2
     depends on TARGET_LINUX_MANGO
+    depends on BBQUE_SCHEDPOL_MANGAV2
     bool "ManGAv2"
-    select BBQUE_SCHEDPOL_MANGAV2
 
   config BBQUE_SCHEDPOL_DEFAULT_THROTTLE
     depends on BBQUE_SCHEDPOL_THROTTLE
     bool "Throttle"
-    select BBQUE_SCHEDPOL_THROTTLE
 
 endchoice
 
