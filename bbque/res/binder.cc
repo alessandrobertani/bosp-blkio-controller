@@ -114,6 +114,11 @@ void ResourceBinder::Bind(
 
 		// Forward power settings
 		out_assign->SetPowerSettings(ru_entry.second->GetPowerSettings());
+		logger->Debug("Bind: <%s> power settings: gov=%s freq=%d perf_state=%d",
+			out_path->ToString().c_str(),
+			(*out_map)[out_path]->GetPowerSettings().freq_governor.c_str(),
+			(*out_map)[out_path]->GetPowerSettings().freq_khz,
+			(*out_map)[out_path]->GetPowerSettings().perf_state);
 	}
 
 	for (auto & m: *out_map) {
