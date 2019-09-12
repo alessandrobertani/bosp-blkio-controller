@@ -398,17 +398,41 @@ public:
 	 * @return RA_SUCCESS if the reservation has been completed correctly,
 	 * RA_FAILED otherwise.
 	 */
-	ExitCode_t  ReserveResources(br::ResourcePathPtr_t resource_path_ptr, uint64_t amount);
+	ExitCode_t ReserveResources(
+	        br::ResourcePathPtr_t resource_path_ptr, uint64_t amount);
 
-	ExitCode_t  ReserveResources(std::string const & path, uint64_t amount);
+	ExitCode_t ReserveResources(
+	        std::string const & path, uint64_t amount);
 
+	/**
+	 * @brief Set the resource to a virtual offline status
+	 *
+	 * The resource will not be available for any accounting
+	 *
+	 * @param path Resource path in char string format
+	 * @return RA_SUCCESS for succesfull call, RA_FAILED if the path
+	 * does not refer to any valid resource
+	 */
+	ExitCode_t SetOffline(std::string const & path);
 
-	bool  IsOfflineResource(br::ResourcePathPtr_t resource_path_ptr) const;
+	/**
+	 * @brief Set the resource (back) to a (virtual) online status
+	 *
+	 * The resource will become available again
+	 *
+	 * @param path Resource path in char string format
+	 * @return RA_SUCCESS for succesfull call, RA_FAILED if the path
+	 * does not refer to any valid resource
+	 */
+	ExitCode_t SetOnline(std::string const & path);
 
-	ExitCode_t  OfflineResources(std::string const & path);
-
-	ExitCode_t  OnlineResources(std::string const & path);
-
+	/**
+	 * @brief Check if a given resource is offline
+	 *
+	 * @param resource_path_ptr Resource path pointer
+	 * @return true if offline, false otherwise
+	 */
+	bool IsOffline(br::ResourcePathPtr_t resource_path_ptr) const;
 
 	/**
 	 * @brief Check if resources are being reshuffled
