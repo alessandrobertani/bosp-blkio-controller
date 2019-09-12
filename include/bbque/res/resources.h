@@ -76,6 +76,8 @@ using AppUsageQtyMap_t = std::map<AppUid_t, uint64_t>;
 using RSHashMap_t =  std::unordered_map<RViewToken_t, ResourceStatePtr_t>;
 
 
+using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
+
 /**
  * @class ResourceState
  *
@@ -155,14 +157,6 @@ public:
 	/**********************************************************************
 	 * GENERAL INFORMATION                                                  *
 	 **********************************************************************/
-
-	/**
-	 * @brief Constructor
-	 * @param res_path Resource path
-	 * @param tot The total amount of resource
-	 */
-	Resource(std::string const & res_path, uint64_t tot = 1);
-
 
 	/**
 	 * @brief Constructor

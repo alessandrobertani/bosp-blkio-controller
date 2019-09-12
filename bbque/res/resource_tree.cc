@@ -40,9 +40,9 @@ ResourceTree::ResourceTree():
 	assert(logger);
 
 	// Initialize the root node
-	std::string root_name("bbque");
 	root = std::make_shared<ResourceNode>(
-		std::make_shared<Resource>(root_name));
+	               std::make_shared<Resource>(
+	                       ResourceType::UNDEFINED, 0, 0));
 }
 
 ResourcePtrList_t
@@ -186,11 +186,6 @@ bool ResourceTree::find_node(
 
 ResourceTree::ResourceNodePtr_t
 ResourceTree::add_node(ResourceNodePtr_t curr_node, ResourcePtr_t resource_ptr) {
-	// Set the path string of the new resource
-	std::string path_prefix("");
-	if (curr_node->data)
-		path_prefix = curr_node->data->Name();
-	resource_ptr->SetPath(path_prefix + "." + resource_ptr->Name());
 
 	// Create the new resource node
 	ResourceNodePtr_t new_node = std::make_shared<ResourceNode>(

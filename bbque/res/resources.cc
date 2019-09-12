@@ -28,29 +28,12 @@ namespace bbque { namespace res {
  * class Resource
  *****************************************************************************/
 
-Resource::Resource(std::string const & res_path, uint64_t tot):
-	br::ResourceIdentifier(br::ResourceType::UNDEFINED, 0),
-	total(tot),
-	reserved(0),
-	offline(false) {
-	path.assign(res_path);
-
-	// Extract the name from the path
-	size_t pos = res_path.find_last_of(".");
-	if (pos != std::string::npos)
-		name = res_path.substr(pos + 1);
-	else
-		name = res_path;
-
-	// Initialize profiling data structures
-	InitProfilingInfo();
-}
-
 Resource::Resource(br::ResourceType type, BBQUE_RID_TYPE id, uint64_t tot):
 	br::ResourceIdentifier(type, id),
 	total(tot),
 	reserved(0),
 	offline(false) {
+	name = std::string(GetResourceTypeString(type)) + std::to_string(id);
 
 	// Initialize profiling data structures
 	InitProfilingInfo();
