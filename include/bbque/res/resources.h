@@ -192,7 +192,7 @@ public:
 	 *
 	 * @return A char string object reference
 	 */
-	inline std::string const & Model() {
+	std::string const & Model() const {
 		return model;
 	}
 
@@ -220,7 +220,7 @@ public:
 	 * @brief Resource total
 	 * @return The total amount of resource
 	 */
-	inline uint64_t Total() {
+	uint64_t Total() const {
 		return total;
 	}
 
@@ -231,7 +231,7 @@ public:
 	 *
 	 * @return How much resource has been allocated
 	 */
-	uint64_t Used(RViewToken_t view_id = 0);
+	uint64_t Used(RViewToken_t view_id = 0) const;
 
 	/**
 	 * @brief Resource availability
@@ -251,7 +251,7 @@ public:
 	 * @return How much resource is still available including the amount of
 	 * resource used by the given application
 	 */
-	uint64_t Available(SchedPtr_t papp = SchedPtr_t(), RViewToken_t view_id = 0);
+	uint64_t Available(SchedPtr_t papp = SchedPtr_t(), RViewToken_t view_id = 0) const;
 
 	/**
 	 * @brief Count of applications using the resource
@@ -259,7 +259,7 @@ public:
 	 * @param view_id The token referencing the resource view
 	 * @return Number of applications
 	 */
-	inline uint16_t ApplicationsCount(RViewToken_t view_id = 0) {
+	uint16_t ApplicationsCount(RViewToken_t view_id = 0) const {
 		AppUsageQtyMap_t apps_map;
 		return ApplicationsCount(apps_map, view_id);
 	}
@@ -272,7 +272,7 @@ public:
 	 *
 	 * @return The 'quota' of resource used by the application
 	 */
-	uint64_t ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_id = 0);
+	uint64_t ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_id = 0) const;
 
 	/**
 	 * @brief Applications using the resource
@@ -281,7 +281,7 @@ public:
 	 * @param view_id The token referencing the resource view
 	 * @return The number of applications
 	 */
-	inline uint16_t Applications(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0) {
+	uint16_t Applications(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0) const {
 		return ApplicationsCount(apps_map, view_id);
 	}
 
@@ -295,16 +295,16 @@ public:
 	 * @return RS_SUCCESS if the App/EXC has been found, RS_NO_APPS otherwise
 	 */
 	ExitCode_t UsedBy(
-			AppUid_t & app_uid,
-			uint64_t & amount,
-			uint8_t nth = 0,
-			RViewToken_t view_id = 0);
+	        AppUid_t & app_uid,
+	        uint64_t & amount,
+	        uint8_t nth = 0,
+	        RViewToken_t view_id = 0) const;
 
 	/**
 	 * @brief The number of state views of the resource
 	 * @return The size of the map
 	 */
-	inline size_t ViewCount() {
+	size_t ViewCount() const {
 		return state_views.size();
 	}
 
@@ -321,7 +321,7 @@ public:
 	 *
 	 * @return The amount of resources not being currently reserved
 	 */
-	inline uint64_t Unreserved() {
+	uint64_t Unreserved() const {
 		return (total - reserved);
 	}
 
@@ -337,7 +337,7 @@ public:
 	 *
 	 * @return The not allocable amount
 	 */
-	inline uint64_t Reserved() const {
+	uint64_t Reserved() const {
 		return reserved;
 	}
 
@@ -346,7 +346,7 @@ public:
 	 *
 	 * @return true if it is offline, false otherwise
 	 */
-	inline bool IsOffline() const {
+	bool IsOffline() const {
 		return offline;
 	}
 
@@ -392,14 +392,14 @@ public:
 	 *
 	 * @return The number of samples
 	 */
-	inline uint GetPowerInfoSamplesWindowSize(PowerManager::InfoType i_type) {
+	uint GetPowerInfoSamplesWindowSize(PowerManager::InfoType i_type) const {
 		return pw_profile.samples_window[int(i_type)];
 	}
 
 	/**
 	 * @brief The number of power profile information required
 	 */
-	inline uint GetPowerInfoEnabledCount() {
+	uint GetPowerInfoEnabledCount() const {
 		return pw_profile.enabled_count;
 	}
 
@@ -447,20 +447,20 @@ public:
 	 *
 	 * @return Current percentage of performance degradation
 	 */
-	 inline uint8_t CurrentDegradationPerc() {
+	uint8_t CurrentDegradationPerc() const {
 		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		return rb_profile.degradation_perc->last_value();
-	 }
+	}
 
 	/**
 	 * @brief Performance degradation (exponential mean value)
 	 *
 	 * @return Mean percentage of performance degradation
 	 */
-	 inline float MeanDegradationPerc() {
+	float MeanDegradationPerc() const {
 		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		return rb_profile.degradation_perc->get();
-	 }
+	}
 
 
 private:
@@ -480,7 +480,7 @@ private:
 	 * @brief Information related to the power/thermal status of the resource
 	 */
 	typedef struct PowerProfile {
-		std::mutex mux;
+		mutable std::mutex mux;
 		PowerManager::SamplesArray_t samples_window; /** Flags of the available run-time information */
 		std::vector<pEma_t> values;                 /** Sampled values */
 		uint enabled_count;                          /** Count of power profiling info enabled */
@@ -491,7 +491,7 @@ private:
 	 * @brief Runtime information about the reliability of the resource
 	 */
 	typedef struct ReliabilityProfile {
-		std::mutex mux;
+		mutable std::mutex mux;
 		pEma_t degradation_perc; /** Percentage of performance degradation (stats) */
 	} ReliabilityProfile_t;
 
@@ -555,7 +555,7 @@ private:
 	 * @note This method acts only upon the default state view only
 	 * @param tot The amount to set
 	 */
-	inline void SetTotal(uint64_t tot) {
+	void SetTotal(uint64_t tot) {
 		total = tot;
 	}
 
@@ -612,7 +612,7 @@ private:
 	 * @return The number of Apps/EXCs using the resource, and a
 	 * reference to the map
 	 */
-	uint16_t ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0);
+	uint16_t ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0) const;
 
 	/**
 	 * @brief Amount of resource used by the application
@@ -622,7 +622,7 @@ private:
 	 *
 	 * @return The 'quota' of resource used by the application
 	 */
-	uint64_t ApplicationUsage(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map);
+	uint64_t ApplicationUsage(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) const;
 
 
 	/**
@@ -631,7 +631,7 @@ private:
 	 * @param view_id The resource state view token
 	 * @return The ResourceState fo the referenced view
 	 */
-	ResourceStatePtr_t GetStateView(RViewToken_t view_id);
+	ResourceStatePtr_t GetStateView(RViewToken_t view_id) const;
 
 	/**
 	 * @brief Delete a state view

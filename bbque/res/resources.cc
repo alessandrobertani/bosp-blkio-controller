@@ -92,7 +92,8 @@ void Resource::SetOnline() {
 }
 
 
-uint64_t Resource::Used(RViewToken_t view_id) {
+uint64_t Resource::Used(RViewToken_t view_id) const
+{
 	// Retrieve the state view
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view)
@@ -102,7 +103,8 @@ uint64_t Resource::Used(RViewToken_t view_id) {
 	return view->used;
 }
 
-uint64_t Resource::Available(SchedPtr_t papp, RViewToken_t view_id) {
+uint64_t Resource::Available(SchedPtr_t papp, RViewToken_t view_id) const
+{
 	uint64_t total_available = Unreserved();
 	ResourceStatePtr_t view;
 
@@ -130,7 +132,8 @@ uint64_t Resource::Available(SchedPtr_t papp, RViewToken_t view_id) {
 
 }
 
-uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_id) {
+uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_id) const
+{
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
 		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
@@ -143,9 +146,10 @@ uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_i
 }
 
 Resource::ExitCode_t Resource::UsedBy(AppUid_t & app_uid,
-		uint64_t & amount,
-		uint8_t nth,
-		RViewToken_t view_id) {
+                                      uint64_t & amount,
+                                      uint8_t nth,
+                                      RViewToken_t view_id) const
+{
 	// Get the map of Apps/EXCs using the resource
 	AppUsageQtyMap_t apps_map;
 	size_t mapsize = ApplicationsCount(apps_map, view_id);
@@ -241,7 +245,8 @@ void Resource::DeleteView(RViewToken_t view_id) {
 	state_views.erase(view_id);
 }
 
-uint16_t Resource::ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t view_id) {
+uint16_t Resource::ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t view_id) const
+{
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view)
 		return 0;
@@ -250,7 +255,8 @@ uint16_t Resource::ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t v
 	return apps_map.size();
 }
 
-uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) {
+uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) const
+{
 	if (!papp) {
 		DB(fprintf(stderr, FW("Resource {%s}: App/EXC null pointer\n"),
 					name.c_str()));
@@ -269,7 +275,8 @@ uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, AppUsageQtyMap_t & 
 	return app_using_it->second;
 }
 
-ResourceStatePtr_t Resource::GetStateView(RViewToken_t view_id) {
+ResourceStatePtr_t Resource::GetStateView(RViewToken_t view_id) const
+{
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	// Default view if token = 0
 	if (view_id == 0)
