@@ -300,9 +300,9 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	for (auto & rsrc: r_list) {
 		rsrc->EnablePowerProfile(samples_window);
 		logger->Info("Register: adding <%s> to power monitoring...",
-			rsrc->Path().c_str());
-		wm_info.resources.push_back({ra.GetPath(rsrc->Path()), rsrc});
-		wm_info.log_fp.emplace(ra.GetPath(rsrc->Path()), new std::ofstream());
+		             rsrc->Path()->ToString().c_str());
+		wm_info.resources.push_back( { rsrc->Path(), rsrc});
+		wm_info.log_fp.emplace(rsrc->Path(), new std::ofstream());
 	}
 
 	return ExitCode_t::OK;
@@ -419,13 +419,13 @@ void  PowerMonitor::SampleResourcesStatus(
 			auto const & r_path(wm_info.resources[i].path);
 			auto & rsrc(wm_info.resources[i].resource_ptr);
 
-			std::string log_i("<" + rsrc->Path() + "> (I): ");
-			std::string log_m("<" + rsrc->Path() + "> (M): ");
+			std::string log_i("<" + rsrc->Path()->ToString() + "> (I): ");
+			std::string log_m("<" + rsrc->Path()->ToString() + "> (M): ");
 			std::string i_values, m_values;
 			uint info_idx   = 0;
 			uint info_count = 0;
 			logger->Debug("SampleResourcesStatus: [thread %d] monitoring <%s>",
-				thd_id, r_path->ToString().c_str());
+			              thd_id, r_path->ToString().c_str());
 
 			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
 					info_count < rsrc->GetPowerInfoEnabledCount();
@@ -434,8 +434,9 @@ void  PowerMonitor::SampleResourcesStatus(
 				info_type = PowerManager::InfoTypeIndex[info_idx];
 				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0) {
 					logger->Warn("SampleResourcesStatus: [thread %d] power profile "
-						"not enabled for %s",
-						thd_id, rsrc->Path().c_str());
+					             "not enabled for %s",
+					             thd_id,
+						rsrc->Path()->ToString().c_str());
 					continue;
 				}
 

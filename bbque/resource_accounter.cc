@@ -174,18 +174,18 @@ void ResourceAccounter::PrintStatusReport(
 		// Build the resource amount string
 		// ...USED
 		len += sprintf(rsrc_text_row + len, "| %-26s %c | %3s | %9s | ",
-				resource_ptr->Path().c_str(),
-				online, model,
-				bu::GetValueUnitStr(
-					resource_ptr->Used(status_view), percent).c_str());
+		               resource_ptr->Path()->ToString().c_str(),
+		               online, model,
+		               bu::GetValueUnitStr(
+		                       resource_ptr->Used(status_view), percent).c_str());
 		// UNRESERVED
 		len += sprintf(rsrc_text_row + len, "%10s | ",
-				bu::GetValueUnitStr(
-					resource_ptr->Unreserved(), percent).c_str());
+		               bu::GetValueUnitStr(
+		                       resource_ptr->Unreserved(), percent).c_str());
 		// TOTAL
 		len += sprintf(rsrc_text_row + len, "%10s |",
-				bu::GetValueUnitStr(
-					resource_ptr->Total(), percent).c_str());
+		               bu::GetValueUnitStr(
+		                       resource_ptr->Total(), percent).c_str());
 		PRINT_NOTICE_IF_VERBOSE(verbose, rsrc_text_row);
 
 		// Print details about how usage is partitioned among applications
@@ -531,16 +531,15 @@ uint64_t ResourceAccounter::GetAssignedAmount(
 			continue;
 
 		// Iterate over the bound resources
-		for (br::ResourcePtr_t const & rsrc: r_assign->GetResourcesList()) {
-			br::ResourcePathPtr_t r_path(GetPath(rsrc->Path()));
+		for (auto const & rsrc : r_assign->GetResourcesList()) {
 			logger->Debug("GetAssignedAmount: path:<%s>",
-				r_path->ToString().c_str());
+			              rsrc->Path()->ToString().c_str());
 			// Scope resource ID
 			if ((r_scope_id >= 0) &&
-				(r_scope_id != r_path->GetID(r_scope_type)))
+			    (r_scope_id != rsrc->Path()->GetID(r_scope_type)))
 				continue;
 			// Resource type
-			if (r_path->Type() != r_type)
+			if (rsrc->Path()->Type() != r_type)
 				continue;
 			amount += rsrc->ApplicationUsage(papp, status_view);
 		}
@@ -664,7 +663,7 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 		return nullptr;
 	}
 	resource_ptr->SetTotal(br::ConvertValue(amount, units));
-	resource_ptr->SetPath(strpath);
+	resource_ptr->SetPath(resource_path_ptr);
 	logger->Debug("Register R<%s>: total = %llu %s",
 			strpath.c_str(), resource_ptr->Total(), units.c_str());
 

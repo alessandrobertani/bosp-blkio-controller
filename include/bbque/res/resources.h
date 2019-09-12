@@ -30,7 +30,7 @@
 #include "bbque/config.h"
 #include "bbque/app/application_status.h"
 #include "bbque/pm/power_manager.h"
-#include "bbque/res/identifier.h"
+#include "bbque/res/resource_path.h"
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/stats.h"
@@ -199,15 +199,15 @@ public:
 	/**
 	 * @brief Set the resource path string
 	 */
-	inline void SetPath(std::string const & r_path) {
-		path.assign(r_path);
+	void SetPath(ResourcePathPtr_t r_path) {
+		path = r_path;
 	}
 
 	/**
 	 * @brief The registered resource path string
 	 * @return A string containing the resource path
 	 */
-	inline std::string const & Path() {
+	ResourcePathPtr_t Path() const {
 		return path;
 	}
 
@@ -503,8 +503,8 @@ private:
 	/** The amount of resource being reserved */
 	uint64_t reserved;
 
-	/** Former resource path string  */
-	std::string path;
+	/** Resource path object (pointer) indicating the hierarchical placement  */
+	ResourcePathPtr_t path;
 
 	/** Resource name, e.g. CPU architecture name */
 	std::string model;

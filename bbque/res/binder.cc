@@ -209,7 +209,6 @@ ResourceBitset ResourceBinder::GetMask(
 ResourceBitset ResourceBinder::GetMask(
 		br::ResourceAssignmentMap_t const & assign_map,
 		br::ResourceType r_type) {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceBitset r_mask;
 
 	// Scan the resource assignments map
@@ -217,8 +216,8 @@ ResourceBitset ResourceBinder::GetMask(
 		br::ResourcePathPtr_t const & ppath(ru_entry.first);
 		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
 		SetBit(ppath, r_type, r_mask);
-		for (br::ResourcePtr_t const & rsrc: r_assign->GetResourcesList())
-			SetBit(ra.GetPath(rsrc->Path()), r_type, r_mask);
+		for (br::ResourcePtr_t const & rsrc : r_assign->GetResourcesList())
+			SetBit(rsrc->Path(), r_type, r_mask);
 	}
 	return r_mask;
 }
@@ -290,7 +289,6 @@ ResourceBitset ResourceBinder::GetMask(
 		RViewToken_t status_view) {
 	ResourceBitset r_mask;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	// Sanity check
 	if (papp == nullptr) return r_mask;
@@ -306,15 +304,17 @@ ResourceBitset ResourceBinder::GetMask(
 		// Is the application using it?
 		if (rsrc->ApplicationUsage(papp, status_view) == 0) {
 			logger->Debug("GetMask: <%s> not used by [%s]. Skipping...",
-					rsrc->Path().c_str(), papp->StrId());
+			              rsrc->Path()->ToString().c_str(),
+			              papp->StrId());
 			continue;
 		}
 		else
 			logger->Debug("GetMask: <%s> used by [%s]. Continuing...",
-					rsrc->Path().c_str(), papp->StrId());
+			              rsrc->Path()->ToString().c_str(),
+			              papp->StrId());
 
 		// Scope resource (type and identifier)
-		br::ResourcePathPtr_t r_path(ra.GetPath(rsrc->Path()));
+		br::ResourcePathPtr_t r_path(rsrc->Path());
 		if (r_path->ParentType(r_type) == r_scope_type
 				&& (r_path->GetID(r_scope_type) == r_scope_id
 					|| r_scope_id == R_ID_ANY)) {
