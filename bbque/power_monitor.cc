@@ -297,8 +297,8 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	// Register each resource to monitor, specifying the number of samples to
 	// consider in the (exponential) mean computation and the output log file
 	// descriptor
-	for (auto & rsrc: r_list) {
-		rsrc->EnablePowerProfile(samples_window);
+	for (auto & rsrc : r_list) {
+		rsrc->EnablePowerProfiling(samples_window);
 		logger->Info("Register: adding <%s> to power monitoring...",
 		             rsrc->Path()->ToString().c_str());
 		wm_info.resources.push_back( { rsrc->Path(), rsrc});

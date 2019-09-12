@@ -292,7 +292,7 @@ ResourceStatePtr_t Resource::GetStateView(RViewToken_t view_id) const
 
 #ifdef CONFIG_BBQUE_PM
 
-void Resource::EnablePowerProfile(
+void Resource::EnablePowerProfiling(
 		PowerManager::SamplesArray_t const & samples_window) {
 	pw_profile.enabled_count = 0;
 
@@ -314,8 +314,9 @@ void Resource::EnablePowerProfile(
 }
 
 
-void Resource::EnablePowerProfile() {
-	EnablePowerProfile(default_samples_window);
+void Resource::EnablePowerProfiling()
+{
+	EnablePowerProfiling(default_samples_window);
 }
 
 double Resource::GetPowerInfo(PowerManager::InfoType i_type, ValueType v_type) {

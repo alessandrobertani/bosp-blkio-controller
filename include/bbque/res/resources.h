@@ -450,13 +450,13 @@ public:
 	 * compute a mean (exponential) value over a number of samples specified in
 	 * the specific position (@see PowerManager::InfoType)
 	 */
-	void EnablePowerProfile(PowerManager::SamplesArray_t const & samples_window);
+	void EnablePowerProfiling(PowerManager::SamplesArray_t const & samples_window);
 
 	/**
 	 * @brief Enable the collection of power-thermal status information with
 	 * the default setting specified in BBQUE_PM_DEFAULT_SAMPLES_WINSIZE
 	 */
-	void EnablePowerProfile();
+	void EnablePowerProfiling();
 
 	/**
 	 * @brief The number of samples for the computation of the mean value of
