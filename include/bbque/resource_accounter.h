@@ -465,7 +465,7 @@ public:
 	 *
 	 * @return The token of the system view
 	 */
-	inline br::RViewToken_t GetSystemView() const {
+	br::RViewToken_t GetSystemView() const {
 		return sys_view_token;
 	}
 
@@ -474,7 +474,7 @@ public:
 	 *
 	 * @return The token of the synchronization state view
 	 */
-	inline br::RViewToken_t GetSyncView() const {
+	br::RViewToken_t GetSyncView() const {
 		return sync_ssn.view;
 	}
 
@@ -483,7 +483,7 @@ public:
 	 *
 	 * @return The token of the scheduled view
 	 */
-	inline br::RViewToken_t GetScheduledView() const {
+	br::RViewToken_t GetScheduledView() const {
 		return sch_view_token;
 	}
 
@@ -687,11 +687,10 @@ private:
 	 */
 	ResourceAccounter();
 
-
 	/**
 	 * @brief Set the status to READY
 	 */
-	inline void SetState(State _s) {
+	void SetState(State _s) {
 		std::unique_lock<std::mutex> status_ul(status_mtx);
 		status = _s;
 		logger->Debug("SetState: => %d", static_cast<int>(_s));
@@ -705,7 +704,7 @@ private:
 	 *
 	 * @return A resource tree matching flag
 	 */
-	inline uint16_t RTFlags(PathClass_t rpc) const {
+	uint16_t RTFlags(PathClass_t rpc) const {
 		switch (rpc) {
 		case EXACT:
 			return RT_MATCH_FIRST;
@@ -967,7 +966,7 @@ private:
 	 * @return true if the synchronization of the resource accounting is in
 	 * progress, false otherwise
 	 */
-	inline bool Synching() {
+	bool Synching() {
 		std::unique_lock<std::mutex> status_ul(status_mtx);
 		return (status == State::SYNC);
 	}
@@ -978,7 +977,7 @@ private:
 	 * @return true if the synchronization of the resource accounting is in
 	 * progress, false otherwise
 	 */
-	inline bool _Synching() {
+	bool _Synching() {
 		return (status == State::SYNC);
 	}
 
