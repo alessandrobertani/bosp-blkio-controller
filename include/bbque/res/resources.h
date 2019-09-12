@@ -149,6 +149,66 @@ public:
 	};
 
 	enum ValueType {
+	        INSTANT,
+	        MEAN
+	};
+
+	/**
+	 * @class PowerSettings
+	 *
+	 * @brief Power settings as of required via recipe or set by scheduling
+	 * policy. This is actuated later on by the platform manager at the
+	 * optimization stage.
+	 *
+	 * freq_governor is the specific governor to set
+	 * freq_khz is the operating frequency in KHz
+	 * perf_state is a number [0,inf) to indicate the operating state of the
+	 * resource
+	 */
+	class PowerSettings
+	{
+	public:
+
+		PowerSettings():
+			freq_governor(""),
+			freq_khz(0),
+			perf_state(-1) {
+		}
+
+		PowerSettings(
+		        std::string const & gov,
+		        uint32_t freq,
+		        int32_t pstate):
+
+			freq_governor(gov),
+			freq_khz(freq),
+			perf_state(pstate) {
+		}
+
+		bool operator==(const PowerSettings & other) const noexcept {
+			return ((this->freq_governor.compare(other.freq_governor) == 0)
+			        && this->freq_khz == other.freq_khz
+			        && this->perf_state == other.perf_state);
+		}
+
+		/**
+		 * @brief Reset the settings to the null values (except the
+		 * online status)
+		 */
+		void Reset() {
+			freq_governor.assign("");
+			freq_khz = 0;
+			perf_state = -1;
+		}
+
+		/// Governor (eg. cpufreq)
+		std::string freq_governor;
+
+		/// Operating clock frequency
+		uint32_t freq_khz;
+
+		/// Operating performance state (alternative to set frequency)
+		int32_t perf_state;
 		INSTANT,
 		MEAN
 	};
@@ -362,12 +422,26 @@ public:
 	void SetOnline();
 
 
-
 #ifdef CONFIG_BBQUE_PM
 
 	/**********************************************************************
-	 * POWER INFORMATION                                                  *
+	 * POWER MANAGEMENT AND PROFILING                                     *
 	 **********************************************************************/
+
+
+	/**
+	 * @brief Set a new power configuration to apply
+	 */
+	void SetPowerSettings(PowerSettings new_settings) {
+		pw_config = new_settings;
+	}
+
+	/**
+	 * @brief Get the currently set power configuration
+	 */
+	PowerSettings const & GetPowerSettings() const {
+		return pw_config;
+	}
 
 	/**
 	 * @brief Enable the collection of power-thermal status information
@@ -517,6 +591,10 @@ private:
 	AvailabilityProfile_t av_profile;
 
 #ifdef CONFIG_BBQUE_PM
+
+	/** Power configuration to apply for the resource assignment */
+	PowerSettings pw_config;
+
 	/** Power/thermal status (if the platform support is available) */
 	PowerProfile_t pw_profile;
 

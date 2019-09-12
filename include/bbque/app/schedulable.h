@@ -431,8 +431,6 @@ protected:
 	 */
 	virtual SyncState_t NextSyncState(AwmPtr_t const & awm) const;
 
-	bool IsPowerChanged(AwmPtr_t cur_awm, AwmPtr_t next_awm) const;
-
 	/**
 	 * @brief Set the working mode assigned by the scheduling policy
 	 *

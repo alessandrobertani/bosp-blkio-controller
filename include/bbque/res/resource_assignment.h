@@ -114,45 +114,6 @@ public:
 	};
 
 	/**
-	 * @class PowerSettings
-	 *
-	 * @brief Power settings as of required via recipe or set by scheduling
-	 * policy.
-	 * freq_governor is the specific governor to set
-	 * freq_khz is the operating frequency in KHz
-	 * perf_state is a number [0,inf) to indicate the operating state of the
-	 * resource
-	 */
-	class PowerSettings {
-	public:
-		PowerSettings():
-			freq_governor(""),
-			freq_khz(0),
-			perf_state(-1) {
-		}
-
-		PowerSettings(
-			std::string const & gov,
-			uint32_t freq,
-			int32_t pstate):
-
-			freq_governor(gov),
-			freq_khz(freq),
-			perf_state(pstate) {
-		}
-
-		bool operator==(const PowerSettings & other) const noexcept {
-			return ((this->freq_governor.compare(other.freq_governor) == 0)
-					&& this->freq_khz == other.freq_khz
-					&& this->perf_state == other.perf_state);
-		}
-
-		std::string freq_governor;
-		uint32_t freq_khz;
-		int32_t perf_state;
-	};
-
-	/**
 	 * @brief Constructor
 
 	 * @param amount The amount of resource usage
@@ -180,20 +141,6 @@ public:
 	 */
 	inline void SetAmount(uint64_t value) {
 		amount = value;
-	}
-
-	/**
-	 * @brief Set a new power configuration to apply
-	 */
-	inline void SetPowerSettings(PowerSettings new_settings) {
-		power_config = new_settings;
-	}
-
-	/**
-	 * @brief Get the currently set power configuration
-	 */
-	inline PowerSettings const & GetPowerSettings() {
-		return power_config;
 	}
 
 	/**
@@ -294,9 +241,6 @@ private:
 
 	/** List of resource descriptors which to the resource usage is bound */
 	ResourcePtrList_t resources;
-
-	/** Power configuration to apply for the resource assignment */
-	PowerSettings power_config;
 
 	/**
 	 * The resources list filling policy, i.e., how the resource amount
