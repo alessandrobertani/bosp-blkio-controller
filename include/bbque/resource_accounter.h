@@ -33,38 +33,25 @@
 
 #define RESOURCE_ACCOUNTER_NAMESPACE "bq.ra"
 
-// Base path for sync session resource view token
-#define SYNC_RVIEW_PATH "ra.sync."
-
-// Max length for the resource view token string
-#define TOKEN_PATH_MAX_LEN 30
-
-// Prefix resource path used for Recipe validation
-#define PREFIX_PATH "sys"
+#define SYNC_RVIEW_PATH       "ra.sync."
+#define PREFIX_PATH           "sys"
+#define TOKEN_PATH_MAX_LEN    30
 
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque {
+namespace bbque
+{
 
+using AppAssignmentsMap_t = std::map<AppUid_t, br::ResourceAssignmentMapPtr_t>;
+using AppAssignmentsMapPtr_t = std::shared_ptr<AppAssignmentsMap_t>;
+using AppAssignmentsViewsMap_t = std::map<br::RViewToken_t, AppAssignmentsMapPtr_t>;
+using ResourceSet_t = std::set<br::ResourcePtr_t>;
+using ResourceSetPtr_t = std::shared_ptr<ResourceSet_t>;
+using ResourceViewsMap_t = std::map<br::RViewToken_t, ResourceSetPtr_t>;
 
-/** Map of map of Usage descriptors. Key: Application UID*/
-typedef std::map<AppUid_t, br::ResourceAssignmentMapPtr_t> AppAssignmentsMap_t;
-/** Shared pointer to a map of pair Application/Usages */
-typedef std::shared_ptr<AppAssignmentsMap_t> AppAssignmentsMapPtr_t;
-/** Map of AppAssignmentsMap_t having the resource state view token as key */
-typedef std::map<br::RViewToken_t, AppAssignmentsMapPtr_t> AppAssignmentsViewsMap_t;
-/** Set of pointers to the resources allocated under a given state view*/
-typedef std::set<br::ResourcePtr_t> ResourceSet_t;
-/** Shared pointer to ResourceSet_t */
-typedef std::shared_ptr<ResourceSet_t> ResourceSetPtr_t;
-/** Map of ResourcesSetPtr_t. The key is the view token */
-typedef std::map<br::RViewToken_t, ResourceSetPtr_t> ResourceViewsMap_t;
-
-// Forward declarations
 class ApplicationManager;
-
 
 /**
  * @class ResourceAccounter
@@ -73,14 +60,16 @@ class ApplicationManager;
  * @brief Provides functions to register the system resources, and query
  * their status
  */
-class ResourceAccounter: public ResourceAccounterConfIF, CommandHandler {
+class ResourceAccounter: public ResourceAccounterConfIF, CommandHandler
+{
 
 public:
 
 	/**
 	 * @brief The states of the module
 	 */
-	enum class State {
+	enum class State
+	{
 	        /** Information not ready for query and accounting */
 	        NOT_READY,
 	        /** Information ready for query and accounting */
@@ -106,6 +95,9 @@ public:
 	 */
 	void SetPlatformNotReady();
 
+	/**
+	 * @brief Wait for the platform synchronization to finish
+	 */
 	void WaitForPlatformReady();
 
 	/**
@@ -121,7 +113,7 @@ public:
 	uint64_t Total(br::ResourcePtrList_t & resources_list) const;
 
 	uint64_t Total(
-		br::ResourcePathPtr_t resource_path_ptr, PathClass_t rpc = EXACT) const;
+	        br::ResourcePathPtr_t resource_path_ptr, PathClass_t rpc = EXACT) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -144,15 +136,17 @@ public:
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	uint64_t Used(std::string const & path, br::RViewToken_t status_view = 0);
+	uint64_t Used(
+	        std::string const & path, br::RViewToken_t status_view = 0);
 
 	uint64_t Used(
-		br::ResourcePtrList_t & resources_list, br::RViewToken_t status_view = 0) const;
+	        br::ResourcePtrList_t & resources_list,
+	        br::RViewToken_t status_view = 0) const;
 
 	uint64_t Used(
-		br::ResourcePathPtr_t resource_path_ptr,
-		PathClass_t rpc = EXACT,
-		br::RViewToken_t status_view = 0) const;
+	        br::ResourcePathPtr_t resource_path_ptr,
+	        PathClass_t rpc = EXACT,
+	        br::RViewToken_t status_view = 0) const;
 
 	/**
 	 * @see ResourceAccounterStatusIF
@@ -170,12 +164,14 @@ public:
 
 	uint16_t CountPerType(br::ResourceType type) const;
 
-	inline uint16_t CountTypes() const { return r_ids_per_type.size(); }
+	uint16_t CountTypes() const {
+		return r_ids_per_type.size();
+	}
 
 	/**
 	 * @see ResourceAccounterStatusIF
 	 */
-	inline std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> const & GetTypes() const {
+	std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> const & GetTypes() const {
 		return r_ids_per_type;
 	}
 
@@ -200,7 +196,7 @@ public:
 
 	bool ExistResource(br::ResourcePathPtr_t resource_path_ptr) const;
 
-	inline std::set<br::ResourcePtr_t> GetResourceSet(){
+	std::set<br::ResourcePtr_t> GetResourceSet() {
 		return resource_set;
 	}
 
@@ -252,13 +248,17 @@ public:
 	 *
 	 * @return The amount of resource usage
 	 */
-	inline uint64_t GetAssignedAmount(
+	uint64_t GetAssignedAmount(
 	        br::ResourceAssignmentMapPtr_t const & assign_map,
 	        br::ResourceType r_type,
 	        br::ResourceType r_scope_type =
 	                br::ResourceType::UNDEFINED,
 	        BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const {
-		return GetAssignedAmount(*(assign_map.get()), r_type, r_scope_type, r_scope_id);
+		return GetAssignedAmount(
+		               *(assign_map.get()),
+		               r_type,
+		               r_scope_type,
+		               r_scope_id);
 	}
 
 	uint64_t GetAssignedAmount(
@@ -277,7 +277,8 @@ public:
 	 * @param status_view Token of the resources state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	void PrintStatusReport(br::RViewToken_t status_view = 0, bool verbose = false) const;
+	void PrintStatusReport(
+	        br::RViewToken_t status_view = 0, bool verbose = false) const;
 
 	/**
 	 * @brief Print details about how resource usage is partitioned among
@@ -290,7 +291,7 @@ public:
 	 */
 	void PrintAppDetails(
 	        br::ResourcePtr_t resource_ptr, bool percent,
-		br::RViewToken_t status_view, bool verbose) const;
+	        br::RViewToken_t status_view, bool verbose) const;
 
 	/**
 	 * @brief Print the number of registered resources for each type
@@ -319,14 +320,21 @@ public:
 	 * resource descriptor cannot be allocated.
 	 */
 	br::ResourcePtr_t RegisterResource(
-	        std::string const & path, std::string const & units, uint64_t amount);
+	        std::string const & path,
+	        std::string const & units,
+	        uint64_t amount);
 
 	/**
-	 * @brief Update availabilies for the specified resource
+	 * @brief Update the total amount of the specified resource
 	 *
+	 * @param path Resource path in char string format
+	 * @param units Units for the amount value (i.e. "1", "Kbps", "Mb", ...)
+	 * @param amount The total amount available
 	 */
 	ExitCode_t UpdateResource(
-	        std::string const & path, std::string const & units, uint64_t amount);
+	        std::string const & path,
+	        std::string const & units,
+	        uint64_t amount);
 
 	/**
 	 * @brief Book e a set of resources
@@ -365,7 +373,8 @@ public:
 	 * @param papp The application holding the resources
 	 * @param status_view The token referencing the resource state view
 	 */
-	void ReleaseResources(ba::SchedPtr_t papp, br::RViewToken_t status_view = 0);
+	void ReleaseResources(
+	        ba::SchedPtr_t papp, br::RViewToken_t status_view = 0);
 
 
 	/**
@@ -514,7 +523,6 @@ public:
 	 * structure that may be modified during a synchronization phase
 	 */
 	void SyncWait();
-
 
 
 	/**
@@ -686,7 +694,6 @@ private:
 		}
 	}
 
-
 	/**
 	 * @brief Thread unsafe version of @ref GetView
 	 */
@@ -765,7 +772,7 @@ private:
 	 * doesn't match any state view.
 	 */
 	ExitCode_t GetAppAssignmentsByView(
-		br::RViewToken_t status_view, AppAssignmentsMapPtr_t & apps_assign);
+	        br::RViewToken_t status_view, AppAssignmentsMapPtr_t & apps_assign);
 
 	/**
 	 * @brief Book e a set of resources (not thread-safe)
