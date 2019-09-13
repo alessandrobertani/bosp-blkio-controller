@@ -522,7 +522,7 @@ public:
 	 * @param i_type The power profile information to update
 	 * @param sample The sample value
 	 */
-	inline void UpdatePowerInfo(PowerManager::InfoType i_type, uint32_t sample) {
+	void UpdatePowerInfo(PowerManager::InfoType i_type, uint32_t sample) {
 		std::unique_lock<std::mutex> ul(pw_profile.mux);
 		pw_profile.values[int(i_type)]->update(sample);
 	}
@@ -550,10 +550,10 @@ public:
 	 *
 	 * @param deg_perc Percentage of performance degradation
 	 */
-	 inline void UpdateDegradationPerc(uint8_t deg_perc) {
+	void UpdateDegradationPerc(uint8_t deg_perc) {
 		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		rb_profile.degradation_perc->update(deg_perc);
-	 }
+	}
 
 	/**
 	 * @brief The current performance degradation (last notification)
