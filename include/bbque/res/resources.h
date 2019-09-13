@@ -188,21 +188,55 @@ public:
 			perf_state(pstate) {
 		}
 
+		enum Actions {
+		        TURN_ONOFF      = 1,
+		        CHANGE_GOVERNOR = 2,
+		        SET_FREQUENCY   = 4,
+		        SET_PERF_STATE  = 8
+		};
+
 		bool operator==(const PowerSettings & other) const noexcept {
 			return ((this->freq_governor.compare(other.freq_governor) == 0)
 			        && this->freq_khz == other.freq_khz
 			        && this->perf_state == other.perf_state);
 		}
 
-		/**
-		 * @brief Reset the settings to the null values (except the
-		 * online status)
-		 */
+		void operator=(const PowerSettings & other) {
+			SetOn(other.online);
+			if (this->freq_governor.compare(other.freq_governor) != 0) {
+				pending_actions |= CHANGE_GOVERNOR;
+				this->freq_governor.assign(other.freq_governor);
+			}
+			if (this->freq_khz != other.freq_khz) {
+				pending_actions |= SET_FREQUENCY;
+				this->freq_khz = other.freq_khz;
+			}
+			if (this->perf_state != other.perf_state) {
+				pending_actions |= SET_PERF_STATE;
+				this->perf_state = other.perf_state;
+			}
+		}
+
+		bool SetOn(bool on) {
+			if (this->online != on) {
+				pending_actions |= TURN_ONOFF;
+				this->online = on;
+				return true;
+			}
+			return false;
+		}
+
 		void Reset() {
+			online = true;
 			freq_governor.assign("");
 			freq_khz = 0;
 			perf_state = -1;
+			pending_actions = 0;
 		}
+
+
+		/// Online/offline status
+		bool online = true;
 
 		/// Governor (eg. cpufreq)
 		std::string freq_governor;
@@ -212,8 +246,10 @@ public:
 
 		/// Operating performance state (alternative to set frequency)
 		int32_t perf_state;
-		INSTANT,
-		MEAN
+
+		/// Set of actions to be performed to update the power
+		/// management settings (bitset)
+		uint8_t pending_actions = 0;
 	};
 
 
@@ -414,7 +450,7 @@ public:
 	 * @return true if it is offline, false otherwise
 	 */
 	bool IsOffline() const {
-		return offline;
+		return !pw_config.online;
 	}
 
 	/**
@@ -428,16 +464,9 @@ public:
 	 */
 	void SetOnline();
 
-
-#ifdef CONFIG_BBQUE_PM
-
-	/**********************************************************************
-	 * POWER MANAGEMENT AND PROFILING                                     *
-	 **********************************************************************/
-
-
 	/**
 	 * @brief Set a new power configuration to apply
+	 * later on during the optimization stage
 	 */
 	void SetPowerSettings(PowerSettings new_settings) {
 		pw_config = new_settings;
@@ -445,10 +474,13 @@ public:
 
 	/**
 	 * @brief Get the currently set power configuration
+	 *  to actuate during the optimization stage
 	 */
 	PowerSettings const & GetPowerSettings() const {
 		return pw_config;
 	}
+
+#ifdef CONFIG_BBQUE_PM
 
 	/**
 	 * @brief Enable the collection of power-thermal status information
@@ -566,7 +598,6 @@ private:
 		uint enabled_count;                          /** Count of power profiling info enabled */
 	} PowerProfile_t;
 
-
 	/**
 	 * @brief Runtime information about the reliability of the resource
 	 */
@@ -574,7 +605,6 @@ private:
 		mutable std::mutex mux;
 		pEma_t degradation_perc; /** Percentage of performance degradation (stats) */
 	} ReliabilityProfile_t;
-
 
 
 	/** The total amount of resource  */
@@ -589,17 +619,14 @@ private:
 	/** Resource name, e.g. CPU architecture name */
 	std::string model;
 
-	/** True if this resource is currently offline */
-	bool offline;
-
 
 	/** The run-time availability profile of this resource */
 	AvailabilityProfile_t av_profile;
 
-#ifdef CONFIG_BBQUE_PM
-
 	/** Power configuration to apply for the resource assignment */
 	PowerSettings pw_config;
+
+#ifdef CONFIG_BBQUE_PM
 
 	/** Power/thermal status (if the platform support is available) */
 	PowerProfile_t pw_profile;

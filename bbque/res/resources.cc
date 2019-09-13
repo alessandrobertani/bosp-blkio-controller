@@ -34,8 +34,8 @@ namespace res
 Resource::Resource(br::ResourceType type, BBQUE_RID_TYPE id, uint64_t tot):
 	br::ResourceIdentifier(type, id),
 	total(tot),
-	reserved(0),
-	offline(false) {
+	reserved(0)
+{
 	name = std::string(GetResourceTypeString(type)) + std::to_string(id);
 
 	// Initialize profiling data structures
@@ -56,28 +56,22 @@ void Resource::InitProfilingInfo()
 
 void Resource::SetOffline()
 {
-	if (offline)
+	if (!pw_config.SetOn(false))
 		return;
-	offline = true;
-
 	// Keep track of last on-lining time
 	av_profile.offline_tmr.start();
 	av_profile.lastOnlineTime = av_profile.online_tmr.getElapsedTimeMs();
-
 	fprintf(stderr, FI("Resource {%s} OFFLINED, last on-line %.3f[s]\n"),
 	        name.c_str(), (av_profile.lastOnlineTime / 1000.0));
 }
 
 void Resource::SetOnline()
 {
-	if (!offline)
+	if (!pw_config.SetOn(true))
 		return;
-	offline = false;
-
 	// Keep track of last on-lining time
 	av_profile.online_tmr.start();
 	av_profile.lastOfflineTime = av_profile.offline_tmr.getElapsedTimeMs();
-
 	fprintf(stderr, FI("Resource {%s} ONLINED, last off-line %.3f[s]\n"),
 	        name.c_str(), (av_profile.lastOfflineTime / 1000.0));
 }
