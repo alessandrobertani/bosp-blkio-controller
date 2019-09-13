@@ -42,13 +42,15 @@ using bbque::utils::ExtraDataContainer;
 using bbque::utils::Timer;
 using bbque::utils::pEma_t;
 
-namespace bbque {
+namespace bbque
+{
 
 // Forward declaration
 class ResourceAccounter;
 
 
-namespace res {
+namespace res
+{
 
 // Forward declarations
 class Resource;
@@ -134,7 +136,8 @@ struct ResourceState {
  * of resource. This feature is particularly useful for components like the
  * Scheduler/Optimizer (see below.)
  */
-class Resource: public ResourceIdentifier, public ExtraDataContainer {
+class Resource: public ResourceIdentifier, public ExtraDataContainer
+{
 
 // This makes method SetTotal() accessible to RA
 friend class bbque::ResourceAccounter;
@@ -142,10 +145,10 @@ friend class bbque::ResourceAccounter;
 public:
 
 	enum ExitCode_t {
-		RS_SUCCESS = 0,       /** Generic success code */
-		RS_FAILED,            /** Generic failure code */
-		RS_NO_APPS,           /** Resource not used by any application */
-		RS_PWR_INFO_DISABLED  /** Required a power information not enabled */
+	        RS_SUCCESS = 0,       /** Generic success code */
+	        RS_FAILED,            /** Generic failure code */
+	        RS_NO_APPS,           /** Resource not used by any application */
+	        RS_PWR_INFO_DISABLED  /** Required a power information not enabled */
 	};
 
 	enum ValueType {
@@ -241,8 +244,8 @@ public:
 	 * @brief Set the resource model name
 	 * e.g. The model name of a CPU ("Intel i7-2640M")
 	 */
-	inline void SetModel(std::string const & _name) {
-		model.assign(_name);
+	void SetModel(std::string const & model_name) {
+		model.assign(model_name);
 	}
 
 	/**
@@ -270,7 +273,6 @@ public:
 	ResourcePathPtr_t Path() const {
 		return path;
 	}
-
 
 	/**********************************************************************
 	 * ACCOUNTING INFORMATION                                             *
@@ -400,6 +402,11 @@ public:
 	uint64_t Reserved() const {
 		return reserved;
 	}
+
+
+	/**********************************************************************
+	 * POWER MANAGEMENT AND PROFILING                                     *
+	 **********************************************************************/
 
 	/**
 	 * @brief Check if the resource is completely not available
@@ -543,20 +550,19 @@ private:
 	 * @brief The metrics to track run-time availability of a resource
 	 */
 	typedef struct AvailabilityProfile {
-		Timer online_tmr;           /** Timer to keep track of online time;   */
-		Timer offline_tmr;          /** Timer to keep track of offline time;  */
+		Timer online_tmr;          /** Timer to keep track of online time;   */
+		Timer offline_tmr;         /** Timer to keep track of offline time;  */
 		uint64_t lastOnlineTime;   /** Last online timeframe [ms]            */
 		uint64_t lastOfflineTime;  /** Last offline timeframe [ms]           */
 	} AvailabilityProfile_t;
-
 
 	/**
 	 * @brief Information related to the power/thermal status of the resource
 	 */
 	typedef struct PowerProfile {
 		mutable std::mutex mux;
-		PowerManager::SamplesArray_t samples_window; /** Flags of the available run-time information */
-		std::vector<pEma_t> values;                 /** Sampled values */
+		PowerManager::SamplesArray_t samples_window; /** Available run-time information */
+		std::vector<pEma_t> values;                  /** Sampled values */
 		uint enabled_count;                          /** Count of power profiling info enabled */
 	} PowerProfile_t;
 
@@ -599,12 +605,11 @@ private:
 	PowerProfile_t pw_profile;
 
 	PowerManager::SamplesArray_t default_samples_window =
-		{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE};
+	{ BBQUE_PM_DEFAULT_SAMPLES_WINSIZE };
 #endif
 
 	/** The run-time reliability profile of this resource */
 	ReliabilityProfile_t rb_profile;
-
 
 	/**
 	 * Hash map with all the views of the resource.
@@ -645,7 +650,7 @@ private:
 	 * @param view_id The token referencing the resource view
 	 * @return The amount of resource acquired if success, 0 otherwise.
 	 */
-	 uint64_t Acquire(SchedPtr_t const & papp, uint64_t amount, RViewToken_t view_id = 0);
+	uint64_t Acquire(SchedPtr_t const & papp, uint64_t amount, RViewToken_t view_id = 0);
 
 	/**
 	 * @brief Release the resource
