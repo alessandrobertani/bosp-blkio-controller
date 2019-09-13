@@ -827,18 +827,27 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 ResourceAccounter::ExitCode_t ResourceAccounter::SetOffline(
         std::string const & path)
 {
-	logger->Info("SetOffline: <%s> setting to (virtual) offline...",
-	             path.c_str());
+	auto resource_path_ptr = GetPath(path);
+	return SetOffline(resource_path_ptr);
+}
+
+ResourceAccounter::ExitCode_t ResourceAccounter::SetOffline(
+        br::ResourcePathPtr_t path)
+{
+	logger->Info("SetOffline: <%s> -> (virtual) offline...",
+	             path->ToString().c_str());
+
 	auto resources_list(GetResources(path));
 	if (resources_list.empty()) {
 		logger->Error("SetOffline: <%s> error: no matchings",
-		              path.c_str());
+		              path->ToString().c_str());
 		return RA_FAILED;
 	}
 
 	for (auto & resource_ptr : resources_list) {
 		resource_ptr->SetOffline();
-		logger->Debug("SetOffline: <%s> setting to (virtual) offline",
+		resources_to_power_manage.push_back(resource_ptr);
+		logger->Debug("SetOffline: <%s> -> (virtual) offline",
 		              resource_ptr->Path()->ToString().c_str());
 	}
 
@@ -848,38 +857,55 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SetOffline(
 ResourceAccounter::ExitCode_t ResourceAccounter::SetOnline(
         std::string const & path)
 {
-	logger->Info("SetOnline: <%s> setting to (virtual) online...",
-	             path.c_str());
+	auto resource_path_ptr = GetPath(path);
+	return SetOnline(resource_path_ptr);
+}
+
+ResourceAccounter::ExitCode_t ResourceAccounter::SetOnline(
+        br::ResourcePathPtr_t path)
+{
+	logger->Info("SetOnline: <%s> -> online...", path->ToString().c_str());
+
 	auto resources_list(GetResources(path));
 	if (resources_list.empty()) {
-		logger->Error("SetOnline: <%s> error: no matchings");
+		logger->Error("SetOnline: <%s> error: no matchings",
+		              path->ToString().c_str());
 		return RA_FAILED;
 	}
 
 	for (auto & resource_ptr : resources_list) {
 		resource_ptr->SetOnline();
-		logger->Debug("SetOnline: <%s> setting to (virtual) online",
+		resources_to_power_manage.push_back(resource_ptr);
+		logger->Debug("SetOnline: <%s> -> online",
 		              resource_ptr->Path()->ToString().c_str());
 	}
 
 	return RA_SUCCESS;
 }
 
-bool ResourceAccounter::IsOffline(ResourcePathPtr_t resource_path_ptr) const
+bool ResourceAccounter::IsOffline(std::string const & path)
 {
-	logger->Debug("IsOffline: <%s> check virtual on/offline status...",
-	              resource_path_ptr->ToString().c_str());
-	auto resources_list = resources.find_list(
-	                              *resource_path_ptr, RT_MATCH_MIXED);
+	auto resource_path_ptr = GetPath(path);
+	return IsOffline(resource_path_ptr);
+}
+
+bool ResourceAccounter::IsOffline(ResourcePathPtr_t path) const
+{
+	logger->Debug("IsOffline: <%s> check virtual offline status...",
+	              path->ToString().c_str());
+	auto resources_list(GetResources(path));
 	if (resources_list.empty()) {
 		logger->Error("IsOffline: <%s> error: no matchings",
-		              resource_path_ptr->ToString().c_str());
+		              path->ToString().c_str());
 		return true;
 	}
 
 	for (auto & resource_ptr : resources_list) {
-		if (!resource_ptr->IsOffline())
+		if (!resource_ptr->IsOffline()) {
+			logger->Debug("IsOffline: <%s> is online",
+			              resource_ptr->Path()->ToString().c_str());
 			return false;
+		}
 	}
 
 	return true;

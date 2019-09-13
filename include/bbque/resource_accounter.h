@@ -415,6 +415,8 @@ public:
 	 */
 	ExitCode_t SetOffline(std::string const & path);
 
+	ExitCode_t SetOffline(br::ResourcePathPtr_t path);
+
 	/**
 	 * @brief Set the resource (back) to a (virtual) online status
 	 *
@@ -426,13 +428,17 @@ public:
 	 */
 	ExitCode_t SetOnline(std::string const & path);
 
+	ExitCode_t SetOnline(br::ResourcePathPtr_t path);
+
 	/**
 	 * @brief Check if a given resource is offline
 	 *
-	 * @param resource_path_ptr Resource path pointer
+	 * @param path Resource path pointer
 	 * @return true if offline, false otherwise
 	 */
-	bool IsOffline(br::ResourcePathPtr_t resource_path_ptr) const;
+	bool IsOffline(br::ResourcePathPtr_t path) const;
+
+	bool IsOffline(std::string const & path);
 
 	/**
 	 * @brief Check if resources are being reshuffled
@@ -637,6 +643,9 @@ private:
 
 	/** Id numbers set for each type of registered resource */
 	std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> r_ids_per_type;
+
+	/** Resources for which a new power management configuration has been specified */
+	std::list<br::ResourcePtr_t> resources_to_power_manage;
 
 
 	/** Resource path (pointer) referencing the prefix */
