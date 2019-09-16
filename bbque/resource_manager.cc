@@ -31,8 +31,8 @@
 
 /** Metrics (class COUNTER) declaration */
 #define RM_COUNTER_METRIC(NAME, DESC)\
- {RESOURCE_MANAGER_NAMESPACE "." NAME, DESC, \
-	 MetricsCollector::COUNTER, 0, NULL, 0}
+	{RESOURCE_MANAGER_NAMESPACE "." NAME, DESC, \
+		MetricsCollector::COUNTER, 0, NULL, 0}
 /** Increase counter for the specified metric */
 #define RM_COUNT_EVENT(METRICS, INDEX) \
 	mc.Count(METRICS[INDEX].mh);
@@ -42,8 +42,8 @@
 
 /** Metrics (class SAMPLE) declaration */
 #define RM_SAMPLE_METRIC(NAME, DESC)\
- {RESOURCE_MANAGER_NAMESPACE "." NAME, DESC, \
-	 MetricsCollector::SAMPLE, 0, NULL, 0}
+	{RESOURCE_MANAGER_NAMESPACE "." NAME, DESC, \
+		MetricsCollector::SAMPLE, 0, NULL, 0}
 /** Reset the timer used to evaluate metrics */
 #define RM_RESET_TIMING(TIMER) \
 	TIMER.start();
@@ -56,8 +56,8 @@
 
 /** Metrics (class PERIDO) declaration */
 #define RM_PERIOD_METRIC(NAME, DESC)\
- {RESOURCE_MANAGER_NAMESPACE "." NAME, DESC, \
-	 MetricsCollector::PERIOD, 0, NULL, 0}
+	{RESOURCE_MANAGER_NAMESPACE "." NAME, DESC, \
+		MetricsCollector::PERIOD, 0, NULL, 0}
 /** Acquire a new time sample */
 #define RM_GET_PERIOD(METRICS, INDEX, PERIOD) \
 	mc.PeriodSample(METRICS[INDEX].mh, PERIOD);
@@ -71,7 +71,8 @@ using bp::PluginManager;
 using bu::MetricsCollector;
 using std::chrono::milliseconds;
 
-namespace bbque {
+namespace bbque
+{
 
 /* Definition of metrics used by this module */
 MetricsCollector::MetricsCollection_t
@@ -88,7 +89,7 @@ ResourceManager::metrics[RM_METRICS_COUNT] = {
 
 	RM_COUNTER_METRIC("sch.tot",	"Total Scheduler activations"),
 	RM_COUNTER_METRIC("sch.failed",	"  FAILED  schedules"),
-	RM_COUNTER_METRIC("sch.delayed","  DELAYED schedules"),
+	RM_COUNTER_METRIC("sch.delayed", "  DELAYED schedules"),
 	RM_COUNTER_METRIC("sch.empty",	"  EMPTY   schedules"),
 
 	RM_COUNTER_METRIC("syn.tot",	"Total Synchronization activations"),
@@ -117,7 +118,8 @@ ResourceManager::metrics[RM_METRICS_COUNT] = {
 };
 
 
-ResourceManager & ResourceManager::GetInstance() {
+ResourceManager & ResourceManager::GetInstance()
+{
 	static ResourceManager rtrm;
 
 	return rtrm;
@@ -151,7 +153,8 @@ ResourceManager::ResourceManager() :
 	em(em::EventManager::GetInstance()),
 #endif
 
-	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)) {
+	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this))
+{
 
 	plat_event = false;
 
@@ -162,19 +165,19 @@ ResourceManager::ResourceManager() :
 	CommandManager &cm = CommandManager::GetInstance();
 #define CMD_STATUS_EXC ".exc_status"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_EXC, static_cast<CommandHandler*>(this),
-			"Dump the status of each registered EXC");
+	                   "Dump the status of each registered EXC");
 #define CMD_STATUS_QUEUES ".que_status"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_QUEUES, static_cast<CommandHandler*>(this),
-			"Dump the status of each Scheduling Queue");
+	                   "Dump the status of each Scheduling Queue");
 #define CMD_STATUS_RESOURCES ".res_status"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_RESOURCES, static_cast<CommandHandler*>(this),
-			"Dump the status of each registered Resource");
+	                   "Dump the status of each registered Resource");
 #define CMD_STATUS_SYNC ".syn_status"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_SYNC, static_cast<CommandHandler*>(this),
-			"Dump the status of each Synchronization Queue");
+	                   "Dump the status of each Synchronization Queue");
 #define CMD_OPT_FORCE ".opt_force"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_OPT_FORCE, static_cast<CommandHandler*>(this),
-			"Force a new scheduling event");
+	                   "Force a new scheduling event");
 
 #ifdef CONFIG_BBQUE_EM
 	em::Event event(true, "rm", "", "barbeque", "__startup", 1);
@@ -184,7 +187,8 @@ ResourceManager::ResourceManager() :
 }
 
 ResourceManager::ExitCode_t
-ResourceManager::Setup() {
+ResourceManager::Setup()
+{
 
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(RESOURCE_MANAGER_NAMESPACE);
@@ -242,10 +246,11 @@ ResourceManager::Setup() {
 	return OK;
 }
 
-void ResourceManager::NotifyEvent(controlEvent_t evt) {
+void ResourceManager::NotifyEvent(controlEvent_t evt)
+{
 	// Ensure we have a valid event
 	logger->Debug("NotifyEvent: received event = %d", evt);
-	assert(evt<EVENTS_COUNT);
+	assert(evt < EVENTS_COUNT);
 
 	// Set the corresponding event flag
 	std::unique_lock<std::mutex> pendingEvts_ul(pendingEvts_mtx, std::defer_lock);
@@ -255,8 +260,7 @@ void ResourceManager::NotifyEvent(controlEvent_t evt) {
 	if (pendingEvts_ul.try_lock()) {
 		logger->Debug("NotifyEvent: notifying %d", evt);
 		pendingEvts_cv.notify_one();
-	}
-	else {
+	} else {
 		logger->Debug("NotifyEvent: NOT notifying %d", evt);
 	}
 }
@@ -265,20 +269,23 @@ std::map<std::string, Worker*> ResourceManager::workers_map;
 std::mutex ResourceManager::workers_mtx;
 std::condition_variable ResourceManager::workers_cv;
 
-void ResourceManager::Register(std::string const & name, Worker *pw) {
+void ResourceManager::Register(std::string const & name, Worker *pw)
+{
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
 	fprintf(stderr, FI("Registering Worker[%s]...\n"), name.c_str());
 	workers_map[name] = pw;
 }
 
-void ResourceManager::Unregister(std::string const & name) {
+void ResourceManager::Unregister(std::string const & name)
+{
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
 	fprintf(stderr, FI("Unregistering Worker[%s]...\n"), name.c_str());
 	workers_map.erase(name);
 	workers_cv.notify_one();
 }
 
-void ResourceManager::WaitForReady() {
+void ResourceManager::WaitForReady()
+{
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	while (!is_ready) {
 		logger->Debug("WaitForReady: an optimization is in progress...");
@@ -286,8 +293,9 @@ void ResourceManager::WaitForReady() {
 	}
 }
 
-void ResourceManager::SetReady(bool value) {
-	logger->Debug("SetReady: %s", value ? "true": "false");
+void ResourceManager::SetReady(bool value)
+{
+	logger->Debug("SetReady: %s", value ? "true" : "false");
 	std::unique_lock<std::mutex> status_ul(status_mtx);
 	is_ready = value;
 	if (value) {
