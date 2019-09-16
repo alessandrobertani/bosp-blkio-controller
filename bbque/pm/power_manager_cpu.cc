@@ -700,8 +700,8 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 
 	// Extracting available frequencies
 	if (core_freqs[pe_id] == nullptr) {
-		logger->Warn("List of frequencies not available for PE %d",
-				pe_id);
+		logger->Warn("GetAvailableFrequencies: <pe=%d> frequencies list missing",
+		             pe_id);
 		return PowerManager::PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 	freqs = *(core_freqs[pe_id]);
@@ -714,24 +714,21 @@ void CPUPowerManager::_GetAvailableFrequencies(
 		int pe_id,
 		std::shared_ptr<std::vector<uint32_t>> cpu_freqs) {
 	bu::IoFs::ExitCode_t result;
+	std::string sysfs_path(BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+	                       "/cpufreq/scaling_available_frequencies");
 
 	// Extracting available frequencies string
 	std::string cpu_available_freqs;
-	result = bu::IoFs::ReadValueFrom(
-				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-				"/cpufreq/scaling_available_frequencies",
-				cpu_available_freqs);
-	std::string path_string(BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-				"/cpufreq/scaling_available_frequencies");
-	logger->Error("%s:%s",path_string.c_str(),cpu_available_freqs.c_str());
+	result = bu::IoFs::ReadValueFrom(sysfs_path, cpu_available_freqs);
+	logger->Debug("%s: { %s }", sysfs_path.c_str(), cpu_available_freqs.c_str());
 	if (result != bu::IoFs::OK) {
-		logger->Warn("List of frequencies not available for <...pe%d>", pe_id);
+		logger->Warn("GetAvailableFrequencies: <pe=%d> cannot get frequencies",
+		             pe_id);
 		return;
 	}
 
-	if (result != bu::IoFs::OK)
-		return;
-	logger->Debug("<...pe%d> frequencies: %s", pe_id, cpu_available_freqs.c_str());
+	logger->Debug("GetAvailableFrequencies: <pe=%d> { %s }",
+	              pe_id, cpu_available_freqs.c_str());
 
 	// Fill the vector with the integer frequency values
 	std::list<uint32_t> cpu_freqs_unsrt;
