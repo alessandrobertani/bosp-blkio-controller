@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2017  Politecnico di Milano
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 #ifndef BBQUE_LOCAL_PLATFORM_PROXY_H_
 #define BBQUE_LOCAL_PLATFORM_PROXY_H_
 
@@ -7,50 +25,62 @@
 #include <vector>
 
 
-namespace bbque {
-namespace pp {
+namespace bbque
+{
+namespace pp
+{
 class LocalPlatformProxy : public PlatformProxy
 {
 public:
 
 	LocalPlatformProxy();
 
+	virtual ~LocalPlatformProxy() { }
+
 	/**
 	 * @brief Return the Platform specific string identifier
 	 */
-	virtual const char* GetPlatformID(int16_t system_id=-1) const;
+	const char* GetPlatformID(int16_t system_id = -1) const;
 
 	/**
 	 * @brief Return the Hardware identifier string
 	 */
-	virtual const char* GetHardwareID(int16_t system_id=-1) const;
+	const char* GetHardwareID(int16_t system_id = -1) const;
 	/**
 	 * @brief Platform specific resource setup interface.
 	 */
-	virtual ExitCode_t Setup(SchedPtr_t papp);
+	ExitCode_t Setup(SchedPtr_t papp);
 
 	/**
-	 * @brief Platform specific resources enumeration
+	 * @brief Register/enumerate local node resources
 	 *
-	 * The default implementation of this method loads the TPD, is such a
-	 * function has been enabled
+	 * The default implementation of this method loads the TPD, if such a
+	 * options has been enabled at compile-time.
 	 */
-	virtual ExitCode_t LoadPlatformData();
+	ExitCode_t LoadPlatformData();
 
 	/**
-	 * @brief Platform specific resources refresh
+	 * @brief Refresh local node resources
 	 */
-	virtual ExitCode_t Refresh();
+	ExitCode_t Refresh();
 
 	/**
-	 * @brief Platform specific resources release interface.
+	 * @brief Release resources from the local node.
 	 */
-	virtual ExitCode_t Release(SchedPtr_t papp);
+	ExitCode_t Release(SchedPtr_t papp);
 
 	/**
-	 * @brief Platform specific resource claiming interface.
+	 * @brief Reclaim resources from the local node.
 	 */
-	virtual ExitCode_t ReclaimResources(SchedPtr_t papp);
+	ExitCode_t ReclaimResources(SchedPtr_t papp);
+
+	/**
+	 * @brief Map the local resource assignments.
+	 */
+	ExitCode_t MapResources(
+	        SchedPtr_t papp,
+	        ResourceAssignmentMapPtr_t pres,
+	        bool excl = true);
 
 	/**
 	 * @brief Platform specific resource binding interface.
@@ -61,21 +91,29 @@ public:
 		bool excl = true) ;
 
 	/**
-	 * @brief Platform specific proxy termination.
+	 * @brief Local termination.
 	 */
-	virtual void Exit();
+	void Exit();
 
-	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
+	/**
+	 * @brief Check if a local resource is "high-performance" qualified.
+	 */
+	bool IsHighPerformance(
+	        bbque::res::ResourcePathPtr_t const & path) const override;
 
 private:
+
+	std::unique_ptr<bu::Logger> logger;
+
 	/**
-	 * @brief The host platform proxy, e.g. linux or android
+	 * @brief The host platform proxy, e.g. Linux or Android, managing the low-level
+	 * access to the local CPUs and OS services.
 	 */
 	std::unique_ptr<PlatformProxy> host;
 
 	/**
-	 * @brief The list of auxiliary platform proxy, like OpenCL, Adapteva,
-	 *        Process Listener, etc.
+	 * @brief The list of auxiliary platform proxy, used for managing additional
+	 * computing resources (like OpenCL, HW accelerators, Process Listener, etc...)
 	 */
 	std::vector<std::unique_ptr<PlatformProxy>> aux;
 

@@ -32,14 +32,16 @@ using bbque::res::ResourceAssignmentMapPtr_t;
 using bbque::res::RViewToken_t;
 using bbque::app::SchedPtr_t;
 
-namespace bbque {
+namespace bbque
+{
 
 /**
  * @class PlatformProxy
  * @brief The PlatformProxy class is the interface for all PlatformProxy
  * classes. The access to these classes is provided by the PlatformManager
  */
-class PlatformProxy {
+class PlatformProxy
+{
 
 public:
 
@@ -49,18 +51,19 @@ public:
 	 * @brief Exit codes returned by methods of this class
 	 */
 	typedef enum ExitCode {
-		PLATFORM_OK = 0,
-		PLATFORM_GENERIC_ERROR,
-		PLATFORM_INIT_FAILED,
-		PLATFORM_ENUMERATION_FAILED,
-		PLATFORM_LOADING_FAILED,
-		PLATFORM_NODE_PARSING_FAILED,
-		PLATFORM_DATA_NOT_FOUND,
-		PLATFORM_DATA_PARSING_ERROR,
-		PLATFORM_COMM_ERROR,
-		PLATFORM_MAPPING_FAILED,
-		PLATFORM_PWR_MONITOR_ERROR,
-		PLATFORM_AGENT_PROXY_ERROR,
+	        PLATFORM_OK = 0,
+	        PLATFORM_GENERIC_ERROR,
+	        PLATFORM_INIT_FAILED,
+	        PLATFORM_ENUMERATION_FAILED,
+	        PLATFORM_LOADING_FAILED,
+	        PLATFORM_NODE_PARSING_FAILED,
+	        PLATFORM_DATA_NOT_FOUND,
+	        PLATFORM_DATA_PARSING_ERROR,
+	        PLATFORM_COMM_ERROR,
+	        PLATFORM_MAPPING_FAILED,
+	        PLATFORM_PWR_MONITOR_ERROR,
+	        PLATFORM_PWR_SETTING_ERROR,
+	        PLATFORM_AGENT_PROXY_ERROR
 	} ExitCode_t;
 
 	/**
@@ -69,7 +72,7 @@ public:
 	 *                  platform identifier. If not specified or equal
 	 *                  to "-1", the platform id of the local system is returned.
 	 */
-	virtual const char* GetPlatformID(int16_t system_id=-1) const = 0;
+	virtual const char* GetPlatformID(int16_t system_id = -1) const = 0;
 
 	/**
 	 * @brief Return the Hardware identifier string
@@ -77,7 +80,7 @@ public:
 	 *                  hardware identifier. If not specified or equal
 	 *                  to "-1", the hw id of the local system is returned.
 	 */
-	virtual const char* GetHardwareID(int16_t system_id=-1) const = 0;
+	virtual const char* GetHardwareID(int16_t system_id = -1) const = 0;
 
 	/**
 	 * @brief Platform specific resource setup interface.
@@ -116,7 +119,7 @@ public:
 	 * usage to the application
 	 */
 	virtual ExitCode_t MapResources(
-			SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
+	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
 	/**
 	 * @brief Graceful closure of the platform proxy
@@ -132,7 +135,7 @@ public:
 	 * @return true or false
 	 */
 	virtual bool IsHighPerformance(
-			bbque::res::ResourcePathPtr_t const & path) const = 0;
+	        bbque::res::ResourcePathPtr_t const & path) const = 0;
 
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
@@ -144,7 +147,7 @@ public:
 #endif
 
 protected:
-        static plugins::PlatformLoaderIF* pli;
+	static plugins::PlatformLoaderIF* pli;
 };
 
 } // namespace bbque

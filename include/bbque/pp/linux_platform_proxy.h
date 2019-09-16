@@ -31,8 +31,10 @@
 
 #include <bitset>
 
-namespace bbque {
-namespace pp {
+namespace bbque
+{
+namespace pp
+{
 
 class LinuxPlatformProxy : public PlatformProxy
 {
@@ -45,12 +47,12 @@ public:
 	/**
 	 * @brief Return the Linux specific string identifier
 	 */
-	const char* GetPlatformID(int16_t system_id=-1) const noexcept override final;
+	const char* GetPlatformID(int16_t system_id = -1) const noexcept override final;
 
 	/**
 	 * @brief Return the Hardware identifier string
 	 */
-	const char* GetHardwareID(int16_t system_id=-1) const noexcept override final;
+	const char* GetHardwareID(int16_t system_id = -1) const noexcept override final;
 
 	/**
 	 * @brief Linux specific resource setup interface.
@@ -100,12 +102,12 @@ private:
 	/**
 	 * @brief Default MAX number of CPUs per socket
 	 */
-	const int MaxCpusCount = BBQUE_MAX_R_ID_NUM+1;
+	const int MaxCpusCount = BBQUE_MAX_R_ID_NUM + 1;
 
 	/**
 	 * @brief Default MAX number of MEMs node per host
 	 */
-	const int MaxMemsCount = BBQUE_MAX_R_ID_NUM+1;
+	const int MaxMemsCount = BBQUE_MAX_R_ID_NUM + 1;
 
 //-------------------- ATTRIBUTES
 	/**
@@ -153,8 +155,8 @@ private:
 	ExitCode_t MakeQDisk(int if_index);
 	ExitCode_t MakeCLS(int if_index);
 	ExitCode_t SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
-					ResourceAssignmentMapPtr_t pres,
-					RLinuxBindingsPtr_t prlb);
+	                                 ResourceAssignmentMapPtr_t pres,
+	                                 RLinuxBindingsPtr_t prlb);
 	ExitCode_t MakeNetClass(AppPid_t handle, unsigned rate, int if_index);
 
 	static ExitCode_t HTBParseOpt(struct nlmsghdr *n);
@@ -194,9 +196,9 @@ private:
 
 
 	ExitCode_t ScanPlatformDescription() noexcept;
-	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu, bool is_local=true) noexcept;
-	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem, bool is_local=true) noexcept;
-	ExitCode_t RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local=true) noexcept;
+	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu, bool is_local = true) noexcept;
+	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem, bool is_local = true) noexcept;
+	ExitCode_t RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local = true) noexcept;
 
 	// --- CGroup-releated methods
 

@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2017  Politecnico di Milano
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef BBQUE_REMOTE_PLATFORM_PROXY_H
 #define BBQUE_REMOTE_PLATFORM_PROXY_H
 
@@ -7,8 +24,10 @@
 
 #define REMOTE_PLATFORM_PROXY_NAMESPACE "bb.pp.rpp"
 
-namespace bbque {
-namespace pp {
+namespace bbque
+{
+namespace pp
+{
 
 class RemotePlatformProxy : public PlatformProxy, public bbque::plugins::AgentProxyIF
 {
@@ -21,39 +40,42 @@ public:
 	/**
 	 * @brief Return the Platform specific string identifier
 	 */
-	virtual const char* GetPlatformID(int16_t system_id=-1) const;
+	const char* GetPlatformID(int16_t system_id = -1) const;
 
 	/**
 	 * @brief Return the Hardware identifier string
 	 */
-	virtual const char* GetHardwareID(int16_t system_id=-1) const;
+	const char* GetHardwareID(int16_t system_id = -1) const;
 	/**
 	 * @brief Platform specific resource setup interface.
 	 */
-	virtual ExitCode_t Setup(SchedPtr_t papp);
+	ExitCode_t Setup(SchedPtr_t papp);
 
 	/**
-	 * @brief Platform specific resources enumeration
-	 *
-	 * The default implementation of this method loads the TPD, is such a
-	 * function has been enabled
+	 * @brief Register/enumerate resources from remote nodes
 	 */
-	virtual ExitCode_t LoadPlatformData();
+	ExitCode_t LoadPlatformData();
 
 	/**
-	 * @brief Platform specific resources refresh
+	 * @brief Refresh resources availability from remote nodes
 	 */
-	virtual ExitCode_t Refresh();
+	ExitCode_t Refresh();
 
 	/**
-	 * @brief Platform specific resources release interface.
+	 * @brief Release from remote nodes.
 	 */
-	virtual ExitCode_t Release(SchedPtr_t papp);
+	ExitCode_t Release(SchedPtr_t papp);
 
 	/**
-	 * @brief Platform specific resource claiming interface.
+	 * @brief Reclaim resources from remote nodes.
 	 */
-	virtual ExitCode_t ReclaimResources(SchedPtr_t papp);
+	ExitCode_t ReclaimResources(SchedPtr_t papp);
+
+	/**
+	 * @brief Map resources assignments on remote nodes.
+	 */
+	ExitCode_t MapResources(
+	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true);
 
 	/**
 	 * @brief Platform specific resource binding interface.
@@ -61,14 +83,19 @@ public:
 	virtual ExitCode_t MapResources(
 		SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) ;
 
-	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
+	/**
+	 * @brief Check if a remote resource is "high-performance" qualified.
+	 */
+	bool IsHighPerformance(
+	        bbque::res::ResourcePathPtr_t const & path) const override;
 
 	/**
-	 * @brief Platform specific termination.
+	 * @brief Remote platform termination.
 	 */
-	virtual void Exit();
+	void Exit();
 
-	//--- AgentProxy functions
+
+	//--- AgentProxy wrapper functions
 
 	void StartServer();
 
@@ -78,21 +105,21 @@ public:
 
 
 	bbque::agent::ExitCode_t GetResourceStatus(
-		std::string const & resource_path, agent::ResourceStatus & status);
+	        std::string const & resource_path, agent::ResourceStatus & status);
 
 
 	bbque::agent::ExitCode_t GetWorkloadStatus(
-		std::string const & system_path, agent::WorkloadStatus & status);
+	        std::string const & system_path, agent::WorkloadStatus & status);
 
 	bbque::agent::ExitCode_t GetWorkloadStatus(
-		int system_id, agent::WorkloadStatus & status);
+	        int system_id, agent::WorkloadStatus & status);
 
 
 	bbque::agent::ExitCode_t GetChannelStatus(
-		std::string const & system_path, agent::ChannelStatus & status);
+	        std::string const & system_path, agent::ChannelStatus & status);
 
 	bbque::agent::ExitCode_t GetChannelStatus(
-		int system_id, agent::ChannelStatus & status);
+	        int system_id, agent::ChannelStatus & status);
 
 
 	bbque::agent::ExitCode_t SendJoinRequest(std::string const & system_path);
@@ -106,10 +133,11 @@ public:
 
 
 	bbque::agent::ExitCode_t SendScheduleRequest(
-		std::string const & system_path,
-		agent::ApplicationScheduleRequest const & request) ;
+	        std::string const & system_path,
+	        agent::ApplicationScheduleRequest const & request) ;
 
 private:
+
 	/**
 	 * @brief The logger used by the worker thread
 	 */

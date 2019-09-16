@@ -12,7 +12,8 @@
 #define PLATFORM_MANAGER_EV_REFRESH  0
 #define PLATFORM_MANAGER_EV_COUNT    1
 
-namespace bbque {
+namespace bbque
+{
 
 class PlatformManager : public PlatformProxy, public utils::Worker, public CommandHandler
 {
@@ -28,7 +29,7 @@ public:
 	 *       platform identifier. If not specified or equal
 	 *       to "-1", the platorm id of the local system is returned.
 	 */
-	virtual const char* GetPlatformID(int16_t system_id=-1) const override;
+	virtual const char* GetPlatformID(int16_t system_id = -1) const override;
 
 	/**
 	 * @brief Return the Hardware identifier string
@@ -36,7 +37,7 @@ public:
 	 *       platform idenfier. If not specified or equal
 	 *       to "-1", the hw id of the local system is returned.
 	 */
-	virtual const char* GetHardwareID(int16_t system_id=-1) const override;
+	virtual const char* GetHardwareID(int16_t system_id = -1) const override;
 
 	/**
 	 * @brief Platform specific resource setup interface.
@@ -68,11 +69,6 @@ public:
 	virtual ExitCode_t ReclaimResources(SchedPtr_t papp) override;
 
 	/**
-	 * @brief Platform specific termiantion.
-	 */
-	virtual void Exit() override;
-
-	/**
 	 * @brief Bind the specified resources to the specified application.
 	 *
 	 * @param papp The application which resources are assigned
@@ -81,7 +77,7 @@ public:
 	 * usage to the application
 	 */
 	virtual ExitCode_t MapResources(
-		SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
+	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
 	/**
 	 * @brief Check if the resource is a "high-performance" is single-ISA
@@ -89,7 +85,13 @@ public:
 	 *
 	 * @return true if so, false otherwise
 	 */
-	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
+	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
+
+	/**
+	 * @brief Platform specific termination.
+	 */
+	virtual void Exit() override;
+
 
 	/**
 	 * @brief Load the configuration via the corresponding plugin
@@ -123,7 +125,7 @@ private:
 	/**
 	 * @brief True if remote and local platform has been initialized
 	 */
-	bool platforms_initialized=false;
+	bool platforms_initialized = false;
 
 	/**
 	 * @brief The logger used by the worker thread

@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2017  Politecnico di Milano
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "bbque/pp/local_platform_proxy.h"
 #include "bbque/pp/test_platform_proxy.h"
 #include "bbque/config.h"
@@ -18,10 +35,16 @@
 #include "bbque/pp/opencl_platform_proxy.h"
 #endif
 
-namespace bbque {
-namespace pp {
 
-LocalPlatformProxy::LocalPlatformProxy() {
+namespace bbque
+{
+namespace pp
+{
+
+LocalPlatformProxy::LocalPlatformProxy()
+{
+	logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE ".local");
+	assert(logger);
 
 #ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
 	this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy::GetInstance());
@@ -47,7 +70,8 @@ LocalPlatformProxy::LocalPlatformProxy() {
 	bbque_assert(this->host);
 }
 
-const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const {
+const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const
+{
 #ifdef CONFIG_TARGET_LINUX_MANGO
 	return this->aux[0]->GetPlatformID(system_id);
 #else
@@ -55,7 +79,8 @@ const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const {
 #endif
 }
 
-const char* LocalPlatformProxy::GetHardwareID(int16_t system_id) const {
+const char* LocalPlatformProxy::GetHardwareID(int16_t system_id) const
+{
 #ifdef CONFIG_TARGET_LINUX_MANGO
 	return this->aux[0]->GetHardwareID(system_id);
 #else
@@ -63,7 +88,8 @@ const char* LocalPlatformProxy::GetHardwareID(int16_t system_id) const {
 #endif
 }
 
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp) {
+LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp)
+{
 	ExitCode_t ec;
 
 	// Obviously, at least a PE in the cpu must be provided to application
@@ -73,7 +99,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp) {
 		return ec;
 	}
 
-	for (auto it=this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->Setup(papp);
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -84,7 +110,8 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp) {
 }
 
 
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData() {
+LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData()
+{
 	ExitCode_t ec;
 
 	ec = this->host->LoadPlatformData();
@@ -92,7 +119,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData() {
 		return ec;
 	}
 
-	for (auto it=this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->LoadPlatformData();
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -103,7 +130,8 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData() {
 }
 
 
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh() {
+LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh()
+{
 	ExitCode_t ec;
 
 	ec = this->host->Refresh();
@@ -111,7 +139,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh() {
 		return ec;
 	}
 
-	for (auto it=this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->Refresh();
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -122,7 +150,8 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh() {
 }
 
 
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp) {
+LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp)
+{
 	ExitCode_t ec;
 
 	ec = this->host->Release(papp);
@@ -130,7 +159,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp) {
 		return ec;
 	}
 
-	for (auto it=this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->Release(papp);
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -138,12 +167,11 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp) {
 	}
 
 	return PLATFORM_OK;
-
 }
 
 
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t papp) {
-
+LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t papp)
+{
 	ExitCode_t ec;
 
 	ec = this->host->ReclaimResources(papp);
@@ -151,7 +179,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t p
 		return ec;
 	}
 
-	for (auto it=this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->ReclaimResources(papp);
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -165,7 +193,8 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t p
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
         SchedPtr_t papp,
         ResourceAssignmentMapPtr_t pres,
-        bool excl) {
+        bool excl)
+{
 	ExitCode_t ec;
 
 	ec = this->host->MapResources(papp, pres, excl);
@@ -173,7 +202,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
 		return ec;
 	}
 
-	for (auto it=this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->MapResources(papp, pres, excl);
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -184,15 +213,18 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
 }
 
 
-void LocalPlatformProxy::Exit() {
+
+void LocalPlatformProxy::Exit()
+{
 	this->host->Exit();
-	for (auto it=this->aux.begin() ; it < this->aux.end(); it++)
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++)
 		(*it)->Exit();
 }
 
 
 bool LocalPlatformProxy::IsHighPerformance(
-		bbque::res::ResourcePathPtr_t const & path) const {
+        bbque::res::ResourcePathPtr_t const & path) const
+{
 	if (path->GetID(bbque::res::ResourceType::CPU) >= 0)
 		return this->host->IsHighPerformance(path);
 	return false;
@@ -201,4 +233,3 @@ bool LocalPlatformProxy::IsHighPerformance(
 
 } // namespace pp
 } // namespace bbque
-
