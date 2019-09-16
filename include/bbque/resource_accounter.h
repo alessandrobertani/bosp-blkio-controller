@@ -581,6 +581,29 @@ public:
 	 */
 	int ResourceDegradationHandler(int argc, char * argv[]);
 
+
+	/**********************************************************************
+	 * POWER MANAGEMENT 		                                      *
+	 **********************************************************************/
+
+	/**
+	 * @brief Specify a new power management configuration for a specific
+	 * resource
+	 *
+	 * @param resource The descriptor (pointer) of the resource to configure
+	 * @param config The power management configuration to apply
+	 */
+	void EnqueueResourceToPowerManage(
+	        br::ResourcePtr_t resource, br::Resource::PowerSettings config);
+
+	/**
+	 * @brief Dequeue the first resource to which apply a pending power
+	 * configuration
+	 *
+	 * @return A resource descriptor (pointer)
+	 */
+	br::ResourcePtr_t DequeueResourceToPowerManage();
+
 private:
 
 	/**

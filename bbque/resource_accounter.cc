@@ -65,7 +65,6 @@ ResourceAccounter::ResourceAccounter() :
 	fm(ConfigurationManager::GetInstance()),
 	status(State::NOT_READY)
 {
-
 	// Get a logger
 	logger = bu::Logger::GetLogger(RESOURCE_ACCOUNTER_NAMESPACE);
 	assert(logger);
@@ -910,6 +909,30 @@ bool ResourceAccounter::IsOffline(ResourcePathPtr_t path) const
 
 	return true;
 }
+
+br::ResourcePtr_t ResourceAccounter::DequeueResourceToPowerManage()
+{
+	if (resources_to_power_manage.empty())
+		return nullptr;
+	auto resource = resources_to_power_manage.front();
+	resources_to_power_manage.pop_front();
+	logger->Debug("DequeueResourceToPowerManage: <%> added",
+	              resource->Path()->ToString().c_str());
+	return resource;
+}
+
+void ResourceAccounter::EnqueueResourceToPowerManage(
+        br::ResourcePtr_t resource,
+        br::Resource::PowerSettings config)
+{
+	resource->SetPowerSettings(config);
+	resources_to_power_manage.push_back(resource);
+	logger->Debug("EnqueueResourceToPowerManage: <%> added",
+	              resource->Path()->ToString().c_str());
+}
+
+
+
 
 /************************************************************************
  *                   STATE VIEWS MANAGEMENT                             *
