@@ -27,6 +27,7 @@
 #include "bbque/platform_manager.h"
 #include "bbque/platform_services.h"
 #include "bbque/plugin_manager.h"
+#include "bbque/pm/power_manager.h"
 #include "bbque/process_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/synchronization_manager.h"
@@ -185,7 +186,7 @@ private:
 	 * resource manager ensure an initialization of this core module before
 	 * starting to grill.
 	 */
-	PluginManager & pm;
+	PluginManager & um;
 
 	ResourceAccounter & ra;
 
@@ -197,7 +198,11 @@ private:
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	ProcessManager & prm;
-#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+#endif
+
+#ifdef CONFIG_BBQUE_PM
+	PowerManager & pm;
+#endif
 
 	CommandManager & cm;
 

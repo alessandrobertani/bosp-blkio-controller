@@ -127,14 +127,17 @@ ResourceManager::ResourceManager() :
 	ps(PlatformServices::GetInstance()),
 	am(ApplicationManager::GetInstance()),
 	ap(ApplicationProxy::GetInstance()),
-	pm(PluginManager::GetInstance()),
+	um(PluginManager::GetInstance()),
 	ra(ResourceAccounter::GetInstance()),
 	bdm(BindingManager::GetInstance()),
 	mc(MetricsCollector::GetInstance()),
 	plm(PlatformManager::GetInstance()),
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	prm(ProcessManager::GetInstance()),
-#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
+#endif
+#ifdef CONFIG_BBQUE_PM
+	pm(PowerManager::GetInstance()),
+#endif
 	cm(CommandManager::GetInstance()),
 	sm(SchedulerManager::GetInstance()),
 	ym(SynchronizationManager::GetInstance()),
@@ -201,7 +204,7 @@ ResourceManager::Setup() {
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	//---------- Dump list of registered plugins
-	const bp::PluginManager::RegistrationMap & rm = pm.GetRegistrationMap();
+	const bp::PluginManager::RegistrationMap & rm = um.GetRegistrationMap();
 	logger->Info("RM: Registered plugins:");
 	bp::PluginManager::RegistrationMap::const_iterator i;
 	for (i = rm.begin(); i != rm.end(); ++i)
@@ -435,6 +438,15 @@ void ResourceManager::Optimize() {
 #else
 	logger->Debug("Scheduling profiling disabled");
 #endif
+
+#ifdef CONFIG_BBQUE_PM
+	// Enforce power management configuration
+	PlatformManager::ExitCode_t platResult = plm.ActuatePowerManagement();
+	if (platResult != PlatformManager::ExitCode_t::PLATFORM_OK) {
+		logger->Warn("Optimize: power configuration setting failed");
+	}
+#endif // CONFIG_BBQUE_PM
+
 	SetReady(true);
 
 #ifdef CONFIG_BBQUE_DM
