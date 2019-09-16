@@ -332,9 +332,8 @@ void ResourceManager::TerminateWorkers() {
 	DB(fprintf(stderr, FD("All workers terminated\n")));
 }
 
-void ResourceManager::Optimize() {
-	SynchronizationManager::ExitCode_t syncResult;
-	SchedulerManager::ExitCode_t schedResult;
+void ResourceManager::Optimize()
+{
 	static bu::Timer optimization_tmr;
 	double period;
 	bool active_apps = true;
@@ -345,14 +344,14 @@ void ResourceManager::Optimize() {
 	// executed anyway. To the contrary, if it is an application event (BBQ_OPTS) check if
 	// there are actually active applications
 	if (!plat_event &&
-		!am.HasApplications(Application::READY) &&
-		!am.HasApplications(Application::RUNNING)
+	    !am.HasApplications(Application::READY) &&
+	    !am.HasApplications(Application::RUNNING)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		&&
-		!prm.HasProcesses(Schedulable::READY) &&
-		!prm.HasProcesses(Schedulable::RUNNING)
+	    &&
+	    !prm.HasProcesses(Schedulable::READY) &&
+	    !prm.HasProcesses(Schedulable::RUNNING)
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
-	) {
+	   ) {
 		logger->Debug("Optimize: nothing to schedule...");
 		active_apps = false;
 	}
@@ -373,39 +372,39 @@ void ResourceManager::Optimize() {
 
 		//--- Scheduling
 		optimization_tmr.start();
-		schedResult = sm.Schedule();
+		SchedulerManager::ExitCode_t schedResult = sm.Schedule();
 		optimization_tmr.stop();
 		switch(schedResult) {
 		case SchedulerManager::MISSING_POLICY:
 		case SchedulerManager::FAILED:
-			logger->Warn("Schedule FAILED (Error: scheduling policy failed)");
+			logger->Warn("Optimize: scheduling FAILED "
+			             "(Error: scheduling policy failed)");
 			RM_COUNT_EVENT(metrics, RM_SCHED_FAILED);
 			SetReady(true);
 			return;
 		case SchedulerManager::DELAYED:
-			logger->Error("Schedule DELAYED");
+			logger->Error("Optimize: scheduling DELAYED");
 			RM_COUNT_EVENT(metrics, RM_SCHED_DELAYED);
 			SetReady(true);
 			return;
 		default:
 			assert(schedResult == SchedulerManager::DONE);
 		}
-		logger->Notice("Schedule Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
+		logger->Notice("Optimize: scheduling time: %11.3f[us]",
+		               optimization_tmr.getElapsedTimeUs());
 		am.PrintStatus(true);
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		prm.PrintStatus(true);
 #endif
-
-
 	}
 
 	// Check if there is at least one application to synchronize
 	if (!am.HasApplications(Application::SYNC)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		&&
-		!prm.HasProcesses(Schedulable::SYNC)
+	    &&
+	    !prm.HasProcesses(Schedulable::SYNC)
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
-	) {
+	   ) {
 		logger->Debug("Optimize: no applications in SYNC state");
 		RM_COUNT_EVENT(metrics, RM_SCHED_EMPTY);
 	} else {
@@ -413,11 +412,12 @@ void ResourceManager::Optimize() {
 		RM_COUNT_EVENT(metrics, RM_SYNCH_TOTAL);
 		RM_GET_PERIOD(metrics, RM_SYNCH_PERIOD, period);
 		if (period)
-			logger->Notice("Schedule Run-time: %9.3f[ms]", period);
+			logger->Notice("Optimize: schedule Run-time: %9.3f[ms]",
+			               period);
 
 		//--- Synchronization
 		optimization_tmr.start();
-		syncResult = ym.SyncSchedule();
+		SynchronizationManager::ExitCode_t syncResult = ym.SyncSchedule();
 		optimization_tmr.stop();
 		if (syncResult != SynchronizationManager::OK) {
 			RM_COUNT_EVENT(metrics, RM_SYNCH_FAILED);
@@ -429,7 +429,8 @@ void ResourceManager::Optimize() {
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		prm.PrintStatus(true);
 #endif
-		logger->Notice("Sync Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
+		logger->Notice("Optimize: sync time: %11.3f[us]",
+		               optimization_tmr.getElapsedTimeUs());
 	}
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
@@ -439,12 +440,13 @@ void ResourceManager::Optimize() {
 	ProfileManager::ExitCode_t profResult = om.ProfileSchedule();
 	optimization_tmr.stop();
 	if (profResult != ProfileManager::OK) {
-		logger->Warn("Scheduler profiling FAILED");
+		logger->Warn("Optimize: scheduler profiling FAILED");
 	}
 	logger->Debug(LNPROE);
-	logger->Debug("Prof Time: %11.3f[us]", optimization_tmr.getElapsedTimeUs());
+	logger->Debug("Optimize: prof time: %11.3f[us]",
+	              optimization_tmr.getElapsedTimeUs());
 #else
-	logger->Debug("Scheduling profiling disabled");
+	logger->Debug("Optimize: scheduling profiling disabled");
 #endif
 
 #ifdef CONFIG_BBQUE_PM
