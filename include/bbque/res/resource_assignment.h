@@ -34,15 +34,11 @@ namespace bbque
 namespace res
 {
 
-// Forward declaration
 class ResourceAssignment;
 class ResourcePath;
 
-/** Shared pointer to Usage object */
 using ResourceAssignmentPtr_t = std::shared_ptr<ResourceAssignment>;
-/** Map of Usage descriptors. Key: resource path */
 using ResourceAssignmentMap_t = std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath>>;
-/** Constant pointer to the map of Usage descriptors */
 using ResourceAssignmentMapPtr_t = std::shared_ptr<ResourceAssignmentMap_t>;
 
 /**
@@ -69,9 +65,9 @@ using ResourceAssignmentMapPtr_t = std::shared_ptr<ResourceAssignmentMap_t>;
  * resources "pe (processing elements)" in the CPU assigned by the
  * scheduler/optimizer module.
  */
-class ResourceAssignment {
-
-friend class bbque::ResourceAccounter;
+class ResourceAssignment
+{
+	friend class bbque::ResourceAccounter;
 
 public:
 
@@ -102,13 +98,13 @@ public:
 	enum class Policy
 	{
 	        /**
-		 * Usage should be distributed over the resource list in a
-		 * sequential manner
+	         * Usage should be distributed over the resource list in a
+	         * sequential manner
 	         */
 	        SEQUENTIAL,
 	        /**
-	         * Usage should be evenly distributed over all the resources in the
-	         * list
+	         * Usage should be evenly distributed over all the resources in
+	         * the list
 	         */
 	        BALANCED
 	};
@@ -132,14 +128,14 @@ public:
 	 *
 	 * @return The amount of resource
 	 */
-	inline uint64_t GetAmount() {
+	uint64_t GetAmount() {
 		return amount;
 	}
 
 	/**
 	 * @brief Set the amount of resource
 	 */
-	inline void SetAmount(uint64_t value) {
+	void SetAmount(uint64_t value) {
 		amount = value;
 	}
 
@@ -148,7 +144,7 @@ public:
 	 *
 	 * @return A reference to the resources list
 	 */
-	inline ResourcePtrList_t & GetResourcesList() {
+	ResourcePtrList_t & GetResourcesList() {
 		return resources;
 	}
 
@@ -203,14 +199,14 @@ public:
 	 *
 	 * @return true if the list is empty, false otherwise.
 	 */
-	inline bool EmptyResourcesList() const {
+	bool EmptyResourcesList() const {
 		return resources.empty();
 	}
 
 	/**
 	 * @brief Set the resources list filling policy
 	 */
-	inline void SetPolicy(Policy policy) {
+	void SetPolicy(Policy policy) {
 		fill_policy = policy;
 	}
 
@@ -219,7 +215,7 @@ public:
 	 *
 	 * @return The policy set
 	 */
-	inline Policy GetPolicy() const {
+	Policy GetPolicy() const {
 		return fill_policy;
 	}
 
@@ -230,7 +226,7 @@ public:
 	 * @return The bitset mask with set-to-1 bits representing IDs of the
 	 * resources set included in the current assignment
 	 */
-	inline ResourceBitset & GetMask() {
+	ResourceBitset & GetMask() {
 		return mask;
 	}
 
