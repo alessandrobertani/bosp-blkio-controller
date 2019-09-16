@@ -80,6 +80,14 @@ public:
 	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
 	/**
+	 * @brief Set the power management configuration set by the scheduling
+	 * policy
+	 *
+	 * @return PLATFORM_OK for success
+	 */
+	virtual ExitCode_t ActuatePowerManagement() override;
+
+	/**
 	 * @brief Check if the resource is a "high-performance" is single-ISA
 	 * heterogeneous platforms
 	 *

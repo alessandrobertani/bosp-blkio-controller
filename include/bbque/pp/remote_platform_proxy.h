@@ -78,10 +78,9 @@ public:
 	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true);
 
 	/**
-	 * @brief Platform specific resource binding interface.
+	 * @brief Actuate power management on remote nodes.
 	 */
-	virtual ExitCode_t MapResources(
-		SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) ;
+	ExitCode_t ActuatePowerManagement() override;
 
 	/**
 	 * @brief Check if a remote resource is "high-performance" qualified.

@@ -3,14 +3,19 @@
 namespace bbque
 {
 
-
 plugins::PlatformLoaderIF * PlatformProxy::pli = nullptr;
 
-bool PlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const {
+bool PlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const
+{
 	(void) path;
 	return false;
-
 }
+
+PlatformProxy::ExitCode_t PlatformProxy::ActuatePowerManagement()
+{
+	return ExitCode_t::PLATFORM_OK;
+}
+
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
 

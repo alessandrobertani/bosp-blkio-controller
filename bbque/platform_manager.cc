@@ -431,6 +431,29 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 }
 
 
+PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
+{
+	logger->Info("ActuatePowerManagement: setting the configuration...");
+	ExitCode_t ec = lpp->ActuatePowerManagement();
+	if (ec != PLATFORM_OK) {
+		logger->Error("ActuatePowerManagement: failed while setting"
+		              " local power management");
+		return PLATFORM_PWR_SETTING_ERROR;
+	}
+
+#ifdef CONFIG_BBQUE_DIST_MODE
+	ec = rpp->ActuatePowerManagement();
+	if (ec != PLATFORM_OK) {
+		logger->Error("ActuatePowerManagement: failed while setting"
+		              " remote power management");
+		return PLATFORM_PWR_SETTING_ERROR;
+	}
+#endif
+
+	logger->Info("ActuatePowerManagement: configuration applied");
+	return PLATFORM_OK;
+}
+
 void PlatformManager::Exit()
 {
 	lpp->Exit();

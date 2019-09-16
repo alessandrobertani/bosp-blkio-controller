@@ -83,12 +83,10 @@ public:
 	        bool excl = true);
 
 	/**
-	 * @brief Platform specific resource binding interface.
+	 * @brief Actuate power management for local node resources and
+	 * system-specific settings.
 	 */
-	virtual ExitCode_t MapResources(
-		SchedPtr_t papp,
-		ResourceAssignmentMapPtr_t pres,
-		bool excl = true) ;
+	ExitCode_t ActuatePowerManagement() override;
 
 	/**
 	 * @brief Local termination.

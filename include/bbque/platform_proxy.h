@@ -122,6 +122,12 @@ public:
 	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
 	/**
+	 * @brief Set the power management configuration if set by the policy
+	 * @return PLATFORM_OK for success
+	 */
+	virtual ExitCode_t ActuatePowerManagement();
+
+	/**
 	 * @brief Graceful closure of the platform proxy
 	 */
 	virtual void Exit() = 0;

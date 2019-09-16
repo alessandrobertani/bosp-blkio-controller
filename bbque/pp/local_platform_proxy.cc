@@ -15,10 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "bbque/config.h"
+#include "bbque/pm/power_manager.h"
 #include "bbque/pp/local_platform_proxy.h"
 #include "bbque/pp/test_platform_proxy.h"
-#include "bbque/config.h"
-#include "bbque/res/resource_path.h"
+#include "bbque/res/resources.h"
+#include "bbque/resource_accounter.h"
 #include "bbque/utils/assert.h"
 
 #ifdef CONFIG_TARGET_LINUX
@@ -212,6 +214,73 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
 	return PLATFORM_OK;
 }
 
+
+LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement()
+{
+
+#ifdef CONFIG_BBQUE_PM
+	ExitCode_t ec;
+	PowerManager & pm(PowerManager::GetInstance());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	br::ResourcePtr_t resource;
+	logger->Debug("ActuatePowerManagement: looking for pending management actions");
+
+	// Apply the power management actions to local resources
+	while ((resource = ra.DequeueResourceToPowerManage()) != nullptr) {
+		auto & ps = resource->GetPowerSettings();
+
+		if (ps.PendingActions() | br::Resource::PowerSettings::TURN_ONOFF) {
+			logger->Debug("ActuatePowerManagement: <%> set on/off: %d",
+			              resource->Path()->ToString().c_str(),
+			              ps.IsOnline());
+			if (ps.IsOnline())
+				pm.SetOn(resource->Path());
+			else
+				pm.SetOff(resource->Path());
+		}
+
+		if (ps.PendingActions() | br::Resource::PowerSettings::CHANGE_GOVERNOR) {
+			logger->Debug("ActuatePowerManagement: <%> setting governor '%s'",
+			              resource->Path()->ToString().c_str(),
+			              ps.FrequencyGovernor().c_str());
+			pm.SetClockFrequencyGovernor(
+			        resource->Path(), ps.FrequencyGovernor());
+		}
+
+		if (ps.PendingActions() | br::Resource::PowerSettings::SET_FREQUENCY) {
+			logger->Debug("ActuatePowerManagement: <%> setting frequency: %d KHz",
+			              resource->Path()->ToString().c_str(),
+			              ps.ClockFrequency());
+			pm.SetClockFrequency(resource->Path(), ps.ClockFrequency());
+
+		}
+
+		if (ps.PendingActions() | br::Resource::PowerSettings::SET_PERF_STATE) {
+			logger->Debug("ActuatePowerManagement: <%> setting performance state: %d",
+			              resource->Path()->ToString().c_str(),
+			              ps.PerformanceState());
+			pm.SetClockFrequency(resource->Path(), ps.PerformanceState());
+		}
+
+		ps.ClearPendingActions();
+		logger->Debug("ActuatePowerManagement: <%s> pending actions left: %d",
+		              resource->Path()->ToString().c_str(),
+		              resource->GetPowerSettings().PendingActions());
+	}
+
+	// Platform-specific power settings (system-level configurations)
+	ec = this->host->ActuatePowerManagement();
+	if (ec != PLATFORM_OK) {
+		return ec;
+	}
+
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+		ec = (*it)->ActuatePowerManagement();
+	}
+#endif // CONFIG_BBQUE_PM
+
+	return PLATFORM_OK;
+}
 
 
 void LocalPlatformProxy::Exit()

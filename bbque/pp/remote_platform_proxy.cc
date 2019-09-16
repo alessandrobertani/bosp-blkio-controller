@@ -102,6 +102,11 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(
 	return PLATFORM_OK;
 }
 
+RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ActuatePowerManagement()
+{
+	logger->Error("AcutatePowerManagement: not implemented.");
+	return PLATFORM_OK;
+}
 
 void RemotePlatformProxy::Exit()
 {
