@@ -85,15 +85,19 @@ CPUPowerManager::CPUPowerManager():
 #endif
 	}
 
+	// Thermal sensors
 	if (core_therms.empty()) {
-		logger->Warn("CPUPowerManager: No thermal monitoring available."
-			"Check the configuration file [etc/bbque/bbque.conf]");
+		logger->Warn("CPUPowerManager: no thermal monitoring available. ");
+		logger->Warn("\tCheck the configuration file [etc/bbque/bbque.conf]");
 	}
 
+	// Parse the available frequency governors
 	InitFrequencyGovernors();
 
-	if (InitCPUFreq() != PowerManager::PMResult::OK){
-		logger->Error("Error during cpufreq initialization");
+	// Initial settings: userspace governor
+	auto ret = InitCPUFreq();
+	if (ret != PowerManager::PMResult::OK) {
+		logger->Error("CPUPowerManager: cpufreq initialization failed");
 	}
 
 }
@@ -111,6 +115,8 @@ CPUPowerManager::~CPUPowerManager() {
 	}
 
 	for (auto pe_id_info : cpufreq_restore) {
+		if (core_freqs[pe_id_info.first]->empty())
+			continue;
 		logger->Notice("Restoring PE %d cpufreq bound: [%u - %u] kHz",
 				pe_id_info.first,
 				core_freqs[pe_id_info.first]->front(),
@@ -125,7 +131,7 @@ CPUPowerManager::~CPUPowerManager() {
 	}
 
 	cpufreq_restore.clear();
-	core_ids.clear();
+	phy_core_ids.clear();
 	core_therms.clear();
 	core_freqs.clear();
 	cpufreq_governors.clear();
@@ -134,12 +140,12 @@ CPUPowerManager::~CPUPowerManager() {
 }
 
 
-void CPUPowerManager::InitCoreIdMapping() {
+void CPUPowerManager::InitCoreIdMapping()
+{
 	bu::IoFs::ExitCode_t result;
-	std::string cpu_av;
 	int cpu_id = 0;
 	int pe_id  = 0;
-	int id_bound[2]; // id_bound[0]=min_id, id_bound[1]=max_id
+	int core_id_bound[2]; // core_id_bound[0]=min_id, core_id_bound[1]=max_id
 	// CPU <--> Core id mapping:
 	// CPU is commonly used to reference the cores while in the BarbequeRTRM
 	// 'core' is referenced as 'processing element', thus it needs a unique id
@@ -156,84 +162,98 @@ void CPUPowerManager::InitCoreIdMapping() {
 	//-------------------------------------------------------------------------
 
 	std::string core_av_filepath(
-				BBQUE_LINUX_SYS_CORE_PREFIX + std::string("/present"));
+	        BBQUE_LINUX_SYS_CORE_PREFIX + std::string("/present"));
 
 	// Taking the min and max pe_id available
-	result = bu::IoFs::ReadValueFrom(core_av_filepath, cpu_av);
-
+	std::string core_id_range;
+	result = bu::IoFs::ReadValueFrom(core_av_filepath, core_id_range);
+	logger->Debug("InitCoreIdMapping: core id range: %s",
+	              core_id_range.c_str());
 	if (result != bu::IoFs::OK) {
-		logger->Error("Failed in reading %s", core_av_filepath.c_str());
+		logger->Error("InitCoreIdMapping: failed while reading %s",
+		              core_av_filepath.c_str());
 		return;
 	}
 
 	int i = 0;
-	while (cpu_av.size() > 1){
-		id_bound[i] = std::stoi(br::ResourcePathUtils::SplitAndPop(cpu_av, "-"));
+	while (core_id_range.size() > 1) {
+		std::string curr_id(br::ResourcePathUtils::SplitAndPop(core_id_range, "-"));
+		logger->Debug("InitCoreIdMapping: %d) core id = %s", i, curr_id.c_str());
+		core_id_bound[i] = std::stoi(curr_id);
 		i++;
 	}
 
-	pe_id = id_bound[0];
+	pe_id = core_id_bound[0];
 
-	while (pe_id <= id_bound[1]) {
+	while (pe_id <= core_id_bound[1]) {
 
 		// Online status per core
 		online_restore[pe_id] = IsOn(pe_id);
 		core_online[pe_id] = online_restore[pe_id];
 
 #ifdef CONFIG_TARGET_ANDROID
-	
 		// CoreID not supported
-
 #else
-		int siblings[2];
-		if(core_online[pe_id]){
-			std::string core_sibl;
+		std::vector<int> siblings(2);
+		if (core_online[pe_id]) {
 			std::string core_sibl_filepath(
-				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-				"/topology/core_siblings_list");
+			        BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			        "/topology/core_siblings_list");
+			logger->Debug("InitCoreIdMapping: reading... %s", core_sibl_filepath.c_str());
 
 			// Taking the min and max pe_id available
-			result = bu::IoFs::ReadValueFrom(core_sibl_filepath, core_sibl);
-
+			std::string core_siblings_range;
+			result = bu::IoFs::ReadValueFrom(core_sibl_filepath, core_siblings_range);
+			logger->Debug("InitCoreIdMapping: core %d siblings: %s ",
+			              pe_id, core_siblings_range.c_str());
 			if (result != bu::IoFs::OK) {
-				logger->Error("Failed in reading %s", core_sibl_filepath.c_str());
+				logger->Error("InitCoreIdMapping: failed while reading %s",
+				              core_sibl_filepath.c_str());
 				break;
 			}
 
 			i = 0;
-			while (cpu_av.size() > 1){
-				siblings[i] = std::stoi(br::ResourcePathUtils::SplitAndPop(core_sibl, "-"));
+			while (core_siblings_range.size() > 1) {
+				std::string curr_core_id(
+				        br::ResourcePathUtils::SplitAndPop(core_siblings_range, "-"));
+				siblings[i] = std::stoi(curr_core_id);
+				logger->Debug("InitCoreIdMapping: pe_id=<%d>"
+				              " sibling bound[%d]=%d",
+				              pe_id, i, siblings[i]);
 				i++;
 			}
 
-			std::string freq_av_filepath(
-				BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-				"/topology/core_id");
+			std::string core_id_filepath(
+			        BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			        "/topology/core_id");
+			logger->Debug("InitCoreIdMapping: reading... %s", core_id_filepath.c_str());
 
-			// Processing element <-> CPU id
-			logger->Debug("Reading... %s", freq_av_filepath.c_str());
-			result = bu::IoFs::ReadIntValueFrom<int>(freq_av_filepath, cpu_id);
+			// Processing element id <-> (physical) CPU id
+			result = bu::IoFs::ReadIntValueFrom<int>(core_id_filepath, cpu_id);
+			logger->Debug("InitCoreIdMapping: cpu id=%d", cpu_id);
 			if (result != bu::IoFs::OK) {
-				logger->Error("Failed in reading %s", freq_av_filepath.c_str());
+				logger->Error("InitCoreIdMapping: failed while reading %s",
+				              core_id_filepath.c_str());
 				break;
 			}
 
-			for(i = siblings[0]; i < siblings[1]; i++){
-				core_ids[i] = cpu_id;
-				logger->Debug("<sys.cpu%d.pe%d> cpufreq reference found", cpu_id, pe_id);
-			}
-
+			phy_core_ids[pe_id] = cpu_id;
+			logger->Debug("InitCoreIdMapping: pe_id=%d -> "
+			              "physical cpu id=%d",
+			              pe_id, cpu_id);
 		}
 #endif
 		// Available frequencies per core
 		core_freqs[pe_id] = std::make_shared<std::vector<uint32_t>>();
 		_GetAvailableFrequencies(pe_id, core_freqs[pe_id]);
 		if (core_freqs[pe_id]->empty())
-			logger->Error("<sys.cpu%d.pe%d>: no frequency list [%d]",
-				cpu_id, pe_id, core_freqs[pe_id]->size());
+			logger->Error("InitCoreIdMapping: <sys.cpu%d.pe%d>: "
+			              "no frequency list [%d]",
+			              cpu_id, pe_id, core_freqs[pe_id]->size());
 		else
-			logger->Info("<sys.cpu%d.pe%d>: %d available frequencies",
-				cpu_id, pe_id, core_freqs[pe_id]->size());
+			logger->Info("InitCoreIdMapping: <sys.cpu%d.pe%d>: "
+			             "%d available frequencies",
+			             cpu_id, pe_id, core_freqs[pe_id]->size());
 
 		std::string scaling_curr_governor;
 		GetClockFrequencyGovernor(pe_id, scaling_curr_governor);
@@ -300,6 +320,8 @@ PowerManager::PMResult CPUPowerManager::InitCPUFreq(){
 	PowerManager::PMResult result;
 
 	for (auto pe_id_info : cpufreq_restore) {
+		if (core_freqs[pe_id_info.first]->empty())
+			continue;
 		logger->Notice("Init PE %d cpufreq bound: [%u - %u] kHz",
 				pe_id_info.first,
 				core_freqs[pe_id_info.first]->front(),
@@ -485,14 +507,14 @@ CPUPowerManager::GetTemperaturePerCore(int pe_id, uint32_t & celsius) {
 
 	// We may have the same sensor for more than one processing element, the
 	// sensor is referenced at "core" level
-	int core_id = core_ids[pe_id];
-	if (core_therms[core_id] == nullptr) {
+	int phy_core_id = phy_core_ids[pe_id];
+	if (core_therms[phy_core_id] == nullptr) {
 		logger->Debug("GetTemperature: sensor for <pe%d> not available", pe_id);
 		return PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 
 	io_result = bu::IoFs::ReadIntValueFrom<uint32_t>(
-			core_therms[core_id]->c_str(), celsius);
+	                    core_therms[phy_core_id]->c_str(), celsius);
 	if (io_result != bu::IoFs::OK) {
 		logger->Error("GetTemperature: cannot read <pe%d> temperature", pe_id);
 		return PMResult::ERR_SENSORS_ERROR;
