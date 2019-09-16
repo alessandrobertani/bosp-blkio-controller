@@ -217,6 +217,27 @@ public:
 			}
 		}
 
+
+		std::string const & FrequencyGovernor() const {
+			return freq_governor;
+		}
+
+		uint32_t ClockFrequency() const {
+			return freq_khz;
+		}
+
+		int32_t PerformanceState() const {
+			return perf_state;
+		}
+
+		bool IsOnline() const {
+			return online;
+		}
+
+		uint8_t PendingActions() const {
+			return pending_actions;
+		}
+
 		bool SetOn(bool on) {
 			if (this->online != on) {
 				pending_actions |= TURN_ONOFF;
@@ -234,7 +255,11 @@ public:
 			pending_actions = 0;
 		}
 
+		void ClearPendingActions() {
+			pending_actions = 0;
+		}
 
+	private:
 		/// Online/offline status
 		bool online = true;
 
@@ -450,12 +475,11 @@ public:
 	 * @return true if it is offline, false otherwise
 	 */
 	bool IsOffline() const {
-		return !pw_config.online;
+		return !pw_config.IsOnline();
 	}
 
 	/**
 	 * @brief Make the resource completely not available
-	 *
 	 */
 	void SetOffline();
 
@@ -476,7 +500,7 @@ public:
 	 * @brief Get the currently set power configuration
 	 *  to actuate during the optimization stage
 	 */
-	PowerSettings const & GetPowerSettings() const {
+	PowerSettings & GetPowerSettings() {
 		return pw_config;
 	}
 
