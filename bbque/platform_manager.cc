@@ -19,6 +19,7 @@
 #include "bbque/platform_manager.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
+#include "bbque/resource_accounter.h"
 #include "bbque/resource_manager.h"
 
 namespace bbque
@@ -447,6 +448,19 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 {
 	logger->Info("ActuatePowerManagement: setting the configuration...");
+
+#ifdef CONFIG_BBQUE_PM
+
+	// Apply the power management configuration to each pending resource
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	bbque::res::ResourcePtr_t resource;
+	while ((resource = ra.DequeueResourceToPowerManage()) != nullptr) {
+		ActuatePowerManagement(resource);
+	}
+#endif
+
+	// Perform resource management actions not related to (local) managed
+	// resources
 	ExitCode_t ec = lpp->ActuatePowerManagement();
 	if (ec != PLATFORM_OK) {
 		logger->Error("ActuatePowerManagement: failed while setting"
@@ -455,6 +469,9 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 	}
 
 #ifdef CONFIG_BBQUE_DIST_MODE
+
+	// Perform resource management actions not related to (remote) managed
+	// resources
 	ec = rpp->ActuatePowerManagement();
 	if (ec != PLATFORM_OK) {
 		logger->Error("ActuatePowerManagement: failed while setting"
@@ -466,6 +483,44 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 	logger->Info("ActuatePowerManagement: configuration applied");
 	return PLATFORM_OK;
 }
+
+
+PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement(
+        bbque::res::ResourcePtr_t resource)
+{
+	ExitCode_t ec;
+	logger->Info("ActuatePowerManagement: processing <%s>...",
+	             resource->Path()->ToString().c_str());
+
+	if (resource->Path()->GetID(bbque::res::ResourceType::SYSTEM) == local_system_id) {
+
+		ec = lpp->ActuatePowerManagement(resource);
+		if (ec != PLATFORM_OK) {
+			logger->Error("ActuatePowerManagement: failed while setting"
+			              " local power settings for <%s>",
+			              resource->Path()->ToString().c_str());
+			return PLATFORM_PWR_SETTING_ERROR;
+		}
+	} else {
+		logger->Debug("ActuatePowerManagement: <%> not a local resource",
+		              resource->Path()->ToString().c_str());
+#ifdef CONFIG_BBQUE_DIST_MODE
+
+		ec = rpp->ActuatePowerManagement(resource);
+		if (ec != PLATFORM_OK) {
+			logger->Error("ActuatePowerManagement: failed while setting"
+			              " remote power settings for <%s>",
+			              resource->Path()->ToString().c_str());
+			return PLATFORM_PWR_SETTING_ERROR;
+		}
+#endif
+	}
+
+	logger->Debug("ActuatePowerManagement: <%s> configured",
+	              resource->Path()->ToString().c_str());
+	return PLATFORM_OK;
+}
+
 
 void PlatformManager::Exit()
 {

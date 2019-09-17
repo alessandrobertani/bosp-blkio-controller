@@ -83,10 +83,16 @@ public:
 	        bool excl = true);
 
 	/**
-	 * @brief Actuate power management for local node resources and
-	 * system-specific settings.
+	 * @brief Actuate power management actions for to (local) not managed
+	 * resources
 	 */
 	ExitCode_t ActuatePowerManagement() override;
+
+	/**
+	 * @brief Actuate power management for a specific local node resource
+	 */
+	ExitCode_t ActuatePowerManagement(
+	        bbque::res::ResourcePtr_t resource) override;
 
 	/**
 	 * @brief Local termination.

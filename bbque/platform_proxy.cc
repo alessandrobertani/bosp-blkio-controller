@@ -16,6 +16,13 @@ PlatformProxy::ExitCode_t PlatformProxy::ActuatePowerManagement()
 	return ExitCode_t::PLATFORM_OK;
 }
 
+PlatformProxy::ExitCode_t PlatformProxy::ActuatePowerManagement(
+        bbque::res::ResourcePtr_t resource)
+{
+	(void) resource;
+	return ExitCode_t::PLATFORM_OK;
+}
+
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
 

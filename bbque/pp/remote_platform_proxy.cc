@@ -104,9 +104,18 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ActuatePowerManagement()
 {
-	logger->Error("AcutatePowerManagement: not implemented.");
+	logger->Error("ActuatePowerManagement: not implemented.");
 	return PLATFORM_OK;
 }
+
+RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ActuatePowerManagement(
+        bbque::res::ResourcePtr_t resource)
+{
+	(void) resource;
+	logger->Error("ActuatePowerManagement: not implemented.");
+	return PLATFORM_OK;
+}
+
 
 void RemotePlatformProxy::Exit()
 {

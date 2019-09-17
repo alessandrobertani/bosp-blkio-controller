@@ -128,6 +128,13 @@ public:
 	virtual ExitCode_t ActuatePowerManagement();
 
 	/**
+	 * @brief Set the power management configuration of a specific resource
+	 * if set by the policy
+	 */
+	virtual ExitCode_t ActuatePowerManagement(
+	        bbque::res::ResourcePtr_t resource);
+
+	/**
 	 * @brief Graceful closure of the platform proxy
 	 */
 	virtual void Exit() = 0;

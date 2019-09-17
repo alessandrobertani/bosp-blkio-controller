@@ -88,6 +88,15 @@ public:
 	ExitCode_t ActuatePowerManagement() override;
 
 	/**
+	 * @brief Set the power management configuration set by the scheduling
+	 * policy, for a specific resource
+	 *
+	 * @return PLATFORM_OK for success
+	 */
+	ExitCode_t ActuatePowerManagement(bbque::res::ResourcePtr_t resource) override;
+
+
+	/**
 	 * @brief Check if the resource is a "high-performance" is single-ISA
 	 * heterogeneous platforms
 	 *

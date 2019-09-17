@@ -83,6 +83,12 @@ public:
 	ExitCode_t ActuatePowerManagement() override;
 
 	/**
+	 * @brief Actuate power management on a specific resource locate on a
+	 * remote node.
+	 */
+	ExitCode_t ActuatePowerManagement(bbque::res::ResourcePtr_t resource) override;
+
+	/**
 	 * @brief Check if a remote resource is "high-performance" qualified.
 	 */
 	bool IsHighPerformance(
