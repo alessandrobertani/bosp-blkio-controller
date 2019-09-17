@@ -25,13 +25,13 @@
 #include <limits>
 #include <locale>
 #include <memory>
-#include <map>
 #include <string>
 #include <sstream>
 
 #include "bbque/application_manager.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/config.h"
+#include "bbque/pm/power_manager.h"
 #include "bbque/process_manager.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/schedlog.h"
@@ -810,7 +810,8 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
         uint64_t amount)
 {
 	auto resource_path_ptr(GetPath(path));
-	logger->Info("Reserve: built %d from %s", resource_path_ptr.get(), path.c_str());
+	logger->Info("Reserve: built %d from %s",
+	             resource_path_ptr.get(), path.c_str());
 
 	if (resource_path_ptr == nullptr) {
 		logger->Fatal("Reserve resource FAILED "
@@ -845,9 +846,11 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SetOffline(
 
 	for (auto & resource_ptr : resources_list) {
 		resource_ptr->SetOffline();
-		resources_to_power_manage.push_back(resource_ptr);
 		logger->Debug("SetOffline: <%s> -> (virtual) offline",
 		              resource_ptr->Path()->ToString().c_str());
+#ifdef CONFIG_BBQUE_PM
+		resources_to_power_manage[resource_ptr->Path()] = resource_ptr;
+#endif
 	}
 
 	return RA_SUCCESS;
@@ -874,9 +877,11 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SetOnline(
 
 	for (auto & resource_ptr : resources_list) {
 		resource_ptr->SetOnline();
-		resources_to_power_manage.push_back(resource_ptr);
 		logger->Debug("SetOnline: <%s> -> online",
 		              resource_ptr->Path()->ToString().c_str());
+#ifdef CONFIG_BBQUE_PM
+		resources_to_power_on[resource_ptr->Path()] = resource_ptr;
+#endif
 	}
 
 	return RA_SUCCESS;
@@ -910,28 +915,46 @@ bool ResourceAccounter::IsOffline(ResourcePathPtr_t path) const
 	return true;
 }
 
+
+#ifdef CONFIG_BBQUE_PM
+
 br::ResourcePtr_t ResourceAccounter::DequeueResourceToPowerManage()
 {
 	if (resources_to_power_manage.empty())
 		return nullptr;
-	auto resource = resources_to_power_manage.front();
-	resources_to_power_manage.pop_front();
-	logger->Debug("DequeueResourceToPowerManage: <%> added",
-	              resource->Path()->ToString().c_str());
-	return resource;
+	auto it = resources_to_power_manage.begin();
+	auto resource_ptr = it->second;
+	resources_to_power_manage.erase(it);
+	logger->Debug("DequeueResourceToPowerManage: <%> removed",
+	              resource_ptr->Path()->ToString().c_str());
+	return resource_ptr;
 }
 
 void ResourceAccounter::EnqueueResourceToPowerManage(
-        br::ResourcePtr_t resource,
+        br::ResourcePtr_t resource_ptr,
         br::Resource::PowerSettings config)
 {
-	resource->SetPowerSettings(config);
-	resources_to_power_manage.push_back(resource);
+	resource_ptr->SetPowerSettings(config);
+	resources_to_power_manage[resource_ptr->Path()] = resource_ptr;
 	logger->Debug("EnqueueResourceToPowerManage: <%> added",
-	              resource->Path()->ToString().c_str());
+	              resource_ptr->Path()->ToString().c_str());
 }
 
 
+void ResourceAccounter::RestoreResourcesToPowerOn()
+{
+	PowerManager & pm(PowerManager::GetInstance());
+
+	for (auto & resource_pair : resources_to_power_on) {
+		logger->Debug("RestoreResourcesToPowerOn: <%> -> ONLINE",
+		              resource_pair.first->ToString().c_str());
+		pm.SetOn(resource_pair.first);
+	}
+
+	resources_to_power_on.clear();
+}
+
+#endif // CONFIG_BBQUE_PM
 
 
 /************************************************************************

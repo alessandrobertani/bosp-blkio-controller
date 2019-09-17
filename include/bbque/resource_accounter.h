@@ -18,9 +18,11 @@
 #ifndef BBQUE_RESOURCE_ACCOUNTER_H_
 #define BBQUE_RESOURCE_ACCOUNTER_H_
 
+#include <map>
 #include <set>
 
 #include "bbque/resource_accounter_conf.h"
+#include "bbque/config.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/command_manager.h"
 
@@ -582,6 +584,8 @@ public:
 	int ResourceDegradationHandler(int argc, char * argv[]);
 
 
+#ifdef CONFIG_BBQUE_PM
+
 	/**********************************************************************
 	 * POWER MANAGEMENT 		                                      *
 	 **********************************************************************/
@@ -603,6 +607,13 @@ public:
 	 * @return A resource descriptor (pointer)
 	 */
 	br::ResourcePtr_t DequeueResourceToPowerManage();
+
+	/**
+	 * @brief Turn on all the resources previously put offline
+	 */
+	void RestoreResourcesToPowerOn();
+
+#endif // CONFIG_BBQUE_PM
 
 private:
 
@@ -667,9 +678,14 @@ private:
 	/** Id numbers set for each type of registered resource */
 	std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> r_ids_per_type;
 
-	/** Resources for which a new power management configuration has been specified */
-	std::list<br::ResourcePtr_t> resources_to_power_manage;
+#ifdef CONFIG_BBQUE_PM
 
+	/** Resources to power on */
+	std::map<br::ResourcePathPtr_t, br::ResourcePtr_t> resources_to_power_on;
+
+	/** Resources for which a new power management configuration has been specified */
+	std::map<br::ResourcePathPtr_t, br::ResourcePtr_t> resources_to_power_manage;
+#endif
 
 	/** Resource path (pointer) referencing the prefix */
 	br::ResourcePathPtr_t r_prefix_path;
