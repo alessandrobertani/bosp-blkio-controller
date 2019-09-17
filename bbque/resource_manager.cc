@@ -339,7 +339,9 @@ void ResourceManager::Optimize()
 	bool active_apps = true;
 
 	SetReady(false);
-
+#ifdef CONFIG_BBQUE_PM
+	ra.RestoreResourcesToPowerOn();
+#endif
 	// If the optimization has been triggered by a platform event (BBQ_PLAT) the policy must be
 	// executed anyway. To the contrary, if it is an application event (BBQ_OPTS) check if
 	// there are actually active applications
