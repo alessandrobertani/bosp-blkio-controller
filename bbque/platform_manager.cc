@@ -221,6 +221,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 	}
 #endif
 
+	UpdateLocalSystemId();
 	logger->Info("All platform data loaded successfully");
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -235,6 +236,18 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 
 	return PLATFORM_OK;
 
+}
+
+void PlatformManager::UpdateLocalSystemId()
+{
+	for (auto & sys_pair : this->GetPlatformDescription().GetSystemsAll()) {
+		if (sys_pair.second.IsLocal()) {
+			local_system_id = sys_pair.second.GetId();
+			logger->Debug("UpdateLocalSystemId: local system id = %d",
+			              local_system_id);
+			return;
+		}
+	}
 }
 
 PlatformManager::ExitCode_t PlatformManager::Refresh()

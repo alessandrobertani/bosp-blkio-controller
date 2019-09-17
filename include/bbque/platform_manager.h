@@ -127,6 +127,13 @@ public:
 	}
 #endif
 
+	/**
+	 * @brief Retrieve the local system ID
+	 * @return the id number -1 if not set)
+	 */
+	int16_t GetLocalSystemId() const noexcept {
+		return local_system_id;
+	}
 
 private:
 
@@ -134,6 +141,11 @@ private:
 	 * @brief True if remote and local platform has been initialized
 	 */
 	bool platforms_initialized = false;
+
+	/**
+	 * @brief the local system id number
+	 */
+	int16_t local_system_id = -1;
 
 	/**
 	 * @brief The logger used by the worker thread
@@ -181,6 +193,10 @@ private:
 	 */
 	void operator=(PlatformManager const&)  = delete;
 
+	/**
+	 * @brief Set/update of the local system id number
+	 */
+	void UpdateLocalSystemId();
 
 	/**
 	 * @brief The command handler callback function
