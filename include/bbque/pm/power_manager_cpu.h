@@ -28,14 +28,15 @@
 #define BBQUE_LINUX_SYS_CPU_PREFIX   "/sys/devices/system/cpu/cpu"
 
 #ifndef CONFIG_BBQUE_PM_NOACPI
-  #define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/devices/platform/coretemp.0/temp"
+#define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/devices/platform/coretemp.0/temp"
 #else
-  #define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/bus/platform/drivers/coretemp/coretemp.0/hwmon/hwmon"
+#define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/bus/platform/drivers/coretemp/coretemp.0/hwmon/hwmon"
 #endif
 
 using namespace bbque::res;
 
-namespace bbque {
+namespace bbque
+{
 
 /**
  * @class CPUPowerManager
@@ -43,15 +44,17 @@ namespace bbque {
  * Provide generic power management API related to CPUs, by extending @ref
  * PowerManager class.
  */
-class CPUPowerManager: public PowerManager {
+class CPUPowerManager: public PowerManager
+{
 
 public:
 
-	enum class ExitStatus {
-		/** Successful call */
-		OK = 0,
-		/** A not specified error code */
-		ERR_GENERIC
+	enum class ExitStatus
+	{
+	        /** Successful call */
+	        OK = 0,
+	        /** A not specified error code */
+	        ERR_GENERIC
 	};
 
 	/**
@@ -84,15 +87,15 @@ public:
 	 */
 	PMResult SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz);
 	PMResult SetClockFrequencyBoundaries(
-			int pe_id, uint32_t khz_min, uint32_t khz_max);
+	        int pe_id, uint32_t khz_min, uint32_t khz_max);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult SetClockFrequency(
-			ResourcePathPtr_t const & rp,
-			uint32_t khz_min,
-			uint32_t khz_max);
+	        ResourcePathPtr_t const & rp,
+	        uint32_t khz_min,
+	        uint32_t khz_max);
 
 
 
@@ -100,42 +103,42 @@ public:
 	 * @see class PowerManager
 	 */
 	PMResult GetClockFrequencyInfo(
-			br::ResourcePathPtr_t const & rp,
-			uint32_t &khz_min,
-			uint32_t &khz_max,
-			uint32_t &khz_step);
+	        br::ResourcePathPtr_t const & rp,
+	        uint32_t &khz_min,
+	        uint32_t &khz_max,
+	        uint32_t &khz_step);
 
 	PMResult GetClockFrequencyInfo(
-		int pe_id, uint32_t & khz_min, uint32_t & khz_max);
-	
+	        int pe_id, uint32_t & khz_min, uint32_t & khz_max);
+
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult GetAvailableFrequencies(
-			ResourcePathPtr_t const & rp, std::vector<uint32_t> &freqs);
+	        ResourcePathPtr_t const & rp, std::vector<uint32_t> &freqs);
 	PMResult GetAvailableFrequencies(
-			int pe_id, std::vector<uint32_t> &freqs);
+	        int pe_id, std::vector<uint32_t> &freqs);
 
 	/**
 	 * @see class PowerManager
 	 */
 	std::vector<std::string> const & GetAvailableFrequencyGovernors(
-			br::ResourcePathPtr_t const & rp) {
+	        br::ResourcePathPtr_t const & rp) {
 		(void) rp;
 		return cpufreq_governors;
 	}
 
 	PMResult GetClockFrequencyGovernor(
-			br::ResourcePathPtr_t const & rp,
-			std::string & governor);
+	        br::ResourcePathPtr_t const & rp,
+	        std::string & governor);
 
 	PMResult SetClockFrequencyGovernor(
-			br::ResourcePathPtr_t const & rp,
-			std::string const & governor);
+	        br::ResourcePathPtr_t const & rp,
+	        std::string const & governor);
 
 	PMResult SetClockFrequencyGovernor(
-			int pe_id,
-			std::string const & governor);
+	        int pe_id,
+	        std::string const & governor);
 
 	/**  On/off status */
 
@@ -155,7 +158,7 @@ public:
 	/* ===========   Power consumption  =========== */
 
 	PMResult GetPowerUsage(
-			br::ResourcePathPtr_t const & rp, uint32_t & mwatt) {
+	        br::ResourcePathPtr_t const & rp, uint32_t & mwatt) {
 		(void) rp;
 		mwatt = 0;
 		return PMResult::ERR_API_NOT_SUPPORTED;
