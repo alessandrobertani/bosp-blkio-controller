@@ -29,7 +29,7 @@ public:
 	 *       platform identifier. If not specified or equal
 	 *       to "-1", the platorm id of the local system is returned.
 	 */
-	virtual const char* GetPlatformID(int16_t system_id = -1) const override;
+	const char* GetPlatformID(int16_t system_id = -1) const override;
 
 	/**
 	 * @brief Return the Hardware identifier string
@@ -37,13 +37,13 @@ public:
 	 *       platform idenfier. If not specified or equal
 	 *       to "-1", the hw id of the local system is returned.
 	 */
-	virtual const char* GetHardwareID(int16_t system_id = -1) const override;
+	const char* GetHardwareID(int16_t system_id = -1) const override;
 
 	/**
 	 * @brief Platform specific resource setup interface.
 	 * @warning Not implemented in PlatformManager!
 	 */
-	virtual ExitCode_t Setup(SchedPtr_t papp) override;
+	ExitCode_t Setup(SchedPtr_t papp) override;
 
 	/**
 	 * @brief Platform specific resources enumeration
@@ -51,22 +51,22 @@ public:
 	 * The default implementation of this method loads the TPD, is such a
 	 * function has been enabled
 	 */
-	virtual ExitCode_t LoadPlatformData() override;
+	ExitCode_t LoadPlatformData() override;
 
 	/**
 	 * @brief Platform specific resources refresh
 	 */
-	virtual ExitCode_t Refresh() override;
+	ExitCode_t Refresh() override;
 
 	/**
 	 * @brief Platform specific resources release interface.
 	 */
-	virtual ExitCode_t Release(SchedPtr_t papp) override;
+	ExitCode_t Release(SchedPtr_t papp) override;
 
 	/**
 	 * @brief Platform specific resource claiming interface.
 	 */
-	virtual ExitCode_t ReclaimResources(SchedPtr_t papp) override;
+	ExitCode_t ReclaimResources(SchedPtr_t papp) override;
 
 	/**
 	 * @brief Bind the specified resources to the specified application.
@@ -76,7 +76,7 @@ public:
 	 * @param excl If true the specified resources are assigned for exclusive
 	 * usage to the application
 	 */
-	virtual ExitCode_t MapResources(
+	ExitCode_t MapResources(
 	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
 
 	/**
@@ -85,7 +85,7 @@ public:
 	 *
 	 * @return PLATFORM_OK for success
 	 */
-	virtual ExitCode_t ActuatePowerManagement() override;
+	ExitCode_t ActuatePowerManagement() override;
 
 	/**
 	 * @brief Check if the resource is a "high-performance" is single-ISA
@@ -93,12 +93,12 @@ public:
 	 *
 	 * @return true if so, false otherwise
 	 */
-	virtual bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
+	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 
 	/**
 	 * @brief Platform specific termination.
 	 */
-	virtual void Exit() override;
+	void Exit() override;
 
 
 	/**
@@ -159,7 +159,7 @@ private:
 	/**
 	 * @brief The thread main code
 	 */
-	virtual void Task() override final;
+	void Task() override final;
 
 	/**
 	 * @brief The constructor. It is private due to singleton pattern
