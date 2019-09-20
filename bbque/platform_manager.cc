@@ -33,10 +33,10 @@ PlatformManager::PlatformManager()
 
 	try {
 		this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(
-				new pp::LocalPlatformProxy());
+		                    new pp::LocalPlatformProxy());
 #ifdef CONFIG_BBQUE_DIST_MODE
 		this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(
-				new pp::RemotePlatformProxy());
+		                    new pp::RemotePlatformProxy());
 #endif
 	} catch(const std::runtime_error & r) {
 		logger->Fatal("Unable to setup some PlatformProxy: %s", r.what());
@@ -46,8 +46,8 @@ PlatformManager::PlatformManager()
 	// Register a command dispatcher to handle CGroups reconfiguration
 	CommandManager & cm = CommandManager::GetInstance();
 	cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh",
-				static_cast<CommandHandler *>(this),
-				"Refresh CGroups resources description");
+	                   static_cast<CommandHandler *>(this),
+	                   "Refresh CGroups resources description");
 
 	Worker::Setup(BBQUE_MODULE_NAME("plm"), PLATFORM_MANAGER_NAMESPACE);
 }
@@ -81,7 +81,6 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformConfig()
 
 void PlatformManager::Task()
 {
-
 	logger->Info("Platform Manager monitoring thread STARTED");
 
 	while (!done) {
@@ -139,8 +138,7 @@ const char * PlatformManager::GetPlatformID(int16_t system_id) const
 	if (system_id == -1) {
 		// The local one
 		return lpp->GetPlatformID();
-	}
-	else {
+	} else {
 		const auto systems = this->GetPlatformDescription().GetSystemsAll();
 		if (systems.at(system_id).IsLocal()) {
 			return lpp->GetPlatformID();
@@ -195,7 +193,7 @@ PlatformManager::ExitCode_t PlatformManager::Setup(SchedPtr_t papp)
 
 PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 {
-	if(platforms_initialized) {
+	if (platforms_initialized) {
 		logger->Warn("Double call to LoadPlatformData, ignoring...");
 		return PLATFORM_OK;
 	}
@@ -228,7 +226,6 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ra.SetPlatformReady();
 	ra.PrintStatusReport(0, true);
-
 
 #ifdef CONFIG_BBQUE_DIST_MODE
 	logger->Info("Starting the Agent Proxy server...");
@@ -267,7 +264,7 @@ PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 	ExitCode_t ec;
 	if (papp->ScheduleCount() == 0) {
 		logger->Warn("Release: [%s] not scheduled yet: nothing to release",
-			papp->StrId());
+		             papp->StrId());
 		return PLATFORM_OK;
 	}
 
@@ -307,7 +304,7 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 	ExitCode_t ec;
 	if (papp->ScheduleCount() == 0) {
 		logger->Warn("ReclaimResources: [%s] not scheduled yet: nothing to reclaim",
-			papp->StrId());
+		             papp->StrId());
 		return PLATFORM_OK;
 	}
 	if (papp->IsLocal()) {
@@ -338,11 +335,11 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 PlatformManager::ExitCode_t PlatformManager::MapResources(
         SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
 {
-
 	ExitCode_t ec;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	RViewToken_t rvt = ra.GetScheduledView();
-	logger->Debug("Mapping resources for app [%s], using view [%d]", papp->StrId(), rvt);
+	logger->Debug("MapResources: [%s] resource assignment from view [%d]",
+	              papp->StrId(), rvt);
 
 	// We have to know if the application is local or remote or both.
 	// NOTE: the application is considered local/remote at the start
@@ -359,7 +356,8 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	// Get the set of assigned (bound) Systems
 	br::ResourceBitset systems(br::ResourceBinder::GetMask(
 	                                   pres, br::ResourceType::SYSTEM));
-	logger->Debug("Mapping: Resources binding includes %d systems", systems.Count());
+	logger->Debug("MapResources: [%s] resource assignment from %d system(s)",
+	              papp->StrId(), systems.Count());
 
 	bool is_local  = false;
 
@@ -370,16 +368,16 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	// Check if application is local or remote.
 	for (int i = 0; i < systems.Count(); i++) {
 		if (systems.Test(i)) {
-			logger->Debug("Mapping: Checking system %d...", i);
+			logger->Debug("MapResources: checking system %d...", i);
 			auto const sys_entry = pd_sys.find(i);
 			if (sys_entry == pd_sys.end()) continue;
 			auto & sys = sys_entry->second;
 			if (sys.IsLocal()) {
 				is_local  = true;
-				logger->Debug("Mapping: system id=%d is local", i);
+				logger->Debug("MapResources: system id=%d is local", i);
 			} else {
 				is_remote = true;
-				logger->Debug("Mapping: system id=%d is remote", i);
+				logger->Debug("MapResources: system id=%d is remote", i);
 			}
 		}
 	}
@@ -387,18 +385,19 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	// yes, obviously we need at least one type of resource
 	assert( is_local || is_remote );
 #else
-			is_local = true;
+	is_local = true;
 #endif
 
 	// If first time scheduled locally, we have to setup it
 	if(is_local != papp->IsLocal()) {
-		logger->Debug("Mapping: Application [%s] is local, call LPP Setup", papp->StrId());
+		logger->Debug("MapResources: [%s] is local, call LPP Setup",
+		              papp->StrId());
 
 		ec = lpp->Setup(papp);
 		if (ec == PLATFORM_OK) {
 			papp->SetLocal(true);
 		} else {
-			logger->Error("Mapping: Application [%s] FAILED to setup locally "
+			logger->Error("MapResources: [%s] FAILED to setup locally "
 			              "(error code: %d)", papp->StrId(), ec);
 			return ec;
 		}
@@ -406,14 +405,14 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if(is_remote != papp->IsRemote()) {
-		logger->Debug("Mapping: Application [%s] is remote, call RPP Setup",
+		logger->Debug("MapResources: [%s] is remote, call RPP Setup",
 		              papp->StrId());
 
 		ec = rpp->Setup(papp);
 		if (ec == PLATFORM_OK) {
 			papp->SetRemote(true);
 		} else {
-			logger->Error("Mapping: Application [%s] FAILED to setup remotely "
+			logger->Error("MapResources: [%s] FAILED to setup remotely "
 			              "(error code: %d)", papp->StrId(), ec);
 			return ec;
 		}
@@ -424,7 +423,7 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	if (papp->IsLocal()) {
 		ec = lpp->MapResources(papp, pres, excl);;
 		if (unlikely(ec != PLATFORM_OK)) {
-			logger->Error("Mapping: Failed to MapResources LOCAL of application [%s]"
+			logger->Error("MapResources: [%s] failed local mapping"
 			              "(error code: %i)", papp->StrId(), ec);
 			return ec;
 		}
@@ -434,7 +433,7 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	if (papp->IsRemote()) {
 		ec = rpp->MapResources(papp, pres, excl);
 		if (unlikely(ec != PLATFORM_OK)) {
-			logger->Error("Failed to MapResources REMOTE of application [%s]"
+			logger->Error("MapResources: [%s] failed remote mapping"
 			              "(error code: %i)", papp->StrId(), ec);
 			return ec;
 		}
@@ -533,10 +532,11 @@ void PlatformManager::Exit()
 
 
 bool PlatformManager::IsHighPerformance(
-		bbque::res::ResourcePathPtr_t const & path) const {
+        bbque::res::ResourcePathPtr_t const & path) const
+{
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	return lpp->IsHighPerformance(path);
-#else	
+#else
 	UNUSED(path);
 #endif
 	return false;
