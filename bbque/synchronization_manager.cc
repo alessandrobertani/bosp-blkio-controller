@@ -595,50 +595,36 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 SynchronizationManager::ExitCode_t
 SynchronizationManager::MapResources(SchedPtr_t papp) {
 	PlatformManager::ExitCode_t result = PlatformManager::PLATFORM_OK;
-	logger->Debug("MapResources <%s>: [%s] checking...",
-		papp->SyncStateStr(papp->SyncState()),
-		papp->StrId());
+	logger->Debug("MapResources <%s>: [%s] resource mapping...",
+	              papp->SyncStateStr(papp->SyncState()),
+	              papp->StrId());
 
 	switch (papp->SyncState()) {
+
 	case Schedulable::STARTING:
-		logger->Debug("MapResources <%s>: [%s] STARTING...",
-			papp->SyncStateStr(papp->SyncState()),
-			papp->StrId());
-		result = plm.MapResources(papp,
-				papp->NextAWM()->GetResourceBinding());
-		break;
 	case Schedulable::RECONF:
 	case Schedulable::MIGREC:
 	case Schedulable::MIGRATE:
-		logger->Debug("MapResources <%s>: [%s] REC/MIG...",
-			papp->SyncStateStr(papp->SyncState()),
-			papp->StrId());
 		result = plm.MapResources(papp,
-				papp->NextAWM()->GetResourceBinding());
+		                          papp->NextAWM()->GetResourceBinding());
 		break;
 	case Schedulable::BLOCKED:
-		logger->Debug("MapResources <%s>: [%s] BLOCKED. Reclaiming...",
-			papp->SyncStateStr(papp->SyncState()),
-			papp->StrId());
 		result = plm.ReclaimResources(papp);
 		break;
 	case Schedulable::DISABLED:
-		logger->Debug("MapResources <%s>: [%s] DISABLED. Doing nothing...",
-			papp->SyncStateStr(papp->SyncState()),
-			papp->StrId());
+		logger->Debug("MapResources <DISABLED>: [%s] nothing to do",
+		              papp->StrId());
 		break;
 	default:
-		logger->Warn("MapResources <%s>: [%s] wrong sync status!",
-			papp->SyncStateStr(papp->SyncState()),
-			papp->StrId());
 		break;
 	}
 
 	if (result != PlatformManager::PLATFORM_OK
-			&& (kill(papp->Pid(), 0) == 0)) {
-		logger->Warn("MapResources <%s>: [%s]: failure occurred ",
-			papp->SyncStateStr(papp->SyncState()),
-			papp->StrId());
+	    && (kill(papp->Pid(), 0) == 0)) {
+		logger->Warn("MapResources <%s>: [%s] failure occurred [ret=%d]",
+		             papp->SyncStateStr(papp->SyncState()),
+		             papp->StrId(),
+		             result);
 
 		return PLATFORM_SYNC_FAILED;
 	}
