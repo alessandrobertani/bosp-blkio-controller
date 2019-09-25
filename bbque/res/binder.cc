@@ -294,7 +294,7 @@ ResourceBitset ResourceBinder::GetMask(
 		}
 
 		// Is the application using it?
-		if (rsrc->ApplicationUsage(papp, status_view) == 0) {
+		if (rsrc->UsedBy(papp, status_view) == 0) {
 			logger->Debug("GetMask: <%s> not used by [%s]. Skipping...",
 			              rsrc->Path()->ToString().c_str(),
 			              papp->StrId());

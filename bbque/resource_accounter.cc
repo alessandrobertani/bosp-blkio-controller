@@ -574,7 +574,7 @@ uint64_t ResourceAccounter::GetAssignedAmount(
 			// Resource type
 			if (rsrc->Path()->Type() != r_type)
 				continue;
-			amount += rsrc->ApplicationUsage(papp, status_view);
+			amount += rsrc->UsedBy(papp, status_view);
 		}
 	}
 	logger->Debug("GetAssignedAmount: EXC:[%s] R:<%-3s> U:%" PRIu64 "",
@@ -1534,7 +1534,7 @@ inline void ResourceAccounter::SyncResourceBooking(
         uint64_t & requested)
 {
 	// Skip the resource binding if the not assigned by the scheduler
-	uint64_t sched_usage = rsrc->ApplicationUsage(papp, sch_view_token);
+	uint64_t sched_usage = rsrc->UsedBy(papp, sch_view_token);
 	if (sched_usage == 0) {
 		logger->Debug("SyncResourceBooking: [%s] no assignment of <%s>",
 		              papp->StrId(), rsrc->Name().c_str());

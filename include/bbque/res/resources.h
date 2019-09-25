@@ -140,7 +140,7 @@ class Resource: public ResourceIdentifier, public ExtraDataContainer
 {
 
 // This makes method SetTotal() accessible to RA
-friend class bbque::ResourceAccounter;
+	friend class bbque::ResourceAccounter;
 
 public:
 
@@ -395,7 +395,7 @@ public:
 	 *
 	 * @return The 'quota' of resource used by the application
 	 */
-	uint64_t ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_id = 0) const;
+	uint64_t UsedBy(SchedPtr_t const & papp, RViewToken_t view_id = 0) const;
 
 	/**
 	 * @brief Applications using the resource
@@ -407,21 +407,6 @@ public:
 	uint16_t Applications(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0) const {
 		return ApplicationsCount(apps_map, view_id);
 	}
-
-	/**
-	 * @brief Get the Uid of the n-th App/EXC using the resource
-	 *
-	 * @param app_uid The Uid of the n-th App/EXC using the resource
-	 * @param amount This is set to the amount of resource used by the App/EXC
-	 * @param nth The n-th App/EXC to find
-	 * @param view_id The token referencing the resource view
-	 * @return RS_SUCCESS if the App/EXC has been found, RS_NO_APPS otherwise
-	 */
-	ExitCode_t UsedBy(
-	        AppUid_t & app_uid,
-	        uint64_t & amount,
-	        uint8_t nth = 0,
-	        RViewToken_t view_id = 0) const;
 
 	/**
 	 * @brief The number of state views of the resource
@@ -643,7 +628,6 @@ private:
 	/** Resource name, e.g. CPU architecture name */
 	std::string model;
 
-
 	/** The run-time availability profile of this resource */
 	AvailabilityProfile_t av_profile;
 
@@ -756,7 +740,7 @@ private:
 	 *
 	 * @return The 'quota' of resource used by the application
 	 */
-	uint64_t ApplicationUsage(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) const;
+	uint64_t UsedBy(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) const;
 
 
 	/**

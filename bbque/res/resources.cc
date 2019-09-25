@@ -111,7 +111,7 @@ uint64_t Resource::Available(SchedPtr_t papp, RViewToken_t view_id) const
 		return total_available;
 
 	// Add resources allocated by requesting applicatiion
-	total_available += ApplicationUsage(papp, view->apps);
+	total_available += UsedBy(papp, view->apps);
 	return total_available;
 
 }
@@ -128,7 +128,7 @@ Resource::ExitCode_t Resource::Reserve(uint64_t amount)
 	return RS_SUCCESS;
 }
 
-uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_id) const
+uint64_t Resource::UsedBy(SchedPtr_t const & papp, RViewToken_t view_id) const
 {
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
@@ -137,39 +137,8 @@ uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, RViewToken_t view_i
 		return 0;
 	}
 
-	// Call the "low-level" ApplicationUsage()
-	return ApplicationUsage(papp, view->apps);
-}
-
-Resource::ExitCode_t Resource::UsedBy(AppUid_t & app_uid,
-                                      uint64_t & amount,
-                                      uint8_t nth,
-                                      RViewToken_t view_id) const
-{
-	// Get the map of Apps/EXCs using the resource
-	AppUsageQtyMap_t apps_map;
-	size_t mapsize = ApplicationsCount(apps_map, view_id);
-	size_t count = 0;
-	app_uid = 0;
-	amount  = 0;
-
-	// Index overflow check
-	if (nth >= mapsize)
-		return RS_NO_APPS;
-
-	// Search the nth-th App/EXC using the resource
-	for (auto const & apps_it : apps_map) {
-		// Skip until the required index has not been reached
-		if (count < nth) continue;
-		// Return the amount of resource used and the App/EXC Uid
-		amount  = apps_it.second;
-		app_uid = apps_it.first;
-		++count;
-
-		return RS_SUCCESS;
-	}
-
-	return RS_NO_APPS;
+	// Call the "low-level" UsedBy()
+	return UsedBy(papp, view->apps);
 }
 
 
@@ -256,7 +225,7 @@ uint16_t Resource::ApplicationsCount(AppUsageQtyMap_t & apps_map, RViewToken_t v
 	return apps_map.size();
 }
 
-uint64_t Resource::ApplicationUsage(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) const
+uint64_t Resource::UsedBy(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) const
 {
 	if (!papp) {
 		DB(fprintf(stderr, FW("Resource {%s}: App/EXC null pointer\n"),
