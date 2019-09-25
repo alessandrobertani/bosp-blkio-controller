@@ -26,9 +26,11 @@
 #include "bbque/res/identifier.h"
 #include "bbque/res/resource_assignment.h"
 
-namespace bbque {
+namespace bbque
+{
 
-namespace res {
+namespace res
+{
 class Resource;
 class ResourcePath;
 typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
@@ -40,7 +42,8 @@ typedef std::list<ResourcePtr_t> ResourcePtrList_t;
 }
 namespace br = bbque::res;
 
-namespace app {
+namespace app
+{
 class ApplicationStatusIF;
 typedef std::shared_ptr<ApplicationStatusIF> AppSPtr_t;
 }
@@ -55,7 +58,8 @@ namespace ba = bbque::app;
  * between resource accounter and "periferical" components of the RTRM (i.e.
  * the RecipeLoader) for resource information querying.
  */
-class ResourceAccounterStatusIF {
+class ResourceAccounterStatusIF
+{
 
 public:
 
@@ -65,46 +69,46 @@ public:
 	 * @brief Exit codes
 	 */
 	enum ExitCode_t {
-		/** Successful return  */
-		RA_SUCCESS = 0,
-		/** Generic ResourceAccounter errro */
-		RA_FAILED,
-		/** Argument "path" missing */
-		RA_ERR_MISS_PATH,
-		/** Unable to allocate a new resource descriptor */
-		RA_ERR_MEM,
-		/** Unable to find the state view specified */
-		RA_ERR_MISS_VIEW,
-		/** Unauthorized system state view manipulation attempt */
-		RA_ERR_UNAUTH_VIEW,
-		/** Application reference missing */
-		RA_ERR_MISS_APP,
-		/** Resource usages map missing	 */
-		RA_ERR_MISS_USAGES,
-		/** Next AWM is missing */
-		RA_ERR_MISS_AWM,
-		/** Application uses yet another resource set */
-		RA_ERR_APP_USAGES,
-		/** Resource usage required exceeds the availabilities */
-		RA_ERR_USAGE_EXC,
+	        /** Successful return  */
+	        RA_SUCCESS = 0,
+	        /** Generic ResourceAccounter errro */
+	        RA_FAILED,
+	        /** Argument "path" missing */
+	        RA_ERR_MISS_PATH,
+	        /** Unable to allocate a new resource descriptor */
+	        RA_ERR_MEM,
+	        /** Unable to find the state view specified */
+	        RA_ERR_MISS_VIEW,
+	        /** Unauthorized system state view manipulation attempt */
+	        RA_ERR_UNAUTH_VIEW,
+	        /** Application reference missing */
+	        RA_ERR_MISS_APP,
+	        /** Resource usages map missing	 */
+	        RA_ERR_MISS_USAGES,
+	        /** Next AWM is missing */
+	        RA_ERR_MISS_AWM,
+	        /** Application uses yet another resource set */
+	        RA_ERR_APP_USAGES,
+	        /** Resource usage required exceeds the availabilities */
+	        RA_ERR_USAGE_EXC,
 
-		// --- Update mode ---
+	        // --- Update mode ---
 
-		/** Resource has not been registered at boot */
-		RA_ERR_NOT_REGISTERED,
-		/** The resource path specified is not valid */
-		RA_ERR_INVALID_PATH,
-		/** Amount exceeding registered total amount */
-		RA_ERR_OVERFLOW,
+	        /** Resource has not been registered at boot */
+	        RA_ERR_NOT_REGISTERED,
+	        /** The resource path specified is not valid */
+	        RA_ERR_INVALID_PATH,
+	        /** Amount exceeding registered total amount */
+	        RA_ERR_OVERFLOW,
 
-		// --- Synchronization mode ---
+	        // --- Synchronization mode ---
 
-		/** Initialization failed */
-		RA_ERR_SYNC_INIT,
-		/** Error occured in using/getting the resource view  */
-		RA_ERR_SYNC_VIEW,
-		/** Synchronization session has not been started */
-		RA_ERR_SYNC_START
+	        /** Initialization failed */
+	        RA_ERR_SYNC_INIT,
+	        /** Error occured in using/getting the resource view  */
+	        RA_ERR_SYNC_VIEW,
+	        /** Synchronization session has not been started */
+	        RA_ERR_SYNC_START
 	};
 
 	/**
@@ -112,16 +116,16 @@ public:
 	 * @brief The class of resource path specified in the query functions
 	 */
 	enum PathClass_t {
-		UNDEFINED = 0,
-		/** Exact resource path matching (type+ID). <br>
-		 *  Example: sys1.cpu2.pe0 */
-		EXACT   ,
-		/** Type matching if no ID provided, otherwise type+ID. <br>
-		 *  Example: sys1.cpu.pe0  */
-		MIXED   ,
-		/** Only type matching. <br>
-		 *  Example: sys.cpu.pe    */
-		TEMPLATE
+	        UNDEFINED = 0,
+	        /** Exact resource path matching (type+ID). <br>
+	         *  Example: sys1.cpu2.pe0 */
+	        EXACT   ,
+	        /** Type matching if no ID provided, otherwise type+ID. <br>
+	         *  Example: sys1.cpu.pe0  */
+	        MIXED   ,
+	        /** Only type matching. <br>
+	         *  Example: sys.cpu.pe    */
+	        TEMPLATE
 	};
 
 	/**
@@ -137,7 +141,7 @@ public:
 	virtual uint64_t Total(std::string const & path) = 0;
 
 	virtual uint64_t Total(
-		br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT) const = 0;
+	        br::ResourcePathPtr_t ppath, PathClass_t rpc = EXACT) const = 0;
 
 	/**
 	 * @brief Total amount of not reserved resources
@@ -198,14 +202,14 @@ public:
 	 * @return The amount of resource available
 	 */
 	virtual uint64_t Available(
-			std::string const & path,
-			br::RViewToken_t status_view = 0,
-			ba::SchedPtr_t papp = ba::SchedPtr_t()) = 0;
+	        std::string const & path,
+	        br::RViewToken_t status_view = 0,
+	        ba::SchedPtr_t papp = ba::SchedPtr_t()) = 0;
 
 	virtual uint64_t Available(br::ResourcePathPtr_t ppath,
-			PathClass_t rpc = EXACT,
-			br::RViewToken_t status_view = 0,
-			ba::SchedPtr_t papp = ba::SchedPtr_t()) const = 0;
+	                           PathClass_t rpc = EXACT,
+	                           br::RViewToken_t status_view = 0,
+	                           ba::SchedPtr_t papp = ba::SchedPtr_t()) const = 0;
 
 	/**
 	 * @brief Amount of resources available
@@ -228,9 +232,9 @@ public:
 	 * @return The amount of resource available
 	 */
 	virtual uint64_t Available(
-			br::ResourcePtrList_t & rsrc_list,
-			br::RViewToken_t status_view = 0,
-			ba::SchedPtr_t papp = ba::SchedPtr_t()) const = 0;
+	        br::ResourcePtrList_t & rsrc_list,
+	        br::RViewToken_t status_view = 0,
+	        ba::SchedPtr_t papp = ba::SchedPtr_t()) const = 0;
 
 	/**
 	 * @brief Amount of resources used
@@ -244,10 +248,11 @@ public:
 	 * @return The used amount of resource
 	 */
 	virtual uint64_t Used(
-		std::string const & path, br::RViewToken_t status_view = 0) = 0;
+	        std::string const & path, br::RViewToken_t status_view = 0) = 0;
 
 	virtual uint64_t Used(br::ResourcePathPtr_t ppath,
-			PathClass_t rpc = EXACT, br::RViewToken_t status_view = 0) const = 0;
+	                      PathClass_t rpc = EXACT,
+	                      br::RViewToken_t status_view = 0) const = 0;
 
 	/**
 	 * @brief Amount of resources used
@@ -267,7 +272,8 @@ public:
 	 * @return The used amount of resource
 	 */
 	virtual uint64_t Used(
-		br::ResourcePtrList_t & rsrc_list, br::RViewToken_t status_view = 0) const = 0;
+	        br::ResourcePtrList_t & rsrc_list,
+	        br::RViewToken_t status_view = 0) const = 0;
 
 	/**
 	 * @brief Get the resource path object related to a string

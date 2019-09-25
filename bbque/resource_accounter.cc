@@ -380,13 +380,13 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath)
  *                   QUERY METHODS                                      *
  ************************************************************************/
 
-inline uint64_t ResourceAccounter::Total(std::string const & path)
+uint64_t ResourceAccounter::Total(std::string const & path)
 {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_TOTAL, 0);
 }
 
-inline uint64_t ResourceAccounter::Total(
+uint64_t ResourceAccounter::Total(
         br::ResourcePtrList_t & resources_list) const
 {
 	if (resources_list.empty())
@@ -394,7 +394,7 @@ inline uint64_t ResourceAccounter::Total(
 	return QueryStatus(resources_list, RA_TOTAL);
 }
 
-inline uint64_t ResourceAccounter::Total(
+uint64_t ResourceAccounter::Total(
         ResourcePathPtr_t resource_path_ptr,
         PathClass_t rpc) const
 {
@@ -403,7 +403,7 @@ inline uint64_t ResourceAccounter::Total(
 }
 
 
-inline uint64_t ResourceAccounter::Used(
+uint64_t ResourceAccounter::Used(
         std::string const & path,
         br::RViewToken_t status_view)
 {
@@ -411,7 +411,7 @@ inline uint64_t ResourceAccounter::Used(
 	return QueryStatus(matchings, RA_USED, status_view);
 }
 
-inline uint64_t ResourceAccounter::Used(
+uint64_t ResourceAccounter::Used(
         br::ResourcePtrList_t & resources_list,
         br::RViewToken_t status_view) const
 {
@@ -420,7 +420,7 @@ inline uint64_t ResourceAccounter::Used(
 	return QueryStatus(resources_list, RA_USED, status_view);
 }
 
-inline uint64_t ResourceAccounter::Used(
+uint64_t ResourceAccounter::Used(
         ResourcePathPtr_t resource_path_ptr,
         PathClass_t rpc,
         br::RViewToken_t status_view) const
@@ -430,7 +430,6 @@ inline uint64_t ResourceAccounter::Used(
 }
 
 
-inline uint64_t ResourceAccounter::Available(
         std::string const & path,
         br::RViewToken_t status_view,
         ba::SchedPtr_t papp)
@@ -439,7 +438,7 @@ inline uint64_t ResourceAccounter::Available(
 	return QueryStatus(matchings, RA_AVAIL, status_view, papp);
 }
 
-inline uint64_t ResourceAccounter::Available(
+uint64_t ResourceAccounter::Available(
         br::ResourcePtrList_t & resources_list,
         br::RViewToken_t status_view,
         ba::SchedPtr_t papp) const
@@ -449,7 +448,7 @@ inline uint64_t ResourceAccounter::Available(
 	return QueryStatus(resources_list, RA_AVAIL, status_view, papp);
 }
 
-inline uint64_t ResourceAccounter::Available(
+uint64_t ResourceAccounter::Available(
         ResourcePathPtr_t resource_path_ptr,
         PathClass_t rpc,
         br::RViewToken_t status_view,
@@ -459,13 +458,13 @@ inline uint64_t ResourceAccounter::Available(
 	return QueryStatus(matchings, RA_AVAIL, status_view, papp);
 }
 
-inline uint64_t ResourceAccounter::Unreserved(std::string const & path)
+uint64_t ResourceAccounter::Unreserved(std::string const & path)
 {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_UNRESERVED, 0);
 }
 
-inline uint64_t ResourceAccounter::Unreserved(
+uint64_t ResourceAccounter::Unreserved(
         br::ResourcePtrList_t & resources_list) const
 {
 	if (resources_list.empty())
@@ -473,7 +472,7 @@ inline uint64_t ResourceAccounter::Unreserved(
 	return QueryStatus(resources_list, RA_UNRESERVED);
 }
 
-inline uint64_t ResourceAccounter::Unreserved(
+uint64_t ResourceAccounter::Unreserved(
         ResourcePathPtr_t resource_path_ptr) const
 {
 	br::ResourcePtrList_t matchings(GetList(resource_path_ptr, MIXED));
@@ -481,14 +480,14 @@ inline uint64_t ResourceAccounter::Unreserved(
 }
 
 
-inline uint16_t ResourceAccounter::Count(
+uint16_t ResourceAccounter::Count(
         ResourcePathPtr_t resource_path_ptr) const
 {
 	br::ResourcePtrList_t matchings(GetResources(resource_path_ptr));
 	return matchings.size();
 }
 
-inline uint16_t ResourceAccounter::CountPerType(br::ResourceType type) const
+uint16_t ResourceAccounter::CountPerType(br::ResourceType type) const
 {
 	auto it = r_ids_per_type.find(type);
 	if (it == r_ids_per_type.end())
@@ -507,7 +506,7 @@ br::ResourcePtrList_t ResourceAccounter::GetList(
 }
 
 
-inline uint64_t ResourceAccounter::QueryStatus(
+uint64_t ResourceAccounter::QueryStatus(
         br::ResourcePtrList_t const & resources_list,
         QueryOption_t _att,
         br::RViewToken_t status_view,
@@ -612,7 +611,7 @@ uint64_t ResourceAccounter::GetAssignedAmount(
 }
 
 
-inline ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
+ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
         br::ResourceAssignmentMapPtr_t const & assign_map,
         br::RViewToken_t status_view,
         ba::SchedPtr_t papp) const
@@ -642,7 +641,7 @@ inline ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 	return RA_SUCCESS;
 }
 
-inline ResourceAccounter::ExitCode_t ResourceAccounter::GetAppAssignmentsByView(
+ResourceAccounter::ExitCode_t ResourceAccounter::GetAppAssignmentsByView(
         br::RViewToken_t status_view,
         AppAssignmentsMapPtr_t & apps_assign)
 {
@@ -1249,7 +1248,7 @@ void ResourceAccounter::SyncWait()
  *                   RESOURCE ACCOUNTING                                *
  ************************************************************************/
 
-inline ResourceAccounter::ExitCode_t ResourceAccounter::_BookResources(
+ResourceAccounter::ExitCode_t ResourceAccounter::_BookResources(
         ba::SchedPtr_t papp,
         br::ResourceAssignmentMapPtr_t const & assign_map,
         br::RViewToken_t status_view)
@@ -1497,7 +1496,7 @@ bool ResourceAccounter::IsReshuffling(
 	return false;
 }
 
-inline void ResourceAccounter::SchedResourceBooking(
+void ResourceAccounter::SchedResourceBooking(
         ba::SchedPtr_t const & papp,
         br::ResourcePtr_t & rsrc,
         br::RViewToken_t status_view,
@@ -1528,7 +1527,7 @@ inline void ResourceAccounter::SchedResourceBooking(
 		requested -= rsrc->Acquire(papp, available, status_view);
 }
 
-inline void ResourceAccounter::SyncResourceBooking(
+void ResourceAccounter::SyncResourceBooking(
         ba::SchedPtr_t const & papp,
         br::ResourcePtr_t & rsrc,
         uint64_t & requested)

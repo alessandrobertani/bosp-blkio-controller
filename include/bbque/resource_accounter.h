@@ -108,7 +108,7 @@ public:
 	virtual ~ResourceAccounter();
 
 	/**
-	 * @see ResourceAccounterStatusIF
+	 * @brief Total amount of the given registered resource
 	 */
 	uint64_t Total(std::string const & path);
 
@@ -118,7 +118,7 @@ public:
 	        br::ResourcePathPtr_t resource_path_ptr, PathClass_t rpc = EXACT) const;
 
 	/**
-	 * @see ResourceAccounterStatusIF
+	 * @brief Available amount of the given registered resource
 	 */
 	uint64_t Available(
 	        std::string const & path,
@@ -136,10 +136,11 @@ public:
 	        ba::SchedPtr_t papp = ba::SchedPtr_t()) const;
 
 	/**
-	 * @see ResourceAccounterStatusIF
+	 * @brief Used/assigned amount of the given registered resource
 	 */
 	uint64_t Used(
-	        std::string const & path, br::RViewToken_t status_view = 0);
+	        std::string const & path,
+	        br::RViewToken_t status_view = 0);
 
 	uint64_t Used(
 	        br::ResourcePtrList_t & resources_list,
