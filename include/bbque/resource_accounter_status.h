@@ -276,6 +276,36 @@ public:
 	        br::RViewToken_t status_view = 0) const = 0;
 
 	/**
+	 * @brief Amount of resource used by a given application
+	 * @param path Resource path
+	 * @param papp Target application
+	 * @param status_view The token referencing the resource state view
+	 * @return the amount of resource
+	 */
+	virtual uint64_t UsedBy(
+	        std::string const & path,
+	        ba::SchedPtr_t papp,
+	        br::RViewToken_t status_view = 0) = 0;
+
+	/**
+	 * @brief Amount of resource used by a given application
+	 * @param resources_list A list of shared pointer to Resource descriptors
+	 * @param papp Target application
+	 * @param status_view The token referencing the resource state view
+	 * @return the amount of resource
+	 */
+	virtual uint64_t UsedBy(
+	        br::ResourcePtrList_t & resources_list,
+	        ba::SchedPtr_t papp,
+	        br::RViewToken_t status_view = 0) const = 0;
+
+	virtual uint64_t UsedBy(
+	        br::ResourcePathPtr_t resource_path_ptr,
+	        ba::SchedPtr_t papp,
+	        PathClass_t rpc = EXACT,
+	        br::RViewToken_t status_view = 0) const = 0;
+
+	/**
 	 * @brief Get the resource path object related to a string
 	 *
 	 * Given a resource path in char string format, the member function

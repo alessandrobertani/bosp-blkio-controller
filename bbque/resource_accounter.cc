@@ -430,6 +430,37 @@ uint64_t ResourceAccounter::Used(
 }
 
 
+uint64_t ResourceAccounter::UsedBy(
+        std::string const & path,
+        ba::SchedPtr_t papp,
+        br::RViewToken_t status_view)
+{
+	br::ResourcePtrList_t matchings(GetResources(path));
+	return QueryStatus(matchings, RA_USED_BY, status_view, papp);
+}
+
+uint64_t ResourceAccounter::UsedBy(
+        br::ResourcePtrList_t & resources_list,
+        ba::SchedPtr_t papp,
+        br::RViewToken_t status_view) const
+{
+	if (resources_list.empty())
+		return 0;
+	return QueryStatus(resources_list, RA_USED_BY, status_view, papp);
+}
+
+uint64_t ResourceAccounter::UsedBy(
+        ResourcePathPtr_t resource_path_ptr,
+        ba::SchedPtr_t papp,
+        PathClass_t rpc,
+        br::RViewToken_t status_view) const
+{
+	br::ResourcePtrList_t matchings(GetList(resource_path_ptr, rpc));
+	return QueryStatus(matchings, RA_USED_BY, status_view, papp);
+}
+
+
+uint64_t ResourceAccounter::Available(
         std::string const & path,
         br::RViewToken_t status_view,
         ba::SchedPtr_t papp)
@@ -529,6 +560,9 @@ uint64_t ResourceAccounter::QueryStatus(
 			break;
 		case RA_TOTAL:
 			value += rsrc->Total();
+			break;
+		case RA_USED_BY:
+			value += rsrc->UsedBy(papp, status_view);
 			break;
 		}
 	}

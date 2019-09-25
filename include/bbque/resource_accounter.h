@@ -152,6 +152,26 @@ public:
 	        br::RViewToken_t status_view = 0) const;
 
 	/**
+	 * @brief Amount of resource used by a given application/process
+	 */
+	uint64_t UsedBy(
+	        std::string const & path,
+	        ba::SchedPtr_t papp,
+	        br::RViewToken_t status_view = 0);
+
+	uint64_t UsedBy(
+	        br::ResourcePtrList_t & resources_list,
+	        ba::SchedPtr_t papp,
+	        br::RViewToken_t status_view = 0) const;
+
+	uint64_t UsedBy(
+	        br::ResourcePathPtr_t resource_path_ptr,
+	        ba::SchedPtr_t papp,
+	        PathClass_t rpc = EXACT,
+	        br::RViewToken_t status_view = 0) const;
+
+
+	/**
 	 * @see ResourceAccounterStatusIF
 	 */
 	uint64_t Unreserved(std::string const & path);
@@ -630,7 +650,9 @@ private:
 	        /** Total amount of not reserved resource */
 	        RA_UNRESERVED,
 	        /** Total amount of resource */
-	        RA_TOTAL
+	        RA_TOTAL,
+	        /** Amount of resource used by the given application */
+	        RA_USED_BY
 	};
 
 	/**

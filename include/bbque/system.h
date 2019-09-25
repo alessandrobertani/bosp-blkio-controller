@@ -249,6 +249,28 @@ public:
 
 
 	/**
+	 * @see ResourceAccounterStatusIF::Used()
+	 */
+	uint64_t ResourceUsedBy(std::string const & path,
+	                        ba::SchedPtr_t papp,
+	                        br::RViewToken_t status_view = 0) const {
+		return ra.UsedBy(path, papp, status_view);
+	}
+
+	uint64_t ResourceUsedBy(ResourcePathPtr_t ppath,
+	                        ba::SchedPtr_t papp,
+	                        br::RViewToken_t status_view = 0) const {
+		return ra.UsedBy(ppath, papp, ResourceAccounter::UNDEFINED, status_view);
+	}
+
+	uint64_t ResourceUsedBy(br::ResourcePtrList_t & rsrc_list,
+	                        ba::SchedPtr_t papp,
+	                        br::RViewToken_t status_view = 0) const {
+		return ra.UsedBy(rsrc_list, papp, status_view);
+	}
+
+
+	/**
 	 * @see ResourceAccounterStatusIF::Count()
 	 */
 	inline int16_t ResourceCount(br::ResourcePath & path) const;
