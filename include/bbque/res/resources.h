@@ -203,18 +203,9 @@ public:
 
 		void operator=(const PowerSettings & other) {
 			SetOn(other.online);
-			if (this->freq_governor.compare(other.freq_governor) != 0) {
-				pending_actions |= CHANGE_GOVERNOR;
-				this->freq_governor.assign(other.freq_governor);
-			}
-			if (this->freq_khz != other.freq_khz) {
-				pending_actions |= SET_FREQUENCY;
-				this->freq_khz = other.freq_khz;
-			}
-			if (this->perf_state != other.perf_state) {
-				pending_actions |= SET_PERF_STATE;
-				this->perf_state = other.perf_state;
-			}
+			SetFrequencyGovernor(other.freq_governor);
+			SetClockFrequency(other.freq_khz);
+			SetPerformanceState(other.perf_state);
 		}
 
 
@@ -242,6 +233,33 @@ public:
 			if (this->online != on) {
 				pending_actions |= TURN_ONOFF;
 				this->online = on;
+				return true;
+			}
+			return false;
+		}
+
+		bool SetFrequencyGovernor(std::string const & freq_governor){
+			if (this->freq_governor.compare(freq_governor) != 0) {
+				pending_actions |= CHANGE_GOVERNOR;
+				this->freq_governor.assign(freq_governor);
+				return true;
+			}
+			return false;
+		}
+
+		bool SetClockFrequency(uint32_t freq_khz){
+			if (this->freq_khz != freq_khz) {
+				pending_actions |= SET_FREQUENCY;
+				this->freq_khz = freq_khz;
+				return true;
+			}
+			return false;
+		}
+
+		bool SetPerformanceState(int32_t perf_state){
+			if (this->perf_state != perf_state) {
+				pending_actions |= SET_PERF_STATE;
+				this->perf_state = perf_state;
 				return true;
 			}
 			return false;
