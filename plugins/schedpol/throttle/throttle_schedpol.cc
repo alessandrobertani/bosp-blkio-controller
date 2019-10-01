@@ -44,6 +44,9 @@
 #define BBQUE_RP_TYPE_LP	false
 #define BBQUE_RP_TYPE_HP	 true
 
+#define CPU_REQUEST "sys.cpu.pe"
+#define RUNTIME_AWM_NAME "Run-time"
+
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
@@ -120,7 +123,7 @@ SchedulerPolicyIF::ExitCode_t ThrottleSchedPol::Init() {
 		uint32_t pe_count = 0;
 		uint32_t perf_states_count = 0;
 		for(auto pe : pe_list){
-			auto pe_path = ra.GetPath(pe->Path());
+			auto pe_path = pe->Path();//ra.GetPath(pe->Path());
 			if(plm.IsHighPerformance(pe_path)){
 				pe_count++;
 				wm.GetPerformanceStatesCount(pe_path, perf_states_count);
@@ -269,13 +272,13 @@ ThrottleSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = proc->CurrentAWM();
 	if (pawm == nullptr) {
-		pawm = std::make_shared<ba::WorkingMode>(99,"Run-time", 1, proc);
+		pawm = std::make_shared<ba::WorkingMode>(99, RUNTIME_AWM_NAME, 1, proc);
 	}
 
 	// Resource request addition
 	auto res_ass; 
 	res_ass = pawm->AddResourceRequest(
-				"sys.cpu.pe", MAX_CPU_QUOTA,
+				CPU_REQUEST, MAX_CPU_QUOTA,
 				br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
@@ -324,6 +327,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	ba::AwmPtr_t next_pawm;
+	uint32_t next_ps;
 				//papp->WorkingModes().size()+1,"Run-time", 1, papp);
 	//assert(next_pawm);
 	/* 1 case: new Application */
@@ -335,21 +339,22 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
 		app_awm_map[papp->Pid()] = 0;
 		next_pawm  = std::make_shared<ba::WorkingMode>(
-				app_awm_map[papp->Pid()],"Run-time", 1, papp);
+				app_awm_map[papp->Pid()], RUNTIME_AWM_NAME, 1, papp);
 		assert(next_pawm);
 		logger->Error("AssignWorkingMode: Added to map [%d:%d]",
 			papp->Pid(), app_awm_map[papp->Pid()]);
 		// Resource request addition
 		auto res_ass = next_pawm->AddResourceRequest(
-					"sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+					CPU_REQUEST, CPU_QUOTA_TO_ALLOCATE,
 					br::ResourceAssignment::Policy::SEQUENTIAL);
 
 		available_cpu_ids = TakeCPUsType(BBQUE_RP_TYPE_LP);
 		logger->Debug("AssignWorkingMode: available cpus size <%d>", available_cpu_ids.size());
 
-		br::ResourceAssignment::PowerSettings new_settings;
-		new_settings.perf_state = low_perf_states_count / 2;
-		next_pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
+		//br::Resource::PowerSettings new_settings;
+		//new_settings.perf_state = low_perf_states_count / 2;
+		//next_pawm->GetResourceRequest(CPU_REQUEST)->SetPowerSettings(new_settings);
+		next_ps = low_perf_states_count / 2;
 		logger->Debug("AssignWorkingMode: resource request added for [%d]", papp->StrId());
 		new_application = true;
 	}
@@ -398,12 +403,12 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 			for(auto bind : prev_binding){
 				for(auto prev_res : bind.second->GetResourcesList()){
 
-					auto prev_res_path = ra.GetPath(prev_res->Path());
+					auto prev_res_path = prev_res->Path();
 					logger->Debug("AssignWorkingMode: Computing PS for res: [%s]", 
 						prev_res_path->ToString().c_str());
 					uint32_t ps_count;
 					
-					uint32_t current_ps, next_ps;
+					uint32_t current_ps;
 					int ggap_percent = 0-(app_info.runtime.ggap_percent);
 					
 
@@ -457,26 +462,10 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 						available_cpu_ids = TakeCPUsType(plm.IsHighPerformance(prev_res_path));
 					}
 
-					br::ResourceAssignment::PowerSettings new_settings;
-					new_settings.perf_state = next_ps;
 					next_pawm->AddResourceRequest(
-							"sys.cpu.pe",
+							CPU_REQUEST,
 							CPU_QUOTA_TO_ALLOCATE,
 							br::ResourceAssignment::Policy::SEQUENTIAL);
-					next_pawm->GetResourceRequest("sys.cpu.pe")->SetPowerSettings(new_settings);
-					auto power_settings = 
-						pawm->GetResourceRequest("sys.cpu.pe")->GetPowerSettings();
-					auto next_power_settings = 
-						next_pawm->GetResourceRequest("sys.cpu.pe")->GetPowerSettings();
-					logger->Error("AssignWorkingMode: Updated PowerSettings "
-								"[GOV = [%s->%s], FREQ = [%d->%d], PERF_STATE = [%d->%d]",
-								power_settings.freq_governor.c_str(),
-								next_power_settings.freq_governor.c_str(),
-								power_settings.freq_khz,
-								next_power_settings.freq_khz,
-								power_settings.perf_state,
-								next_power_settings.perf_state);
-
 				}
 			}
 		}
@@ -507,6 +496,26 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 			continue;
 		}
 
+
+		// Power setting
+		br::Resource::PowerSettings new_settings;
+		new_settings.SetPerformanceState(next_ps);
+		logger->Error("AssignWorkingMode: Updated PowerSettings "
+								"[GOV = [%s], FREQ = [%d], PERF_STATE = [%d]",
+								new_settings.FrequencyGovernor().c_str(),
+								new_settings.ClockFrequency(),
+								new_settings.PerformanceState());
+
+		auto binding_map = next_pawm->GetResourceBinding();
+		auto & binding = *(binding_map.get());
+		for(auto bind : binding){
+			for(auto res : bind.second->GetResourcesList()){
+
+			res->SetPowerSettings(new_settings);
+
+			}
+
+		}
 		// Assign 
 
 		// Schedule request
