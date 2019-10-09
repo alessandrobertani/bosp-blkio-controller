@@ -133,6 +133,9 @@ ResourceManager::ResourceManager() :
 	ra(ResourceAccounter::GetInstance()),
 	bdm(BindingManager::GetInstance()),
 	mc(MetricsCollector::GetInstance()),
+#ifdef CONFIG_BBQUE_RELIABILITY
+	lm(ReliabilityManager::GetInstance()),
+#endif
 	plm(PlatformManager::GetInstance()),
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	prm(ProcessManager::GetInstance()),

@@ -24,19 +24,18 @@
 #include "bbque/application_manager.h"
 #include "bbque/application_proxy.h"
 #include "bbque/binding_manager.h"
+#include "bbque/command_manager.h"
+#include "bbque/data_manager.h"
 #include "bbque/platform_manager.h"
 #include "bbque/platform_services.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/pm/power_manager.h"
 #include "bbque/process_manager.h"
+#include "bbque/profile_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/synchronization_manager.h"
-#include "bbque/profile_manager.h"
+#include "bbque/reliability_manager.h"
 #include "bbque/resource_accounter.h"
-
-#include "bbque/command_manager.h"
-
-#include "bbque/data_manager.h"
 
 #ifdef CONFIG_BBQUE_EM
 #include "bbque/em/event.h"
@@ -196,6 +195,9 @@ private:
 
 	MetricsCollector & mc;
 
+#ifdef CONFIG_BBQUE_RELIABILITY
+	ReliabilityManager & lm;
+#endif
 	PlatformManager & plm;
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
