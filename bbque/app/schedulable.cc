@@ -36,9 +36,9 @@ char const *Schedulable::stateStr[] = {
 
 char const *Schedulable::syncStateStr[] = {
 	"STARTING",
-	"RECONF",
-	"MIGREC",
-	"MIGRATE",
+	"RECONFIG",
+	"R-MIGRATED",
+	"MIGRATED",
 	"BLOCKED",
 	"DISABLED",
 	"NONE"
