@@ -248,6 +248,13 @@ void ProcessManager::NotifyExit(app::AppPid_t pid) {
 		return;
 	}
 
+	// Warning: exit can be notified also for frozen processes
+	if (ending_proc->State() == Schedulable::FROZEN) {
+		logger->Warn("NotifyExit: process PID=<%d> is frozen."
+		             " Ignoring exit notification...",
+		             pid);
+		return;
+	}
 	// Status change
 	auto ret = ChangeState(ending_proc,
 		app::Schedulable::SYNC, app::Schedulable::DISABLED);
@@ -263,6 +270,43 @@ void ProcessManager::NotifyExit(app::AppPid_t pid) {
 	rm.NotifyEvent(ResourceManager::BBQ_OPTS);
 }
 
+ProcessManager::ExitCode_t ProcessManager::SetAsFrozen(app::AppUid_t pid)
+{
+	logger->Debug("SetAsFrozen: process PID=<%d> update status to FROZEN", pid);
+	ProcPtr_t proc = GetProcess(pid);
+	if (!proc) {
+		logger->Warn("SetAsFrozen: process PID=<%d> not found", pid);
+		return ExitCode_t::PROCESS_NOT_FOUND;
+	}
+	return ChangeState(proc, Schedulable::FROZEN);
+}
+
+ProcessManager::ExitCode_t ProcessManager::SetToThaw(app::AppUid_t pid)
+{
+	logger->Debug("SetToThaw: process PID=<%d> to thaw...", pid);
+	ProcPtr_t proc = GetProcess(pid);
+	if (!proc) {
+		logger->Warn("SetToThaw: process PID=<%d> not found", pid);
+		return ExitCode_t::PROCESS_NOT_FOUND;
+	}
+
+	if (proc->State() != Schedulable::FROZEN) {
+		logger->Warn("SetToThaw: process PID=<%d> not FROZEN", pid);
+		return ExitCode_t::PROCESS_WRONG_STATE;
+	}
+
+	Schedulable::State_t next_state = Schedulable::THAWED;
+	auto ret = ChangeState(proc, next_state);
+	if (ret == ExitCode_t::SUCCESS) {
+		logger->Debug("SetToThaw: process PID=<%d> status updated: %s",
+		              pid, proc->StateStr(next_state));
+	} else {
+		logger->Error("SetToThaw: process PID=<%d> status update failed",
+		              pid);
+	}
+
+	return ret;
+}
 
 bool ProcessManager::HasProcesses() const {
 	std::unique_lock<std::mutex> u_lock(proc_mutex);

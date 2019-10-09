@@ -103,9 +103,27 @@ public:
 
 	void NotifyExit(app::AppPid_t pid);
 
-/*******************************************************************************
- *     Map iterations
- ******************************************************************************/
+	/**
+	 * @brief Update process status to FROZEN. Usually called by platform
+	 * proxies once the actual freezing action has been performed.
+	 * @param pid the process id
+	 * @return ChangeState() return value
+	 */
+	ExitCode_t SetAsFrozen(app::AppPid_t pid);
+
+	/**
+	 * @brief Set the THAWED status, in order to trigger the actual thawing
+	 * of the process during the synchronization stage. However it is
+	 * mandatory that the scheduling policy would pick THAWED processes also.
+	 *
+	 * @param pid the process id
+	 * @return ChangeState() return value
+	 */
+	ExitCode_t SetToThaw(app::AppPid_t pid);
+
+	/*******************************************************************************
+	 *     Map iterations
+	 ******************************************************************************/
 
 
 	/**
