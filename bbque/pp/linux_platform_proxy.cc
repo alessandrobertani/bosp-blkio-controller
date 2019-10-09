@@ -130,6 +130,8 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 		                             "InitCGroups() failed.");
 	}
 
+#ifdef CONFIG_BBQUE_RELIABILITY
+
 	// Checkpoint image path
 	image_prefix_dir.assign(BBQUE_CHECKPOINT_IMAGE_PATH);
 	logger->Info("Reliability support: checkpoint images path:  %s",
@@ -155,6 +157,8 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 		else
 			logger->Error("Reliability support: freezer created");
 	}
+
+#endif
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	InitCoresType();
 #endif
@@ -466,6 +470,8 @@ LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
 	// ... thus releasing the corresponding control group
 	logger->Debug("Release: releasing platform-specific data [%s]", papp->StrId());
 	papp->ClearPluginData(LINUX_PP_NAMESPACE);
+
+#ifdef CONFIG_BBQUE_RELIABILITY
 	// Remove checkpoint image path
 	std::string image_dir(ApplicationPath(image_prefix_dir, papp));
 	logger->Debug("Release: image directory [%s] ", image_dir.c_str());
@@ -485,6 +491,8 @@ LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
 			logger->Info("Release feezer directory [%s] removed",
 			freezer_dir.c_str());
 	}
+#endif
+
 	return PLATFORM_OK;
 }
 
@@ -523,9 +531,12 @@ LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept {
 void LinuxPlatformProxy::Exit()
 {
 	logger->Debug("Exit: LinuxPP termination...");
+
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	proc_listener.Terminate();
 #endif
+
+#ifdef CONFIG_BBQUE_RELIABILITY
 	// Remove checkpoint image path
 	if (boost::filesystem::exists(image_prefix_dir)) {
 		if (boost::filesystem::remove(image_prefix_dir))
@@ -548,6 +559,8 @@ void LinuxPlatformProxy::Exit()
 			              "cannot remove freezer directory [%s]",
 			              freezer_prefix_dir.c_str());
 	}
+#endif
+
 }
 
 
