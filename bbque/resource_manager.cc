@@ -563,14 +563,14 @@ void ResourceManager::EvtBbqUsr1() {
 	logger->Info("==========[ Status Queues ]============"
 			"========================================");
 	logger->Info("");
-	am.PrintStatusQ(true);
+	am.PrintStatusQ();
 
 	logger->Info("");
 	logger->Info("");
 	logger->Info("==========[ Synchronization Queues ]==="
 			"========================================");
 	logger->Info("");
-	am.PrintSyncQ(true);
+	am.PrintSyncQ();
 
 	logger->Notice("");
 	logger->Notice("");
@@ -679,7 +679,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Info("==========[ Status Queues ]============"
 				"========================================");
 		logger->Info("");
-		am.PrintStatusQ(true);
+		am.PrintStatusQ();
 		break;
 
 	case 'r':
@@ -707,7 +707,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Info("==========[ Synchronization Queues ]==="
 				"========================================");
 		logger->Info("");
-		am.PrintSyncQ(true);
+		am.PrintSyncQ();
 		break;
 	case 'o':
 		logger->Info("");

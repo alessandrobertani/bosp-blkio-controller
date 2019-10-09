@@ -636,58 +636,35 @@ ApplicationManager::GetApplication(AppPid_t pid, uint8_t exc_id)
 	}\
 
 
-void ApplicationManager::PrintStatusQ(bool verbose) const {
+void ApplicationManager::PrintStatusQ() const
+{
+	std::string queue_str("[");
 
-	// Report on current status queue
-	char report[] = "StateQ: [NEW: 000, RDY: 000, SYC: 000, RUN: 000, FIN: 000]";
-
-	if (verbose) {
-		for (uint8_t i = 0; i < Application::STATE_COUNT; ++i) {
-			::sprintf(report+14+i*10, "%03u",
-				AppsCount(static_cast<ApplicationStatusIF::State_t>(i)));
-			report[17+i*10] = ',';
-		}
-		report[17+10*(Application::STATE_COUNT-1)] = ']';
-		logger->Info(report);
-	} else {
-		DB(
-		for (uint8_t i = 0; i < Application::STATE_COUNT; ++i) {
-			::sprintf(report+14+i*10, "%03u",
-				AppsCount(static_cast<ApplicationStatusIF::State_t>(i)));
-			report[17+i*10] = ',';
-		}
-		report[17+10*(Application::STATE_COUNT-1)] = ']';
-		logger->Debug(report);
-		);
+	for (uint8_t i = 0; i < Application::STATE_COUNT; ++i) {
+		Schedulable::State_t app_state = static_cast<Schedulable::State_t>(i);
+		std::string state_str(Schedulable::StateStr(app_state));
+		queue_str += " "
+		             + state_str.substr(0, 3) + ":"
+		             + std::to_string(AppsCount(app_state));
 	}
 
+	logger->Debug("StateQ: %s ]", queue_str.c_str());
 }
 
-void ApplicationManager::PrintSyncQ(bool verbose) const {
+void ApplicationManager::PrintSyncQ() const
+{
+	std::string queue_str("[");
 
-	// Report on current status queue
-	char report[] = "SyncQ:  [STA: 000, REC: 000, M/R: 000, MIG: 000, BLK: 000, DIS: 000]";
-
-	if (verbose) {
-		for (uint8_t i = 0; i < Application::SYNC_STATE_COUNT; ++i) {
-			::sprintf(report+14+i*10, "%03u",
-				AppsCount(static_cast<ApplicationStatusIF::SyncState_t>(i)));
-			report[17+i*10] = ',';
-		}
-		report[17+10*(Application::SYNC_STATE_COUNT-1)] = ']';
-		logger->Info(report);
-	} else {
-		DB(
-		for (uint8_t i = 0; i < Application::SYNC_STATE_COUNT; ++i) {
-			::sprintf(report+14+i*10, "%03u",
-				AppsCount(static_cast<ApplicationStatusIF::SyncState_t>(i)));
-			report[17+i*10] = ',';
-		}
-		report[17+10*(Application::SYNC_STATE_COUNT-1)] = ']';
-		logger->Debug(report);
-		);
+	for (uint8_t i = 0; i < Application::SYNC_STATE_COUNT; ++i) {
+		Schedulable::SyncState_t app_state =
+		        static_cast<Schedulable::SyncState_t>(i);
+		std::string state_str(Schedulable::SyncStateStr(app_state));
+		queue_str += " "
+		             + state_str.substr(0, 3) + ":"
+		             + std::to_string(AppsCount(app_state));
 	}
 
+	logger->Debug("SyncQ : %s ]", queue_str.c_str());
 }
 
 ApplicationManager::ExitCode_t

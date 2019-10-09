@@ -498,12 +498,12 @@ public:
 	/**
 	 * @brief Dump a logline to report on current Status queue counts
 	 */
-	void PrintStatusQ(bool verbose = false) const;
+	void PrintStatusQ() const;
 
 	/**
 	 * @brief Dump a logline to report on current Status queue counts
 	 */
-	void PrintSyncQ(bool verbose = false) const;
+	void PrintSyncQ() const;
 
 	/**
 	 * @brief Dump a logline to report all applications status
