@@ -613,6 +613,13 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 	              papp->SyncStateStr(papp->SyncState()),
 	              papp->StrId());
 
+
+	auto pre_sync_state = papp->PreSyncState();
+	logger->Debug("MapResources <%s>: [%s] pre-sync-state: %s",
+	              papp->SyncStateStr(papp->SyncState()),
+	              papp->StrId(),
+	              papp->StateStr(pre_sync_state));
+
 	switch (papp->SyncState()) {
 
 	case Schedulable::STARTING:
@@ -621,6 +628,13 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 	case Schedulable::MIGRATE:
 		result = plm.MapResources(papp,
 		                          papp->NextAWM()->GetResourceBinding());
+		// Was it frozen?
+		if (pre_sync_state == Schedulable::THAWED) {
+			logger->Debug("MapResources <%s>: [%s] thawing...",
+			              papp->SyncStateStr(papp->SyncState()),
+			              papp->StrId());
+			plm.Thaw(papp);
+		}
 		break;
 	case Schedulable::BLOCKED:
 		result = plm.ReclaimResources(papp);
