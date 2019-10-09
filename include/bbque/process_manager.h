@@ -31,7 +31,8 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/map_iterator.h"
 
-namespace bbque {
+namespace bbque
+{
 
 using ProcPtr_t    = std::shared_ptr<app::Process>;
 using ProcessMap_t = std::map<app::AppPid_t, ProcPtr_t>;
@@ -41,7 +42,8 @@ using ProcessMapIteratorRetainer_t = utils::MapIteratorRetainer_t<ProcPtr_t>;
 using namespace app;
 
 
-class ProcessManager: public CommandHandler {
+class ProcessManager: public CommandHandler
+{
 
 public:
 
@@ -50,14 +52,14 @@ public:
 	 * @brief Get the ProcessManager instance
 	 */
 	enum ExitCode_t {
-		SUCCESS = 0,
-		PROCESS_NOT_SCHEDULED,
-		PROCESS_NOT_SCHEDULABLE,
-		PROCESS_NOT_FOUND,
-		PROCESS_MISSING_AWM,
-		PROCESS_WRONG_STATE,
-		PROCESS_SCHED_REQ_REJECTED,
-		ABORT
+	        SUCCESS = 0,
+	        PROCESS_NOT_SCHEDULED,
+	        PROCESS_NOT_SCHEDULABLE,
+	        PROCESS_NOT_FOUND,
+	        PROCESS_MISSING_AWM,
+	        PROCESS_WRONG_STATE,
+	        PROCESS_SCHED_REQ_REJECTED,
+	        ABORT
 	};
 
 	/**
@@ -65,9 +67,9 @@ public:
 	 */
 	static ProcessManager & GetInstance();
 
-/*******************************************************************************
- *     Process manipulation
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Process manipulation
+	 ******************************************************************************/
 
 	/**
 	 * @brief Add a process to the managed map
@@ -174,9 +176,9 @@ public:
 	 */
 	uint32_t ProcessesCount(app::Schedulable::State_t state);
 
-/*******************************************************************************
- *     Scheduling functions
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Scheduling functions
+	 ******************************************************************************/
 
 	/**
 	 * @brief Request to re-schedule this application into a new configuration
@@ -201,8 +203,8 @@ public:
 	 * returns always AM_APP_DISABLED.
 	 */
 	ExitCode_t ScheduleRequest(
-		ProcPtr_t proc, app::AwmPtr_t  awm,
-		br::RViewToken_t status_view, size_t b_refn);
+	        ProcPtr_t proc, app::AwmPtr_t  awm,
+	        br::RViewToken_t status_view, size_t b_refn);
 
 	/**
 	 * @brief Re-schedule this application according to previous scheduling
@@ -218,7 +220,7 @@ public:
 	 * available.
 	 */
 	ExitCode_t ScheduleRequestAsPrev(
-		ProcPtr_t proc, br::RViewToken_t status_view) {
+	        ProcPtr_t proc, br::RViewToken_t status_view) {
 		return ScheduleRequest(proc, proc->CurrentAWM(), status_view, 0);
 	}
 
@@ -243,12 +245,12 @@ public:
 	 */
 	ExitCode_t NoSchedule(ProcPtr_t proc) {
 		return ChangeState(proc,
-			Schedulable::SYNC, Schedulable::BLOCKED);
+		                   Schedulable::SYNC, Schedulable::BLOCKED);
 	}
 
-/*******************************************************************************
- *     Synchronization functions
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Synchronization functions
+	 ******************************************************************************/
 
 	/**
 	 * @brief Commit the synchronization for the specified application
@@ -292,7 +294,8 @@ private:
 	/**
 	 * @brief Runtime information about the instances of managed processes
 	 */
-	class ProcessInstancesInfo {
+	class ProcessInstancesInfo
+	{
 	public:
 		ProcessInstancesInfo() {
 			sched_req = std::make_shared<app::Process::ScheduleRequest>();
@@ -335,9 +338,9 @@ private:
 	 * @brief Change a process state
 	 */
 	ExitCode_t ChangeState(
-		ProcPtr_t proc,
-		Schedulable::State_t to_state,
-		Schedulable::SyncState_t next_state=Schedulable::SYNC_NONE);
+	        ProcPtr_t proc,
+	        Schedulable::State_t to_state,
+	        Schedulable::SyncState_t next_state = Schedulable::SYNC_NONE);
 
 	/**
 	 * @brief The handler for commands defined by this module
@@ -365,4 +368,3 @@ private:
 } // namespace bbque
 
 #endif // BBQUE_PROCESS_MANAGER_H_
-
