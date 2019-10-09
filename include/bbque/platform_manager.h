@@ -95,7 +95,6 @@ public:
 	 */
 	ExitCode_t ActuatePowerManagement(bbque::res::ResourcePtr_t resource) override;
 
-
 	/**
 	 * @brief Check if the resource is a "high-performance" is single-ISA
 	 * heterogeneous platforms
@@ -108,6 +107,18 @@ public:
 	 * @brief Platform specific termination.
 	 */
 	void Exit() override;
+
+	/******************************************************************
+	 * CheckpointRestoreIF inherithed member functions                *
+	 ******************************************************************/
+
+	CheckpointRestoreIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
+
+	CheckpointRestoreIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+
+	CheckpointRestoreIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
+
+	CheckpointRestoreIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
 
 
 	/**
@@ -171,6 +182,7 @@ private:
 	 * @brief Pointer to remote platform proxy
 	 */
 	std::unique_ptr<pp::RemotePlatformProxy> rpp;
+
 #endif // CONFIG_BBQUE_DIST_MODE
 	/**
 	 * @brief The set of flags related to pending platform events to handle

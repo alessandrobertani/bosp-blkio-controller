@@ -16,7 +16,10 @@
  */
 
 #include "bbque/config.h"
+#include "bbque/application_manager.h"
 #include "bbque/platform_manager.h"
+#include "bbque/process_manager.h"
+
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_utils.h"
 #include "bbque/resource_accounter.h"
@@ -559,5 +562,139 @@ int PlatformManager::CommandsCb(int argc, char * argv[])
 
 	return 0;
 }
+
+
+CheckpointRestoreIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	if (psched->IsLocal()) {
+		ec = lpp->Dump(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Dump: [%s] failed local checkpoint dump"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+
+#ifdef CONFIG_BBQUE_DIST_MODE
+	if (psched->IsRemote()) {
+		ec = rpp->Dump(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Dump: [%s] failed remote checkpoint dump"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+#endif
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
+CheckpointRestoreIF::ExitCode_t PlatformManager::Restore(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	if (psched->IsLocal()) {
+		ec = lpp->Restore(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Restore: [%s] failed local restore"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+
+#ifdef CONFIG_BBQUE_DIST_MODE
+	if (psched->IsRemote()) {
+		ec = rpp->Restore(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Restore: [%s] failed remote restore"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+#endif
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
+CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	if (psched->IsLocal()) {
+		ec = lpp->Freeze(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Freeze: [%s] failed local freezing"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+
+#ifdef CONFIG_BBQUE_DIST_MODE
+	if (psched->IsRemote()) {
+		ec = rpp->Freeze(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Freeze: [%s] failed remote freezing"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+#endif
+
+	if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+		logger->Error("Freeze: <%s> freezing failed", psched->StrId());
+		return ec;
+	}
+
+	// Update application (frozen) status
+	if (psched->GetType() == ba::Schedulable::Type::ADAPTIVE) {
+		ApplicationManager & am(ApplicationManager::GetInstance());
+		am.SetAsFrozen(psched->Uid());
+		return CheckpointRestoreIF::ExitCode_t::OK;
+	}
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+
+	// Update process (frozen) status
+	if (psched->GetType() == ba::Schedulable::Type::PROCESS) {
+		ProcessManager & prm(ProcessManager::GetInstance());
+		prm.SetAsFrozen(psched->Uid());
+		return CheckpointRestoreIF::ExitCode_t::OK;
+	}
+#endif
+
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
+CheckpointRestoreIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	if (psched->IsLocal()) {
+		ec = lpp->Thaw(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Thaw: [%s] failed local thawning"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+
+#ifdef CONFIG_BBQUE_DIST_MODE
+	if (psched->IsRemote()) {
+		ec = rpp->Thaw(psched);
+		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+			logger->Error("Thaw: [%s] failed remote thawing"
+			              "(error code: %i)", psched->StrId(), ec);
+			return ec;
+		}
+	}
+#endif
+
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
 
 } // namespace bbque
