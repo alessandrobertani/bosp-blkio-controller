@@ -31,6 +31,8 @@ char const *Schedulable::stateStr[] = {
 	"READY",
 	"SYNC",
 	"RUNNING",
+	"FROZEN",
+	"THAWED",
 	"FINISHED"
 };
 
@@ -157,6 +159,10 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 		return RECONF;
 	}
 
+	// Thawed into the same AWM
+	if (schedule.state == THAWED) {
+		return STARTING;
+	}
 
 	// NOTE: By default no reconfiguration is assumed to be required, thus we
 	// return the SYNC_STATE_COUNT which must be read as false values
@@ -306,4 +312,3 @@ bool Schedulable::Reshuffling(AwmPtr_t const & next_awm) const
 } // namespace app
 
 } // namespace bbque
-

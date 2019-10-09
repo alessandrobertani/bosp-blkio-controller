@@ -76,13 +76,15 @@ public:
 	 * This is the set of possible state an application could be.
 	 */
 	typedef enum State {
-		NEW = 0, 	/** Registered within Barbeque but currently disabled */
-		READY,      	/** Registered within Barbeque and waiting to start */
-		SYNC,     	/** (Re-)scheduled but not reconfigured yet */
-		RUNNING,  	/** Running */
-		FINISHED, 	/** Regular termination */
+	        NEW = 0, 	/** Registered within Barbeque but currently disabled */
+	        READY,      	/** Registered within Barbeque and waiting to start */
+	        SYNC,     	/** (Re-)scheduled but not reconfigured yet */
+	        RUNNING,  	/** Running */
+	        FROZEN,         /** Frozen */
+	        THAWED,         /** Thawed after freezing - need new resource assignment */
+	        FINISHED, 	/** Regular termination */
 
-		STATE_COUNT	/** This must alwasy be the last entry */
+	        STATE_COUNT	/** This must alwasy be the last entry */
 	} State_t;
 
 	/**
