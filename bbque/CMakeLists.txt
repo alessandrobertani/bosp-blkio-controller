@@ -135,6 +135,11 @@ if (CONFIG_BBQUE_LINUX_PROC_MANAGER)
 	set (BARBEQUE_SRC pp/proc_listener ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_LINUX_PROC_MANAGER)
 
+# Reliability management
+if (CONFIG_BBQUE_RELIABILITY)
+	set (BARBEQUE_SRC reliability_manager ${BARBEQUE_SRC})
+endif (CONFIG_BBQUE_RELIABILITY)
+
 # Data management
 if (CONFIG_BBQUE_DM)
 	set (BARBEQUE_SRC data_manager ${BARBEQUE_SRC})
