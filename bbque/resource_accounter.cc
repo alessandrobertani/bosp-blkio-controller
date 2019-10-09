@@ -86,11 +86,6 @@ ResourceAccounter::ResourceAccounter() :
 	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_TOTAL,
 	                   static_cast<CommandHandler*>(this),
 	                   "Set a new amount of resource that can be allocated");
-	// Notify the degradation of a resource
-#define CMD_NOTIFY_DEGRADATION "notify_degradation"
-	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_NOTIFY_DEGRADATION,
-	                   static_cast<CommandHandler*>(this),
-	                   "Performance degradation affecting the resource [percentage]");
 }
 
 ResourceAccounter::~ResourceAccounter()
@@ -1660,19 +1655,6 @@ int ResourceAccounter::CommandsCb(int argc, char *argv[])
 		return SetResourceTotalHandler(argv[1], argv[2]);
 	}
 
-	// Set the degradation value of the given resources
-	if (!strncmp(CMD_NOTIFY_DEGRADATION, command_id, strlen(CMD_NOTIFY_DEGRADATION))) {
-		if (!(argc % 2)) {
-			logger->Error("'bq.ra.%s' expecting {resource path, value} pairs.",
-			              CMD_NOTIFY_DEGRADATION);
-			logger->Error("Example: 'bq.ra.%s <resource_path> (e.g., sys0.cpu0.pe0)"
-			              " <degradation_percentage> (e.g. 10) ...'",
-			              CMD_NOTIFY_DEGRADATION);
-			return 2;
-		}
-		return ResourceDegradationHandler(argc, argv);
-	}
-
 	logger->Error("Unexpected command: %s", command_id);
 
 	return 0;
@@ -1692,37 +1674,6 @@ int ResourceAccounter::SetResourceTotalHandler(char * r_path, char * value)
 	logger->Info("SetResourceTotalHandler: "
 	             "set quota %" PRIu64 " to [%s]", amount, r_path);
 	PrintStatusReport(0, true);
-
-	return 0;
-}
-
-int ResourceAccounter::ResourceDegradationHandler(int argc, char * argv[])
-{
-	int index = 1;
-	argc--;
-
-	// Parsing the "<resource> <degradation_value>" pairs
-	while (argc) {
-		auto rsrc(GetResource(argv[index]));
-		if (rsrc != nullptr) {
-			if (IsNumber(argv[index + 1])) {
-				rsrc->UpdateDegradationPerc(atoi(argv[index + 1]));
-				logger->Warn("Resource degradation: <%s> = %2d%% [mean=%.2f]",
-				             argv[index],
-				             rsrc->CurrentDegradationPerc(),
-				             rsrc->MeanDegradationPerc());
-			} else {
-				logger->Error("Resource degradation: <%s> not a valid value",
-				              argv[index + 1]);
-			}
-		} else {
-			logger->Error("Resource degradation: <%s> not a valid resource",
-			              argv[index]);
-		}
-
-		index += 2;
-		argc  -= 2;
-	}
 
 	return 0;
 }

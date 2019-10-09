@@ -594,16 +594,6 @@ public:
 	 */
 	int SetResourceTotalHandler(char * r_path, char * value);
 
-	/**
-	 * @brief Handler for resource performance degradation notification
-	 *
-	 * @param argc The command line arguments
-	 * @param argv The command line arguments vector: {resource, value} pairs
-	 *
-	 * @return 0 if success, a positive integer value otherwise
-	 */
-	int ResourceDegradationHandler(int argc, char * argv[]);
-
 
 #ifdef CONFIG_BBQUE_PM
 
