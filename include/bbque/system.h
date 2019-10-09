@@ -97,7 +97,6 @@ public:
 	/**
 	 * @brief Map of blocked applications (descriptors)
 	 */
-
 	ba::AppCPtr_t GetFirstBlocked(AppsUidMapIt & ait) {
 		return am.GetFirst(ba::ApplicationStatusIF::BLOCKED, ait);
 	}
@@ -105,6 +104,18 @@ public:
 	ba::AppCPtr_t GetNextBlocked(AppsUidMapIt & ait) {
 		return am.GetNext(ba::ApplicationStatusIF::BLOCKED, ait);
 	}
+
+	/**
+	 * @brief Map of frozen applications to thaw (descriptors)
+	 */
+	ba::AppCPtr_t GetFirstThawed(AppsUidMapIt & ait) {
+		return am.GetFirst(ba::ApplicationStatusIF::THAWED, ait);
+	}
+
+	ba::AppCPtr_t GetNextThawed(AppsUidMapIt & ait) {
+		return am.GetNext(ba::ApplicationStatusIF::THAWED, ait);
+	}
+
 
 	/**
 	 * @see ApplicationManagerStatusIF
