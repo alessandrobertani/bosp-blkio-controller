@@ -52,18 +52,21 @@ namespace po = boost::program_options;
 
 using std::chrono::milliseconds;
 
-namespace bbque {
+namespace bbque
+{
 
-ApplicationManager & ApplicationManager::GetInstance() {
+ApplicationManager & ApplicationManager::GetInstance()
+{
 	static ApplicationManager instance;
 	return instance;
 }
 
 
 ApplicationManager::ApplicationManager() :
-		cm(CommandManager::GetInstance()),
-		plm(PlatformManager::GetInstance()),
-		cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this)) {
+	cm(CommandManager::GetInstance()),
+	plm(PlatformManager::GetInstance()),
+	cleanup_dfr("am.cln", std::bind(&ApplicationManager::Cleanup, this))
+{
 
 	// Get a logger
 	logger = bu::Logger::GetLogger(APPLICATION_MANAGER_NAMESPACE);
@@ -83,23 +86,24 @@ ApplicationManager::ApplicationManager() :
 	// Register commands
 #define CMD_WIPE_RECP ".recipes_wipe"
 	cm.RegisterCommand(
-			MODULE_NAMESPACE CMD_WIPE_RECP,
-			static_cast<CommandHandler*>(this),
-			"Wipe out all the recipes");
+	        MODULE_NAMESPACE CMD_WIPE_RECP,
+	        static_cast<CommandHandler*>(this),
+	        "Wipe out all the recipes");
 
 #define CMD_CONTAINER_ADD ".container_add"
 	cm.RegisterCommand(
-			MODULE_NAMESPACE CMD_CONTAINER_ADD,
-			static_cast<CommandHandler*>(this),
-			"Add a new EXC Container");
+	        MODULE_NAMESPACE CMD_CONTAINER_ADD,
+	        static_cast<CommandHandler*>(this),
+	        "Add a new EXC Container");
 
 #define CMD_CONTAINER_DEL ".container_del"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_CONTAINER_DEL,
-			static_cast<CommandHandler*>(this),
-			"Remove an existing EXC Container");
+	                   static_cast<CommandHandler*>(this),
+	                   "Remove an existing EXC Container");
 }
 
-int ApplicationManager::CommandsCb(int argc, char *argv[]) {
+int ApplicationManager::CommandsCb(int argc, char *argv[])
+{
 	ResourceManager &rm(ResourceManager::GetInstance());
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	uint32_t pid, prio;
@@ -110,7 +114,7 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	cmd_offset = ::strlen(MODULE_NAMESPACE) + sizeof("recipes_");
 	switch (argv[0][cmd_offset]) {
 	case 'w': // Recipes wiping
-		  // recipes_wipe
+		// recipes_wipe
 		logger->Debug("CommandsCb: # recipes = %d", recipes.size());
 		logger->Info("CommandsCb: wiping out all the recipes...");
 		recipes.clear();
@@ -121,7 +125,7 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 	cmd_offset = ::strlen(MODULE_NAMESPACE) + sizeof("container_");
 	switch (argv[0][cmd_offset]) {
 	case 'a': // Container add
-		  // container_add <name> <pid> <recipe> <prio>
+		// container_add <name> <pid> <recipe> <prio>
 		if (strcmp(argv[0], MODULE_NAMESPACE CMD_CONTAINER_ADD))
 			break;
 
@@ -134,7 +138,7 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 		prio = atoi(argv[4]);
 
 		logger->Notice("EXC [%s:%d] adding container, using recipe=<%s> prio=<%d>",
-				argv[1], pid, argv[3], prio);
+		               argv[1], pid, argv[3], prio);
 		papp = CreateEXC(argv[1], pid, 0, argv[3], RTLIB_LANG_CPP, prio, false, true);
 		if (!papp) {
 			logger->Warn("EXC [%s:%d] container creation FAILED", argv[1], pid);
@@ -146,13 +150,13 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 		return 0;
 
 	case 'd': // Container del
-		  // container_del <pid>
+		// container_del <pid>
 		if (strcmp(argv[0], MODULE_NAMESPACE CMD_CONTAINER_DEL))
-            break;
+			break;
 
 		if (argc < 2) {
 			logger->Error("Missing params for [container_del] command");
-            break;
+			break;
 		}
 
 		logger->Notice("Removing EXC container...");
@@ -174,12 +178,13 @@ int ApplicationManager::CommandsCb(int argc, char *argv[]) {
 }
 
 
-ApplicationManager::~ApplicationManager() {
+ApplicationManager::~ApplicationManager()
+{
 
 	// Clear the sync vector
 	logger->Debug("Clearing SYNC vector...");
 	for (uint8_t state = 0;
-			state < Application::SYNC_STATE_COUNT; ++state) {
+	     state < Application::SYNC_STATE_COUNT; ++state) {
 		sync_vec[state].clear();
 		sync_ret[state].clear();
 	}
@@ -187,7 +192,7 @@ ApplicationManager::~ApplicationManager() {
 	// Clear the status vector
 	logger->Debug("Clearing STATUS vector...");
 	for (uint8_t state = 0;
-			state < Application::STATE_COUNT; ++state) {
+	     state < Application::STATE_COUNT; ++state) {
 		status_vec[state].clear();
 		status_ret[state].clear();
 	}
@@ -215,9 +220,10 @@ ApplicationManager::~ApplicationManager() {
 }
 
 bp::RecipeLoaderIF::ExitCode_t ApplicationManager::LoadRecipe(
-		std::string const & recipe_name,
-		RecipePtr_t & recipe,
-		bool weak_load) {
+        std::string const & recipe_name,
+        RecipePtr_t & recipe,
+        bool weak_load)
+{
 	std::unique_lock<std::mutex> recipes_ul(recipes_mtx);
 	bp::RecipeLoaderIF::ExitCode_t result;
 	logger->Debug("LoadRecipe: loading <%s>...", recipe_name.c_str());
@@ -230,11 +236,11 @@ bp::RecipeLoaderIF::ExitCode_t ApplicationManager::LoadRecipe(
 
 	//---  Checking for previously loaded recipe
 	std::map<std::string, RecipePtr_t>::iterator it(
-			recipes.find(recipe_name));
+	        recipes.find(recipe_name));
 	if (it != recipes.end()) {
 		// Return a previously loaded recipe
 		logger->Debug("LoadRecipe: recipe <%s> already loaded",
-				recipe_name.c_str());
+		              recipe_name.c_str());
 		recipe = (*it).second;
 		return bp::RecipeLoaderIF::RL_SUCCESS;
 	}
@@ -248,14 +254,14 @@ bp::RecipeLoaderIF::ExitCode_t ApplicationManager::LoadRecipe(
 	// or a parsing error happened: then return an empty recipe
 	if (result == bp::RecipeLoaderIF::RL_WEAK_LOAD && !weak_load) {
 		logger->Error("LoadRecipe: loading <%s> FAILED: weak load not accepted)",
-				recipe_name.c_str());
+		              recipe_name.c_str());
 		return result;
 
 	}
 	// On all other case just WEAK_LOAD and SUCCESS are acceptable
 	if (result >= bp::RecipeLoaderIF::RL_FAILED ) {
 		logger->Error("LoadRecipe: loading <%s> FAILED: error code %d",
-				recipe_name.c_str(), result);
+		              recipe_name.c_str(), result);
 		return result;
 	}
 	logger->Debug("LoadRecipe: <%s> load COMPLETED", recipe_name.c_str());
@@ -277,7 +283,8 @@ bp::RecipeLoaderIF::ExitCode_t ApplicationManager::LoadRecipe(
 
 void
 ApplicationManager::UpdateIterators(AppsUidMapItRetainer_t & ret,
-		AppPtr_t papp) {
+                                    AppPtr_t papp)
+{
 	AppsUidMapItRetainer_t::iterator it;
 	AppsUidMapIt* pati;
 
@@ -300,7 +307,8 @@ ApplicationManager::UpdateIterators(AppsUidMapItRetainer_t & ret,
 
 }
 
-AppPtr_t ApplicationManager::GetFirst(AppsUidMapIt & ait) {
+AppPtr_t ApplicationManager::GetFirst(AppsUidMapIt & ait)
+{
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx);
 	AppPtr_t papp;
 
@@ -314,12 +322,13 @@ AppPtr_t ApplicationManager::GetFirst(AppsUidMapIt & ait) {
 	// Add iterator to the retainers list
 	ait.Retain();
 	logger->Debug("GetFirst: > ADD retained UIDs iterator [@%p => %d]",
-			&(ait.it), papp->Uid());
+	              &(ait.it), papp->Uid());
 
 	return papp;
 }
 
-AppPtr_t ApplicationManager::GetNext(AppsUidMapIt & ait) {
+AppPtr_t ApplicationManager::GetNext(AppsUidMapIt & ait)
+{
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx);
 	AppPtr_t papp;
 
@@ -328,7 +337,7 @@ AppPtr_t ApplicationManager::GetNext(AppsUidMapIt & ait) {
 		// Release the iterator retainer
 		ait.Release();
 		logger->Debug("GetNext: < DEL retained UIDs iterator [@%p => %d]",
-				&(ait.it));
+		              &(ait.it));
 		return AppPtr_t();
 	}
 
@@ -337,7 +346,8 @@ AppPtr_t ApplicationManager::GetNext(AppsUidMapIt & ait) {
 }
 
 AppPtr_t ApplicationManager::GetFirst(AppPrio_t prio,
-		AppsUidMapIt & ait) {
+                                      AppsUidMapIt & ait)
+{
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	std::unique_lock<std::mutex> prio_ul(prio_mtx[prio]);
 	AppPtr_t papp;
@@ -351,13 +361,14 @@ AppPtr_t ApplicationManager::GetFirst(AppPrio_t prio,
 	// Add iterator to the retainers list
 	ait.Retain();
 	logger->Debug("GetFirst: > ADD retained PRIO[%d] iterator [@%p => %d]",
-			prio, &(ait.it), papp->Uid());
+	              prio, &(ait.it), papp->Uid());
 
 	return papp;
 }
 
 AppPtr_t ApplicationManager::GetNext(AppPrio_t prio,
-		AppsUidMapIt & ait) {
+                                     AppsUidMapIt & ait)
+{
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	std::unique_lock<std::mutex> prio_ul(prio_mtx[prio]);
 	AppPtr_t papp;
@@ -367,7 +378,7 @@ AppPtr_t ApplicationManager::GetNext(AppPrio_t prio,
 		// Release the iterator retainer
 		ait.Release();
 		logger->Debug("GetNext: < DEL retained PRIO[%d] iterator [@%p]",
-			prio, &(ait.it));
+		              prio, &(ait.it));
 		return AppPtr_t();
 	}
 
@@ -376,7 +387,8 @@ AppPtr_t ApplicationManager::GetNext(AppPrio_t prio,
 }
 
 AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::State_t state,
-		AppsUidMapIt & ait) {
+                                      AppsUidMapIt & ait)
+{
 	assert(state < Application::STATE_COUNT);
 	std::unique_lock<std::mutex> status_ul(status_mtx[state]);
 	AppPtr_t papp;
@@ -390,13 +402,14 @@ AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::State_t state,
 	// Add iterator to the retainers list
 	ait.Retain();
 	logger->Debug("GetFirst: > ADD retained STATUS[%s] iterator [@%p => %d]",
-			Application::StateStr(state), &(ait.it), papp->Uid());
+	              Application::StateStr(state), &(ait.it), papp->Uid());
 
 	return papp;
 }
 
 AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::State_t state,
-		AppsUidMapIt & ait) {
+                                     AppsUidMapIt & ait)
+{
 	assert(state < Application::STATE_COUNT);
 	std::unique_lock<std::mutex> status_ul(status_mtx[state]);
 	AppPtr_t papp;
@@ -406,7 +419,7 @@ AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::State_t state,
 		// Release the iterator retainer
 		ait.Release();
 		logger->Debug("GetNext: < DEL retained STATUS[%s] iterator [@%p]",
-			Application::StateStr(state), &(ait.it));
+		              Application::StateStr(state), &(ait.it));
 		return AppPtr_t();
 	}
 
@@ -415,7 +428,8 @@ AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::State_t state,
 }
 
 AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::SyncState_t state,
-		AppsUidMapIt & ait) {
+                                      AppsUidMapIt & ait)
+{
 	assert(state < Application::SYNC_STATE_COUNT);
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	AppPtr_t papp;
@@ -429,14 +443,15 @@ AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::SyncState_t state,
 	// Add iterator to the retainers list
 	ait.Retain();
 	logger->Debug("GetFirst: > ADD retained SYNCS[%s] iterator [@%p => %d]",
-			Application::SyncStateStr(state), &(ait.it),
-			papp->Uid());
+	              Application::SyncStateStr(state), &(ait.it),
+	              papp->Uid());
 
 	return papp;
 }
 
 AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::SyncState_t state,
-		AppsUidMapIt & ait) {
+                                     AppsUidMapIt & ait)
+{
 	assert(state < Application::SYNC_STATE_COUNT);
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	AppPtr_t papp;
@@ -446,7 +461,7 @@ AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::SyncState_t state,
 		// Release the iterator retainer
 		ait.Release();
 		logger->Debug("GetNext: < DEL retained SYNCS[%s] iterator [@%p]",
-			Application::SyncStateStr(state), &(ait.it));
+		              Application::SyncStateStr(state), &(ait.it));
 		return AppPtr_t();
 	}
 
@@ -455,63 +470,73 @@ AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::SyncState_t state,
 }
 
 bool ApplicationManager::HasApplications (
-		AppPrio_t prio) {
+        AppPrio_t prio)
+{
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	return !(prio_vec[prio].empty());
 }
 
-bool ApplicationManager::HasApplications (ApplicationStatusIF::State_t state) {
+bool ApplicationManager::HasApplications (ApplicationStatusIF::State_t state)
+{
 	assert(state < Application::STATE_COUNT);
 	return !(status_vec[state].empty());
 }
 
-bool ApplicationManager::HasApplications (ApplicationStatusIF::SyncState_t state) {
+bool ApplicationManager::HasApplications (ApplicationStatusIF::SyncState_t state)
+{
 	assert(state < Application::SYNC_STATE_COUNT);
 	return !(sync_vec[state].empty());
 }
 
-bool ApplicationManager::HasApplications (RTLIB_ProgrammingLanguage_t lang) {
+bool ApplicationManager::HasApplications (RTLIB_ProgrammingLanguage_t lang)
+{
 	assert(lang < RTLIB_LANG_COUNT);
 	return !(lang_vec[lang].empty());
 }
 
-uint16_t ApplicationManager::AppsCount() const {
+uint16_t ApplicationManager::AppsCount() const
+{
 	uint16_t count = 0;
 	for (uint16_t prio = 0; prio < BBQUE_APP_PRIO_LEVELS; ++prio)
 		count +=  prio_vec[prio].size();
 	return count;
 }
 
-uint16_t ApplicationManager::AppsCount (AppPrio_t prio) const {
+uint16_t ApplicationManager::AppsCount (AppPrio_t prio) const
+{
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	return prio_vec[prio].size();
 }
 
-uint16_t ApplicationManager::AppsCount (ApplicationStatusIF::State_t state) const {
+uint16_t ApplicationManager::AppsCount (ApplicationStatusIF::State_t state) const
+{
 	assert(state < Application::STATE_COUNT);
 	return status_vec[state].size();
 }
 
-uint16_t ApplicationManager::AppsCount (ApplicationStatusIF::SyncState_t state) const {
+uint16_t ApplicationManager::AppsCount (ApplicationStatusIF::SyncState_t state) const
+{
 	assert(state < Application::SYNC_STATE_COUNT);
 	return sync_vec[state].size();
 }
 
-uint16_t ApplicationManager::AppsCount (RTLIB_ProgrammingLanguage_t lang) const {
+uint16_t ApplicationManager::AppsCount (RTLIB_ProgrammingLanguage_t lang) const
+{
 	assert(lang < RTLIB_LANG_COUNT);
 	return lang_vec[lang].size();
 }
 
-AppPtr_t ApplicationManager::HighestPrio(ApplicationStatusIF::State_t state) {
+AppPtr_t ApplicationManager::HighestPrio(ApplicationStatusIF::State_t state)
+{
 	AppPtr_t papp, papp_hp;
 	AppsUidMapIt apps_it;
 	assert(state < Application::STATE_COUNT);
 	logger->Debug("HighestPrio: looking for highest prio [%s] apps...",
-			ApplicationStatusIF::StateStr(state));
+	              ApplicationStatusIF::StateStr(state));
 
 	if (!HasApplications(state)) {
 		logger->Debug("HighestPrio: no applications in [%s]",
-			ApplicationStatusIF::StateStr(state));
+		              ApplicationStatusIF::StateStr(state));
 		return AppPtr_t();
 	}
 
@@ -519,30 +544,31 @@ AppPtr_t ApplicationManager::HighestPrio(ApplicationStatusIF::State_t state) {
 	while (papp) {
 		papp = GetNext(state, apps_it);
 		if (papp &&
-			(papp->Priority() > papp_hp->Priority()))
+		    (papp->Priority() > papp_hp->Priority()))
 			papp_hp = papp;
 	}
 
 	logger->Debug("HighestPrio: highest [%s] prio [%d] app [%s]",
-			ApplicationStatusIF::StateStr(state),
-			papp_hp->Priority(),
-			papp_hp->StrId());
+	              ApplicationStatusIF::StateStr(state),
+	              papp_hp->Priority(),
+	              papp_hp->StrId());
 
 	return papp_hp;
 
 }
 
 AppPtr_t ApplicationManager::HighestPrio(
-		ApplicationStatusIF::SyncState_t syncState) {
+        ApplicationStatusIF::SyncState_t syncState)
+{
 	AppPtr_t papp, papp_hp;
 	AppsUidMapIt apps_it;
 	assert(syncState < Application::SYNC_STATE_COUNT);
 	logger->Debug("HighestPrio: looking for highest prio [%s] apps...",
-			ApplicationStatusIF::SyncStateStr(syncState));
+	              ApplicationStatusIF::SyncStateStr(syncState));
 
 	if (!HasApplications(syncState)) {
 		logger->Debug("HighestPrio: no applications in [%s]",
-			ApplicationStatusIF::SyncStateStr(syncState));
+		              ApplicationStatusIF::SyncStateStr(syncState));
 		return AppPtr_t();
 	}
 
@@ -550,14 +576,14 @@ AppPtr_t ApplicationManager::HighestPrio(
 	while (papp) {
 		papp = GetNext(syncState, apps_it);
 		if (papp &&
-			(papp->Priority() > papp_hp->Priority()))
+		    (papp->Priority() > papp_hp->Priority()))
 			papp_hp = papp;
 	}
 
 	logger->Debug("HighestPrio: highest [%s] prio [%d] app [%s]",
-			ApplicationStatusIF::SyncStateStr(syncState),
-			papp_hp->Priority(),
-			papp_hp->StrId());
+	              ApplicationStatusIF::SyncStateStr(syncState),
+	              papp_hp->Priority(),
+	              papp_hp->StrId());
 
 	return papp_hp;
 }
@@ -566,7 +592,8 @@ AppPtr_t ApplicationManager::HighestPrio(
  *  Get EXC handlers
  ******************************************************************************/
 
-AppPtr_t const ApplicationManager::GetApplication(AppUid_t uid) {
+AppPtr_t const ApplicationManager::GetApplication(AppUid_t uid)
+{
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx);
 	AppsUidMap_t::const_iterator it = uids.find(uid);
 
@@ -575,10 +602,10 @@ AppPtr_t const ApplicationManager::GetApplication(AppUid_t uid) {
 	//----- Find the required EXC
 	if (it == uids.end()) {
 		DB(logger->Debug("GetApplication: lookup for EXC [%05d:*:%02d] (UID: %07d) FAILED"
-				" (Error: UID not registered)",
-				Application::Uid2Pid(uid),
-				Application::Uid2Eid(uid),
-				uid));
+		                 " (Error: UID not registered)",
+		                 Application::Uid2Pid(uid),
+		                 Application::Uid2Eid(uid),
+		                 uid));
 		return AppPtr_t();
 	}
 
@@ -589,7 +616,8 @@ AppPtr_t const ApplicationManager::GetApplication(AppUid_t uid) {
 }
 
 AppPtr_t const
-ApplicationManager::GetApplication(AppPid_t pid, uint8_t exc_id) {
+ApplicationManager::GetApplication(AppPid_t pid, uint8_t exc_id)
+{
 	logger->Debug("Looking for EXC [%05d:*:%02d]...", pid, exc_id);
 	return GetApplication(Application::Uid(pid, exc_id));
 }
@@ -664,19 +692,20 @@ void ApplicationManager::PrintSyncQ(bool verbose) const {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
-		Application::State_t prev, Application::State_t next) {
+                                     Application::State_t prev, Application::State_t next)
+{
 	PrintStatusQ();
 	assert(papp);
 	if (prev == next) {
 		logger->Debug("UpdateStatusMaps: %s => %s (nothing to do)",
-			papp->StateStr(prev), papp->StateStr(next));
+		              papp->StateStr(prev), papp->StateStr(next));
 		return AM_EXC_STATUS_CHANGE_NONE;
 	}
 
 	std::unique_lock<std::mutex> currState_ul(
-			status_mtx[prev], std::defer_lock);
+	        status_mtx[prev], std::defer_lock);
 	std::unique_lock<std::mutex> nextState_ul(
-			status_mtx[next], std::defer_lock);
+	        status_mtx[next], std::defer_lock);
 	std::lock(currState_ul, nextState_ul);
 
 	// Retrieve the runtime map from the status vector
@@ -684,10 +713,10 @@ ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 	AppsUidMap_t *next_state_map = &(status_vec[next]);
 	assert(curr_state_map != next_state_map);
 	logger->Debug("UpdateStatusMap: [%s] moving %s => %s (sync=%s)",
-		papp->StrId(),
-		papp->StateStr(prev),
-		papp->StateStr(next),
-		papp->SyncStateStr(papp->SyncState()));
+	              papp->StrId(),
+	              papp->StateStr(prev),
+	              papp->StateStr(next),
+	              papp->SyncStateStr(papp->SyncState()));
 
 	// Move it from the current to the next status map
 	// FIXME: maybe we could avoid to enqueue FINISHED EXCs
@@ -700,7 +729,8 @@ ApplicationManager::UpdateStatusMaps(AppPtr_t papp,
 }
 
 
-void ApplicationManager::PrintStatus(bool verbose) {
+void ApplicationManager::PrintStatus(bool verbose)
+{
 	AppsUidMapIt app_it;
 	AppPtr_t papp;
 	char line[80];
@@ -723,14 +753,15 @@ void ApplicationManager::PrintStatus(bool verbose) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::ChangeEXCState(
-		AppPtr_t papp,
-		app::Schedulable::State_t next_state,
-		app::Schedulable::SyncState_t next_sync) {
+        AppPtr_t papp,
+        app::Schedulable::State_t next_state,
+        app::Schedulable::SyncState_t next_sync)
+{
 
 	logger->Debug("ChangeEXCState: [%s] state transition [%d:%s => %d:%s]",
-			papp->StrId(),
-			papp->State(), Application::StateStr(papp->State()),
-			next_state, Application::StateStr(next_state));
+	              papp->StrId(),
+	              papp->State(), Application::StateStr(papp->State()),
+	              next_state, Application::StateStr(next_state));
 	auto curr_state = papp->State();
 	auto curr_sync  = papp->SyncState();
 
@@ -744,17 +775,17 @@ ApplicationManager::ChangeEXCState(
 	auto ret = papp->SetState(next_state, next_sync);
 	if (ret != Application::APP_SUCCESS) {
 		logger->Error("ChangeEXCState: transition not allowed [%d:%s => %d:%s]",
-			papp->StrId(),
-			curr_state, Application::StateStr(curr_state),
-			next_state, Application::StateStr(next_state));
+		              papp->StrId(),
+		              curr_state, Application::StateStr(curr_state),
+		              next_state, Application::StateStr(next_state));
 		return AM_EXC_STATUS_CHANGE_FAILED;
 	}
 
 	// Update the sync status maps (if it is the case)
 	logger->Debug("ChangeEXCState: [%s] updating sync queue? [%d:%s => %d:%s]",
-			papp->StrId(),
-			curr_state, Application::StateStr(curr_state),
-			papp->State(), Application::StateStr(papp->State()));
+	              papp->StrId(),
+	              curr_state, Application::StateStr(curr_state),
+	              papp->State(), Application::StateStr(papp->State()));
 	if (curr_state == Application::SYNC) {
 		RemoveFromSyncMap(papp, curr_sync);
 	}
@@ -765,9 +796,9 @@ ApplicationManager::ChangeEXCState(
 	// Update the stable status maps
 	if (curr_state != papp->State()) {
 		logger->Debug("ChangeEXCState: [%s] updating state queue [%d:%s => %d:%s]",
-				papp->StrId(),
-				curr_state, Application::StateStr(curr_state),
-				papp->State(), Application::StateStr(papp->State()));
+		              papp->StrId(),
+		              curr_state, Application::StateStr(curr_state),
+		              papp->State(), Application::StateStr(papp->State()));
 		return UpdateStatusMaps(papp, curr_state, next_state);
 	}
 
@@ -775,7 +806,8 @@ ApplicationManager::ChangeEXCState(
 }
 
 
-int ApplicationManager::UpdateRuntimeProfiles() {
+int ApplicationManager::UpdateRuntimeProfiles()
+{
 	ApplicationProxy & ap(ApplicationProxy::GetInstance());
 	AppsUidMapIt app_it;
 	ba::AppPtr_t papp;
@@ -786,7 +818,7 @@ int ApplicationManager::UpdateRuntimeProfiles() {
 	papp = GetFirst(ba::Application::RUNNING, app_it);
 	for (; papp; papp = GetNext(ba::Application::RUNNING, app_it)) {
 		logger->Debug("NotifyNewState: updating OpenCL profile for [%s]...",
-				papp->StrId());
+		              papp->StrId());
 		ap.Prof_GetRuntimeData(papp);
 	}
 
@@ -798,20 +830,18 @@ int ApplicationManager::UpdateRuntimeProfiles() {
  ******************************************************************************/
 
 AppPtr_t ApplicationManager::CreateEXC(
-		std::string const & _name, AppPid_t _pid, uint8_t _exc_id,
-		std::string const & _rcp_name,
-		RTLIB_ProgrammingLanguage_t _lang,
-		app::AppPrio_t _prio,
-		bool _weak_load,
-		bool container) {
+        std::string const & _name, AppPid_t _pid, uint8_t _exc_id,
+        std::string const & _rcp_name,
+        RTLIB_ProgrammingLanguage_t _lang,
+        app::AppPrio_t _prio,
+        bool _weak_load,
+        bool container)
+{
 	std::unique_lock<std::mutex> lang_ul(lang_mtx[_lang], std::defer_lock);
 	std::unique_lock<std::mutex> prio_ul(prio_mtx[_prio], std::defer_lock);
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx, std::defer_lock);
 	std::unique_lock<std::mutex> status_ul(status_mtx[Application::NEW], std::defer_lock);
 	std::unique_lock<std::mutex> apps_ul(apps_mtx, std::defer_lock);
-	Application::ExitCode_t app_result;
-	bp::RecipeLoaderIF::ExitCode_t rcp_result;
-	RecipePtr_t rcp_ptr;
 
 	// Create a new descriptor
 	AppPtr_t papp = std::make_shared<ba::Application>(_name, _pid, _exc_id, _lang, container);
@@ -823,21 +853,22 @@ AppPtr_t ApplicationManager::CreateEXC(
 	logger->Info("CreateEXC: [%s], prio[%d]", papp->StrId(), papp->Priority());
 
 	// Load the required recipe
-	rcp_result = LoadRecipe(_rcp_name, rcp_ptr, _weak_load);
+	RecipePtr_t rcp_ptr;
+	auto rcp_result = LoadRecipe(_rcp_name, rcp_ptr, _weak_load);
 	if (rcp_result != bp::RecipeLoaderIF::RL_SUCCESS) {
 		logger->Error("CreateEXC: [%s] FAILED "
-				"(Error while loading recipe [%s])",
-				papp->StrId(), _rcp_name.c_str());
-		return AppPtr_t();
+		              "(Error while loading recipe [%s])",
+		              papp->StrId(), _rcp_name.c_str());
+		return nullptr;
 	}
 
 	// Set the recipe into the Application/EXC
-	app_result = papp->SetRecipe(rcp_ptr, papp);
+	auto app_result = papp->SetRecipe(rcp_ptr, papp);
 	if (app_result != Application::APP_SUCCESS) {
 		logger->Error("CreateEXC: [%s] FAILED "
-				"(Error: recipe rejected by application descriptor)",
-				papp->StrId());
-		return AppPtr_t();
+		              "(Error: recipe rejected by application descriptor)",
+		              papp->StrId());
+		return nullptr;
 	}
 
 	// NOTE: a deadlock condition exists if other maps are locked before
@@ -846,30 +877,30 @@ AppPtr_t ApplicationManager::CreateEXC(
 	// Should this lock be keep till the exit?!?
 	apps_ul.lock();
 	// Save application descriptors
-	apps.insert(AppsMapEntry_t(papp->Pid(), papp));
+	apps.emplace(papp->Pid(), papp);
 	logger->Debug("CreateEXC: [%s] inserted in applications map", papp->StrId());
 
 	uids_ul.lock();
-	uids.insert(UidsMapEntry_t(papp->Uid(), papp));
+	uids.emplace(papp->Uid(), papp);
 	uids_ul.unlock();
 	logger->Debug("CreateEXC: [%s] inserted in UIDs map", papp->StrId());
 
 	// Priority vector
 	prio_ul.lock();
-	prio_vec[papp->Priority()].insert(UidsMapEntry_t(papp->Uid(), papp));
+	prio_vec[papp->Priority()].emplace(papp->Uid(), papp);
 	prio_ul.unlock();
 	logger->Debug("CreateEXC: [%s] inserted in priority map", papp->StrId());
 
 	// Status vector (all new EXC are initially disabled)
 	assert(papp->State() == Application::NEW);
 	status_ul.lock();
-	status_vec[papp->State()].insert(UidsMapEntry_t(papp->Uid(), papp));
+	status_vec[papp->State()].emplace(papp->Uid(), papp);
 	status_ul.unlock();
 	logger->Debug("CreateEXC: [%s] inserted in status map", papp->StrId());
 
 	// Language vector
 	lang_ul.lock();
-	lang_vec[papp->Language()].insert(UidsMapEntry_t(papp->Uid(), papp));
+	lang_vec[papp->Language()].emplace(papp->Uid(), papp);
 	lang_ul.unlock();
 	logger->Info("CreateEXC: [%s] CREATED", papp->StrId());
 
@@ -882,7 +913,8 @@ AppPtr_t ApplicationManager::CreateEXC(
  ******************************************************************************/
 
 ApplicationManager::ExitCode_t
-ApplicationManager::PriorityRemove(AppPtr_t papp) {
+ApplicationManager::PriorityRemove(AppPtr_t papp)
+{
 	logger->Debug("PriorityRemove: releasing [%s] from PRIORITY map...", papp->StrId());
 	std::unique_lock<std::mutex> prio_ul(prio_mtx[papp->Priority()]);
 	UpdateIterators(prio_ret[papp->Priority()], papp);
@@ -891,7 +923,8 @@ ApplicationManager::PriorityRemove(AppPtr_t papp) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::StatusRemove(AppPtr_t papp) {
+ApplicationManager::StatusRemove(AppPtr_t papp)
+{
 	logger->Debug("StatusRemove: releasing [%s] from STATUS map...", papp->StrId());
 	std::unique_lock<std::mutex> status_ul(status_mtx[papp->State()]);
 	UpdateIterators(status_ret[papp->State()], papp);
@@ -900,7 +933,8 @@ ApplicationManager::StatusRemove(AppPtr_t papp) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::LangRemove(AppPtr_t papp) {
+ApplicationManager::LangRemove(AppPtr_t papp)
+{
 	logger->Debug("LangRemove: releasing [%s] from LANGUAGE map...", papp->StrId());
 	std::unique_lock<std::mutex> lang_ul(lang_mtx[papp->Language()]);
 	UpdateIterators(lang_ret[papp->Language()], papp);
@@ -909,7 +943,8 @@ ApplicationManager::LangRemove(AppPtr_t papp) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::AppsRemove(AppPtr_t papp) {
+ApplicationManager::AppsRemove(AppPtr_t papp)
+{
 	std::unique_lock<std::mutex> apps_ul(apps_mtx);
 	std::pair<AppsMap_t::iterator, AppsMap_t::iterator> range;
 	AppsMap_t::iterator it;
@@ -918,14 +953,14 @@ ApplicationManager::AppsRemove(AppPtr_t papp) {
 	range = apps.equal_range(papp->Pid());
 	it = range.first;
 	while (it != range.second &&
-		((*it).second)->ExcId() != papp->ExcId()) {
+	       ((*it).second)->ExcId() != papp->ExcId()) {
 		++it;
 	}
 
 	// Application/EXC could have been already removed...
 	if (it == range.second) {
 		logger->Debug("AppsRemove: [%s] not found: alredy removed?",
-			papp->StrId());
+		              papp->StrId());
 		return AM_SUCCESS;
 	}
 	apps.erase(it);
@@ -934,7 +969,8 @@ ApplicationManager::AppsRemove(AppPtr_t papp) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::CleanupEXC(AppPtr_t papp) {
+ApplicationManager::CleanupEXC(AppPtr_t papp)
+{
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx, std::defer_lock);
 	PlatformManager::ExitCode_t pp_result;
 	ExitCode_t am_result;
@@ -970,7 +1006,8 @@ ApplicationManager::CleanupEXC(AppPtr_t papp) {
 	return AM_SUCCESS;
 }
 
-void ApplicationManager::Cleanup() {
+void ApplicationManager::Cleanup()
+{
 	AppsUidMapIt apps_it;
 	logger->Debug("Cleanup EXCs...");
 	// Loop on FINISHED apps to release all resources
@@ -983,7 +1020,8 @@ void ApplicationManager::Cleanup() {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::DestroyEXC(AppPtr_t papp) {
+ApplicationManager::DestroyEXC(AppPtr_t papp)
+{
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ExitCode_t result;
 	logger->Debug("DestroyEXC: destroying descriptor for [%s]...", papp->StrId());
@@ -1025,7 +1063,8 @@ ApplicationManager::DestroyEXC(AppPtr_t papp) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::DestroyEXC(AppPid_t pid, uint8_t exc_id) {
+ApplicationManager::DestroyEXC(AppPid_t pid, uint8_t exc_id)
+{
 	// Find the required EXC
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	assert(papp);
@@ -1038,7 +1077,8 @@ ApplicationManager::DestroyEXC(AppPid_t pid, uint8_t exc_id) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::DestroyEXC(AppPid_t pid) {
+ApplicationManager::DestroyEXC(AppPid_t pid)
+{
 	std::pair<AppsMap_t::iterator, AppsMap_t::iterator> range;
 	AppsMap_t::iterator it;
 	ExitCode_t result;
@@ -1066,7 +1106,8 @@ ApplicationManager::DestroyEXC(AppPid_t pid) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SetConstraintsEXC(AppPtr_t papp,
-			RTLIB_Constraint_t *constraints, uint8_t count) {
+                                      RTLIB_Constraint_t *constraints, uint8_t count)
+{
 	Application::ExitCode_t result;
 	logger->Debug("SetConstraintsEXC: [%s] setting constraints...", papp->StrId());
 
@@ -1091,7 +1132,8 @@ ApplicationManager::SetConstraintsEXC(AppPtr_t papp,
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SetConstraintsEXC(AppPid_t pid, uint8_t exc_id,
-			RTLIB_Constraint_t *constraints, uint8_t count) {
+                                      RTLIB_Constraint_t *constraints, uint8_t count)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("SetConstraintsEXC: [%d:*:%d] set constraints FAILED: EXC not found", pid, exc_id);
@@ -1105,7 +1147,8 @@ ApplicationManager::SetConstraintsEXC(AppPid_t pid, uint8_t exc_id,
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::ClearConstraintsEXC(AppPtr_t papp) {
+ApplicationManager::ClearConstraintsEXC(AppPtr_t papp)
+{
 	logger->Debug("ClearConstraintsEXC: [%s] clearing constraints...", papp->StrId());
 	papp->ClearWorkingModeConstraints();
 
@@ -1113,7 +1156,8 @@ ApplicationManager::ClearConstraintsEXC(AppPtr_t papp) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id) {
+ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("ClearConstraintsEXC: [%d:*:%d] clear FAILED: EXC not found", pid, exc_id);
@@ -1131,11 +1175,12 @@ ApplicationManager::ClearConstraintsEXC(AppPid_t pid, uint8_t exc_id) {
 
 ApplicationManager::ExitCode_t
 ApplicationManager::CheckGoalGapEXC(
-		AppPtr_t papp,
-		struct app::RuntimeProfiling_t &rt_prof) {
+        AppPtr_t papp,
+        struct app::RuntimeProfiling_t &rt_prof)
+{
 	// Define the contraints for this execution context
 	logger->Debug("CheckGoalGapEXC: [%s] checking goal-gap (%d)...",
-			papp->StrId(), rt_prof.ggap_percent);
+	              papp->StrId(), rt_prof.ggap_percent);
 
 	// FIXME the reschedule should be activated based on some
 	// configuration parameter or policy decision
@@ -1148,21 +1193,23 @@ ApplicationManager::CheckGoalGapEXC(
 
 ApplicationManager::ExitCode_t
 ApplicationManager::IsReschedulingRequired(
-		AppPtr_t papp,
-		struct app::RuntimeProfiling_t &rt_prof) {
+        AppPtr_t papp,
+        struct app::RuntimeProfiling_t &rt_prof)
+{
 	return CheckGoalGapEXC(papp, rt_prof);
 }
 
 ApplicationManager::ExitCode_t
 ApplicationManager::IsReschedulingRequired(
-		AppPid_t pid,
-		uint8_t exc_id,
-		struct app::RuntimeProfiling_t &rt_prof) {
+        AppPid_t pid,
+        uint8_t exc_id,
+        struct app::RuntimeProfiling_t &rt_prof)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("IsReschedulingRequired: [%d:*:%d] "
-			"check for rescheduling FAILED: EXC not found",
-			pid, exc_id);
+		             "check for rescheduling FAILED: EXC not found",
+		             pid, exc_id);
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
@@ -1172,11 +1219,12 @@ ApplicationManager::IsReschedulingRequired(
 
 ApplicationManager::ExitCode_t
 ApplicationManager::GetRuntimeProfile(
-		AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t &profile) {
+        AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t &profile)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("GetRuntimeProfile: [%d:*:%d] profiling not available:"
-			" EXC not found", pid, exc_id);
+		             " EXC not found", pid, exc_id);
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
@@ -1185,11 +1233,12 @@ ApplicationManager::GetRuntimeProfile(
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SetRuntimeProfile(
-		AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t profile) {
+        AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t profile)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("SetRuntimeProfile: [%d:*:%d] profiling setting FAILED: "
-			"EXC not found", pid, exc_id);
+		             "EXC not found", pid, exc_id);
 		assert(papp);
 		return AM_EXC_NOT_FOUND;
 	}
@@ -1198,11 +1247,12 @@ ApplicationManager::SetRuntimeProfile(
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SetRuntimeProfile(
-		AppPid_t pid,
-		uint8_t exc_id,
-		int gap,
-		int cusage,
-		int ctime_ms) {
+        AppPid_t pid,
+        uint8_t exc_id,
+        int gap,
+        int cusage,
+        int ctime_ms)
+{
 	// Getting current runtime profile information
 	ExitCode_t result;
 	struct app::RuntimeProfiling_t rt_prof;
@@ -1215,7 +1265,7 @@ ApplicationManager::SetRuntimeProfile(
 	rt_prof.ggap_percent      = gap;
 	rt_prof.cpu_usage_prev    = rt_prof.cpu_usage;
 	rt_prof.cpu_usage    =
-			(cusage > 0) ? cusage : rt_prof.cpu_usage_prediction;
+	        (cusage > 0) ? cusage : rt_prof.cpu_usage_prediction;
 	// Removing fluctuation due to additional threads such as input collector,
 	// which are not included in the CPU usage count
 	rt_prof.cpu_usage = std::min(cusage, rt_prof.cpu_usage_prediction);
@@ -1261,7 +1311,8 @@ ApplicationManager::SetRuntimeProfile(
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
-void ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id) {
+void ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("LoadTaskGraph: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
@@ -1272,7 +1323,8 @@ void ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id) {
 }
 
 
-void ApplicationManager::LoadTaskGraphAll() {
+void ApplicationManager::LoadTaskGraphAll()
+{
 	AppsUidMapIt app_it;
 
 	AppPtr_t papp = GetFirst(ba::ApplicationStatusIF::READY, app_it);
@@ -1293,7 +1345,8 @@ void ApplicationManager::LoadTaskGraphAll() {
  ******************************************************************************/
 
 ApplicationManager::ExitCode_t
-ApplicationManager::EnableEXC(AppPtr_t papp) {
+ApplicationManager::EnableEXC(AppPtr_t papp)
+{
 	logger->Debug("EnableEXC: [%s] enabling...", papp->StrId());
 
 	auto ret = ChangeEXCState(papp, app::Schedulable::READY);
@@ -1307,7 +1360,8 @@ ApplicationManager::EnableEXC(AppPtr_t papp) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::EnableEXC(AppPid_t pid, uint8_t exc_id) {
+ApplicationManager::EnableEXC(AppPid_t pid, uint8_t exc_id)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("EnableEXC: [%d:*:%d] enabling FAILED: not found", pid, exc_id);
@@ -1324,14 +1378,15 @@ ApplicationManager::EnableEXC(AppPid_t pid, uint8_t exc_id) {
  ******************************************************************************/
 
 ApplicationManager::ExitCode_t
-ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
+ApplicationManager::DisableEXC(AppPtr_t papp, bool release)
+{
 	// A disabled EXC is moved (as soon as possible) into the DISABLED queue
 	// NOTE: other code-path should check wheter an application is still
 	// !DISABLED to _assume_ a normal operation
 	logger->Debug("DisableEXC: [%s:%s/%s] disabling...",
-			papp->StrId(),
-			Application::stateStr[papp->State()],
-			Application::syncStateStr[papp->SyncState()]);
+	              papp->StrId(),
+	              Application::stateStr[papp->State()],
+	              Application::syncStateStr[papp->SyncState()]);
 
 	// Scheduling in progress?
 	logger->Debug("DisableEXC: waiting for scheduler manager...");
@@ -1362,7 +1417,8 @@ ApplicationManager::DisableEXC(AppPtr_t papp, bool release) {
 }
 
 ApplicationManager::ExitCode_t
-ApplicationManager::DisableEXC(AppPid_t pid, uint8_t exc_id, bool release) {
+ApplicationManager::DisableEXC(AppPid_t pid, uint8_t exc_id, bool release)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Warn("DisableEXC: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
@@ -1378,7 +1434,8 @@ ApplicationManager::DisableEXC(AppPid_t pid, uint8_t exc_id, bool release) {
  *  EXC Checking
  ******************************************************************************/
 
-bool ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
+bool ApplicationManager::CheckEXC(AppPtr_t papp, bool release)
+{
 	logger->Debug("CheckEXC: [%s] checking life status...", papp->StrId());
 
 	// Check if the required process is still alive
@@ -1389,7 +1446,7 @@ bool ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 		logger->Warn("CheckEXC: Dead process PID=%d", papp->Pid());
 	}
 	logger->Debug("CheckEXC: [%s] is %s",
-		papp->StrId(), dead ? "DEAD" : "still ALIVE");
+	              papp->StrId(), dead ? "DEAD" : "still ALIVE");
 
 	// If already finished, remove from the map of finished
 	if (papp->Finished()) {
@@ -1405,7 +1462,8 @@ bool ApplicationManager::CheckEXC(AppPtr_t papp, bool release) {
 	return !dead;
 }
 
-bool ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
+bool ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release)
+{
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
 		logger->Debug("CheckEXC: [%d:*:%d] FAILED: EXC not found", pid, exc_id);
@@ -1416,7 +1474,8 @@ bool ApplicationManager::CheckEXC(AppPid_t pid, uint8_t exc_id, bool release) {
 }
 
 
-void ApplicationManager::CheckActiveEXCs() {
+void ApplicationManager::CheckActiveEXCs()
+{
 	AppsUidMapIt app_it;
 	AppPtr_t papp = GetFirst(ba::ApplicationStatusIF::READY, app_it);
 	for (; papp; papp = GetNext(ba::ApplicationStatusIF::READY, app_it)) {
@@ -1433,15 +1492,16 @@ void ApplicationManager::CheckActiveEXCs() {
  ******************************************************************************/
 
 ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequest(
-		ba::AppCPtr_t papp,
-		ba::AwmPtr_t awm,
-		br::RViewToken_t status_view,
-		size_t b_refn) {
+        ba::AppCPtr_t papp,
+        ba::AwmPtr_t awm,
+        br::RViewToken_t status_view,
+        size_t b_refn)
+{
 
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceAccounter::ExitCode_t ra_result;
 	logger->Info("ScheduleRequest: [%s] schedule request for binding @[%d] view=%ld",
-		papp->StrId(), b_refn, status_view);
+	             papp->StrId(), b_refn, status_view);
 
 	// AWM safety check
 	if (!awm) {
@@ -1450,15 +1510,15 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequest(
 		return AM_AWM_NULL;
 	}
 	logger->Debug("ScheduleRequest: [%s] request for scheduling in AWM [%02d:%s]",
-			papp->StrId(), awm->Id(), awm->Name().c_str());
+	              papp->StrId(), awm->Id(), awm->Name().c_str());
 
 	// App is SYNC/BLOCKED for a previously failed scheduling.
 	// Reset state and syncState for this new attempt.
 	if (papp->Blocking()) {
 		logger->Warn("ScheduleRequest: [%s] request for blocking application",
-			papp->StrId());
+		             papp->StrId());
 		logger->Warn("ScheduleRequest: [%s] forcing a new state transition",
-			papp->StrId());
+		             papp->StrId());
 		ChangeEXCState(papp, papp->PreSyncState(), app::Schedulable::SYNC_NONE);
 		return AM_APP_BLOCKING;
 	}
@@ -1471,10 +1531,10 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequest(
 
 	// Checking for resources availability: unschedule if not
 	ra_result = ra.BookResources(
-		papp, awm->GetSchedResourceBinding(b_refn), status_view);
+	                    papp, awm->GetSchedResourceBinding(b_refn), status_view);
 	if (ra_result != ResourceAccounter::RA_SUCCESS) {
 		logger->Debug("ScheduleRequest: [%s] not enough resources...",
-			papp->StrId());
+		              papp->StrId());
 		Unschedule(papp);
 		return AM_AWM_NOT_SCHEDULABLE;
 	}
@@ -1484,7 +1544,7 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequest(
 
 	// Reschedule accordingly to "awm"
 	logger->Debug("ScheduleRequest: (re)scheduling [%s] into AWM [%d:%s]...",
-			papp->StrId(), awm->Id(), awm->Name().c_str());
+	              papp->StrId(), awm->Id(), awm->Name().c_str());
 	auto ret = Reschedule(papp, awm);
 	if (ret != AM_SUCCESS) {
 		ra.ReleaseResources(papp, status_view);
@@ -1499,8 +1559,9 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequest(
 }
 
 ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAsPrev(
-		ba::AppCPtr_t papp,
-		br::RViewToken_t status_view) {
+        ba::AppCPtr_t papp,
+        br::RViewToken_t status_view)
+{
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ResourceAccounter::ExitCode_t ra_result;
 	if (papp == nullptr) {
@@ -1512,13 +1573,13 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAsPrev(
 	// Application must be already running
 	if (!papp->Running()) {
 		logger->Warn("ScheduleRequestAsPrev: [%s] not in RUNNING state [%s]",
-			papp->StrId(), papp->StateStr(papp->State()));
+		             papp->StrId(), papp->StateStr(papp->State()));
 		return AM_EXC_INVALID_STATUS;
 	}
 
 	// Checking resources are still available
 	ra_result = ra.BookResources(
-		papp, papp->CurrentAWM()->GetResourceBinding(), status_view);
+	                    papp, papp->CurrentAWM()->GetResourceBinding(), status_view);
 	if (ra_result != ResourceAccounter::RA_SUCCESS) {
 		logger->Warn("ScheduleRequestAsPrev: [%s] unscheduling...", papp->StrId());
 		return AM_AWM_NOT_SCHEDULABLE;
@@ -1527,17 +1588,18 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAsPrev(
 	// Set next awm to the previous one
 	papp->SetNextAWM(papp->CurrentAWM());
 	logger->Debug("ScheduleRequestAsPrev: [%s] rescheduled as previously: AWM [%d -> %d]",
-			papp->StrId(), papp->CurrentAWM()->Id(), papp->NextAWM()->Id());
+	              papp->StrId(), papp->CurrentAWM()->Id(), papp->NextAWM()->Id());
 
 	return AM_SUCCESS;
 }
 
 ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAbort(
-		ba::AppCPtr_t papp,
-		br::RViewToken_t status_view) {
+        ba::AppCPtr_t papp,
+        br::RViewToken_t status_view)
+{
 
 	logger->Info("ScheduleRequestAbort: [%s] abort schedule request [view=%ld]",
-		papp->StrId(), status_view);
+	             papp->StrId(), status_view);
 
 	// AWM safety check
 	if (!papp->NextAWM()) {
@@ -1564,8 +1626,9 @@ ApplicationManager::ExitCode_t ApplicationManager::ScheduleRequestAbort(
 
 
 ApplicationManager::ExitCode_t ApplicationManager::Reschedule(
-		ba::AppCPtr_t papp,
-		ba::AwmPtr_t awm) {
+        ba::AppCPtr_t papp,
+        ba::AwmPtr_t awm)
+{
 	// Ready application could be synchronized to start
 	if (papp->State() == app::Schedulable::READY) {
 		logger->Debug("(Re)schedule: [%s] for STARTING", papp->StrId());
@@ -1575,17 +1638,17 @@ ApplicationManager::ExitCode_t ApplicationManager::Reschedule(
 	// Otherwise, the application should be running...
 	if (papp->State() != app::Schedulable::RUNNING) {
 		logger->Crit("(Re)schedule: [%s] wrong status {%s/%s}",
-			papp->StrId(),
-			papp->StateStr(papp->State()),
-			papp->SyncStateStr(papp->SyncState()));
+		             papp->StrId(),
+		             papp->StateStr(papp->State()),
+		             papp->SyncStateStr(papp->SyncState()));
 		return AM_ABORT;
 	}
 
 	// Checking if a synchronization is required
 	auto next_sync = papp->NextSyncState(awm);
-		logger->Debug("(Re)schedule: [%s] for %s",
-			papp->StrId(),
-			papp->SyncStateStr(next_sync));
+	logger->Debug("(Re)schedule: [%s] for %s",
+	              papp->StrId(),
+	              papp->SyncStateStr(next_sync));
 	if (next_sync == app::Schedulable::SYNC_NONE)
 		return AM_SUCCESS;
 
@@ -1595,15 +1658,16 @@ ApplicationManager::ExitCode_t ApplicationManager::Reschedule(
 
 
 ApplicationManager::ExitCode_t ApplicationManager::Unschedule(
-		ba::AppCPtr_t papp) {
+        ba::AppCPtr_t papp)
+{
 	// Do nothing if already ready or blocking
 	if ((papp->State() == app::Schedulable::READY) || (papp->Blocking())) {
 		logger->Debug("Unschedule: [%s] current status = {%s/%s})",
-			papp->StrId(),
-			papp->StateStr(papp->State()),
-			papp->SyncStateStr(papp->SyncState()));
+		              papp->StrId(),
+		              papp->StateStr(papp->State()),
+		              papp->SyncStateStr(papp->SyncState()));
 		logger->Debug("Unschedule: [%s] no need further actions",
-			papp->StrId());
+		              papp->StrId());
 		return AM_SUCCESS;
 	}
 	// Request a synchronization to block the application
@@ -1611,30 +1675,32 @@ ApplicationManager::ExitCode_t ApplicationManager::Unschedule(
 }
 
 ApplicationManager::ExitCode_t ApplicationManager::NoSchedule(
-		ba::AppCPtr_t papp) {
+        ba::AppCPtr_t papp)
+{
 	logger->Debug("NoSchedule: [%s] not scheduled", papp->StrId());
 	return ChangeEXCState(papp,
-		app::Schedulable::SYNC, app::Schedulable::BLOCKED);
+	                      app::Schedulable::SYNC, app::Schedulable::BLOCKED);
 }
 
 ApplicationManager::ExitCode_t
 ApplicationManager::SetForSynchronization(
-		app::AppCPtr_t papp, Application::SyncState_t next_sync) {
+        app::AppCPtr_t papp, Application::SyncState_t next_sync)
+{
 	// Check valid state has beed required
 	if (next_sync >= Application::SYNC_STATE_COUNT) {
 		logger->Crit("SetForSynchronization: [%s] FAILED : invalid sync state [%d]",
-				papp->StrId(), next_sync);
+		             papp->StrId(), next_sync);
 		assert(next_sync < app::Schedulable::SYNC_STATE_COUNT);
 		return AM_ABORT;
 	}
 	logger->Debug("SetForSynchronization: [%s, %s] requesting synchronization...",
-			papp->StrId(), Application::SyncStateStr(next_sync));
+	              papp->StrId(), Application::SyncStateStr(next_sync));
 
 	// Change synchronization state
 	ChangeEXCState(papp, app::Schedulable::SYNC, next_sync);
 	if (!papp->Synching()) {
 		logger->Crit("SetForSynchronization: [%s] FAILED: invalid EXC state [%d]",
-				papp->StrId(), next_sync);
+		             papp->StrId(), next_sync);
 		assert(papp->Synching());
 		return AM_ABORT;
 	}
@@ -1642,7 +1708,7 @@ ApplicationManager::SetForSynchronization(
 	// TODO notify the Resource Manager
 
 	logger->Debug("SetForSynchronization: [%s, %s] completed", papp->StrId(),
-			Application::SyncStateStr(papp->SyncState()));
+	              Application::SyncStateStr(papp->SyncState()));
 
 	return AM_SUCCESS;
 }
@@ -1652,90 +1718,95 @@ ApplicationManager::SetForSynchronization(
  *  EXC Synchronization
  ******************************************************************************/
 
-void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp, Application::SyncState_t state) {
+void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp, Application::SyncState_t state)
+{
 	logger->Debug("RemoveFromSyncMap: [%s] removing sync [%s] request ...",
-		papp->StrId(), ba::Schedulable::SyncStateStr(state));
+	              papp->StrId(), ba::Schedulable::SyncStateStr(state));
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	assert(papp);
 	UpdateIterators(sync_ret[state], papp);
 
 	PrintSyncQ();
 	logger->Debug("RemoveFromSyncMap: [%s] removing sync [%s] after request ...",
-		papp->StrId(), ba::Schedulable::SyncStateStr(state));
+	              papp->StrId(), ba::Schedulable::SyncStateStr(state));
 
 	// Get the applications map
 	if (sync_vec[state].erase(papp->Uid())) {
 		logger->Debug("RemoveFromSyncMap: [%s, %s] removed sync request",
-			papp->StrId(), papp->SyncStateStr(state));
+		              papp->StrId(), papp->SyncStateStr(state));
 		PrintSyncQ();
 		return;
 	}
 	logger->Crit("RemoveFromSyncMap: [%s, %s] should not arrive here!",
-		papp->StrId(), papp->SyncStateStr(state));
+	             papp->StrId(), papp->SyncStateStr(state));
 
 
 	// We should never got there
 	assert(false);
 }
 
-void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp) {
+void ApplicationManager::RemoveFromSyncMap(AppPtr_t papp)
+{
 	assert(papp);
 	logger->Debug("RemoveFromSyncMap: [%s] removing sync request ...", papp->StrId());
 
 	// Disregard EXCs which are not in SYNC state
 	if (!papp->Synching()) {
 		logger->Debug("RemoveFromSyncMap: [%s] inconsistent state: %s/%s ...",
-			papp->StrId(),
-			papp->StateStr(papp->State()),
-			papp->SyncStateStr(papp->SyncState()));
+		              papp->StrId(),
+		              papp->StateStr(papp->State()),
+		              papp->SyncStateStr(papp->SyncState()));
 		return;
 	}
 
 	RemoveFromSyncMap(papp, papp->SyncState());
 }
 
-void ApplicationManager::AddToSyncMap(AppPtr_t papp, Application::SyncState_t state) {
+void ApplicationManager::AddToSyncMap(AppPtr_t papp, Application::SyncState_t state)
+{
 	assert(papp);
 	// Disregard EXCs which are not in SYNC state
 	logger->Debug("AddToSyncMap: [%s] state: %s/%s removing from map...",
-		papp->StrId(),
-		papp->StateStr(papp->State()),
-		papp->SyncStateStr(papp->SyncState()));
+	              papp->StrId(),
+	              papp->StateStr(papp->State()),
+	              papp->SyncStateStr(papp->SyncState()));
 
 	if (!papp->Synching()) {
 		logger->Debug("AddToSyncMap: [%s] inconsistent state: %s/%s ...",
-			papp->StrId(),
-			papp->StateStr(papp->State()),
-			papp->SyncStateStr(papp->SyncState()));
+		              papp->StrId(),
+		              papp->StateStr(papp->State()),
+		              papp->SyncStateStr(papp->SyncState()));
 		return;
 	}
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
 	sync_vec[state].insert(UidsMapEntry_t(papp->Uid(), papp));
 }
 
-void ApplicationManager::AddToSyncMap(AppPtr_t papp) {
+void ApplicationManager::AddToSyncMap(AppPtr_t papp)
+{
 	assert(papp);
 	AddToSyncMap(papp, papp->SyncState());
 	logger->Debug("AddToSyncMap: [%s, %d:%s] added synchronization request",
-			papp->StrId(),
-			papp->SyncState(),
-			papp->SyncStateStr(papp->SyncState()));
+	              papp->StrId(),
+	              papp->SyncState(),
+	              papp->SyncStateStr(papp->SyncState()));
 	PrintSyncQ();
 }
 
 
 
 ApplicationManager::ExitCode_t
-ApplicationManager::SyncCommit(AppPtr_t papp) {
+ApplicationManager::SyncCommit(AppPtr_t papp)
+{
 	logger->Debug("SyncCommit: [%s, %s] synchronization in progress...",
-			papp->StrId(), papp->SyncStateStr(papp->SyncState()));
+	              papp->StrId(), papp->SyncStateStr(papp->SyncState()));
 	auto curr_state = papp->State();
 	auto curr_sync  = papp->SyncState();
 
 	// Notify application
 	papp->SyncCommit();
 	logger->Debug("SyncCommit: [%s] prev state [%s]...",
-			papp->StrId(), papp->StateStr(papp->PreSyncState()));
+	              papp->StrId(), papp->StateStr(papp->PreSyncState()));
 
 	// Update status maps
 	UpdateStatusMaps(papp, curr_state, papp->State());
@@ -1746,29 +1817,30 @@ ApplicationManager::SyncCommit(AppPtr_t papp) {
 	// If FINISHED we can destroy the EXC descriptor
 	if (papp->Finished()) {
 		logger->Debug("SyncCommit: [%s] [%s/%s] destroying EXC...",
-			papp->StrId(),
-			papp->StateStr(papp->State()),
-			papp->SyncStateStr(papp->SyncState()));
+		              papp->StrId(),
+		              papp->StateStr(papp->State()),
+		              papp->SyncStateStr(papp->SyncState()));
 		DestroyEXC(papp);
 	}
 	logger->Debug("SyncCommit: [%s] [%s/%s] synchronization COMPLETED",
-			papp->StrId(),
-			papp->StateStr(papp->State()),
-			papp->SyncStateStr(papp->SyncState()));
+	              papp->StrId(),
+	              papp->StateStr(papp->State()),
+	              papp->SyncStateStr(papp->SyncState()));
 
 	return AM_SUCCESS;
 }
 
-void ApplicationManager::SyncAbort(AppPtr_t papp) {
+void ApplicationManager::SyncAbort(AppPtr_t papp)
+{
 	Application::SyncState_t syncState = papp->SyncState();
 	logger->Warn("SyncAbort: [%s, sync_state=%s] synchronization aborted...",
-			papp->StrId(), papp->SyncStateStr(syncState));
+	             papp->StrId(), papp->SyncStateStr(syncState));
 
 	// The abort must be performed only for SYNC applications
 	Application::State_t state = papp->State();
 	if (!papp->Synching()) {
 		logger->Error("SyncAbort: [%s, state=%s] (expected SYNC)",
-				papp->StrId(), papp->StateStr(state));
+		              papp->StrId(), papp->StateStr(state));
 	}
 
 	// Move to READY map if still alive
@@ -1782,15 +1854,16 @@ void ApplicationManager::SyncAbort(AppPtr_t papp) {
 
 
 ApplicationManager::ExitCode_t
-ApplicationManager::SyncContinue(AppPtr_t papp) {
+ApplicationManager::SyncContinue(AppPtr_t papp)
+{
 	Application::State_t state = papp->State();
 	Application::SyncState_t syncState = papp->SyncState();
 	assert(papp->CurrentAWM()); // This must be called only for RUNNING App/ExC
 	if (papp->State() != app::Schedulable::RUNNING) {
 		logger->Error("SyncContinue: [%s] is not running. State {%s/%s}",
-				papp->StrId(),
-				papp->StateStr(state),
-				papp->SyncStateStr(syncState));
+		              papp->StrId(),
+		              papp->StateStr(state),
+		              papp->SyncStateStr(syncState));
 		assert(papp->State() == app::Schedulable::RUNNING);
 		assert(papp->SyncState() == app::Schedulable::SYNC_NONE);
 		return AM_ABORT;
@@ -1803,10 +1876,10 @@ ApplicationManager::SyncContinue(AppPtr_t papp) {
 	// AWM current and next must match
 	if (papp->CurrentAWM()->Id() != papp->NextAWM()->Id()) {
 		logger->Error("SyncContinue: [%s] AWMs differs. "
-				"{curr=%d / next=%d}",
-				papp->StrId(),
-				papp->CurrentAWM()->Id(),
-				papp->NextAWM()->Id());
+		              "{curr=%d / next=%d}",
+		              papp->StrId(),
+		              papp->CurrentAWM()->Id(),
+		              papp->NextAWM()->Id());
 		return AM_ABORT;
 	}
 

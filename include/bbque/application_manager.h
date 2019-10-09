@@ -37,9 +37,11 @@ using bbque::CommandHandler;
 
 namespace bu = bbque::utils;
 
-namespace bbque {
+namespace bbque
+{
 
-namespace app {
+namespace app
+{
 class Recipe;
 typedef std::shared_ptr<Recipe> RecipePtr_t;
 }
@@ -62,7 +64,8 @@ class PlatformManager;
  * to know which is lowest priority level (maximum integer value) managed by
  * Barbeque RTRM.
  */
-class ApplicationManager: public ApplicationManagerConfIF, public CommandHandler {
+class ApplicationManager: public ApplicationManagerConfIF, public CommandHandler
+{
 
 public:
 
@@ -79,13 +82,13 @@ public:
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
-	 AppPtr_t CreateEXC(
-			std::string const & name, AppPid_t pid, uint8_t exc_id,
-			std::string const & recipe,
-			RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP,
-			AppPrio_t prio = BBQUE_APP_PRIO_LEVELS-1,
-			bool weak_load = false,
-			bool container = false);
+	AppPtr_t CreateEXC(
+	        std::string const & name, AppPid_t pid, uint8_t exc_id,
+	        std::string const & recipe,
+	        RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP,
+	        AppPrio_t prio = BBQUE_APP_PRIO_LEVELS - 1,
+	        bool weak_load = false,
+	        bool container = false);
 
 	/**
 	 * @see ApplicationManagerConfIF
@@ -107,13 +110,13 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t SetConstraintsEXC(AppPtr_t papp,
-			RTLIB_Constraint_t *constraints, uint8_t count);
+	                             RTLIB_Constraint_t *constraints, uint8_t count);
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t SetConstraintsEXC(AppPid_t pid, uint8_t exc_id,
-			RTLIB_Constraint_t *constraints, uint8_t count);
+	                             RTLIB_Constraint_t *constraints, uint8_t count);
 
 	/**
 	 * @see ApplicationManagerConfIF
@@ -144,7 +147,7 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t DisableEXC(AppPid_t pid, uint8_t exc_id,
-			bool release = false);
+	                      bool release = false);
 
 	/**
 	 * @see ApplicationManagerConfIF
@@ -162,9 +165,9 @@ public:
 	void CheckActiveEXCs();
 
 
-/*******************************************************************************
- *     Thread-Safe Queue Access Functions
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Thread-Safe Queue Access Functions
+	 ******************************************************************************/
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -180,37 +183,37 @@ public:
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetFirst(AppPrio_t prio,
-			AppsUidMapIt & it);
+	                  AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetNext(AppPrio_t prio,
-			AppsUidMapIt & it);
+	                 AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetFirst(ApplicationStatusIF::State_t state,
-			AppsUidMapIt & it);
+	                  AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetNext(ApplicationStatusIF::State_t state,
-			AppsUidMapIt & it);
+	                 AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetFirst(ApplicationStatusIF::SyncState_t state,
-			AppsUidMapIt & it);
+	                  AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetNext(ApplicationStatusIF::SyncState_t state,
-			AppsUidMapIt & it);
+	                 AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -281,12 +284,12 @@ public:
 	 * @see ApplicationManagerStatusIF
 	 */
 	inline app::AppPrio_t LowestPriority() const {
-		return BBQUE_APP_PRIO_LEVELS-1;
+		return BBQUE_APP_PRIO_LEVELS - 1;
 	};
 
-/*******************************************************************************
- *     Scheduling functions
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Scheduling functions
+	 ******************************************************************************/
 
 	/**
 	 * @brief Request to re-schedule this application into a new configuration
@@ -311,8 +314,8 @@ public:
 	 * returns always AM_APP_DISABLED.
 	 */
 	ExitCode_t ScheduleRequest(
-		app::AppCPtr_t papp, app::AwmPtr_t  awm,
-		br::RViewToken_t status_view, size_t b_refn);
+	        app::AppCPtr_t papp, app::AwmPtr_t  awm,
+	        br::RViewToken_t status_view, size_t b_refn);
 
 	/**
 	 * @brief Re-schedule this application according to previous scheduling
@@ -326,7 +329,7 @@ public:
 	 * stats, APP_AWM_NOT_SCHEDULABLE if required resources are no longer available.
 	 */
 	ExitCode_t ScheduleRequestAsPrev(
-		app::AppCPtr_t papp, br::RViewToken_t status_view);
+	        app::AppCPtr_t papp, br::RViewToken_t status_view);
 
 	/**
 	 * @brief Abort a schedule request
@@ -335,8 +338,8 @@ public:
 	 * @param status_view The token referencing the resources state view
 	 */
 	ExitCode_t ScheduleRequestAbort(
-		app::AppCPtr_t papp,
-		br::RViewToken_t status_view);
+	        app::AppCPtr_t papp,
+	        br::RViewToken_t status_view);
 
 	/**
 	 * @brief Configure this application to switch to the specified AWM
@@ -370,11 +373,11 @@ public:
 	 * AM_ABORT on synchronization request errors
 	 */
 	ExitCode_t SetForSynchronization(
-		app::AppCPtr_t papp, ApplicationStatusIF::SyncState_t next_sync);
+	        app::AppCPtr_t papp, ApplicationStatusIF::SyncState_t next_sync);
 
-/*******************************************************************************
- *     Synchronization functions
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Synchronization functions
+	 ******************************************************************************/
 
 	/**
 	 * @brief Commit the synchronization for the specified application
@@ -401,9 +404,9 @@ public:
 	ExitCode_t SyncContinue(AppPtr_t papp);
 
 
-/*******************************************************************************
- *     Run-time Profiling and Task-graph Functions
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Run-time Profiling and Task-graph Functions
+	 ******************************************************************************/
 
 	/**
 	 * @see ApplicationManagerConfIF
@@ -414,13 +417,13 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t IsReschedulingRequired(AppPid_t pid, uint8_t exc_id,
-			struct app::RuntimeProfiling_t &profile);
+	                                  struct app::RuntimeProfiling_t &profile);
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t IsReschedulingRequired(AppPtr_t papp,
-			struct app::RuntimeProfiling_t &profile);
+	                                  struct app::RuntimeProfiling_t &profile);
 
 	/**
 	 * @brief Update runtime profiling information of each active
@@ -435,13 +438,13 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t GetRuntimeProfile(
-		AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t &profile);
+	        AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t &profile);
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
 	inline ExitCode_t GetRuntimeProfile(AppPtr_t papp,
-			struct app::RuntimeProfiling_t &profile) {
+	                                    struct app::RuntimeProfiling_t &profile) {
 		profile = papp->GetRuntimeProfile();
 		return AM_SUCCESS;
 	}
@@ -450,16 +453,16 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t SetRuntimeProfile(AppPid_t pid,
-			uint8_t exc_id, struct app::RuntimeProfiling_t profile);
+	                             uint8_t exc_id, struct app::RuntimeProfiling_t profile);
 
 	ExitCode_t SetRuntimeProfile(AppPid_t pid, uint8_t exc_id,
-			int gap, int cusage, int ctime);
+	                             int gap, int cusage, int ctime);
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
 	inline ExitCode_t SetRuntimeProfile(AppPtr_t papp,
-			struct app::RuntimeProfiling_t profile) {
+	                                    struct app::RuntimeProfiling_t profile) {
 		papp->SetRuntimeProfile(profile);
 		return AM_SUCCESS;
 	}
@@ -477,7 +480,9 @@ public:
 	 * @brief Load the task-graph of an application
 	 * @param The application descriptor
 	 */
-	inline void LoadTaskGraph(AppPtr_t papp) { papp->LoadTaskGraph(); }
+	inline void LoadTaskGraph(AppPtr_t papp) {
+		papp->LoadTaskGraph();
+	}
 
 	/**
 	 * @brief Load the task-graphs of all the active applications (ready and running)
@@ -486,9 +491,9 @@ public:
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
-/*******************************************************************************
- *     Status logging
- ******************************************************************************/
+	/*******************************************************************************
+	 *     Status logging
+	 ******************************************************************************/
 
 	/**
 	 * @brief Dump a logline to report on current Status queue counts
@@ -665,7 +670,7 @@ private:
 
 	/** Return a pointer to a loaded recipe */
 	RecipeLoaderIF::ExitCode_t LoadRecipe(std::string const & _recipe_name,
-			RecipePtr_t & _recipe, bool weak_load = false);
+	                                      RecipePtr_t & _recipe, bool weak_load = false);
 
 	/**
 	 * Remove the specified application from the priority maps
@@ -701,9 +706,9 @@ private:
 	 * @param next_sync next synchronization state
 	 */
 	ExitCode_t ChangeEXCState(
-		AppPtr_t papp,
-		app::Schedulable::State_t next_state,
-		app::Schedulable::SyncState_t next_sync = app::Schedulable::SYNC_NONE);
+	        AppPtr_t papp,
+	        app::Schedulable::State_t next_state,
+	        app::Schedulable::SyncState_t next_sync = app::Schedulable::SYNC_NONE);
 
 	/**
 	 * @brief Move the application from state vectors
@@ -713,8 +718,8 @@ private:
 	 * @param next next application status
 	 */
 	ExitCode_t UpdateStatusMaps(AppPtr_t papp,
-			ApplicationStatusIF::State_t prev,
-			ApplicationStatusIF::State_t next);
+	                            ApplicationStatusIF::State_t prev,
+	                            ApplicationStatusIF::State_t next);
 
 	/**
 	 * @brief Release a synchronization request for the specified application
