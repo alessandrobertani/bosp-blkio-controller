@@ -290,9 +290,9 @@
 /*******************************************************************************
  * Mango project related
  ******************************************************************************/
-#define MANGO_DEVICE_NAME "${CONFIG_MANGO_DEVICE}"
 
-#define MANGO_PEAK_OS "${CONFIG_MANGO_ROOT_PATH}/usr/share/peakos.img"
+#define MANGO_DEVICE_NAME   "${CONFIG_MANGO_DEVICE}"
+#define MANGO_PEAK_OS       "${CONFIG_MANGO_ROOT_PATH}/usr/share/peakos.img"
 #define MANGO_PEAK_PROTOCOL "${CONFIG_MANGO_ROOT_PATH}/usr/share/peak_protocol.img"
 
 #define MANGO_BASE_NUM_PARTITIONS ${CONFIG_MANGO_BASE_NUM_PARTITIONS}
