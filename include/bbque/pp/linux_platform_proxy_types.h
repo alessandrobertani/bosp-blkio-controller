@@ -46,6 +46,8 @@ include linux_platform_proxy.h!
  */
 #define BBQUE_LINUXPP_CLUSTER "node"
 
+#define BBQUE_LINUXPP_FREEZER_STATE "/freezer.state"
+
 namespace bbque {
 namespace pp {
 

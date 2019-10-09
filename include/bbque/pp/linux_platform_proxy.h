@@ -97,6 +97,14 @@ public:
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 
 
+	CheckpointRestoreIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
+
+	CheckpointRestoreIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+
+	CheckpointRestoreIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
+
+	CheckpointRestoreIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
+
 private:
 //-------------------- CONSTS
 	/**
@@ -217,6 +225,15 @@ private:
 	ExitCode_t SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
 	                       bool excl = false, bool move = true) noexcept;
 	ExitCode_t BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept;
+
+	/**
+	 * @brief
+	 * @param prefix
+	 * @return
+	 */
+	std::string ApplicationPath(
+	        std::string const & prefix, ba::SchedPtr_t psched) const;
+
 };
 
 }   // namespace pp

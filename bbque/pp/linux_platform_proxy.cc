@@ -24,6 +24,7 @@
 #include "bbque/utils/assert.h"
 
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <libcgroup.h>
 #include <linux/ethtool.h>
@@ -129,6 +130,31 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 		                             "InitCGroups() failed.");
 	}
 
+	// Checkpoint image path
+	image_prefix_dir.assign(BBQUE_CHECKPOINT_IMAGE_PATH);
+	logger->Info("Reliability support: checkpoint images path:  %s",
+	             image_prefix_dir.c_str());
+
+	if (!boost::filesystem::exists(image_prefix_dir)) {
+		if (boost::filesystem::create_directory(image_prefix_dir))
+			logger->Debug("Reliability support: "
+			              "image directory created");
+		else
+			logger->Error("Reliability support: "
+			              "image directory not created");
+	}
+
+	// Freezer initialization
+	freezer_prefix_dir.assign(BBQUE_FREEZER_PATH);
+	logger->Info("Reliability support: freezer interfaces path: %s",
+	             freezer_prefix_dir.c_str());
+
+	if (!boost::filesystem::exists(freezer_prefix_dir)) {
+		if (boost::filesystem::create_directory(freezer_prefix_dir))
+			logger->Debug("Reliability support: freezer created");
+		else
+			logger->Error("Reliability support: freezer created");
+	}
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	InitCoresType();
 #endif
@@ -440,6 +466,25 @@ LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
 	// ... thus releasing the corresponding control group
 	logger->Debug("Release: releasing platform-specific data [%s]", papp->StrId());
 	papp->ClearPluginData(LINUX_PP_NAMESPACE);
+	// Remove checkpoint image path
+	std::string image_dir(ApplicationPath(image_prefix_dir, papp));
+	logger->Debug("Release: image directory [%s] ", image_dir.c_str());
+
+	if (boost::filesystem::exists(image_dir)) {
+		if (boost::filesystem::remove(image_dir))
+			logger->Info("Release: image directory [%s] removed",
+			image_dir.c_str());
+	}
+
+	// Remove freezer directory
+	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, papp));
+	logger->Debug("Release: freezer directory [%s] ", freezer_dir.c_str());
+
+	if (boost::filesystem::exists(freezer_dir)) {
+		if (boost::filesystem::remove(freezer_dir))
+			logger->Info("Release feezer directory [%s] removed",
+			freezer_dir.c_str());
+	}
 	return PLATFORM_OK;
 }
 
@@ -481,6 +526,28 @@ void LinuxPlatformProxy::Exit()
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	proc_listener.Terminate();
 #endif
+	// Remove checkpoint image path
+	if (boost::filesystem::exists(image_prefix_dir)) {
+		if (boost::filesystem::remove(image_prefix_dir))
+			logger->Info("Reliability: "
+			             "image directory [%s] removed",
+			             image_prefix_dir.c_str());
+		else
+			logger->Error("Reliability: "
+			              "cannot remove image directory [%s]",
+			              image_prefix_dir.c_str());
+	}
+	// Remove freezer directory
+	if (boost::filesystem::exists(freezer_prefix_dir)) {
+		if (!boost::filesystem::remove(freezer_prefix_dir))
+			logger->Info("Reliability: "
+			             "freezer directory [%s] removed",
+			             freezer_prefix_dir.c_str());
+		else
+			logger->Error("Reliability: "
+			              "cannot remove freezer directory [%s]",
+			              freezer_prefix_dir.c_str());
+	}
 }
 
 
@@ -1355,6 +1422,124 @@ LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept 
 }
 
 
+
+CheckpointRestoreIF::ExitCode_t
+LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
+{
+
+
+	/** CRIU dump here **/
+
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
+
+
+CheckpointRestoreIF::ExitCode_t
+LinuxPlatformProxy::Restore(app::SchedPtr_t psched)
+{
+	if (psched->State() != ba::Application::State_t::FROZEN) {
+		logger->Warn("Restore: <%s> not FROZEN [state=%s]",
+		             psched->StrId(),
+		             ba::Schedulable::StateStr(psched->State()));
+		return CheckpointRestoreIF::ExitCode_t::ERROR_WRONG_STATE;
+	}
+
+	std::string image_dir(ApplicationPath(image_prefix_dir, psched));
+	logger->Debug("Restore: <%s> recovering checkpoint from = [%s]",
+	              psched->StrId(), image_dir.c_str());
+
+	if (!boost::filesystem::exists(image_dir)) {
+		logger->Debug("Restore: <%s> missing directory [%s]",
+		              psched->StrId(), image_dir.c_str());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+	}
+
+	/** CRIU restore here **/
+
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
+
+CheckpointRestoreIF::ExitCode_t
+LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
+{
+	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
+	logger->Debug("Freeze: <%s> freezer directory = [%s]",
+	              psched->StrId(), freezer_dir.c_str());
+
+	if (!boost::filesystem::exists(freezer_dir)) {
+		logger->Debug("Freeze: <%s> creating directory [%s]",
+		              psched->StrId(), freezer_dir.c_str());
+		boost::filesystem::create_directory(freezer_dir);
+	}
+
+	// add the task to the freeze
+	std::string freezer_tasks(freezer_dir + "/tasks");
+	std::ofstream tasks_ofs(freezer_tasks, std::ofstream::out);
+	try {
+		tasks_ofs << psched->Pid();
+		tasks_ofs.close();
+	} catch(...) {
+		tasks_ofs.close();
+		logger->Error("Freeze: <%s> filesystem error", psched->StrId());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+	}
+
+	// change state to frozen
+	std::string freezer_attr(freezer_dir + BBQUE_LINUXPP_FREEZER_STATE);
+	std::ofstream fstate_ofs(freezer_attr, std::ofstream::out);
+	try {
+		fstate_ofs << "FROZEN";
+		fstate_ofs.close();
+	} catch(...) {
+		fstate_ofs.close();
+		logger->Error("Freeze: <%s> filesystem error", psched->StrId());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+	}
+
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
+CheckpointRestoreIF::ExitCode_t
+LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
+{
+	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
+	logger->Debug("Thaw: <%s> freezer directory = [%s]",
+	              psched->StrId(), freezer_dir.c_str());
+
+	if (!boost::filesystem::exists(freezer_dir)) {
+		logger->Error("Thaw: <%s> not frozen", psched->StrId());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_PROCESS_ID;
+	}
+
+	std::string freezer_attr(freezer_dir + BBQUE_LINUXPP_FREEZER_STATE);
+	std::ofstream fofs(freezer_attr, std::ofstream::out);
+	try {
+		fofs << "THAWED";
+		fofs.close();
+	} catch(...) {
+		fofs.close();
+		logger->Error("Thaw: <%s> filesystem error", psched->StrId());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+	}
+
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
+std::string LinuxPlatformProxy::ApplicationPath(
+        std::string const & prefix_dir,
+        app::SchedPtr_t psched) const
+{
+	return std::string(
+	               prefix_dir
+	               + "/" + std::to_string(psched->Uid())
+	               + "_" + psched->Name());
+}
 
 }   // namespace pp
 }   // namespace bbque
