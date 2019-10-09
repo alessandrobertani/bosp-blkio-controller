@@ -403,6 +403,26 @@ public:
 	 */
 	ExitCode_t SyncContinue(AppPtr_t papp);
 
+	/**
+	 * @brief Update status of a frozen application, once an actual
+	 * freezing has been performed by the platform proxies.
+	 *
+	 * @param uid application unique identifier
+	 * @return AM_SUCCESS on success, AM_ABORT on failure
+	 */
+	ExitCode_t SetAsFrozen(AppUid_t uid);
+
+	/**
+	 * @brief Set the THAWED status, in order to trigger the actual thawing
+	 * of the application during the synchronization stage. However it is
+	 * mandatory that the scheduling policy would pick THAWED application
+	 * also.
+	 *
+	 * @param uid application unique identifier
+	 * @return AM_SUCCESS on success, AM_ABORT on failure
+	 */
+	ExitCode_t SetToThaw(AppUid_t uid);
+
 
 	/*******************************************************************************
 	 *     Run-time Profiling and Task-graph Functions

@@ -1869,5 +1869,73 @@ ApplicationManager::SyncContinue(AppPtr_t papp)
 	return AM_SUCCESS;
 }
 
-}   // namespace bbque
 
+ApplicationManager::ExitCode_t
+ApplicationManager::SetAsFrozen(AppPid_t uid)
+{
+	AppPtr_t papp(GetApplication(uid));
+	if (!papp) {
+		logger->Error("SetAsFrozen: uid=[%d] not an application", uid);
+	}
+
+	auto curr_state = papp->State();
+	logger->Debug("SetAsFrozen: [%s, %s] to freeze...",
+	              papp->StrId(), papp->StateStr(curr_state));
+
+	auto a_ret = papp->SetState(ba::Schedulable::State_t::FROZEN);
+	if (a_ret != ba::Application::APP_SUCCESS) {
+		logger->Error("SetAsFrozen: [%s] change state to FROZEN failed",
+		              papp->StrId());
+		return AM_EXC_STATUS_CHANGE_FAILED;
+	}
+
+	auto am_ret = UpdateStatusMaps(papp, curr_state, papp->State());
+	if (am_ret != AM_SUCCESS) {
+		logger->Error("SetAsFrozen: [%s] status map update failed",
+		              papp->StrId());
+		return AM_EXC_STATUS_CHANGE_NONE;
+	}
+
+	return AM_SUCCESS;
+}
+
+
+ApplicationManager::ExitCode_t
+ApplicationManager::SetToThaw(AppPid_t uid)
+{
+	AppPtr_t papp(GetApplication(uid));
+	if (!papp) {
+		logger->Error("SetToThaw: uid=[%d] not an application", uid);
+	}
+
+	auto curr_state = papp->State();
+	logger->Debug("SetToThaw: [%s, %s] to freeze...",
+	              papp->StrId(), papp->StateStr(curr_state));
+
+
+	if (curr_state != Schedulable::FROZEN) {
+		logger->Warn("SetToThaw: [%s] not frozen...", papp->StrId());
+		return ExitCode_t::AM_EXC_INVALID_STATUS;
+	}
+
+	Schedulable::ExitCode_t a_ret = papp->SetState(Schedulable::THAWED);
+	if (a_ret != Application::APP_SUCCESS) {
+		logger->Error("SetToThaw: [%s] failed while thawing",
+		              papp->StrId());
+		return AM_EXC_STATUS_CHANGE_FAILED;
+	}
+
+	auto am_ret = UpdateStatusMaps(papp, curr_state, papp->State());
+	if (am_ret != AM_SUCCESS) {
+		logger->Error("SetToThaw: [%s] status map update failed",
+		              papp->StrId());
+		return AM_EXC_STATUS_CHANGE_NONE;
+	}
+
+	logger->Debug("SetToThaw: [%s] status updated: %s",
+	              papp->StrId(), papp->StateStr(curr_state));
+
+	return AM_SUCCESS;
+}
+
+}   // namespace bbque
