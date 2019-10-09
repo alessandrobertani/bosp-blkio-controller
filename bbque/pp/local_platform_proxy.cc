@@ -298,5 +298,78 @@ bool LocalPlatformProxy::IsHighPerformance(
 }
 
 
+CheckpointRestoreIF::ExitCode_t LocalPlatformProxy::Dump(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	ec = this->host->Dump(psched);
+	if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+		return ec;
+	}
+
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+		ec = (*it)->Dump(psched);
+		if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+			return ec;
+		}
+	}
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+CheckpointRestoreIF::ExitCode_t LocalPlatformProxy::Restore(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	ec = this->host->Restore(psched);
+	if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+		return ec;
+	}
+
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+		ec = (*it)->Restore(psched);
+		if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+			return ec;
+		}
+	}
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+CheckpointRestoreIF::ExitCode_t LocalPlatformProxy::Freeze(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	ec = this->host->Freeze(psched);
+	if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+		return ec;
+	}
+
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+		ec = (*it)->Freeze(psched);
+		if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+			return ec;
+		}
+	}
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+CheckpointRestoreIF::ExitCode_t LocalPlatformProxy::Thaw(app::SchedPtr_t psched)
+{
+	CheckpointRestoreIF::ExitCode_t ec;
+
+	ec = this->host->Thaw(psched);
+	if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+		return ec;
+	}
+
+	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+		ec = (*it)->Thaw(psched);
+		if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+			return ec;
+		}
+	}
+	return CheckpointRestoreIF::ExitCode_t::OK;
+}
+
+
 } // namespace pp
 } // namespace bbque
