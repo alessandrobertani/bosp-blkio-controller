@@ -160,6 +160,16 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::ScheduleApplications() {
 		}
 	}
 
+	// Thawed applications
+	papp = sys->GetFirstThawed(app_it);
+	for (; papp; papp = sys->GetNextThawed(app_it)) {
+		ret = AssignWorkingMode(papp);
+		if (ret != SCHED_OK) {
+			logger->Error("ScheduleApplications: error in THAWED");
+			return ret;
+		}
+	}
+
 	// Running applications
 	papp = sys->GetFirstRunning(app_it);
 	for (; papp; papp = sys->GetNextRunning(app_it)) {
@@ -182,7 +192,7 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::ScheduleProcesses() {
 	ProcessManager & prm(ProcessManager::GetInstance());
 	ProcessMapIterator proc_it;
 
-	// Ready applications
+	// Ready processes
 	ProcPtr_t proc = prm.GetFirst(ba::Schedulable::READY, proc_it);
 	for (; proc; proc = prm.GetNext(ba::Schedulable::READY, proc_it)) {
 		ret = AssignWorkingMode(proc);
@@ -192,7 +202,17 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::ScheduleProcesses() {
 		}
 	}
 
-	// Running applications
+	// Thawed processes
+	proc = prm.GetFirst(ba::Schedulable::THAWED, proc_it);
+	for (; proc; proc = prm.GetNext(ba::Schedulable::THAWED, proc_it)) {
+		ret = AssignWorkingMode(proc);
+		if (ret != SCHED_OK) {
+			logger->Error("ScheduleProcesses: error in READY");
+			return ret;
+		}
+	}
+
+	// Running processes
 	proc = prm.GetFirst(ba::Schedulable::RUNNING, proc_it);
 	for (; proc; proc = prm.GetNext(ba::Schedulable::RUNNING, proc_it)) {
 		proc->CurrentAWM()->ClearResourceRequests();
