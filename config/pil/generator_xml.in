@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DEBUG_MODE=0
-declare TMP_FOLDER=/tmp/bbque_bpl
+declare TMP_FOLDER=/tmp/bbque/bpl
 
 BPL_FOLDER="@CONFIG_BOSP_RUNTIME_PATH@/etc/bbque/pil"
 TARGET_SYS="$BPL_FOLDER/`hostname`.xml"
