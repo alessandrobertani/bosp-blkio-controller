@@ -20,7 +20,10 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
 
-namespace bbque { namespace app {
+namespace bbque
+{
+namespace app
+{
 
 
 char const *Schedulable::stateStr[] = {
@@ -46,13 +49,15 @@ char const *Schedulable::syncStateStr[] = {
  *  EXC State and SyncState Management
  ******************************************************************************/
 
-void Schedulable::SetSyncState(SyncState_t sync) {
+void Schedulable::SetSyncState(SyncState_t sync)
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	schedule.syncState = sync;
 }
 
 
-Schedulable::ExitCode_t Schedulable::SetState(State_t next_state, SyncState_t next_sync) {
+Schedulable::ExitCode_t Schedulable::SetState(State_t next_state, SyncState_t next_sync)
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	// Switching to a sychronization state
 	if (next_state == SYNC) {
@@ -76,12 +81,11 @@ Schedulable::ExitCode_t Schedulable::SetState(State_t next_state, SyncState_t ne
 
 	// Update current and next working mode: SYNC case
 	if ((next_sync == DISABLED)
-			|| (next_sync == BLOCKED)
-			|| (next_state == READY)) {
+	    || (next_sync == BLOCKED)
+	    || (next_state == READY)) {
 		schedule.awm.reset();
 		schedule.next_awm.reset();
-	}
-	else if (next_state == RUNNING) {
+	} else if (next_state == RUNNING) {
 		schedule.awm = schedule.next_awm;
 		schedule.awm->IncSchedulingCount();
 		++schedule.count;
@@ -92,34 +96,41 @@ Schedulable::ExitCode_t Schedulable::SetState(State_t next_state, SyncState_t ne
 }
 
 
-Schedulable::State_t Schedulable::_State() const {
+Schedulable::State_t Schedulable::_State() const
+{
 	return schedule.state;
 }
 
-Schedulable::State_t Schedulable::State() const {
+Schedulable::State_t Schedulable::State() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _State();
 }
 
-Schedulable::State_t Schedulable::_PreSyncState() const {
+Schedulable::State_t Schedulable::_PreSyncState() const
+{
 	return schedule.preSyncState;
 }
 
-Schedulable::State_t Schedulable::PreSyncState() const {
+Schedulable::State_t Schedulable::PreSyncState() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _PreSyncState();
 }
 
-Schedulable::SyncState_t Schedulable::_SyncState() const {
+Schedulable::SyncState_t Schedulable::_SyncState() const
+{
 	return schedule.syncState;
 }
 
-Schedulable::SyncState_t Schedulable::SyncState() const {
+Schedulable::SyncState_t Schedulable::SyncState() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _SyncState();
 }
 
-Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) const {
+Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) const
+{
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
 	// First scheduling
 	if (!schedule.awm)
@@ -127,13 +138,13 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 
 	// Changing assigned resources: RECONF|MIGREC|MIGRATE
 	if ((schedule.awm->Id() != next_awm->Id()) &&
-			(schedule.awm->BindingSet(br::ResourceType::CPU) !=
-			           next_awm->BindingSet(br::ResourceType::CPU))) {
+	    (schedule.awm->BindingSet(br::ResourceType::CPU) !=
+	     next_awm->BindingSet(br::ResourceType::CPU))) {
 		return MIGREC;
 	}
 
 	if ((schedule.awm->Id() == next_awm->Id()) &&
-			(schedule.awm->BindingChanged(br::ResourceType::CPU))) {
+	    (schedule.awm->BindingChanged(br::ResourceType::CPU))) {
 		return MIGRATE;
 	}
 
@@ -146,99 +157,120 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 		return RECONF;
 	}
 
+
 	// NOTE: By default no reconfiguration is assumed to be required, thus we
 	// return the SYNC_STATE_COUNT which must be read as false values
 	return SYNC_NONE;
 }
 
-void Schedulable::SetNextAWM(AwmPtr_t awm) {
+void Schedulable::SetNextAWM(AwmPtr_t awm)
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	schedule.next_awm = awm;
 }
 
-bool Schedulable::_Disabled() const {
+bool Schedulable::_Disabled() const
+{
 	return (_SyncState() == DISABLED);
 }
 
-bool Schedulable::Disabled() const {
+bool Schedulable::Disabled() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _Disabled();
 }
 
-bool Schedulable::_Finished() const {
+bool Schedulable::_Finished() const
+{
 	return (_State() == FINISHED);
 }
 
-bool Schedulable::Finished() const {
+bool Schedulable::Finished() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _Finished();
 }
 
-bool Schedulable::_Active() const {
+bool Schedulable::_Active() const
+{
 	return ((schedule.state == READY) ||
-			(schedule.state == RUNNING));
+	        (schedule.state == RUNNING));
 }
 
-bool Schedulable::Active() const {
+bool Schedulable::Active() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _Active();
 }
 
-bool Schedulable::_Running() const {
+bool Schedulable::_Running() const
+{
 	return ((schedule.state == RUNNING));
 }
 
-bool Schedulable::Running() const {
+bool Schedulable::Running() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _Running();
 }
 
-bool Schedulable::_Synching() const {
+bool Schedulable::_Synching() const
+{
 	return (schedule.state == SYNC);
 }
 
-bool Schedulable::Synching() const {
+bool Schedulable::Synching() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _Synching();
 }
 
-bool Schedulable::_Starting() const {
+bool Schedulable::_Starting() const
+{
 	return (_Synching() && (_SyncState() == STARTING));
 }
 
-bool Schedulable::Starting() const {
+bool Schedulable::Starting() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _Starting();
 }
 
-bool Schedulable::_Blocking() const {
+bool Schedulable::_Blocking() const
+{
 	return (_Synching() && (_SyncState() == BLOCKED));
 }
 
-bool Schedulable::Blocking() const {
+bool Schedulable::Blocking() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _Blocking();
 }
 
-AwmPtr_t const & Schedulable::_CurrentAWM() const {
+AwmPtr_t const & Schedulable::_CurrentAWM() const
+{
 	return schedule.awm;
 }
 
-AwmPtr_t const & Schedulable::CurrentAWM() const {
+AwmPtr_t const & Schedulable::CurrentAWM() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _CurrentAWM();
 }
 
-AwmPtr_t const & Schedulable::_NextAWM() const {
+AwmPtr_t const & Schedulable::_NextAWM() const
+{
 	return schedule.next_awm;
 }
 
-AwmPtr_t const & Schedulable::NextAWM() const {
+AwmPtr_t const & Schedulable::NextAWM() const
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _NextAWM();
 }
 
-bool Schedulable::_SwitchingAWM() const {
+bool Schedulable::_SwitchingAWM() const
+{
 	if (schedule.state != SYNC)
 		return false;
 	if (schedule.awm->Id() == schedule.next_awm->Id())
@@ -246,17 +278,20 @@ bool Schedulable::_SwitchingAWM() const {
 	return true;
 }
 
-bool Schedulable::SwitchingAWM() const noexcept {
+bool Schedulable::SwitchingAWM() const noexcept
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return _SwitchingAWM();
 }
 
-uint64_t Schedulable::ScheduleCount() const noexcept {
+uint64_t Schedulable::ScheduleCount() const noexcept
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return schedule.count;
 }
 
-bool Schedulable::Reshuffling(AwmPtr_t const & next_awm) const {
+bool Schedulable::Reshuffling(AwmPtr_t const & next_awm) const
+{
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	auto pumc = schedule.awm->GetResourceBinding();
