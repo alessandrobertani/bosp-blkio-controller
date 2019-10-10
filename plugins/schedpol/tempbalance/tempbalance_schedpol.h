@@ -27,9 +27,10 @@
 #include "bbque/plugins/scheduler_policy.h"
 #include "bbque/scheduler_manager.h"
 
-#define SCHEDULER_POLICY_NAME "gridbalance"
-
+#undef SCHEDULER_POLICY_NAME
+#define SCHEDULER_POLICY_NAME "tempbalance"
 #define MODULE_NAMESPACE SCHEDULER_POLICY_NAMESPACE "." SCHEDULER_POLICY_NAME
+#define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
 using bbque::res::RViewToken_t;
 using bbque::utils::MetricsCollector;
@@ -38,16 +39,19 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
 /**
- * @class GridBalanceSchedPol
- *
- * GridBalance scheduler policy registered as a dynamic C++ plugin.
+ * @class TempBalanceSchedPol
+ * @brief Balance the load of the CPU cores according to the current temperature.
  */
-class GridBalanceSchedPol: public SchedulerPolicyIF {
+class TempBalanceSchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -69,7 +73,7 @@ public:
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~GridBalanceSchedPol();
+	virtual ~TempBalanceSchedPol();
 
 	/**
 	 * @brief Return the name of the policy plugin
@@ -98,7 +102,7 @@ private:
 
 	// ************************************** //
 
-	GridBalanceSchedPol();
+	TempBalanceSchedPol();
 
 	// ----- Initialization stuff ---- //
 

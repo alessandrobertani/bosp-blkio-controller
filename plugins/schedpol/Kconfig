@@ -67,9 +67,9 @@ choice
     depends on BBQUE_SCHEDPOL_TEMPURA
     bool "Tempura"
 
-  config BBQUE_SCHEDPOL_DEFAULT_GRIDBALANCE
-    depends on BBQUE_SCHEDPOL_GRIDBALANCE
-    bool "GridBalance"
+  config BBQUE_SCHEDPOL_DEFAULT_TEMPBALANCE
+    depends on BBQUE_SCHEDPOL_TEMPBALANCE
+    bool "TempBalance"
 
   config BBQUE_SCHEDPOL_DEFAULT_PERDETEMP
     depends on BBQUE_SCHEDPOL_PERDETEMP
@@ -102,7 +102,7 @@ endchoice
 source barbeque/plugins/schedpol/random/Kconfig
 source barbeque/plugins/schedpol/test/Kconfig
 source barbeque/plugins/schedpol/tempura/Kconfig
-source barbeque/plugins/schedpol/gridbalance/Kconfig
+source barbeque/plugins/schedpol/tempbalance/Kconfig
 source barbeque/plugins/schedpol/perdetemp/Kconfig
 source barbeque/plugins/schedpol/contrex/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig

@@ -1,5 +1,5 @@
-config BBQUE_SCHEDPOL_GRIDBALANCE
-  bool "GridBalance"
+config BBQUE_SCHEDPOL_TEMPBALANCE
+  bool "TempBalance"
   depends on !BBQUE_TEST_PLATFORM_DATA
   default y
   ---help---
