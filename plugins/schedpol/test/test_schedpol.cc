@@ -38,15 +38,22 @@
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+using namespace std::placeholders;
+
+namespace bbque
+{
+namespace plugins
+{
 
 // :::::::::::::::::::::: Static plugin interface ::::::::::::::::::::::::::::
 
-void * TestSchedPol::Create(PF_ObjectParams *) {
+void * TestSchedPol::Create(PF_ObjectParams *)
+{
 	return new TestSchedPol();
 }
 
-int32_t TestSchedPol::Destroy(void * plugin) {
+int32_t TestSchedPol::Destroy(void * plugin)
+{
 	if (!plugin)
 		return -1;
 	delete (TestSchedPol *)plugin;
@@ -55,39 +62,43 @@ int32_t TestSchedPol::Destroy(void * plugin) {
 
 // ::::::::::::::::::::: Scheduler policy module interface :::::::::::::::::::
 
-char const * TestSchedPol::Name() {
+char const * TestSchedPol::Name()
+{
 	return SCHEDULER_POLICY_NAME;
 }
 
 TestSchedPol::TestSchedPol():
-		cm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()) {
+	cm(ConfigurationManager::GetInstance()),
+	ra(ResourceAccounter::GetInstance())
+{
 	logger = bu::Logger::GetLogger("bq.sp.test");
 	assert(logger);
 	if (logger)
 		logger->Info("test: Built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
-			FI("test: Built new dynamic object [%p]\n"), (void *)this);
+		        FI("test: Built new dynamic object [%p]\n"), (void *)this);
 }
 
 
-TestSchedPol::~TestSchedPol() {
+TestSchedPol::~TestSchedPol()
+{
 
 }
 
 
-SchedulerPolicyIF::ExitCode_t TestSchedPol::Init() {
+SchedulerPolicyIF::ExitCode_t TestSchedPol::Init()
+{
 	// Build a string path for the resource state view
 	std::string token_path(MODULE_NAMESPACE);
 	++status_view_count;
 	token_path.append(std::to_string(status_view_count));
 	logger->Debug("Init: Require a new resource state view [%s]",
-		token_path.c_str());
+	              token_path.c_str());
 
 	// Get a fresh resource status view
 	ResourceAccounterStatusIF::ExitCode_t ra_result =
-		ra.GetView(token_path, sched_status_view);
+	        ra.GetView(token_path, sched_status_view);
 	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
 		logger->Fatal("Init: cannot get a resource state view");
 		return SCHED_ERROR_VIEW;
@@ -118,8 +129,9 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Init() {
 
 
 SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
-		System & system,
-		RViewToken_t & status_view) {
+        System & system,
+        RViewToken_t & status_view)
+{
 	SchedulerPolicyIF::ExitCode_t result = SCHED_DONE;
 
 	// Class providing query functions for applications and resources
@@ -130,11 +142,24 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 
 	/** INSERT YOUR CODE HERE **/
 	fut_tg.get();
-	result = ScheduleApplications();
+	auto assign_awm_app = std::bind(
+	                              static_cast<ExitCode_t (TestSchedPol::*)(ba::AppCPtr_t)>
+	                              (&TestSchedPol::AssignWorkingMode),
+	                              this, _1);
+	ForEachApplicationToScheduleDo(assign_awm_app);
+	if (result != SCHED_OK)
+		return result;
 	logger->Debug("Schedule: done with applications");
 
+
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	result = ScheduleProcesses();
+	auto assign_awm_proc = std::bind(
+	                               static_cast<ExitCode_t (TestSchedPol::*)(ProcPtr_t)>
+	                               (&TestSchedPol::AssignWorkingMode),
+	                               this, _1);
+	ForEachProcessToScheduleDo(assign_awm_proc);
+	if (result != SCHED_OK)
+		return result;
 	logger->Debug("Schedule: done with processes");
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
@@ -145,91 +170,12 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 }
 
 
-SchedulerPolicyIF::ExitCode_t TestSchedPol::ScheduleApplications() {
-	SchedulerPolicyIF::ExitCode_t ret;
-	bbque::app::AppCPtr_t papp;
-	AppsUidMapIt app_it;
-
-	// Ready applications
-	papp = sys->GetFirstReady(app_it);
-	for (; papp; papp = sys->GetNextReady(app_it)) {
-		ret = AssignWorkingMode(papp);
-		if (ret != SCHED_OK) {
-			logger->Error("ScheduleApplications: error in READY");
-			return ret;
-		}
-	}
-
-	// Thawed applications
-	papp = sys->GetFirstThawed(app_it);
-	for (; papp; papp = sys->GetNextThawed(app_it)) {
-		ret = AssignWorkingMode(papp);
-		if (ret != SCHED_OK) {
-			logger->Error("ScheduleApplications: error in THAWED");
-			return ret;
-		}
-	}
-
-	// Running applications
-	papp = sys->GetFirstRunning(app_it);
-	for (; papp; papp = sys->GetNextRunning(app_it)) {
-		papp->CurrentAWM()->ClearResourceRequests();
-		AssignWorkingMode(papp);
-		if (ret != SCHED_OK) {
-			logger->Error("ScheduleApplications: error in RUNNING");
-			return ret;
-		}
-	}
-
-	return SCHED_OK;
-}
-
-
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-
-SchedulerPolicyIF::ExitCode_t TestSchedPol::ScheduleProcesses() {
-	SchedulerPolicyIF::ExitCode_t ret;
-	ProcessManager & prm(ProcessManager::GetInstance());
-	ProcessMapIterator proc_it;
-
-	// Ready processes
-	ProcPtr_t proc = prm.GetFirst(ba::Schedulable::READY, proc_it);
-	for (; proc; proc = prm.GetNext(ba::Schedulable::READY, proc_it)) {
-		ret = AssignWorkingMode(proc);
-		if (ret != SCHED_OK) {
-			logger->Error("ScheduleProcesses: error in READY");
-			return ret;
-		}
-	}
-
-	// Thawed processes
-	proc = prm.GetFirst(ba::Schedulable::THAWED, proc_it);
-	for (; proc; proc = prm.GetNext(ba::Schedulable::THAWED, proc_it)) {
-		ret = AssignWorkingMode(proc);
-		if (ret != SCHED_OK) {
-			logger->Error("ScheduleProcesses: error in READY");
-			return ret;
-		}
-	}
-
-	// Running processes
-	proc = prm.GetFirst(ba::Schedulable::RUNNING, proc_it);
-	for (; proc; proc = prm.GetNext(ba::Schedulable::RUNNING, proc_it)) {
-		proc->CurrentAWM()->ClearResourceRequests();
-		ret = AssignWorkingMode(proc);
-		if (ret != SCHED_OK) {
-			logger->Error("ScheduleProcesses: error in RUNNING");
-			return ret;
-		}
-	}
-
-	return SCHED_OK;
-}
 
 
 SchedulerPolicyIF::ExitCode_t
-TestSchedPol::AssignWorkingMode(ProcPtr_t proc) {
-	ProcessManager & prm(ProcessManager::GetInstance());
+TestSchedPol::AssignWorkingMode(ProcPtr_t proc)
+{
 	if (proc == nullptr) {
 		logger->Error("AssignWorkingMode: null process descriptor!");
 		return SCHED_ERROR;
@@ -238,31 +184,42 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = proc->CurrentAWM();
 	if (pawm == nullptr) {
-		pawm = std::make_shared<ba::WorkingMode>(99,"Run-time", 1, proc);
+		pawm = std::make_shared<ba::WorkingMode>(99, "Run-time", 1, proc);
+	} else {
+		if (proc->State() == Schedulable::RUNNING) {
+			proc->CurrentAWM()->ClearResourceRequests();
+			logger->Debug("AssignWorkingMode: <%s> RUNNING ->"
+			              "clear previous resources requests",
+			              proc->StrId());
+		}
 	}
+
 	// Resource request addition
 	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-		br::ResourceAssignment::Policy::BALANCED);
+	                         br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
+	ProcessManager & prm(ProcessManager::GetInstance());
 	BindingManager & bdm(BindingManager::GetInstance());
 	BindingMap_t & bindings(bdm.GetBindingDomains());
 	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
-	for (BBQUE_RID_TYPE cpu_id: cpu_ids) {
-		logger->Info("AssingWorkingMode: binding attempt CPU id = %d", cpu_id);
+	for (BBQUE_RID_TYPE cpu_id : cpu_ids) {
+		logger->Info("AssingWorkingMode: binding attempt CPU id = % d",
+		             cpu_id);
 
 		// CPU binding
 		auto ref_num = DoCPUBinding(pawm, cpu_id);
 		if (ref_num < 0) {
-			logger->Error("AssingWorkingMode: CPU binding to [%d] failed", cpu_id);
+			logger->Error("AssingWorkingMode: CPU binding to [ % d] failed",
+			              cpu_id);
 			continue;
 		}
 
 		// Schedule request
 		auto prm_ret = prm.ScheduleRequest(proc, pawm, sched_status_view, ref_num);
 		if (prm_ret != ProcessManager::SUCCESS) {
-			logger->Error("AssignWorkingMode: schedule request failed for [%d]",
-				proc->StrId());
+			logger->Error("AssignWorkingMode: schedule request failed for [ % d]",
+			              proc->StrId());
 			continue;
 		}
 
@@ -276,11 +233,12 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc) {
 
 
 SchedulerPolicyIF::ExitCode_t
-TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
+TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
+{
 	ApplicationManager & am(ApplicationManager::GetInstance());
 
 	if (papp == nullptr) {
-		logger->Error("AssignWorkingMode: null application descriptor!");
+		logger->Error("AssignWorkingMode : null application descriptor!");
 		return SCHED_ERROR;
 	}
 
@@ -288,26 +246,26 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(
-				papp->WorkingModes().size(),"Run-time", 1, papp);
+		               papp->WorkingModes().size(), "Run - time", 1, papp);
 	}
 
 	// Resource request addition
 	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-		br::ResourceAssignment::Policy::BALANCED);
+	                         br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
 	BindingManager & bdm(BindingManager::GetInstance());
 	BindingMap_t & bindings(bdm.GetBindingDomains());
 	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
-	for (BBQUE_RID_TYPE cpu_id: cpu_ids) {
-		logger->Info("AssingWorkingMode: [%s] binding attempt CPU id = %d",
-			papp->StrId(), cpu_id);
+	for (BBQUE_RID_TYPE cpu_id : cpu_ids) {
+		logger->Info("AssingWorkingMode : [ % s] binding attempt CPU id = % d",
+		             papp->StrId(), cpu_id);
 
 		// CPU binding
 		auto ref_num = DoCPUBinding(pawm, cpu_id);
 		if (ref_num < 0) {
-			logger->Error("AssingWorkingMode: [%s] CPU binding to <%d> failed",
-				papp->StrId(), cpu_id);
+			logger->Error("AssingWorkingMode : [ % s] CPU binding to < % d > failed",
+			              papp->StrId(), cpu_id);
 			continue;
 		}
 
@@ -315,8 +273,8 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		ApplicationManager::ExitCode_t am_ret;
 		am_ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
 		if (am_ret != ApplicationManager::AM_SUCCESS) {
-			logger->Error("AssignWorkingMode: [%s] schedule request failed",
-				papp->StrId());
+			logger->Error("AssignWorkingMode : [ % s] schedule request failed",
+			              papp->StrId());
 			continue;
 		}
 
@@ -331,8 +289,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
 
 int32_t TestSchedPol::DoCPUBinding(
-		bbque::app::AwmPtr_t pawm,
-		BBQUE_RID_TYPE cpu_id) {
+        bbque::app::AwmPtr_t pawm,
+        BBQUE_RID_TYPE cpu_id)
+{
 	// CPU-level binding: the processing elements are in the scope of the CPU 'cpu_id'
 	int32_t ref_num = -1;
 	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, cpu_id, ref_num);
@@ -342,11 +301,11 @@ int32_t TestSchedPol::DoCPUBinding(
 	// (CPU core mapping)
 	br::ResourceBitset pes;
 	uint16_t pe_count = 0;
-	for (auto & pe_id: pe_ids) {
+	for (auto & pe_id : pe_ids) {
 		pes.Set(pe_id);
 		ref_num = pawm->BindResource(resource_path, pes, ref_num);
-		logger->Info("DoCPUBinding: [%s] binding refn: %d",
-			pawm->StrId(), ref_num);
+		logger->Info("DoCPUBinding : [ % s] binding refn : % d",
+		             pawm->StrId(), ref_num);
 		++pe_count;
 		if (pe_count == CPU_QUOTA_TO_ALLOCATE / 100) break;
 	}
@@ -356,11 +315,12 @@ int32_t TestSchedPol::DoCPUBinding(
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
-void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
+void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
+{
 	auto task_graph = papp->GetTaskGraph();
 	if (task_graph == nullptr) {
-		logger->Warn("AssignWorkingMode: [%s] no task-graph to map",
-			papp->StrId());
+		logger->Warn("AssignWorkingMode : [ % s] no task - graph to map",
+		             papp->StrId());
 		return;
 	}
 
@@ -369,7 +329,7 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 	int unit_id = 3; // An arbitrary device id number
 	int sys_id  = 0; // An arbitrary system id number
 
-	for (auto t_entry: task_graph->Tasks()) {
+	for (auto t_entry : task_graph->Tasks()) {
 		unit_id++;
 		auto & task(t_entry.second);
 		auto const & tr(papp->GetTaskRequirements(task->Id()));
@@ -377,18 +337,18 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp) {
 		task->SetAssignedSystem(sys_id);
 		task->SetAssignedProcessor(unit_id);
 		task->GetProfiling(throughput, c_time);
-		logger->Info("[%s] <T %d> throughput: %.2f/%.2f  ctime: %d/%d [ms]",
-			papp->StrId(), t_entry.first,
-			static_cast<float>(throughput)/100.0, tr.Throughput(),
-			c_time, tr.CompletionTime());
+		logger->Info("[ % s] < T % d > throughput : % .2f / % .2f  ctime : % d / % d [ms]",
+		             papp->StrId(), t_entry.first,
+		             static_cast<float>(throughput) / 100.0, tr.Throughput(),
+		             c_time, tr.CompletionTime());
 	}
 
 	task_graph->GetProfiling(throughput, c_time);
-	logger->Info("[%s] Task-graph throughput: %d  ctime: %d [app=%p]",
-		papp->StrId(), throughput, c_time, papp.get());
+	logger->Info("[ % s] Task - graph throughput : % d  ctime : % d [app = % p]",
+	             papp->StrId(), throughput, c_time, papp.get());
 
 	papp->SetTaskGraph(task_graph);
-	logger->Info("[%s] Task-graph updated", papp->StrId());
+	logger->Info("[ % s] Task - graph updated", papp->StrId());
 }
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
