@@ -302,6 +302,38 @@ protected:
 		}
 		return SCHED_OK;
 	}
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+
+	/**
+	 * @brief Execute a function over all the processes to schedule
+	 * (READY, THAWED, RUNNING)
+	 */
+	ExitCode_t ForEachProcessToScheduleDo(
+	        std::function <ExitCode_t(ProcPtr_t) > do_func)	{
+
+		ProcessManager & prm(ProcessManager::GetInstance());
+		ProcessMapIterator proc_it;
+
+		ProcPtr_t proc = prm.GetFirst(ba::Schedulable::READY, proc_it);
+		for (; proc; proc = prm.GetNext(ba::Schedulable::READY, proc_it)) {
+			do_func(proc);
+		}
+
+		proc = prm.GetFirst(ba::Schedulable::THAWED, proc_it);
+		for (; proc; proc = prm.GetNext(ba::Schedulable::THAWED, proc_it)) {
+			do_func(proc);
+		}
+
+		proc = prm.GetFirst(ba::Schedulable::RUNNING, proc_it);
+		for (; proc; proc = prm.GetNext(ba::Schedulable::RUNNING, proc_it)) {
+			do_func(proc);
+		}
+		return SCHED_OK;
+	}
+
+#endif
+
 };
 
 } // namespace plugins
