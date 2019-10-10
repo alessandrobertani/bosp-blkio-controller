@@ -232,7 +232,7 @@ TempuraSchedPol::InitBudgets() {
 
 		// Resource path e.g., "sys0.cpu[0..n].XX"
 		for (br::ResourcePtr_t const & rsrc: bd_info.resources) {
-			br::ResourcePathPtr_t r_path(ra.GetPath(rsrc->Path()));
+			br::ResourcePathPtr_t r_path(rsrc->Path());
 			r_path->AppendString("pe");
 
 			// Add a budget info object
@@ -256,7 +256,7 @@ TempuraSchedPol::InitBudgets() {
 void TempuraSchedPol::InitCPUFreqGovernor(br::ResourcePathPtr_t r_path) {
 	PowerManager & pm(PowerManager::GetInstance());
 	for (auto & rsrc: budgets[r_path]->r_list) {
-		br::ResourcePathPtr_t r_path_exact(ra.GetPath(rsrc->Path()));
+		br::ResourcePathPtr_t r_path_exact(rsrc->Path());
 		pm.SetClockFrequencyGovernor(r_path_exact, cpufreq_gov);
 //		std::string cpu_gov;
 //		pm.GetClockFrequencyGovernor(r_path_exact, cpu_gov);

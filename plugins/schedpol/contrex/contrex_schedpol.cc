@@ -113,11 +113,10 @@ void ContrexSchedPol::InitProcessorsPath()
 	br::ResourcePathPtr_t r_path;
 	br::ResourcePtrList_t r_list(ra.GetResources("sys.cpu.pe"));
 	for (auto & resource_ptr: r_list) {
-		r_path = ra.GetPath(resource_ptr->Path());
 		if (r_path != nullptr) {
 			logger->Debug("Got the resource path object for %s ",
-				resource_ptr->Path().c_str());
-			pe_paths.push_back(r_path);
+				resource_ptr->Path()->ToString().c_str());
+			pe_paths.push_back(resource_ptr->Path());
 		}
 	}
 }
