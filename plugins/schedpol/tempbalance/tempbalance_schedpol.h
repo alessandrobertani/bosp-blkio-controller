@@ -96,7 +96,7 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 
 
-	uint32_t slots;
+	uint32_t nr_slots;
 
 	bbque::res::ResourcePtrList_t proc_elements;
 
@@ -115,6 +115,9 @@ private:
 #endif // CONFIG_BBQUE_PM_CPU
 
 	// ----- Policy core functions ---- //
+
+	uint64_t ComputeResourceQuota(
+	        std::string resource_path_str, bbque::app::AppCPtr_t papp) const;
 
 	ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);
 

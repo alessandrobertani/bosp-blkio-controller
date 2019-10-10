@@ -74,10 +74,12 @@ TempBalanceSchedPol::TempBalanceSchedPol():
 	assert(logger);
 
 	if (logger)
-		logger->Info("tempbalance: Built a new dynamic object[%p]", this);
+		logger->Info("tempbalance: Built a new dynamic object[%p]",
+		             this);
 	else
 		fprintf(stderr,
-		        FI("tempbalance: Built new dynamic object [%p]\n"), (void *)this);
+		        FI("tempbalance: Built new dynamic object [%p]\n"),
+		        (void *)this);
 }
 
 
@@ -115,11 +117,12 @@ SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::Init()
 
 	// Compute the number of slots for priority-proportional assignments
 	if (sys->HasApplications(ApplicationStatusIF::READY))
-		slots = GetSlots();
-	logger->Debug("Init: number of assignable slots = %d", slots);
+		nr_slots = GetSlots();
+	logger->Debug("Init: number of assignable slots = %d", nr_slots);
 
 	return SCHED_OK;
 }
+
 
 #ifdef CONFIG_BBQUE_PM_CPU
 
@@ -140,6 +143,27 @@ void TempBalanceSchedPol::SortProcessingElements()
 #endif // CONFIG_BBQUE_PM_CPU
 
 
+uint64_t TempBalanceSchedPol::ComputeResourceQuota(
+        std::string resource_path_str, bbque::app::AppCPtr_t papp) const
+{
+	// Amount of processing resources to assign
+	uint64_t total_quota = sys->ResourceTotal(resource_path_str);
+	uint64_t resource_slot_size = total_quota / nr_slots;
+	logger->Debug("Assign: <%s> total = %lu slot_size=%d",
+	              resource_path_str.c_str(),
+	              total_quota,
+	              resource_slot_size);
+	uint64_t assigned_quota =
+	        (sys->ApplicationLowestPriority() - papp->Priority() + 1)
+	        * resource_slot_size;
+	logger->Info("Assign: [%s] amount of <%s> assigned = %4d",
+	             papp->StrId(),
+	             resource_path_str.c_str(),
+	             assigned_quota);
+
+	return assigned_quota;
+}
+
 SchedulerPolicyIF::ExitCode_t
 TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 {
@@ -159,25 +183,17 @@ TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 		pawm = std::make_shared<ba::WorkingMode>(
 		               papp->WorkingModes().size(), "Run-time", 1, papp);
 
-	// Amount of processing resources to assign
+	// Processing element quota
 	std::string resource_path_str("sys.cpu.pe");
-	uint64_t resource_slot_size = sys->ResourceTotal(resource_path_str) / slots;
-	logger->Debug("Assign: <%s> total = %lu slot_size=%d",
-	              resource_path_str.c_str(), sys->ResourceTotal(resource_path_str),
-	              resource_slot_size);
-	uint64_t resource_amount =
-	        (sys->ApplicationLowestPriority() - papp->Priority() + 1)
-	        * resource_slot_size;
-	logger->Info("Assign: [%s] amount of <%s> assigned = %4d",
-	             papp->StrId(), resource_path_str.c_str(), resource_amount);
-
-	if (resource_amount == 0) {
+	uint64_t assigned_quota = ComputeResourceQuota(resource_path_str, papp);
+	if (assigned_quota == 0) {
 		logger->Warn("Assign: [%s] will have no resources", papp->StrId());
 		return SCHED_OK;
 	}
 
 	// Assign...
-	pawm->AddResourceRequest(resource_path_str, resource_amount,
+	pawm->AddResourceRequest(resource_path_str,
+	                         assigned_quota,
 	                         br::ResourceAssignment::Policy::BALANCED);
 	logger->Debug("Assign: [%s] added resource request [#%d]",
 	              papp->StrId(), pawm->NumberOfResourceRequests());
