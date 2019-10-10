@@ -18,6 +18,7 @@
 #ifndef BBQUE_SCHEDULER_POLICY_H_
 #define BBQUE_SCHEDULER_POLICY_H_
 
+#include "bbque/config.h"
 #include "bbque/system.h"
 #include "bbque/app/application_conf.h"
 #include "bbque/app/working_mode.h"
@@ -33,7 +34,10 @@
 namespace ba = bbque::app;
 namespace br = bbque::res;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 /**
  * @class SchedulerPolicyIF
@@ -45,7 +49,8 @@ namespace bbque { namespace plugins {
  * This class could be used to implement resource scheduling alghoritms and
  * heuristics.
  */
-class SchedulerPolicyIF {
+class SchedulerPolicyIF
+{
 
 public:
 
@@ -53,15 +58,15 @@ public:
 	 * @brief Scheduling result
 	 */
 	typedef enum ExitCode {
-		SCHED_DONE = 0,        /** Scheduling regular termination */
-		SCHED_OK,              /** Successful return */
-		SCHED_R_NOT_FOUND,     /** Looking for not existing resource */
-		SCHED_R_UNAVAILABLE,   /** Not enough available resources */
-		SCHED_SKIP_APP,        /** Skip the applicaton (disabled or already running) */
-		SCHED_OPT_OVER,        /** No more static options to explore */
-		SCHED_ERROR_INIT,      /** Error during initialization */
-		SCHED_ERROR_VIEW,      /** Error in using the resource state view */
-		SCHED_ERROR            /** Unexpected error */
+	        SCHED_DONE = 0,        /** Scheduling regular termination */
+	        SCHED_OK,              /** Successful return */
+	        SCHED_R_NOT_FOUND,     /** Looking for not existing resource */
+	        SCHED_R_UNAVAILABLE,   /** Not enough available resources */
+	        SCHED_SKIP_APP,        /** Skip the applicaton (disabled or already running) */
+	        SCHED_OPT_OVER,        /** No more static options to explore */
+	        SCHED_ERROR_INIT,      /** Error during initialization */
+	        SCHED_ERROR_VIEW,      /** Error in using the resource state view */
+	        SCHED_ERROR            /** Unexpected error */
 	} ExitCode_t;
 
 	/**
@@ -83,7 +88,7 @@ public:
 			papp(_papp),
 			pawm(_pawm),
 			bind_id(_bid) {
-				_BuildStr();
+			_BuildStr();
 		};
 
 		/** Application/EXC to schedule */
@@ -102,34 +107,34 @@ public:
 		char str_id[40];
 
 		/** Return the identifier string */
-		inline const char * StrId() const {
+		const char * StrId() const {
 			return str_id;
 		}
 
 		/** Build the identifier string */
-		inline void _BuildStr() {
+		void _BuildStr() {
 			int32_t awm_id = -1;
 			if (pawm != nullptr)
 				awm_id = pawm->Id();
 
 			if ((bind_id != R_ID_NONE) && (bind_id != R_ID_ANY))
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B:%s%d}",
-						papp->StrId(), awm_id,
-						br::GetResourceTypeString(bind_type),
-						bind_id);
+				         papp->StrId(), awm_id,
+				         br::GetResourceTypeString(bind_type),
+				         bind_id);
 			else
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B: -}",
-						papp->StrId(), awm_id);
+				         papp->StrId(), awm_id);
 		}
 
 		/** Set the working mode */
-		inline void SetAWM(ba::AwmPtr_t _pawm) {
+		void SetAWM(ba::AwmPtr_t _pawm) {
 			pawm = _pawm;
 			_BuildStr();
 		}
 
 		/** Set the binding ID to track */
-		inline void SetBindingID(BBQUE_RID_TYPE bid, br::ResourceType btype) {
+		void SetBindingID(BBQUE_RID_TYPE bid, br::ResourceType btype) {
 			bind_id = bid;
 			bind_type = btype;
 			_BuildStr();
@@ -140,9 +145,9 @@ public:
 		 * previous one (given the type of resource referenced by the such
 		 * domain)
 		 */
-		inline bool IsMigrating(br::ResourceType r_type) const {
+		bool IsMigrating(br::ResourceType r_type) const {
 			return (papp->CurrentAWM() &&
-					!(papp->CurrentAWM()->BindingSet(r_type).Test(bind_id)));
+			        !(papp->CurrentAWM()->BindingSet(r_type).Test(bind_id)));
 		}
 
 		/**
@@ -150,9 +155,9 @@ public:
 		 * Application) or if the AWM assigned is different from the
 		 * previous one
 		 */
-		inline bool IsReconfiguring() const {
+		bool IsReconfiguring() const {
 			return (!papp->CurrentAWM() ||
-					papp->CurrentAWM()->Id() != pawm->Id());
+			        papp->CurrentAWM()->Id() != pawm->Id());
 		}
 	};
 
@@ -175,7 +180,7 @@ public:
 		 * value")
 		 */
 		SchedEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, BBQUE_RID_TYPE _bid,
-				float _metr):
+		              float _metr):
 			EvalEntity_t(_papp, _pawm, _bid),
 			metrics(_metr) {
 		};
@@ -183,7 +188,7 @@ public:
 		/** Metrics computed */
 		float metrics;
 
-		inline bool operator()(SchedEntity_t & se) {
+		bool operator()(SchedEntity_t & se) {
 			// Metrics (primary sorting key)
 			if (metrics < se.metrics)
 				return false;
@@ -226,7 +231,7 @@ public:
 	 * the scheduling has been successfull.
 	 */
 	virtual ExitCode_t Schedule(bbque::System & system,
-			bbque::res::RViewToken_t &rvt) = 0;
+	                            bbque::res::RViewToken_t &rvt) = 0;
 
 
 protected:
@@ -263,11 +268,11 @@ protected:
 	 * information related to both resources and applications
 	 * @return The number of slots
 	 */
-	inline uint32_t GetSlots() {
+	uint32_t GetSlots() {
 		uint32_t slots = 0;
 		for (AppPrio_t prio = 0; prio <= sys->ApplicationLowestPriority(); prio++)
-			slots += (sys->ApplicationLowestPriority()+1 - prio) *
-				sys->ApplicationsCount(prio);
+			slots += (sys->ApplicationLowestPriority() + 1 - prio) *
+			         sys->ApplicationsCount(prio);
 		return slots;
 	}
 
