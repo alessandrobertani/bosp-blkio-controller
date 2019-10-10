@@ -272,11 +272,12 @@ protected:
 	}
 
 	/**
-	 * @brief Execute a function over all the active applications
+	 * @brief Execute a function over all the applications to schedule
+	 * (READY, THAWED, RUNNING)
 	 */
-	inline ExitCode_t ForEachReadyAndRunningDo(
-			std::function<
-				ExitCode_t(bbque::app::AppCPtr_t)> do_func) {
+	ExitCode_t ForEachApplicationToScheduleDo(
+	        std::function <ExitCode_t(bbque::app::AppCPtr_t) > do_func) {
+
 		AppsUidMapIt app_it;
 		ba::AppCPtr_t app_ptr;
 
@@ -284,6 +285,12 @@ protected:
 		for (; app_ptr; app_ptr = sys->GetNextReady(app_it)) {
 			do_func(app_ptr);
 		}
+
+		app_ptr = sys->GetFirstThawed(app_it);
+		for (; app_ptr; app_ptr = sys->GetNextThawed(app_it)) {
+			do_func(app_ptr);
+		}
+
 		app_ptr = sys->GetFirstRunning(app_it);
 		for (; app_ptr; app_ptr = sys->GetNextRunning(app_it)) {
 			do_func(app_ptr);

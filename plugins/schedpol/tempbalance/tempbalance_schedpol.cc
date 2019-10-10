@@ -208,7 +208,6 @@ TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 
 SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::BindWorkingModesAndSched()
 {
-
 	bbque::res::ResourcePtrList_t::const_iterator iter = proc_elements.begin();
 	auto proc_path = ra.GetPath("sys.cpu.pe");
 
@@ -258,7 +257,7 @@ TempBalanceSchedPol::Schedule(
 
 	// Resource (AWM) assignment
 	auto assign_awm = std::bind(&TempBalanceSchedPol::AssignWorkingMode, this, _1);
-	ForEachReadyAndRunningDo(assign_awm);
+	ForEachApplicationToScheduleDo(assign_awm);
 
 	// Resource binding and then scheduling
 	BindWorkingModesAndSched();
