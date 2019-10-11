@@ -44,7 +44,7 @@ public:
 	        OK,
 	        ERROR_PROCESS_ID,
 	        ERROR_TASK_ID,
-	        ERROR_FILE_SYSTEM,
+	        ERROR_FILESYSTEM,
 	        ERROR_PERMISSIONS,
 	        ERROR_WRONG_STATE,
 	        ERROR_UNKNOWN
