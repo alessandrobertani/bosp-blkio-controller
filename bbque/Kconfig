@@ -1,0 +1,210 @@
+
+menu "Platform Loader"
+
+  choice
+    prompt "Layout Parser"
+
+    config BBQUE_PIL_LOADER
+      bool "Platform Loader"
+      ---help---
+      The new platform loader for BarbequeRTRM Platform Layout files, that
+      enables also multi-systems environment.
+
+    config BBQUE_PIL_LEGACY
+      bool "Legacy BPL Parser"
+      ---help---
+      The old parser for BarbequeRTRM Platform Layout files (under pil
+      directory)
+  endchoice
+
+ # depends on BBQUE_PIL_LOADER
+  source "barbeque/plugins/ploader/Kconfig"
+endmenu
+
+menu "Simulated Mode"
+
+  config BBQUE_TEST_PLATFORM_DATA
+    bool "Use Test Platform Data (TPD)"
+    default y if TARGET_ANDROID
+    default n
+    ---help---
+    Build the BarbequeRTRM with support for Test Platform Data.
+    When compiled with this option turned on, all the target specific
+    platform control facilities are disabled.
+  
+    This could be a convenient way to use the BarbequeRTRM for initial
+    application development and integration, without worry about daemon
+    setup or requiring to run the daemon as root.
+
+endmenu # Simulated mode
+
+################################################################################
+# Linux Resource Management
+################################################################################
+
+menu "Linux Resource Management"
+
+  menu "Linux Control Groups"
+  depends on !BBQUE_TEST_PLATFORM_DATA
+  
+    config BBQUE_LINUX_CG_SYSTEMD
+      bool "Mount CGroups in systemd directory"
+      default y
+      depends on TARGET_LINUX
+      depends on !BBQUE_TEST_PLATFORM_DATA
+      ---help---
+      Mount Control Groups into the /sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls
+      directory.
+    
+    config BBQUE_LINUX_CG_MEMORY
+      bool "Memory controller"
+      default n
+      depends on TARGET_LINUX
+      depends on !BBQUE_TEST_PLATFORM_DATA
+      ---help---
+      Enable the Control Groups memory controller for enforcing the memory
+      assignment control.
+    
+    config BBQUE_LINUX_CG_NET_BANDWIDTH
+      bool "Network bandwidth controller"
+      default n
+      depends on TARGET_LINUX
+      depends on !BBQUE_TEST_PLATFORM_DATA
+      ---help---
+      Enable the Control Groups net_cls controller for enforcing the network
+      bandwidth assignment control.
+ 
+    config BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+      bool "CGroups handled at RTLIb level"
+      default n
+      depends on TARGET_LINUX
+      depends on !BBQUE_TEST_PLATFORM_DATA
+      ---help---
+      Control Groups are written by the RTLib rather than the Platform Proxy.
+      Indeed, what is written into the CGroups is nonetheless decided by Barbeque.
+  
+  endmenu # Linux Control Groups
+
+  config BBQUE_LINUX_PROC_MANAGER
+    bool "Linux Process Management"
+    depends on TARGET_LINUX || TARGET_ANDROID
+    default n
+    ---help---
+    Enables BarbequeRTRM to monitor the status of other processes running
+    on the machine, and take actions (if the suitable policy has been selected)
+  
+  choice
+  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on BBQUE_PIL_LEGACY
+    prompt "Memory locality"
+    default BBQUE_MEMLOC_L3
+  
+    config BBQUE_MEMLOC_L3
+      bool "L3 cache"
+  
+    config BBQUE_MEMLOC_L2
+      bool "L2 cache"
+  
+    depends on !BBQUE_TEST_PLATFORM_DATA
+    ---help---
+    Select the memory locality that the BarbequeRTRM optimization policy should
+    take into account to properly perform scheduling and resource allocation
+    decisions.
+    According to the option selected the resource manager can consider a CPU as
+    an entity featuring one or more cores (processing elements), sharing a L3
+    cache memory ("socket") or a L2 cache memory ("core").
+  
+  endchoice # Memory locality
+
+endmenu # Linux Resource Management
+
+################################################################################
+
+menu "Heterogeneous Systems"
+depends on !BBQUE_TEST_PLATFORM_DATA
+
+  config BBQUE_OPENCL
+    bool "OpenCL Run-time Management Support"
+    depends on TARGET_LINUX
+    depends on !BBQUE_TEST_PLATFORM_DATA
+    select EXTERNAL_OPENCL
+    default n
+    ---help---
+    Enable the support for run-time resource management of OpenCL applications.
+
+endmenu # OpenCL Support
+
+
+################################################################################
+
+menu "Power Management"
+depends on !BBQUE_TEST_PLATFORM_DATA
+	source "barbeque/bbque/pm/Kconfig"
+
+endmenu # Power Management
+
+################################################################################
+# Distributed Systems
+################################################################################
+
+menu "Distributed Systems"
+  depends on BBQUE_PIL_LOADER
+
+  config BBQUE_DIST_MODE
+    bool "Distributed Mode"
+    default n
+    ---help---
+    If enabled, it configures the BarbequeRTRM to control a distributed multi-node
+    system.
+
+  choice
+    prompt "Distributed Configuration"
+    depends on BBQUE_DIST_MODE
+
+    config BBQUE_DIST_HIERARCHICAL
+      bool "Hierarchical"
+      ---help---
+      Master/slave configuration. A master instance of the BarbequeRTRM is responsible
+      of driving the decisional process of the instances running on the other system
+      nodes.
+
+    config BBQUE_DIST_FULLY
+      bool "Fully Distributed"
+      ---help
+      No master instance expected. Each instance make autonomous choices, eventually
+      negotiating the workload distribution among the other peer instances running
+      on the other system nodes.
+
+  endchoice
+
+  source "barbeque/plugins/agent_proxy/Kconfig"
+  source "barbeque/mpi/Kconfig"
+
+endmenu # Distributed Systems
+
+################################################################################
+# Reliability Management
+################################################################################
+
+menu "Reliability Management"
+
+  config BBQUE_RELIABILITY
+    bool "Reliability Support"
+    default n
+    ---help---
+    Add the support for checkpoint/restore and execution freezing.
+
+  config BBQUE_FREEZER_PATH
+    string "Freezer interfaces path"
+    default "/sys/fs/cgroup/freezer/bbque"
+    ---help---
+    The path under which freezer interfaces are located.
+
+  config BBQUE_CHECKPOINT_IMAGE_PATH
+    string "Checkpoint dump image path"
+    default "/tmp/bbque/dump"
+    ---help---
+    The path under which to store the images of the processes dump
+    after a checkpoint.
+
+endmenu #Reliability
