@@ -175,7 +175,7 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 
 LinuxPlatformProxy::~LinuxPlatformProxy()
 {
-
+	logger->Info("LinuxPlatformProxy: terminating...");
 }
 
 
@@ -474,9 +474,9 @@ LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
 #ifdef CONFIG_BBQUE_RELIABILITY
 	// Remove checkpoint image path
 	std::string image_dir(ApplicationPath(image_prefix_dir, papp));
-	logger->Debug("Release: image directory [%s] ", image_dir.c_str());
 
 	if (boost::filesystem::exists(image_dir)) {
+		logger->Debug("Release: image directory [%s] ", image_dir.c_str());
 		if (boost::filesystem::remove(image_dir))
 			logger->Info("Release: image directory [%s] removed",
 			image_dir.c_str());
@@ -484,9 +484,8 @@ LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
 
 	// Remove freezer directory
 	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, papp));
-	logger->Debug("Release: freezer directory [%s] ", freezer_dir.c_str());
-
 	if (boost::filesystem::exists(freezer_dir)) {
+		logger->Debug("Release: freezer directory [%s] ", freezer_dir.c_str());
 		if (boost::filesystem::remove(freezer_dir))
 			logger->Info("Release feezer directory [%s] removed",
 			freezer_dir.c_str());
@@ -512,7 +511,7 @@ LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept {
 	papp->Pid());
 
 	// Configure the CGroup based on resource bindings
-	logger->Notice("ReclaimResources: [%s] => SILOS[%s]",
+	logger->Info("ReclaimResources: [%s] => SILOS[%s]",
 	papp->StrId(), psilos->cgpath);
 	error = cgroup_modify_cgroup(psilos->pcg);
 	if (unlikely(error)) {
@@ -646,7 +645,8 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 	proc_elements_exclusive.Reset();
 
 	for (BBQUE_RID_TYPE pe_id = proc_elements.FirstSet();
-	     pe_id <= proc_elements.LastSet(); pe_id++) {
+	     pe_id <= proc_elements.LastSet();
+	     pe_id++) {
 
 		// Skip if this processing element is not allocated to this app
 		if (! proc_elements.Test(pe_id))
@@ -789,9 +789,13 @@ LinuxPlatformProxy::GetResourceMapping(
 
 	// Memory nodes
 	br::ResourceBitset mem_ids(
-	        br::ResourceBinder::GetMask(assign_map,
-	br::ResourceType::PROC_ELEMENT,
-	br::ResourceType::MEMORY, node_id, papp, rvt));
+	        br::ResourceBinder::GetMask(
+	                assign_map,
+	                br::ResourceType::PROC_ELEMENT,
+	                br::ResourceType::MEMORY,
+	                node_id,
+	                papp,
+	                rvt));
 	if (mem_ids.Count() == 0)
 		strncpy(prlb->mems, memory_ids_all.c_str(), memory_ids_all.length());
 	else
@@ -836,7 +840,7 @@ LinuxPlatformProxy::GetResourceMapping(
 
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Refresh() noexcept {
-	logger->Notice("Refresh: Updating CGroups resources description...");
+	logger->Info("Refresh: Updating CGroups resources description...");
 	refreshMode = true;
 	return this->ScanPlatformDescription();
 }
@@ -865,7 +869,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 	for (const auto & sys_entry : pd->GetSystemsAll()) {
 		auto sys = sys_entry.second;
 
-		logger->Debug("ScanPlatformDescription: [%s@%s] Looking for CPUs...",
+		logger->Debug("ScanPlatformDescription: [%s@%s] CPUs...",
 		sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu, sys.IsLocal());
@@ -874,19 +878,24 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 				return result;
 			}
 		}
-		logger->Debug("ScanPlatformDescription: [%s@%s] Looking for memories...",
-		              sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+
+		logger->Debug("ScanPlatformDescription: [%s@%s] Memories...",
+		              sys.GetHostname().c_str(),
+		              sys.GetNetAddress().c_str());
 		for (const auto mem : sys.GetMemoriesAll()) {
 			ExitCode_t result = this->RegisterMEM(*mem, sys.IsLocal());
 			if (unlikely(PLATFORM_OK != result)) {
-				logger->Fatal("ScanPlatformDescription: MEM %d registration failed",
+				logger->Fatal("ScanPlatformDescription: MEM %d "
+				              "registration failed",
 				              mem->GetId());
 				return result;
 			}
 
 			if (sys.IsLocal()) {
-				logger->Debug("ScanPlatformDescription: [%s@%s] is local",
-				              sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+				logger->Debug("ScanPlatformDescription: [%s@%s] "
+				              "is LOCAL",
+				              sys.GetHostname().c_str(),
+				              sys.GetNetAddress().c_str());
 
 				this->memory_ids_all += std::to_string(mem->GetId()) + ',';
 			}
@@ -894,9 +903,11 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 		for (const auto net : sys.GetNetworkIFsAll()) {
 			ExitCode_t result = this->RegisterNET(*net, sys.IsLocal());
 			if (unlikely(PLATFORM_OK != result)) {
-				logger->Fatal("ScanPlatformDescription: NETIF %d (%s) registration failed "
-				              "[%d]",
-				              net->GetId(), net->GetName().c_str(), result);
+				logger->Error("ScanPlatformDescription: network "
+				              "interface %d (%s) registration failed [%d]",
+				              net->GetId(),
+				              net->GetName().c_str(),
+				              result);
 				return result;
 			}
 		}
@@ -905,30 +916,35 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 	// Build the default string for the CGroups
 	if (!this->memory_ids_all.empty())
 		this->memory_ids_all.pop_back();
-	logger->Debug("ScanPlatformDescription: Memory nodes = {%s}", memory_ids_all.c_str());
+	logger->Debug("ScanPlatformDescription: Memory nodes = {%s}",
+	              memory_ids_all.c_str());
 
 	return PLATFORM_OK;
 }
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu, bool is_local) noexcept {
+LinuxPlatformProxy::RegisterCPU(
+        const PlatformDescription::CPU &cpu,
+        bool is_local) noexcept {
+
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 	for (const auto pe : cpu.GetProcessingElementsAll()) {
 		auto pe_type = pe.GetPartitionType();
-		if (PlatformDescription::MDEV == pe_type ||
-		PlatformDescription::SHARED == pe_type) {
-
+		if ((PlatformDescription::MDEV == pe_type)
+		|| (PlatformDescription::SHARED == pe_type)) {
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
-			logger->Debug("RegisterCPU: Registration of <%s>: %d", resource_path.c_str(), share);
+			logger->Debug("RegisterCPU: <%s>: total=%d", resource_path.c_str(), share);
 
 			if (refreshMode) {
 				ra.UpdateResource(resource_path, "", share);
 			} else {
 				ra.RegisterResource(resource_path, "", share);
-				if (is_local) InitPowerInfo(resource_path.c_str(), pe.GetId());
+				if (is_local)
+					InitPowerInfo(resource_path.c_str(),
+					              pe.GetId());
 			}
 		}
 	}
@@ -937,42 +953,47 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu, bool is_loc
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem, bool is_local) noexcept {
+LinuxPlatformProxy::RegisterMEM(
+        const PlatformDescription::Memory &mem,
+        bool is_local) noexcept {
+
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	UNUSED(is_local);
 
 	std::string resource_path = mem.GetPath();
 	const auto q_bytes = mem.GetQuantity();
 	logger->Debug("RegisterMEM: Registration of <%s>: %d Kb",
-			resource_path.c_str(), q_bytes);
+	resource_path.c_str(), q_bytes);
 
 	if (refreshMode) {
 		ra.UpdateResource(resource_path, "", q_bytes);
-	}
-	else {
+	} else {
 		ra.RegisterResource(resource_path, "", q_bytes);
 	}
 	logger->Debug("RegisterMEM: Registration of <%s> successfully performed",
-			resource_path.c_str());
+	resource_path.c_str());
 
 	return PLATFORM_OK;
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local) noexcept {
+LinuxPlatformProxy::RegisterNET(
+        const PlatformDescription::NetworkIF &net,
+        bool is_local) noexcept {
+
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	UNUSED(is_local);
 
 	std::string resource_path = net.GetPath();
 	logger->Debug("RegisterNET: Registration of netif %d <%s>",
-			net.GetId(), net.GetName().c_str());
+	net.GetId(), net.GetName().c_str());
 
 	uint64_t bw;
 	try {
 		bw = GetNetIFBandwidth(net.GetName());
 	} catch(std::runtime_error &e) {
 		logger->Error("RegisterNET: Unable to get the Bandwidth of %s: %s",
-			net.GetName().c_str(), e.what());
+		net.GetName().c_str(), e.what());
 		return PLATFORM_GENERIC_ERROR;
 	}
 
@@ -1123,7 +1144,7 @@ LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept {
 	cgroup_set_value_string(pcgd->pc_cpuset, BBQUE_LINUXPP_MEMN_PARAM, prlb->mems);
 
 	// Updating silos constraints
-	logger->Notice("BuildSilosCG: Updating kernel CGroup [%s]", pcgd->cgpath);
+	logger->Info("BuildSilosCG: Updating kernel CGroup [%s]", pcgd->cgpath);
 	error = cgroup_modify_cgroup(pcgd->pcg);
 	if (unlikely(error)) {
 		logger->Error("BuildSilosCG: CGroup resource mapping FAILED "
@@ -1137,7 +1158,6 @@ LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept {
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
-	int result;
 
 	logger->Debug("BuildCGroup: Building CGroup [%s]...", pcgd->cgpath);
 
@@ -1149,7 +1169,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 		return PLATFORM_MAPPING_FAILED;
 	}
 
-	// Add "cpuset" controller
+	// cpuset controller
 	pcgd->pc_cpuset = cgroup_add_controller(pcgd->pcg, "cpuset");
 	if (unlikely(!pcgd->pc_cpuset)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
@@ -1159,7 +1179,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	}
 
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
-	// Add "memory" controller
+	// memory controller
 	pcgd->pc_memory = cgroup_add_controller(pcgd->pcg, "memory");
 	if (unlikely(!pcgd->pc_memory)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
@@ -1170,8 +1190,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
-
-	// Add "cpu" controller
+	// cpu controller
 	pcgd->pc_cpu = cgroup_add_controller(pcgd->pcg, "cpu");
 	if (unlikely(!pcgd->pc_cpu)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
@@ -1183,6 +1202,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 #endif
 
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
+	// network interface controller
 	pcgd->pc_net_cls = cgroup_add_controller(pcgd->pcg, "net_cls");
 	if (!pcgd->pc_net_cls) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
@@ -1196,15 +1216,14 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	// NOTE: the current libcg API is quite confuse and unclear
 	// regarding the "ignore_ownership" second parameter
 	logger->Info("BuildCGroup: Create kernel CGroup [%s]", pcgd->cgpath);
-	result = cgroup_create_cgroup(pcgd->pcg, 0);
+	int result = cgroup_create_cgroup(pcgd->pcg, 0);
 	if (unlikely(result && errno)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
 		"(Error: libcgroup, kernel cgroup creation "
 		"[%d: %s]", errno, strerror(errno));
-		cgroup_delete_cgroup(pcgd->pcg, 1);	// As suggested by documentation
+		cgroup_delete_cgroup(pcgd->pcg, 1); // As suggested by doc
 		return PLATFORM_MAPPING_FAILED;
 	}
-
 
 	// Unfortunately we cannot use pcgd->pcg to check if the "cpu" controller
 	// is available or not, so we have to open a new cgroup in order to check
@@ -1213,13 +1232,12 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	assert(temp_cg != NULL);
 	if (unlikely(0 != cgroup_get_cgroup(temp_cg))) {
 		logger->Error("BuildCGroup: Cannot re-open CGroup [%s], continuing with cpu quota"
-                      "disabled", pcgd->cgpath);
+		"disabled", pcgd->cgpath);
 		pcgd->cfs_quota_available = false;
 		return PLATFORM_OK;
 	}
 
 	struct cgroup_controller *temp_cgc = cgroup_get_controller(temp_cg, "cpu");
-
 	for (int i = 0; i < cgroup_get_value_name_count(temp_cgc); i++) {
 		const char* cg_c_name = cgroup_get_value_name(temp_cgc, i);
 		if ( 0 == strcmp(cg_c_name, "cpu.cfs_quota_us") ) {
@@ -1293,20 +1311,24 @@ LinuxPlatformProxy::SetupCGroup(
 
 	// Set the assigned CPUs
 	cgroup_set_value_string(
-	        pcgd->pc_cpuset, BBQUE_LINUXPP_CPUS_PARAM, prlb->cpus ? prlb->cpus : "");
+	        pcgd->pc_cpuset,
+	        BBQUE_LINUXPP_CPUS_PARAM,
+	        prlb->cpus ? prlb->cpus : "");
 
 	// Set the assigned memory NODE (only if we have at least one CPUS)
 	if (prlb->cpus[0]) {
 		cgroup_set_value_string(
-		        pcgd->pc_cpuset, BBQUE_LINUXPP_MEMN_PARAM, prlb->mems);
+		        pcgd->pc_cpuset,
+		        BBQUE_LINUXPP_MEMN_PARAM,
+		        prlb->mems);
 
 		logger->Debug("SetupCGroup: CPUSET for [%s]: {cpus [%c: %s], mems[%s]}",
-			pcgd->papp->StrId(),
-			excl ? 'E' : 'S',
-			prlb->cpus, prlb->mems);
+		pcgd->papp->StrId(),
+		excl ? 'E' : 'S',
+		prlb->cpus, prlb->mems);
 	} else {
 		logger->Debug("SetupCGroup: CPUSET for [%s]: {cpus [NONE], mems[NONE]}",
-			pcgd->papp->StrId());
+		pcgd->papp->StrId());
 	}
 
 
@@ -1358,15 +1380,18 @@ LinuxPlatformProxy::SetupCGroup(
 		cpus_quota = prlb->amount_cpus;
 		cpus_quota += ((cpus_quota / 100) + 1) * cfs_margin_pct;
 		if ((cpus_quota % 100) > cfs_threshold_pct) {
-			logger->Warn("SetupCGroup: CFS (quota+margin) %d > %d threshold, enforcing disabled",
+			logger->Warn("SetupCGroup: CFS (quota+margin) %d > %d "
+			             "threshold, enforcing disabled",
 			             cpus_quota, cfs_threshold_pct);
 			quota_enforcing = false;
 		}
 
 		if (quota_enforcing) {
-
 			cpus_quota = (cfs_period_us / 100) *	prlb->amount_cpus;
-			cgroup_set_value_int64(pcgd->pc_cpu, BBQUE_LINUXPP_CPUQ_PARAM, cpus_quota);
+			cgroup_set_value_int64(
+			        pcgd->pc_cpu,
+			        BBQUE_LINUXPP_CPUQ_PARAM,
+			        cpus_quota);
 
 			logger->Debug("SetupCGroup: CPU for [%s]: {period [%s], quota [%lu]}",
 			              pcgd->papp->StrId(),
@@ -1413,7 +1438,7 @@ LinuxPlatformProxy::SetupCGroup(
 		prlb->cpus, prlb->amount_cpus,
 		prlb->mems, prlb->amount_memb);
 	cgroup_set_value_uint64(
-		pcgd->pc_cpuset, BBQUE_LINUXPP_PROCS_PARAM, pcgd->papp->Pid());
+	        pcgd->pc_cpuset, BBQUE_LINUXPP_PROCS_PARAM, pcgd->papp->Pid());
 
 	logger->Debug("SetupCGroup: Updating cgroup [%s]", pcgd->cgpath);
 	result = cgroup_modify_cgroup(pcgd->pcg);
@@ -1453,20 +1478,20 @@ CheckpointRestoreIF::ExitCode_t
 LinuxPlatformProxy::Restore(app::SchedPtr_t psched)
 {
 	if (psched->State() != ba::Application::State_t::FROZEN) {
-		logger->Warn("Restore: <%s> not FROZEN [state=%s]",
+		logger->Warn("Restore: [%s] not FROZEN [state=%s]",
 		             psched->StrId(),
 		             ba::Schedulable::StateStr(psched->State()));
 		return CheckpointRestoreIF::ExitCode_t::ERROR_WRONG_STATE;
 	}
 
 	std::string image_dir(ApplicationPath(image_prefix_dir, psched));
-	logger->Debug("Restore: <%s> recovering checkpoint from = [%s]",
+	logger->Debug("Restore: [%s] recovering checkpoint from = [%s]",
 	              psched->StrId(), image_dir.c_str());
 
 	if (!boost::filesystem::exists(image_dir)) {
-		logger->Debug("Restore: <%s> missing directory [%s]",
+		logger->Debug("Restore: [%s] missing directory [%s]",
 		              psched->StrId(), image_dir.c_str());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
 	/** CRIU restore here **/
@@ -1480,11 +1505,11 @@ CheckpointRestoreIF::ExitCode_t
 LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 {
 	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
-	logger->Debug("Freeze: <%s> freezer directory = [%s]",
+	logger->Debug("Freeze: [%s] freezer directory = [%s]",
 	              psched->StrId(), freezer_dir.c_str());
 
 	if (!boost::filesystem::exists(freezer_dir)) {
-		logger->Debug("Freeze: <%s> creating directory [%s]",
+		logger->Debug("Freeze: [%s] creating directory [%s]",
 		              psched->StrId(), freezer_dir.c_str());
 		boost::filesystem::create_directory(freezer_dir);
 	}
@@ -1497,8 +1522,8 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 		tasks_ofs.close();
 	} catch(...) {
 		tasks_ofs.close();
-		logger->Error("Freeze: <%s> filesystem error", psched->StrId());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+		logger->Error("Freeze: [%s] filesystem error", psched->StrId());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
 	// change state to frozen
@@ -1509,8 +1534,8 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 		fstate_ofs.close();
 	} catch(...) {
 		fstate_ofs.close();
-		logger->Error("Freeze: <%s> filesystem error", psched->StrId());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+		logger->Error("Freeze: [%s] filesystem error", psched->StrId());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
 	return CheckpointRestoreIF::ExitCode_t::OK;
@@ -1521,11 +1546,11 @@ CheckpointRestoreIF::ExitCode_t
 LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 {
 	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
-	logger->Debug("Thaw: <%s> freezer directory = [%s]",
+	logger->Debug("Thaw: [%s] freezer directory = [%s]",
 	              psched->StrId(), freezer_dir.c_str());
 
 	if (!boost::filesystem::exists(freezer_dir)) {
-		logger->Error("Thaw: <%s> not frozen", psched->StrId());
+		logger->Error("Thaw: [%s] not frozen", psched->StrId());
 		return CheckpointRestoreIF::ExitCode_t::ERROR_PROCESS_ID;
 	}
 
@@ -1536,8 +1561,8 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 		fofs.close();
 	} catch(...) {
 		fofs.close();
-		logger->Error("Thaw: <%s> filesystem error", psched->StrId());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILE_SYSTEM;
+		logger->Error("Thaw: [%s] filesystem error", psched->StrId());
+		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
 	return CheckpointRestoreIF::ExitCode_t::OK;

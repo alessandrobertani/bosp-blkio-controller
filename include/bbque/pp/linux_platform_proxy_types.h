@@ -26,7 +26,6 @@ include linux_platform_proxy.h!
  */
 #define BBQUE_LINUXPP_CGROUP "user.slice"
 
-
 /**
  * @brief The CGroup expected to define resources clusterization
  *
@@ -36,7 +35,6 @@ include linux_platform_proxy.h!
  * each application within a single cluster.
  */
 #define BBQUE_LINUXPP_RESOURCES BBQUE_LINUXPP_CGROUP"/res"
-
 
 /**
  * @brief The CGroup expected to define Clusters
@@ -48,8 +46,11 @@ include linux_platform_proxy.h!
 
 #define BBQUE_LINUXPP_FREEZER_STATE "/freezer.state"
 
-namespace bbque {
-namespace pp {
+
+namespace bbque
+{
+namespace pp
+{
 
 /**
  * @brief Resource assignment bindings on a Linux machine
@@ -68,12 +69,12 @@ struct RLinuxBindings_t {
 		// with syntax: "nn,". This allows for up-to 99 resources per
 		// cluster
 		if (MaxCpusCount) {
-			cpus = new char[3*MaxCpusCount]();
+			cpus = new char[3 * MaxCpusCount]();
 			cpus[0] = 0;
 		}
 		if (MaxMemsCount) {
-			mems = new char[3*MaxMemsCount]();
-			mems[0] = 0; 
+			mems = new char[3 * MaxMemsCount]();
+			mems[0] = 0;
 		}
 	}
 
