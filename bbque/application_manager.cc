@@ -955,23 +955,14 @@ ApplicationManager::CleanupEXC(AppPtr_t papp)
 	// Remove application description from its status map
 	am_result = StatusRemove(papp);
 	if (am_result != AM_SUCCESS) {
-		logger->Error("CleanupEXC: [%s] cleanup FAILED: status map error", papp->StrId());
+		logger->Error("CleanupEXC: [%s] cleanup FAILED: status map error",
+		              papp->StrId());
 		return am_result;
 	}
 
-	// Remove platform specific data
-	if (papp->ScheduleCount() > 0) {
-		logger->Debug("CleanupEXC: [%s] missing platform data", papp->StrId());
-		pp_result = plm.Release(papp);
-		if (pp_result != PlatformManager::PLATFORM_OK) {
-			logger->Error("CleanupEXC: [%s] cleanup FAILED: platform data error", papp->StrId());
-			return AM_PLAT_PROXY_ERROR;
-		}
-	}
-
-	logger->Debug("CleanupEXC: [%s] cleaning up from UIDs map...", papp->StrId());
-
 	// Remove application descriptor from UIDs map
+	logger->Debug("CleanupEXC: [%s] cleaning up from UIDs map...",
+	              papp->StrId());
 	uids_ul.lock();
 	UpdateIterators(uids_ret, papp);
 	uids.erase(papp->Uid());

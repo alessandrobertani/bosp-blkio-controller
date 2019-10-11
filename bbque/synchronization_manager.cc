@@ -636,12 +636,17 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 			plm.Thaw(papp);
 		}
 		break;
+
 	case Schedulable::BLOCKED:
+		logger->Debug("MapResources <BLOCKED>: [%s] releasing resources",
+		              papp->StrId());
 		result = plm.ReclaimResources(papp);
 		break;
+
 	case Schedulable::DISABLED:
-		logger->Debug("MapResources <DISABLED>: [%s] nothing to do",
+		logger->Debug("MapResources <DISABLED>: [%s] cleanup ",
 		              papp->StrId());
+		plm.Release(papp);
 		break;
 	default:
 		break;
