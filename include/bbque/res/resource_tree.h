@@ -37,7 +37,8 @@
  * Whether this flag is unset, the search will not stop until all the matching
  * paths have been retrieved from the tree
  */
-                // ALL       ...000
+
+//                 ALL       ...000
 #define RT_MATCH_FIRST  1 // ...001
 
 /**
@@ -45,14 +46,18 @@
  * Whether this flag is unset, an "exact matching" (type + ID) will be
  * performed
  */
-              // EXACT       ...00x
+
+//               EXACT       ...00x
 #define RT_MATCH_TYPE   2 // ...01x
 #define RT_MATCH_MIXED  4 // ...10x
 
 
 namespace bu = bbque::utils;
 
-namespace bbque { namespace res {
+namespace bbque
+{
+namespace res
+{
 
 // Forward declaration
 class ResourcePath;
@@ -65,7 +70,8 @@ class ResourcePath;
  * way. The hierarchy is structured as a tree. The access to the content is
  * based on a namespace-like approach (i.e. sys.cpu0.pe2 ...)
  */
-class ResourceTree {
+class ResourceTree
+{
 
 public:
 
@@ -80,27 +86,28 @@ public:
 	 * The base node of the ResourceTree containing a reference to a Resource
 	 * descriptor.
 	 */
-	class ResourceNode {
-		public:
-			ResourceNode(ResourcePtr_t r):
-				data(r) {};
+	class ResourceNode
+	{
+	public:
+		ResourceNode(ResourcePtr_t r):
+			data(r) {};
 
-			ResourceNode(
-				ResourcePtr_t r, ResourceNodePtr_t pnode, uint16_t d):
-				data(r), parent(pnode), depth(d) {};
+		ResourceNode(
+		        ResourcePtr_t r, ResourceNodePtr_t pnode, uint16_t d):
+			data(r), parent(pnode), depth(d) {};
 
-			virtual ~ResourceNode() {
-				children.clear();
-			}
+		virtual ~ResourceNode() {
+			children.clear();
+		}
 
-			/** Data node (resource descriptor pointer) */
-			ResourcePtr_t data = nullptr;
-			/** Parent node */
-			ResourceNodePtr_t parent = nullptr;
-			/** Depth in the tree */
-			uint16_t depth = 0;
-			/** Children nodes */
-			ResourceNodesList_t children;
+		/** Data node (resource descriptor pointer) */
+		ResourcePtr_t data = nullptr;
+		/** Parent node */
+		ResourceNodePtr_t parent = nullptr;
+		/** Depth in the tree */
+		uint16_t depth = 0;
+		/** Children nodes */
+		ResourceNodesList_t children;
 	};
 
 
@@ -168,8 +175,9 @@ public:
 	 *
 	 * @return A list of resource descriptors (pointers)
 	 */
-	ResourcePtrList_t find_list(ResourcePath & rsrc_path,
-			uint16_t match_flags = 0) const;
+	ResourcePtrList_t find_list(
+	        ResourcePath & rsrc_path,
+	        uint16_t match_flags = 0) const;
 
 	/**
 	 * @brief Maximum depth of the tree
@@ -222,10 +230,10 @@ private:
 	 * @return True if the search have found some matchings.
 	 */
 	bool find_node(ResourceNodePtr_t curr_node,
-			std::vector<ResourceIdentifierPtr_t>::iterator & rp_it,
-			std::vector<ResourceIdentifierPtr_t>::iterator const & rp_end,
-			uint16_t match_flags,
-			ResourcePtrList_t & matchings) const;
+	               std::vector<ResourceIdentifierPtr_t>::iterator & rp_it,
+	               std::vector<ResourceIdentifierPtr_t>::iterator const & rp_end,
+	               uint16_t match_flags,
+	               ResourcePtrList_t & matchings) const;
 
 	/**
 	 * @brief Append a child to the current node

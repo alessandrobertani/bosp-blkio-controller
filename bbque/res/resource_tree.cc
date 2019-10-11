@@ -28,13 +28,15 @@
 
 namespace bu = bbque::utils;
 
-namespace bbque { namespace res {
-
+namespace bbque
+{
+namespace res
+{
 
 ResourceTree::ResourceTree():
 	max_depth(0),
-	count(0) {
-
+	count(0)
+{
 	// Get a logger
 	logger = bu::Logger::GetLogger(RESOURCE_TREE_NAMESPACE);
 	assert(logger);
@@ -46,7 +48,8 @@ ResourceTree::ResourceTree():
 }
 
 ResourcePtrList_t
-ResourceTree::find_list(ResourcePath & rsrc_path, uint16_t match_flags) const {
+ResourceTree::find_list(ResourcePath & rsrc_path, uint16_t match_flags) const
+{
 	ResourcePtrList_t matchings;
 	auto head_path(rsrc_path.Begin());
 	auto const & end_path(rsrc_path.End());
@@ -59,37 +62,38 @@ ResourceTree::find_list(ResourcePath & rsrc_path, uint16_t match_flags) const {
 	return matchings;
 }
 
-ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path) {
-
+ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path)
+{
 	// Seeking on the last matching resource path level (tree node)
 	ResourceNodePtr_t curr_node = root;
 	for (auto path_it = rsrc_path.Begin();
-			path_it != rsrc_path.End(); ++path_it) {
+	     path_it != rsrc_path.End(); ++path_it) {
 		br::ResourceIdentifierPtr_t const & curr_rid(*path_it);
 
 		// No children -> add the first one
 		if (curr_node->children.empty()) {
-			ResourcePtr_t resource_ptr = std::make_shared<Resource>
-				(curr_rid->Type(), curr_rid->ID());
+			ResourcePtr_t resource_ptr = std::make_shared<Resource>(
+			                                     curr_rid->Type(),
+			                                     curr_rid->ID());
 			curr_node = add_node(curr_node, resource_ptr);
 			curr_node->depth > max_depth ?
-				max_depth = curr_node->depth: max_depth;
+			max_depth = curr_node->depth : max_depth;
 			continue;
 		}
 
 		// Children
 		logger->Debug("insert: %s has %d children",
-				curr_node->data->Name().c_str(),
-				curr_node->children.size());
+		              curr_node->data->Name().c_str(),
+		              curr_node->children.size());
 
 		// Current resource path level matches: go one level down
 		bool node_exist = false;
-		for (auto tree_node: curr_node->children) {
+		for (auto tree_node : curr_node->children) {
 			ResourcePtr_t & resource_ptr(tree_node->data);
 			if (resource_ptr->Compare(*curr_rid) != Resource::EQUAL) {
 				logger->Debug("%-4s != %-4s",
-						resource_ptr->Name().c_str(),
-						curr_rid->Name().c_str());
+				              resource_ptr->Name().c_str(),
+				              curr_rid->Name().c_str());
 				continue;
 			}
 			// Matching
@@ -100,8 +104,9 @@ ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path) {
 
 		// No matching: add a children node
 		if (!node_exist) {
-			ResourcePtr_t resource_ptr = std::make_shared<Resource>
-				(curr_rid->Type(), curr_rid->ID());
+			ResourcePtr_t resource_ptr = std::make_shared<Resource>(
+			                                     curr_rid->Type(),
+			                                     curr_rid->ID());
 			curr_node = add_node(curr_node, resource_ptr);
 		}
 	}
@@ -112,11 +117,12 @@ ResourcePtr_t & ResourceTree::insert(ResourcePath const & rsrc_path) {
 }
 
 bool ResourceTree::find_node(
-		ResourceNodePtr_t curr_node,
-		ResourcePath::Iterator & path_it,
-		ResourcePath::Iterator const & path_end,
-		uint16_t match_flags,
-		ResourcePtrList_t & matchings) const {
+        ResourceNodePtr_t curr_node,
+        ResourcePath::Iterator & path_it,
+        ResourcePath::Iterator const & path_end,
+        uint16_t match_flags,
+        ResourcePtrList_t & matchings) const
+{
 	Resource::CResult_t rresult;
 	bool found;
 
@@ -126,8 +132,8 @@ bool ResourceTree::find_node(
 
 	// Look for the current resource path level
 	logger->Debug("find_node: %s has %d children",
-			curr_node->data->Name().c_str(), curr_node->children.size());
-	for (auto & tree_node: curr_node->children) {
+	              curr_node->data->Name().c_str(), curr_node->children.size());
+	for (auto & tree_node : curr_node->children) {
 		auto & resource_ptr(tree_node->data);
 		auto & path_node(*path_it);
 		found = false;
@@ -136,9 +142,9 @@ bool ResourceTree::find_node(
 		// resource tree accordingly
 		rresult = resource_ptr->Compare(*path_node);
 		logger->Debug("find_node: compare T:%4s to P:%4s = %d [match_flags %d]",
-				resource_ptr->Name().c_str(),
-				path_node->Name().c_str(),
-				rresult, match_flags);
+		              resource_ptr->Name().c_str(),
+		              path_node->Name().c_str(),
+		              rresult, match_flags);
 
 		if (rresult == Resource::EQUAL_TYPE) {
 			//  Skip if mixed matching required but resource IDs do not match
@@ -156,10 +162,14 @@ bool ResourceTree::find_node(
 		// Go deeper in the resource tree (if the not is not a leaf)
 		if (rresult != Resource::NOT_EQUAL) {
 			if (path_it != path_end)
-				find_node(tree_node, ++path_it, path_end, match_flags, matchings);
+				find_node(
+				        tree_node,
+				        ++path_it,
+				        path_end,
+				        match_flags,
+				        matchings);
 			found = true;
-		}
-		else
+		} else
 			continue;
 
 		// End of the resource path, and resource identity matching?
@@ -168,7 +178,8 @@ bool ResourceTree::find_node(
 		if ((path_it == path_end) && (found)) {
 			matchings.push_back(resource_ptr);
 			logger->Debug("find_node: added back %s [%d]",
-					resource_ptr->Name().c_str(), matchings.size());
+			              resource_ptr->Name().c_str(),
+			              matchings.size());
 			// Back to a "valid" iterator
 			--path_it;
 		}
@@ -185,21 +196,24 @@ bool ResourceTree::find_node(
 }
 
 ResourceTree::ResourceNodePtr_t
-ResourceTree::add_node(ResourceNodePtr_t curr_node, ResourcePtr_t resource_ptr) {
-
+ResourceTree::add_node(ResourceNodePtr_t curr_node, ResourcePtr_t resource_ptr)
+{
 	// Create the new resource node
 	ResourceNodePtr_t new_node = std::make_shared<ResourceNode>(
-		resource_ptr, curr_node, curr_node->depth+1);
+	                                     resource_ptr,
+	                                     curr_node,
+	                                     curr_node->depth + 1);
 
 	// Append it as child of the current node
 	curr_node->children.push_back(new_node);
 	return new_node;
 }
 
-void ResourceTree::print_children(ResourceNodePtr_t _node, int _depth) const {
+void ResourceTree::print_children(ResourceNodePtr_t _node, int _depth) const
+{
 	++_depth;
-	for (auto & curr_node: _node->children) {
-		for (int i= 0; i < _depth-1; ++i)
+	for (auto & curr_node : _node->children) {
+		for (int i = 0; i < _depth - 1; ++i)
 			logger->Debug("\t");
 
 		logger->Debug("|-------%s", curr_node->data->Name().c_str());
@@ -208,8 +222,9 @@ void ResourceTree::print_children(ResourceNodePtr_t _node, int _depth) const {
 	}
 }
 
-void ResourceTree::clear_node(ResourceNodePtr_t _node) {
-	for (auto & curr_node: _node->children) {
+void ResourceTree::clear_node(ResourceNodePtr_t _node)
+{
+	for (auto & curr_node : _node->children) {
 		if (!curr_node->children.empty())
 			clear_node(curr_node);
 		curr_node->children.clear();
@@ -219,4 +234,3 @@ void ResourceTree::clear_node(ResourceNodePtr_t _node) {
 }   // namespace res
 
 }   // namespace bbque
-
