@@ -201,12 +201,12 @@ ResourceManager::Setup()
 	ConfigurationManager & cm = ConfigurationManager::GetInstance();
 	po::options_description opts_desc("Resource Manager Options");
 	opts_desc.add_options()
-		("ResourceManager.opt_interval",
-		 po::value<uint32_t>
-		 (&opt_interval)->default_value(
-			 BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
-		 "The interval [ms] of activation of the periodic optimization")
-		;
+	("ResourceManager.opt_interval",
+	 po::value<uint32_t>
+	 (&opt_interval)->default_value(
+	         BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
+	 "The interval [ms] of activation of the periodic optimization")
+	;
 	po::variables_map opts_vm;
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
@@ -307,7 +307,8 @@ void ResourceManager::SetReady(bool value)
 	}
 }
 
-void ResourceManager::TerminateWorkers() {
+void ResourceManager::TerminateWorkers()
+{
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
 	std::chrono::milliseconds timeout = std::chrono::milliseconds(300);
 
@@ -316,11 +317,11 @@ void ResourceManager::TerminateWorkers() {
 
 		// Signal all registered Workers to terminate
 		for_each(workers_map.begin(), workers_map.end(),
-				[=](std::pair<std::string, Worker*> entry) {
-				fprintf(stderr, FI("Terminating Worker[%s]...\n"),
-					entry.first.c_str());
-				entry.second->Terminate();
-				});
+		[ = ](std::pair<std::string, Worker*> entry) {
+			fprintf(stderr, FI("Terminating Worker[%s]...\n"),
+			        entry.first.c_str());
+			entry.second->Terminate();
+		});
 
 		// Wait up to 300[ms] for workers to terminate
 		workers_cv.wait_for(workers_ul, timeout);
@@ -328,8 +329,7 @@ void ResourceManager::TerminateWorkers() {
 			break;
 
 		DB(fprintf(stderr, FD("Waiting for [%lu] workers to terminate...\n"),
-					workers_map.size()));
-
+		           workers_map.size()));
 	}
 
 	DB(fprintf(stderr, FD("All workers terminated\n")));
@@ -376,6 +376,7 @@ void ResourceManager::Optimize()
 		optimization_tmr.start();
 		SchedulerManager::ExitCode_t schedResult = sm.Schedule();
 		optimization_tmr.stop();
+
 		switch(schedResult) {
 		case SchedulerManager::MISSING_POLICY:
 		case SchedulerManager::FAILED:
@@ -420,7 +421,7 @@ void ResourceManager::Optimize()
 		RM_COUNT_EVENT(metrics, RM_SYNCH_TOTAL);
 		RM_GET_PERIOD(metrics, RM_SYNCH_PERIOD, period);
 		if (period)
-			logger->Notice("Optimize: schedule Run-time: %9.3f[ms]",
+			logger->Notice("Optimize: scheduling period: %9.3f[us]",
 			               period);
 
 		//--- Synchronization
@@ -437,7 +438,7 @@ void ResourceManager::Optimize()
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		prm.PrintStatus(true);
 #endif
-		logger->Notice("Optimize: sync time: %11.3f[us]",
+		logger->Notice("Optimize: synchronization time: %11.3f[us]",
 		               optimization_tmr.getElapsedTimeUs());
 	}
 
@@ -451,7 +452,7 @@ void ResourceManager::Optimize()
 		logger->Warn("Optimize: scheduler profiling FAILED");
 	}
 	logger->Debug(LNPROE);
-	logger->Debug("Optimize: prof time: %11.3f[us]",
+	logger->Debug("Optimize: profiling time: %11.3f[us]",
 	              optimization_tmr.getElapsedTimeUs());
 #else
 	logger->Debug("Optimize: scheduling profiling disabled");
@@ -472,7 +473,8 @@ void ResourceManager::Optimize()
 #endif
 }
 
-void ResourceManager::EvtExcStart() {
+void ResourceManager::EvtExcStart()
+{
 	uint32_t timeout = 0;
 
 	logger->Info("EXC Enabled");
@@ -504,7 +506,8 @@ void ResourceManager::EvtExcStart() {
 	RM_GET_TIMING(metrics, RM_EVT_TIME_START, rm_tmr);
 }
 
-void ResourceManager::EvtExcStop() {
+void ResourceManager::EvtExcStop()
+{
 	uint32_t timeout = 0;
 
 	logger->Info("EXC Disabled");
@@ -520,7 +523,8 @@ void ResourceManager::EvtExcStop() {
 	RM_GET_TIMING(metrics, RM_EVT_TIME_STOP, rm_tmr);
 }
 
-void ResourceManager::EvtBbqPlat() {
+void ResourceManager::EvtBbqPlat()
+{
 
 	logger->Info("BarbequeRTRM Optimization Request for Platform Event");
 	plat_event = true;
@@ -538,7 +542,8 @@ void ResourceManager::EvtBbqPlat() {
 	RM_GET_TIMING(metrics, RM_EVT_TIME_PLAT, rm_tmr);
 }
 
-void ResourceManager::EvtBbqOpts() {
+void ResourceManager::EvtBbqOpts()
+{
 	uint32_t timeout = 0;
 
 	logger->Info("BarbequeRTRM Optimization Request for Application Event");
@@ -557,35 +562,36 @@ void ResourceManager::EvtBbqOpts() {
 }
 
 
-void ResourceManager::EvtBbqUsr1() {
+void ResourceManager::EvtBbqUsr1()
+{
 
 	// Reset timer for START event execution time collection
 	RM_RESET_TIMING(rm_tmr);
 
 	logger->Info("");
-	logger->Info("==========[ Status Queues ]============"
-			"========================================");
+	logger->Info("=======[ Status Queues ]============"
+	             "========================================");
 	logger->Info("");
 	am.PrintStatusQ();
 
 	logger->Info("");
 	logger->Info("");
-	logger->Info("==========[ Synchronization Queues ]==="
-			"========================================");
+	logger->Info("=======[ Synchronization Queues ]==="
+	             "========================================");
 	logger->Info("");
 	am.PrintSyncQ();
 
 	logger->Notice("");
 	logger->Notice("");
-	logger->Notice("==========[ Resources Status ]========="
-			"========================================");
+	logger->Notice("=======[ Resources Status ]========="
+	               "========================================");
 	logger->Notice("");
 	ra.PrintStatusReport(0, true);
 
 	logger->Notice("");
 	logger->Notice("");
-	logger->Notice("==========[ EXCs Status ]=============="
-			"========================================");
+	logger->Notice("=======[ EXCs Status ]=============="
+	               "========================================");
 	logger->Notice("");
 	am.PrintStatus(true);
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
@@ -600,8 +606,8 @@ void ResourceManager::EvtBbqUsr1() {
 	RM_GET_TIMING(metrics, RM_EVT_TIME_USR1, rm_tmr);
 }
 
-void ResourceManager::EvtBbqUsr2() {
-
+void ResourceManager::EvtBbqUsr2()
+{
 	// Reset timer for START event execution time collection
 	RM_RESET_TIMING(rm_tmr);
 
@@ -615,7 +621,8 @@ void ResourceManager::EvtBbqUsr2() {
 	RM_GET_TIMING(metrics, RM_EVT_TIME_USR2, rm_tmr);
 }
 
-void ResourceManager::EvtBbqExit() {
+void ResourceManager::EvtBbqExit()
+{
 	AppsUidMapIt apps_it;
 	AppPtr_t papp;
 
@@ -645,7 +652,8 @@ void ResourceManager::EvtBbqExit() {
 	ResourceManager::TerminateWorkers();
 }
 
-int ResourceManager::CommandsCb(int argc, char *argv[]) {
+int ResourceManager::CommandsCb(int argc, char *argv[])
+{
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
 	// Fix compiler warnings
 	(void)argc;
@@ -664,7 +672,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Notice("");
 		logger->Notice("");
 		logger->Notice("==========[ EXCs Status ]=============="
-				"========================================");
+		               "========================================");
 		logger->Notice("");
 		am.PrintStatus(true);
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
@@ -680,7 +688,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 
 		logger->Info("");
 		logger->Info("==========[ Status Queues ]============"
-				"========================================");
+		             "========================================");
 		logger->Info("");
 		am.PrintStatusQ();
 		break;
@@ -694,7 +702,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Notice("");
 		logger->Notice("");
 		logger->Notice("==========[ Resources Status ]========="
-				"========================================");
+		               "========================================");
 		logger->Notice("");
 		ra.PrintStatusReport(0, true);
 		break;
@@ -708,7 +716,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Info("");
 		logger->Info("");
 		logger->Info("==========[ Synchronization Queues ]==="
-				"========================================");
+		             "========================================");
 		logger->Info("");
 		am.PrintSyncQ();
 		break;
@@ -716,7 +724,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 		logger->Info("");
 		logger->Info("");
 		logger->Info("==========[ User Required Scheduling ]==="
-				"===============================");
+		             "===============================");
 		logger->Info("");
 		NotifyEvent(ResourceManager::BBQ_OPTS);
 		break;
@@ -731,7 +739,8 @@ int ResourceManager::CommandsCb(int argc, char *argv[]) {
 }
 
 
-void ResourceManager::ControlLoop() {
+void ResourceManager::ControlLoop()
+{
 	std::unique_lock<std::mutex> pendingEvts_ul(pendingEvts_mtx);
 	double period;
 
@@ -747,24 +756,24 @@ void ResourceManager::ControlLoop() {
 	}
 
 	// Checking for pending events, starting from higer priority ones.
-	for(uint8_t evt=EVENTS_COUNT; evt; --evt) {
+	for(uint8_t evt = EVENTS_COUNT; evt; --evt) {
 
 		logger->Debug("Checking events [%d:%s]",
-				evt-1, pendingEvts[evt-1] ? "Pending" : "None");
+		              evt - 1, pendingEvts[evt - 1] ? "Pending" : "None");
 
 		// Jump not pending events
-		if (!pendingEvts[evt-1])
+		if (!pendingEvts[evt - 1])
 			continue;
 
 		// Resetting event
-		pendingEvts.reset(evt-1);
+		pendingEvts.reset(evt - 1);
 
 		// Account for a new event
 		RM_COUNT_EVENT(metrics, RM_EVT_TOTAL);
 		RM_GET_PERIOD(metrics, RM_EVT_PERIOD, period);
 
 		// Dispatching events to handlers
-		switch(evt-1) {
+		switch(evt - 1) {
 		case EXC_START:
 			logger->Debug("Event [EXC_START]");
 			EvtExcStart();
@@ -777,14 +786,14 @@ void ResourceManager::ControlLoop() {
 			RM_COUNT_EVENT(metrics, RM_EVT_STOP);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_STOP, period);
 			break;
-		// Platform reconfiguration or warning conditions requiring a policy execution
+			// Platform reconfiguration or warning conditions requiring a policy execution
 		case BBQ_PLAT:
 			logger->Debug("Event [BBQ_PLAT]");
 			EvtBbqPlat();
 			RM_COUNT_EVENT(metrics, RM_EVT_PLAT);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_PLAT, period);
 			break;
-		// Application-driven policy execution request
+			// Application-driven policy execution request
 		case BBQ_OPTS:
 			logger->Debug("Event [BBQ_OPTS]");
 			EvtBbqOpts();
@@ -812,13 +821,14 @@ void ResourceManager::ControlLoop() {
 			logger->Fatal("Abortive quit");
 			exit(EXIT_FAILURE);
 		default:
-			logger->Crit("Unhandled event [%d]", evt-1);
+			logger->Crit("Unhandled event [%d]", evt - 1);
 		}
 	}
 }
 
 ResourceManager::ExitCode_t
-ResourceManager::Go() {
+ResourceManager::Go()
+{
 	ExitCode_t result;
 
 	result = Setup();
@@ -833,4 +843,3 @@ ResourceManager::Go() {
 }
 
 } // namespace bbque
-
