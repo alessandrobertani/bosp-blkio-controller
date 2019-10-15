@@ -40,27 +40,33 @@ namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bp = bbque::plugins;
 
-namespace bbque { namespace app {
+namespace bbque
+{
+namespace app
+{
 
 
 // Compare two working mode values.
 // This is used to sort the list of enabled working modes.
-bool AwmValueLesser(const AwmPtr_t & wm1, const AwmPtr_t & wm2) {
-		return wm1->Value() < wm2->Value();
+bool AwmValueLesser(const AwmPtr_t & wm1, const AwmPtr_t & wm2)
+{
+	return wm1->Value() < wm2->Value();
 }
 
-bool AwmIdLesser(const AwmPtr_t & wm1, const AwmPtr_t & wm2) {
-		return wm1->Id() < wm2->Id();
+bool AwmIdLesser(const AwmPtr_t & wm1, const AwmPtr_t & wm2)
+{
+	return wm1->Id() < wm2->Id();
 }
 
 Application::Application(std::string const & _name,
-		AppPid_t _pid,
-		uint8_t _exc_id,
-		RTLIB_ProgrammingLanguage_t lang,
-		bool container):
+                         AppPid_t _pid,
+                         uint8_t _exc_id,
+                         RTLIB_ProgrammingLanguage_t lang,
+                         bool container):
 	exc_id(_exc_id),
 	language(lang),
-	container(container) {
+	container(container)
+{
 	name = _name;
 	pid  = _pid;
 	type = Schedulable::Type::ADAPTIVE;
@@ -74,7 +80,7 @@ Application::Application(std::string const & _name,
 
 	// Format the application string identifier for logging purpose
 	snprintf(str_id, SCHEDULABLE_ID_MAX_LEN, "%05d:%5s:%02d",
-		Pid(), Name().substr(0,5).c_str(), ExcId());
+	         Pid(), Name().substr(0, 5).c_str(), ExcId());
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 	// Task-graph file paths
@@ -83,7 +89,7 @@ Application::Application(std::string const & _name,
 	std::replace(app_str.begin(), app_str.end(), ':', '.');
 	tg_sem_name.assign("/" + app_str);
 	logger->Info("Task-graph serial file: <%s> sem: <%s>",
-		tg_path.c_str(), tg_sem_name.c_str());
+	             tg_path.c_str(), tg_sem_name.c_str());
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 	// Initialized scheduling state
@@ -93,7 +99,8 @@ Application::Application(std::string const & _name,
 	logger->Info("Built new EXC [%s]", StrId());
 }
 
-Application::~Application() {
+Application::~Application()
+{
 	logger->Debug("Destroying EXC [%s]", StrId());
 	awms.recipe_vect.clear();
 	awms.enabled_list.clear();
@@ -104,14 +111,16 @@ Application::~Application() {
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 }
 
-void Application::SetPriority(AppPrio_t _prio) {
+void Application::SetPriority(AppPrio_t _prio)
+{
 	bbque::ApplicationManager &am(bbque::ApplicationManager::GetInstance());
 	// If _prio value is greater then the lowest priority
 	// (maximum integer value) it is trimmed to the last one.
 	priority = std::min(_prio, am.LowestPriority());
 }
 
-void Application::InitWorkingModes(AppPtr_t & papp) {
+void Application::InitWorkingModes(AppPtr_t & papp)
+{
 	// Get the working modes from recipe and init the vector size
 	AwmPtrVect_t const & recipe_awms(recipe->WorkingModesAll());
 
@@ -145,27 +154,29 @@ void Application::InitWorkingModes(AppPtr_t & papp) {
 	logger->Info("InitWorkingModes: %d enabled AWMs", awms.enabled_list.size());
 }
 
-void Application::InitResourceConstraints() {
+void Application::InitResourceConstraints()
+{
 	// For each static constraint on a resource make an assertion
-	for (auto & constr_entry: recipe->ConstraintsAll()) {
+	for (auto & constr_entry : recipe->ConstraintsAll()) {
 		ResourcePathPtr_t const & rsrc_path(constr_entry.first);
 		ConstrPtr_t const & rsrc_constr(constr_entry.second);
 
 		// Lower bound
 		if (rsrc_constr->lower > 0)
 			SetResourceConstraint(
-				rsrc_path, br::ResourceConstraint::LOWER_BOUND, rsrc_constr->lower);
+			        rsrc_path, br::ResourceConstraint::LOWER_BOUND, rsrc_constr->lower);
 		// Upper bound
 		if (rsrc_constr->upper > 0)
 			SetResourceConstraint(
-				rsrc_path, br::ResourceConstraint::UPPER_BOUND, rsrc_constr->upper);
+			        rsrc_path, br::ResourceConstraint::UPPER_BOUND, rsrc_constr->upper);
 	}
 
 	logger->Debug("InitResourceConstraints: %d resource constraints", rsrc_constraints.size());
 }
 
 Application::ExitCode_t
-Application::SetRecipe(RecipePtr_t & _recipe, AppPtr_t & papp) {
+Application::SetRecipe(RecipePtr_t & _recipe, AppPtr_t & papp)
+{
 	// Safety check on recipe object
 	if (!_recipe) {
 		logger->Error("SetRecipe: null recipe object");
@@ -191,8 +202,9 @@ Application::SetRecipe(RecipePtr_t & _recipe, AppPtr_t & papp) {
 	return APP_SUCCESS;
 }
 
-AwmPtr_t Application::GetWorkingMode(uint8_t wmId) {
-	for (auto & awm: awms.enabled_list) {
+AwmPtr_t Application::GetWorkingMode(uint8_t wmId)
+{
+	for (auto & awm : awms.enabled_list) {
 		if (awm->Id() == wmId)
 			return awm;
 	}
@@ -205,19 +217,21 @@ AwmPtr_t Application::GetWorkingMode(uint8_t wmId) {
  *  EXC Optimization
  ******************************************************************************/
 
-void Application::SetNextAWM(AwmPtr_t awm) {
+void Application::SetNextAWM(AwmPtr_t awm)
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	schedule.next_awm = awm;
 	awms.curr_inv = false;
 	logger->Debug("SetNewAWM: [%s] next_awm = %d",
-		StrId(), schedule.next_awm->Id());
+	              StrId(), schedule.next_awm->Id());
 }
 
 /*******************************************************************************
  *  EXC Synchronization
  ******************************************************************************/
 
-Application::ExitCode_t Application::SyncCommit() {
+Application::ExitCode_t Application::SyncCommit()
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	Application::ExitCode_t ret;
 
@@ -229,53 +243,54 @@ Application::ExitCode_t Application::SyncCommit() {
 
 	// Synchronization state
 	switch(_SyncState()) {
-		case STARTING:
-		case RECONF:
-		case MIGREC:
-		case MIGRATE:
-			// Reset GoalGap whether the Application has been scheduled into a AWM
-			// having a value higher than the previous one
-			if (schedule.awm &&
-					(schedule.awm->Value() < schedule.next_awm->Value())) {
-				logger->Debug("Resetting GoalGap (%d%c) on [%s]",
-						rt_prof.ggap_percent, '%', StrId());
-				rt_prof.ggap_percent = 0;
-			}
+	case STARTING:
+	case RECONF:
+	case MIGREC:
+	case MIGRATE:
+		// Reset GoalGap whether the Application has been scheduled into a AWM
+		// having a value higher than the previous one
+		if (schedule.awm &&
+		    (schedule.awm->Value() < schedule.next_awm->Value())) {
+			logger->Debug("Resetting GoalGap (%d%c) on [%s]",
+			              rt_prof.ggap_percent, '%', StrId());
+			rt_prof.ggap_percent = 0;
+		}
 
-			ret = SetState(RUNNING);
-			if (ret != APP_SUCCESS) {
-				logger->Error("SyncCommit: status transition failed");
-				return ret;
-			}
-			logger->Debug("Scheduling count: %" PRIu64 "", schedule.count);
-			break;
+		ret = SetState(RUNNING);
+		if (ret != APP_SUCCESS) {
+			logger->Error("SyncCommit: status transition failed");
+			return ret;
+		}
+		logger->Debug("Scheduling count: %" PRIu64 "", schedule.count);
+		break;
 
-		case BLOCKED:
-			SetState(READY);
-			break;
+	case BLOCKED:
+		SetState(READY);
+		break;
 
-		case DISABLED:
-			SetState(FINISHED);
-			schedule.awm.reset();
-			schedule.next_awm.reset();
-			break;
+	case DISABLED:
+		SetState(FINISHED);
+		schedule.awm.reset();
+		schedule.next_awm.reset();
+		break;
 
-		default:
-			logger->Crit("SyncCommit: synchronization failed for EXC [%s]"
-					"(Error: invalid synchronization state)");
-			assert(_SyncState() < Application::SYNC_NONE);
-			return APP_ABORT;
+	default:
+		logger->Crit("SyncCommit: synchronization failed for EXC [%s]"
+		             "(Error: invalid synchronization state)");
+		assert(_SyncState() < Application::SYNC_NONE);
+		return APP_ABORT;
 	}
 
 	logger->Info("SyncCommit: synchronization completed [%s, %d:%s]",
-			StrId(), _State(), StateStr(_State()));
+	             StrId(), _State(), StateStr(_State()));
 
 	return APP_SUCCESS;
 }
 
 
 
-Application::ExitCode_t Application::SyncContinue() {
+Application::ExitCode_t Application::SyncContinue()
+{
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	// Reset next AWM (only current must be set)
 	schedule.next_awm.reset();
@@ -288,15 +303,16 @@ Application::ExitCode_t Application::SyncContinue() {
  ******************************************************************************/
 
 Application::ExitCode_t Application::SetWorkingModeConstraint(
-		RTLIB_Constraint & constraint) {
+        RTLIB_Constraint & constraint)
+{
 	// Get a lock. The assertion may invalidate the current AWM.
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
 	ExitCode_t result = APP_ABORT;
 
 	logger->Debug("SetConstraint, AWM_ID: %d, OP: %s, TYPE: %d",
-			constraint.awm,
-			constraint.operation ? "ADD" : "REMOVE",
-			constraint.type);
+	              constraint.awm,
+	              constraint.operation ? "ADD" : "REMOVE",
+	              constraint.type);
 
 	// Check the working mode ID validity
 	if (constraint.awm > awms.max_id)
@@ -325,30 +341,32 @@ Application::ExitCode_t Application::SetWorkingModeConstraint(
 	RebuildEnabledWorkingModes();
 
 	logger->Debug("SetConstraint (AWMs): %d total working modes",
-			awms.recipe_vect.size());
+	              awms.recipe_vect.size());
 	logger->Debug("SetConstraint (AWMs): %d enabled working modes",
-			awms.enabled_list.size());
+	              awms.enabled_list.size());
 
 	DB(DumpValidAWMs());
 
 	return APP_SUCCESS;
 }
 
-void Application::DumpValidAWMs() const {
+void Application::DumpValidAWMs() const
+{
 	uint8_t len = 0;
 	char buff[256];
 
 	for (int j = 0; j <= awms.max_id; ++j) {
 		if (awms.enabled_bset.test(j))
-			len += snprintf(buff+len, 265-len, "%d,", j);
+			len += snprintf(buff + len, 265 - len, "%d,", j);
 	}
 	// Remove leading comma
-	buff[len-1] = 0;
+	buff[len - 1] = 0;
 	logger->Info("SetConstraint (AWMs): enabled map/list = {%s}", buff);
 }
 
 Application::ExitCode_t Application::AddWorkingModeConstraint(
-		RTLIB_Constraint & constraint) {
+        RTLIB_Constraint & constraint)
+{
 	// Check the type of constraint to set
 	switch (constraint.type) {
 	case RTLIB_ConstraintType::LOWER_BOUND:
@@ -385,14 +403,15 @@ Application::ExitCode_t Application::AddWorkingModeConstraint(
 		// Mark the corresponding bit in the enabled map
 		awms.enabled_bset.set(constraint.awm);
 		logger->Debug("SetConstraint (AWMs): set exact value AWM {%d}",
-				constraint.awm);
+		              constraint.awm);
 		return APP_WM_ENAB_CHANGED;
 	}
 
 	return APP_WM_ENAB_UNCHANGED;
 }
 
-void Application::SetWorkingModesLowerBound(RTLIB_Constraint & constraint) {
+void Application::SetWorkingModesLowerBound(RTLIB_Constraint & constraint)
+{
 	uint8_t hb = std::max(constraint.awm, awms.low_id);
 
 	// Disable all the AWMs lower than the new lower bound and if the
@@ -408,10 +427,11 @@ void Application::SetWorkingModesLowerBound(RTLIB_Constraint & constraint) {
 	// Save the new lower bound
 	awms.low_id = constraint.awm;
 	logger->Debug("SetConstraint (AWMs): set lower bound AWM {%d}",
-			awms.low_id);
+	              awms.low_id);
 }
 
-void Application::SetWorkingModesUpperBound(RTLIB_Constraint & constraint) {
+void Application::SetWorkingModesUpperBound(RTLIB_Constraint & constraint)
+{
 	uint8_t lb = std::min(constraint.awm, awms.upp_id);
 
 	// Disable all the AWMs greater than the new upper bound and if the
@@ -427,11 +447,12 @@ void Application::SetWorkingModesUpperBound(RTLIB_Constraint & constraint) {
 	// Save the new upper bound
 	awms.upp_id = constraint.awm;
 	logger->Debug("SetConstraint (AWMs): set upper bound AWM {%d}",
-			awms.upp_id);
+	              awms.upp_id);
 }
 
 Application::ExitCode_t Application::RemoveWorkingModeConstraint(
-		RTLIB_Constraint & constraint) {
+        RTLIB_Constraint & constraint)
+{
 	// Check the type of constraint to remove
 	switch (constraint.type) {
 	case RTLIB_ConstraintType::LOWER_BOUND:
@@ -457,7 +478,8 @@ Application::ExitCode_t Application::RemoveWorkingModeConstraint(
 	return APP_WM_ENAB_UNCHANGED;
 }
 
-void Application::ClearWorkingModesLowerBound() {
+void Application::ClearWorkingModesLowerBound()
+{
 	// Set all the bit previously unset
 	for (int i = awms.low_id - 1; i >= 0; --i)
 		awms.enabled_bset.set(i);
@@ -467,7 +489,8 @@ void Application::ClearWorkingModesLowerBound() {
 	awms.low_id = 0;
 }
 
-void Application::ClearWorkingModesUpperBound() {
+void Application::ClearWorkingModesUpperBound()
+{
 	// Set all the bit previously unset
 	for (int i = awms.upp_id + 1; i <= awms.max_id; ++i)
 		awms.enabled_bset.set(i);
@@ -476,7 +499,8 @@ void Application::ClearWorkingModesUpperBound() {
 	awms.upp_id = awms.max_id;
 }
 
-void Application::ClearWorkingModeConstraints() {
+void Application::ClearWorkingModeConstraints()
+{
 	// Reset range bounds
 	awms.low_id = 0;
 	awms.upp_id = awms.max_id;
@@ -488,7 +512,8 @@ void Application::ClearWorkingModeConstraints() {
 	logger->Debug("ClearConstraint (AWMs): %d enabled working modes", awms.enabled_list.size());
 }
 
-void Application::RebuildEnabledWorkingModes() {
+void Application::RebuildEnabledWorkingModes()
+{
 	// Clear the list
 	awms.enabled_list.clear();
 
@@ -499,8 +524,8 @@ void Application::RebuildEnabledWorkingModes() {
 		// the AWM is hidden according to the current status of the hardware
 		// resources
 		if ((!awms.enabled_bset.test(j))
-				|| (UsageOutOfBounds(awms.recipe_vect[j]))
-				|| awms.recipe_vect[j]->Hidden())
+		    || (UsageOutOfBounds(awms.recipe_vect[j]))
+		    || awms.recipe_vect[j]->Hidden())
 			continue;
 
 		// Insert the working mode
@@ -511,13 +536,14 @@ void Application::RebuildEnabledWorkingModes() {
 	FinalizeEnabledWorkingModes();
 }
 
-void Application::FinalizeEnabledWorkingModes() {
+void Application::FinalizeEnabledWorkingModes()
+{
 	// Check if the current AWM has been invalidated
 	if (schedule.awm &&
-			!awms.enabled_bset.test(schedule.awm->Id())) {
+	    !awms.enabled_bset.test(schedule.awm->Id())) {
 		logger->Warn("WorkingMode constraints: current AWM (""%s"" ID:%d)"
-				" invalidated.", schedule.awm->Name().c_str(),
-				schedule.awm->Id());
+		             " invalidated.", schedule.awm->Name().c_str(),
+		             schedule.awm->Id());
 		awms.curr_inv = true;
 	}
 
@@ -527,9 +553,10 @@ void Application::FinalizeEnabledWorkingModes() {
 
 /************************** Resource Constraints ****************************/
 
-bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
+bool Application::UsageOutOfBounds(AwmPtr_t & awm)
+{
 	// Check if there are constraints on the resource assignments
-	for (auto const & rsrc_req_entry: awm->ResourceRequests()) {
+	for (auto const & rsrc_req_entry : awm->ResourceRequests()) {
 		auto & rsrc_path(rsrc_req_entry.first);
 		auto & rsrc_amount(rsrc_req_entry.second);
 
@@ -540,25 +567,29 @@ bool Application::UsageOutOfBounds(AwmPtr_t & awm) {
 		// Check if the usage value is out of the constraint bounds
 		br::ResourceAssignmentPtr_t const & r_assign(rsrc_amount);
 		if ((r_assign->GetAmount() < rsrc_constr_it->second->lower) ||
-			(r_assign->GetAmount() > rsrc_constr_it->second->upper))
+		    (r_assign->GetAmount() > rsrc_constr_it->second->upper))
 			return true;
 	}
 
 	return false;
 }
 
-void Application::UpdateEnabledWorkingModes() {
+void Application::UpdateEnabledWorkingModes()
+{
 	// Remove AWMs violating resources constraints
-	awms.enabled_list.remove_if([this](AwmPtr_t & awm){ return UsageOutOfBounds(awm); });
+	awms.enabled_list.remove_if([this](AwmPtr_t & awm) {
+		return UsageOutOfBounds(awm);
+	});
 	// Check current AWM and re-order the list
 	FinalizeEnabledWorkingModes();
 	logger->Debug("UpdateEnabledWorkingModes:", awms.enabled_list.size());
 }
 
 Application::ExitCode_t Application::SetResourceConstraint(
-		ResourcePathPtr_t r_path,
-		br::ResourceConstraint::BoundType_t b_type,
-		uint64_t _value) {
+        ResourcePathPtr_t r_path,
+        br::ResourceConstraint::BoundType_t b_type,
+        uint64_t _value)
+{
 
 	// Check the existance of the resource
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
@@ -579,10 +610,10 @@ Application::ExitCode_t Application::SetResourceConstraint(
 		rsrc_constraints[r_path]->lower = _value;
 		if (rsrc_constraints[r_path]->upper < _value)
 			rsrc_constraints[r_path]->upper =
-				std::numeric_limits<uint64_t>::max();
+			        std::numeric_limits<uint64_t>::max();
 
 		logger->Debug("SetConstraint (Resources): Set on {%s} LB = %" PRIu64,
-				r_path->ToString().c_str(), _value);
+		              r_path->ToString().c_str(), _value);
 		break;
 
 	case br::ResourceConstraint::UPPER_BOUND:
@@ -591,7 +622,7 @@ Application::ExitCode_t Application::SetResourceConstraint(
 			rsrc_constraints[r_path]->lower = 0;
 
 		logger->Debug("SetConstraint (Resources): Set on {%s} UB = %" PRIu64,
-				r_path->ToString().c_str(), _value);
+		              r_path->ToString().c_str(), _value);
 		break;
 	}
 
@@ -602,8 +633,9 @@ Application::ExitCode_t Application::SetResourceConstraint(
 }
 
 Application::ExitCode_t Application::ClearResourceConstraint(
-		ResourcePathPtr_t r_path,
-		br::ResourceConstraint::BoundType_t b_type) {
+        ResourcePathPtr_t r_path,
+        br::ResourceConstraint::BoundType_t b_type)
+{
 	// Lookup the constraint by resource pathname
 	auto const it_con(rsrc_constraints.find(r_path));
 	if (it_con == rsrc_constraints.end()) {
@@ -634,14 +666,15 @@ Application::ExitCode_t Application::ClearResourceConstraint(
 
 
 uint64_t Application::GetResourceRequestStat(
-		std::string const & rsrc_path,
-		ResourceUsageStatType_t stats_type) {
+        std::string const & rsrc_path,
+        ResourceUsageStatType_t stats_type)
+{
 	uint64_t min_val  = UINT64_MAX;
 	uint64_t max_val  = 0;
 	uint64_t total = 0;
 
-	for (auto const & awm: awms.enabled_list) {                 // AWMs (enabled)
-		for (auto const & r_entry: awm->ResourceRequests()) {      // Resources
+	for (auto const & awm : awms.enabled_list) {                // AWMs (enabled)
+		for (auto const & r_entry : awm->ResourceRequests()) {     // Resources
 			ResourcePathPtr_t const & curr_path(r_entry.first);
 			uint64_t curr_amount = (r_entry.second)->GetAmount();
 
@@ -652,8 +685,8 @@ uint64_t Application::GetResourceRequestStat(
 
 			// Cumulate the resource usage and update min or max
 			total += curr_amount;
-			curr_amount < min_val ? min_val = curr_amount: min_val;
-			curr_amount > max_val ? max_val = curr_amount: max_val;
+			curr_amount < min_val ? min_val = curr_amount : min_val;
+			curr_amount > max_val ? max_val = curr_amount : max_val;
 		}
 	}
 
@@ -677,30 +710,31 @@ uint64_t Application::GetResourceRequestStat(
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
-Application::ExitCode_t Application::LoadTaskGraph() {
+Application::ExitCode_t Application::LoadTaskGraph()
+{
 	logger->Debug("LoadTaskGraph: [%s] getting task-graph information...", StrId());
 
 	if (tg_sem == nullptr) {
 		logger->Info("LoadTaskGraph: [%s] loading [path:%s sem=%s]...",
-			StrId(), tg_path.c_str(), tg_sem_name.c_str());
+		             StrId(), tg_path.c_str(), tg_sem_name.c_str());
 		tg_sem = sem_open(tg_sem_name.c_str(), O_RDWR);
 		if (errno != 0) {
 			logger->Crit("LoadTaskGraph: [%s] error while opening semaphore [errno=%d]: %s",
-				StrId(), errno, strerror(errno));
+			             StrId(), errno, strerror(errno));
 			return APP_TG_SEM_ERROR;
 		}
 	}
 
 	if (tg_sem == SEM_FAILED) {
 		logger->Warn("LoadTaskGraph: [%s] task-graph not available on the application side",
-			StrId());
+		             StrId());
 		return APP_TG_SEM_ERROR;
 	}
 
 	logger->Debug("LoadTaskGraph: [%s] waiting on task-graph semaphore...", StrId());
 	if (sem_wait(tg_sem) != 0) {
 		logger->Error("LoadTaskGraph: [%s] wait on semaphore failed [errno=%d]: %s",
-			StrId(), errno, strerror(errno));
+		              StrId(), errno, strerror(errno));
 		return APP_TG_SEM_ERROR;
 	}
 
@@ -724,17 +758,17 @@ Application::ExitCode_t Application::LoadTaskGraph() {
 		sem_post(tg_sem);
 		logger->Info("LoadTaskGraph: [%s] task-graph loaded", StrId());
 		return APP_SUCCESS;
-	}
-	catch(std::exception & ex) {
+	} catch(std::exception & ex) {
 		logger->Error("LoadTaskGraph: [%s] exception [%s]",
-			StrId(), ex.what());
+		              StrId(), ex.what());
 		sem_post(tg_sem);
 		return APP_TG_FILE_ERROR;
 	}
 }
 
 
-void Application::UpdateTaskGraph() {
+void Application::UpdateTaskGraph()
+{
 	if (tg_sem == nullptr) {
 		logger->Warn("UpdateTaskGraph: [%s] task-graph is null", StrId());
 		return;
@@ -745,15 +779,14 @@ void Application::UpdateTaskGraph() {
 		std::ofstream ofs(tg_path);
 		boost::archive::text_oarchive oa(ofs);
 		oa << *task_graph;
-	}
-	catch(std::exception & ex) {
+	} catch(std::exception & ex) {
 		logger->Error("UpdateTaskGraph: [%s] exception [%s]",
-			StrId(), ex.what());
+		              StrId(), ex.what());
 	}
 	sem_post(tg_sem);
 
 	logger->Debug("UpdateTaskGraph: [%s] task-graph sent back to "
-		"programming library", StrId());
+	              "programming library", StrId());
 }
 
 #endif //CONFIG_BBQUE_TG_PROG_MODEL
@@ -761,4 +794,3 @@ void Application::UpdateTaskGraph() {
 } // namespace app
 
 } // namespace bbque
-

@@ -47,11 +47,13 @@
 
 namespace bu = bbque::utils;
 
-namespace bbque {
+namespace bbque
+{
 
 class ApplicationManager;
 
-namespace res {
+namespace res
+{
 class Resource;
 class ResourcePath;
 class ResourceConstraint;
@@ -64,7 +66,8 @@ using ResourceAssignmentMapPtr_t = std::shared_ptr<ResourceAssignmentMap_t>;
 
 namespace br = bbque::res;
 
-namespace app {
+namespace app
+{
 
 class Recipe;
 
@@ -116,9 +119,10 @@ struct RuntimeProfiling_t {
  * (could be different from the one given by OS) plus a reference to the
  * recipe object, the list of enabled working modes and resource constraints.
  */
-class Application: public ApplicationConfIF {
+class Application: public ApplicationConfIF
+{
 
-friend class bbque::ApplicationManager;
+	friend class bbque::ApplicationManager;
 
 public:
 
@@ -131,9 +135,9 @@ public:
 	 * @param container If true, this is just an "EXC container".
 	 */
 	Application(std::string const & name,
-			AppPid_t pid, uint8_t exc_id,
-			RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP,
-			bool container = false);
+	            AppPid_t pid, uint8_t exc_id,
+	            RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP,
+	            bool container = false);
 
 	/**
 	 * @brief Default destructor
@@ -143,12 +147,16 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline uint8_t ExcId() const noexcept { return exc_id; }
+	uint8_t ExcId() const noexcept {
+		return exc_id;
+	}
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline RTLIB_ProgrammingLanguage_t Language() const noexcept { return language; }
+	RTLIB_ProgrammingLanguage_t Language() const noexcept {
+		return language;
+	}
 
 
 	/**
@@ -159,12 +167,14 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline float Value() const noexcept { return schedule.value; }
+	float Value() const noexcept {
+		return schedule.value;
+	}
 
 	/**
 	 * @see ApplicationConfIF
 	 */
-	inline void SetValue(float sched_metrics) noexcept {
+	void SetValue(float sched_metrics) noexcept {
 		schedule.value = sched_metrics;
 	}
 
@@ -173,7 +183,7 @@ public:
 	 * stored in a specific object
 	 * @return A shared pointer to the recipe object
 	 */
-	inline RecipePtr_t GetRecipe() noexcept { return recipe; }
+	RecipePtr_t GetRecipe() noexcept { return recipe; }
 
 	/**
 	 * @brief Set the current recipe used by the application.
@@ -203,37 +213,41 @@ public:
 	 * @papp Shared pointer to the current Application (provided by the
 	 * Application Manager)
 	 */
-	inline void ReloadWorkingModes(AppPtr_t & papp) { return InitWorkingModes(papp); }
+	void ReloadWorkingModes(AppPtr_t & papp) {
+		return InitWorkingModes(papp);
+	}
 
 
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	bool IsContainer() const noexcept { return container; }
+	bool IsContainer() const noexcept {
+		return container;
+	}
 
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline AwmPtrList_t const & WorkingModes() noexcept { return awms.enabled_list; }
+	AwmPtrList_t const & WorkingModes() noexcept { return awms.enabled_list; }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline AwmPtr_t const & LowValueAWM() noexcept { return awms.enabled_list.front(); }
+	AwmPtr_t const & LowValueAWM() noexcept { return awms.enabled_list.front(); }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	inline AwmPtr_t const & HighValueAWM() noexcept { return awms.enabled_list.back(); }
+	AwmPtr_t const & HighValueAWM() noexcept { return awms.enabled_list.back(); }
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
 	uint64_t GetResourceRequestStat(
-			std::string const & rsrc_path,
-			ResourceUsageStatType_t ru_stat);
+	        std::string const & rsrc_path,
+	        ResourceUsageStatType_t ru_stat);
 
 
 
@@ -323,7 +337,9 @@ public:
 	 *
 	 * @return true is the AWM is no more valid, false otherwise.
 	 */
-	inline bool CurrentAWMNotValid() const noexcept { return awms.curr_inv; }
+	bool CurrentAWMNotValid() const noexcept {
+		return awms.curr_inv;
+	}
 
 	/**
 	 * @brief Dump on logger a list of valid AWMs
@@ -342,7 +358,7 @@ public:
 	 * @param mark_acknowledged
 	 * @return A data structure of type RuntimeProfiling_t
 	 */
-	inline RuntimeProfiling_t GetRuntimeProfile(bool mark_acknowledged = false) {
+	RuntimeProfiling_t GetRuntimeProfile(bool mark_acknowledged = false) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		if (mark_acknowledged)
 			rt_prof.is_valid = false;
@@ -354,7 +370,7 @@ public:
 	 *
 	 * @param rt_profile The structure containing the profiling data
 	 */
-	inline void SetRuntimeProfile(struct RuntimeProfiling_t rt_profile) {
+	void SetRuntimeProfile(struct RuntimeProfiling_t rt_profile) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		rt_prof = rt_profile;
 	}
@@ -365,7 +381,7 @@ public:
 	 * @param cpu_usage_prediction The expected amount of CPU usage
 	 * @param goal_gap_prediction The expected goal gap
 	 */
-	inline void SetAllocationInfo(int cpu_usage_prediction, int goal_gap_prediction = 0) {
+	void SetAllocationInfo(int cpu_usage_prediction, int goal_gap_prediction = 0) {
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		rt_prof.cpu_usage_prediction_old = rt_prof.cpu_usage_prediction;
 		rt_prof.cpu_usage_prediction     = cpu_usage_prediction;
@@ -384,7 +400,9 @@ public:
 	/**
 	 * @brief Return the current task-graph description
 	 */
-	inline std::shared_ptr<TaskGraph> GetTaskGraph() { return task_graph; }
+	std::shared_ptr<TaskGraph> GetTaskGraph() {
+		return task_graph;
+	}
 
 	/**
 	 * @brief Set a new task-graph description
@@ -393,7 +411,7 @@ public:
 	 * @param write_through If set to true (default) update also the file or memory
 	 * region storing the copy shared with the RTLib
 	 */
-	inline void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through=true) {
+	void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through = true) {
 		task_graph = tg;
 		if (write_through) UpdateTaskGraph();
 	}
@@ -401,12 +419,14 @@ public:
 	/**
 	 * @brief Update the task-graph description shared with the RTLib
 	 */
-	 void UpdateTaskGraph();
+	void UpdateTaskGraph();
 
 	/**
 	 * @brief Clear the task-graph description (it optionally forces a reload)
 	 */
-	inline void ClearTaskGraph() { task_graph = nullptr; }
+	void ClearTaskGraph() {
+		task_graph = nullptr;
+	}
 
 
 	/**
@@ -414,21 +434,23 @@ public:
 	 * @param task_id Task identification number
 	 * @return A reference to TaskRequirements stored in the recipe object
 	 */
-	inline const TaskRequirements & GetTaskRequirements(uint32_t task_id) {
+	const TaskRequirements & GetTaskRequirements(uint32_t task_id) {
 		return recipe->GetTaskRequirements(task_id);
 	};
 
 	/**
 	 * @brief Return the current partition
 	 */
-	inline std::shared_ptr<Partition> GetPartition() { return assigned_partition; }
+	std::shared_ptr<Partition> GetPartition() {
+		return assigned_partition;
+	}
 
 	/**
 	 * @brief Set the allocated partition
 	 * @note Typically used by the scheduling policy for resource mapping purpose
 	 * @param partition the allocated partition object
 	 */
-	inline void SetPartition(std::shared_ptr<Partition> partition) {
+	void SetPartition(std::shared_ptr<Partition> partition) {
 		assigned_partition = partition;
 	}
 
@@ -445,6 +467,8 @@ private:
 
 	/** The ID of this Execution Context */
 	uint8_t exc_id;
+
+	AppUid_t uid;
 
 	/** The programming language */
 	RTLIB_ProgrammingLanguage_t language;
@@ -550,7 +574,7 @@ private:
 	 * specified does not exist.
 	 */
 	ExitCode_t SetResourceConstraint(br::ResourcePathPtr_t r_path,
-			br::ResourceConstraint::BoundType_t b_type, uint64_t value);
+	                                 br::ResourceConstraint::BoundType_t b_type, uint64_t value);
 
 	/**
 	 * @brief Remove a constraint upon a specific resource.
@@ -564,7 +588,7 @@ private:
 	 * a previous constraint on the resource
 	 */
 	ExitCode_t ClearResourceConstraint(br::ResourcePathPtr_t r_path,
-			br::ResourceConstraint::BoundType_t b_type);
+	                                   br::ResourceConstraint::BoundType_t b_type);
 
 
 	/**
