@@ -949,7 +949,6 @@ ApplicationManager::ExitCode_t
 ApplicationManager::CleanupEXC(AppPtr_t papp)
 {
 	std::unique_lock<std::recursive_mutex> uids_ul(uids_mtx, std::defer_lock);
-	PlatformManager::ExitCode_t pp_result;
 	ExitCode_t am_result;
 
 	// Remove application description from its status map
@@ -990,9 +989,8 @@ void ApplicationManager::Cleanup()
 ApplicationManager::ExitCode_t
 ApplicationManager::DestroyEXC(AppPtr_t papp)
 {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 	ExitCode_t result;
-	logger->Debug("DestroyEXC: destroying descriptor for [%s]...", papp->StrId());
+	logger->Info("DestroyEXC: destroying descriptor for [%s]...", papp->StrId());
 
 	// Change status to FINISHED
 	if (papp->State() != app::Schedulable::FINISHED)
@@ -1025,7 +1023,6 @@ ApplicationManager::DestroyEXC(AppPtr_t papp)
 
 	logger->Info("DestroyEXC: [%s] FINISHED", papp->StrId());
 	PrintStatus();
-	ra.PrintStatusReport();
 
 	return AM_SUCCESS;
 }
