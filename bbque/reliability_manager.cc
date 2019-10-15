@@ -251,18 +251,18 @@ void ReliabilityManager::SimulateFault(std::string const & resource_path)
 
 
 void ReliabilityManager::Freeze(
-        app::AppUid_t uid, app::Schedulable::Type type)
+        app::AppPid_t pid, app::Schedulable::Type type)
 {
 	app::SchedPtr_t psched;
 	if (type == app::Schedulable::Type::ADAPTIVE) {
-		psched = am.GetApplication(uid);
+		psched = am.GetApplication(app::Application::Uid(pid, 0));
 		if (psched)
 			logger->Debug("Freeze: moving application <%s> into freezer...",
 			              psched->StrId());
 	}
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	else if (type == app::Schedulable::Type::PROCESS) {
-		psched = prm.GetProcess(uid);
+		psched = prm.GetProcess(pid);
 		if (psched)
 			logger->Debug("Freeze: moving process <%s> into freezer",
 			              psched->StrId());
@@ -270,8 +270,7 @@ void ReliabilityManager::Freeze(
 #endif
 
 	if (!psched) {
-		logger->Warn("Freeze: uid=<%d> no application or process found",
-		             uid);
+		logger->Warn("Freeze: pid=<%d> no application or process", pid);
 		return;
 	}
 	plm.Freeze(psched);
@@ -279,18 +278,18 @@ void ReliabilityManager::Freeze(
 }
 
 void ReliabilityManager::Thaw(
-        app::AppUid_t uid, app::Schedulable::Type type)
+        app::AppPid_t pid, app::Schedulable::Type type)
 {
 	app::SchedPtr_t psched;
 	if (type == app::Schedulable::Type::ADAPTIVE) {
-		psched = am.GetApplication(uid);
+		psched = am.GetApplication(app::Application::Uid(pid, 0));
 		if (psched)
 			logger->Debug("Thaw: moving application <%s> into freezer...",
 			              psched->StrId());
 	}
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	else if (type == app::Schedulable::Type::PROCESS) {
-		psched = prm.GetProcess(uid);
+		psched = prm.GetProcess(pid);
 		if (psched)
 			logger->Debug("Thaw: moving process <%s> into freezer",
 			              psched->StrId());
@@ -298,12 +297,11 @@ void ReliabilityManager::Thaw(
 #endif
 
 	if (!psched) {
-		logger->Warn("Thaw: uid=<%d> no application or process found",
-		             uid);
+		logger->Warn("Thaw: uid=<%d> no application or process", pid);
 		return;
 	}
 
-	prm.SetToThaw(uid);
+	prm.SetToThaw(pid);
 	logger->Debug("Thaw: trigger re-scheduling", psched->StrId());
 	ResourceManager & rm = ResourceManager::GetInstance();
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
