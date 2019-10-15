@@ -570,7 +570,6 @@ SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState
 	AppPtr_t papp;
 	papp = am.GetFirst(syncState, apps_it);
 	for ( ; papp; papp = am.GetNext(syncState, apps_it)) {
-		\
 		logger->Debug("Sync_Platform <%s>: [%s] ...",
 		              papp->SyncStateStr(syncState), papp->StrId());
 		if (!policy->DoSync(papp))
@@ -626,8 +625,10 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 	case Schedulable::RECONF:
 	case Schedulable::MIGREC:
 	case Schedulable::MIGRATE:
-		result = plm.MapResources(papp,
-		                          papp->NextAWM()->GetResourceBinding());
+		result = plm.MapResources(
+		                 papp,
+		                 papp->NextAWM()->GetResourceBinding());
+
 		// Was it frozen?
 		if (pre_sync_state == Schedulable::THAWED) {
 			logger->Debug("MapResources <%s>: [%s] thawing...",
@@ -638,16 +639,19 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 		break;
 
 	case Schedulable::BLOCKED:
-		logger->Debug("MapResources <BLOCKED>: [%s] releasing resources",
+		logger->Debug("MapResources <%s>: [%s] reclaiming resources ",
+		              papp->SyncStateStr(papp->SyncState()),
 		              papp->StrId());
 		result = plm.ReclaimResources(papp);
 		break;
 
 	case Schedulable::DISABLED:
-		logger->Debug("MapResources <DISABLED>: [%s] cleanup ",
+		logger->Debug("MapResources <%s>: [%s] resources already reclaimed",
+		              papp->SyncStateStr(papp->SyncState()),
 		              papp->StrId());
 		plm.Release(papp);
 		break;
+
 	default:
 		break;
 	}
