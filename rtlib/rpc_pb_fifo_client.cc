@@ -76,8 +76,8 @@ BbqueRPC_PB_FIFO_Client::~ BbqueRPC_PB_FIFO_Client()
 
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::ChannelRelease()
 {
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_APP_EXIT, RpcMsgToken(), channel_thread_pid, 0);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_APP_EXIT, RpcMsgToken(), application_pid, 0);
 	rpc_fifo_APP_EXIT_t rf_APP_EXIT = {
 		{
 			FIFO_PKT_SIZE(APP_EXIT),
@@ -248,8 +248,8 @@ void BbqueRPC_PB_FIFO_Client::ChannelTrd(const char * name)
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::ChannelPair(const char * name)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_APP_PAIR, RpcMsgToken(), channel_thread_pid, 0);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_APP_PAIR, RpcMsgToken(), application_pid, 0);
 	msg.set_mjr_version(BBQUE_RPC_FIFO_MAJOR_VERSION);
 	msg.set_mnr_version(BBQUE_RPC_FIFO_MINOR_VERSION);
 	msg.set_app_name(name);
@@ -267,7 +267,7 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::ChannelPair(const char * name)
 	msg.SerializeToArray(rf_APP_PAIR.pyl, msg.ByteSize());
 	::strncpy(rf_APP_PAIR.rpc_fifo, app_fifo_filename, BBQUE_FIFO_NAME_LENGTH);
 	logger->Debug("Pairing FIFO channels [app: %s, pid: %d]", name,
-		channel_thread_pid);
+	              application_pid);
 	// Sending RPC Request
 	RPC_FIFO_SEND(APP_PAIR);
 	logger->Debug("Waiting BBQUE response...");
@@ -339,7 +339,7 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Init(
 	trdStatus_cv.wait(trdStatus_ul);
 	// Setting up application FIFO filename
 	snprintf(app_fifo_filename, BBQUE_FIFO_NAME_LENGTH,
-		"bbque_%05d_%s", channel_thread_pid, name);
+	         "bbque_%05d_%s", application_pid, name);
 	// Setting up the communication channel
 	result = ChannelSetup();
 
@@ -365,8 +365,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Init(
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Register(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_REGISTER, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_REGISTER, RpcMsgToken(), application_pid, prec->id);
 	msg.set_exc_name(prec->name);
 	msg.set_recipe(prec->parameters.recipe);
 	msg.set_lang(prec->parameters.language);
@@ -396,8 +396,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Register(pRegisteredEXC_t prec)
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Unregister(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_UNREGISTER, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_UNREGISTER, RpcMsgToken(), application_pid, prec->id);
 	msg.set_exc_name(prec->name);
 	rpc_fifo_EXC_UNREGISTER_t rf_EXC_UNREGISTER = {
 		{
@@ -424,8 +424,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Unregister(pRegisteredEXC_t prec)
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Enable(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_START, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_START, RpcMsgToken(), application_pid, prec->id);
 	rpc_fifo_EXC_START_t rf_EXC_START = {
 		{
 			FIFO_PKT_SIZE(EXC_START),
@@ -450,8 +450,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Enable(pRegisteredEXC_t prec)
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Disable(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_STOP, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_STOP, RpcMsgToken(), application_pid, prec->id);
 	rpc_fifo_EXC_STOP_t rf_EXC_STOP = {
 		{
 			FIFO_PKT_SIZE(EXC_STOP),
@@ -477,8 +477,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Set(pRegisteredEXC_t prec,
                 RTLIB_Constraint_t * constraints, uint8_t count)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_SET, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_SET, RpcMsgToken(), application_pid, prec->id);
 	// At least 1 constraint it is expected
 	assert(count);
 	RTLIB_Constraint_t *c;
@@ -517,8 +517,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Set(pRegisteredEXC_t prec,
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Clear(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_CLEAR, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_CLEAR, RpcMsgToken(), application_pid, prec->id);
 	rpc_fifo_EXC_CLEAR_t rf_EXC_CLEAR = {
 		{
 			FIFO_PKT_SIZE(EXC_CLEAR),
@@ -544,8 +544,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int g
                 int cpu_usage, int cycle_time_ms)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_RTNOTIFY, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_RTNOTIFY, RpcMsgToken(), application_pid, prec->id);
 	msg.set_gap(gap);
 	msg.set_cusage(cpu_usage);
 	msg.set_ctime_ms(cycle_time_ms);
@@ -577,8 +577,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int g
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_ScheduleRequest(pRegisteredEXC_t prec)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_EXC_SCHEDULE, RpcMsgToken(), channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_EXC_SCHEDULE, RpcMsgToken(), application_pid, prec->id);
 	rpc_fifo_EXC_SCHEDULE_t rf_EXC_SCHEDULE = {
 		{
 			FIFO_PKT_SIZE(EXC_SCHEDULE),
@@ -612,8 +612,8 @@ void BbqueRPC_PB_FIFO_Client::_Exit()
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_SyncpPreChangeResp(
         rpc_msg_token_t token, pRegisteredEXC_t prec, uint32_t syncLatency)
 {
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, application_pid, prec->id);
 	msg.mutable_hdr()->set_resp_type(PB_BBQ_SYNCP_PRECHANGE_RESP);
 	msg.set_sync_latency(syncLatency);
 	msg.set_result(RTLIB_OK);
@@ -722,9 +722,9 @@ void BbqueRPC_PB_FIFO_Client::RpcBbqSyncpPreChange(unsigned int pyl_size)
 RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_SyncpSyncChangeResp(
         rpc_msg_token_t token, pRegisteredEXC_t prec, RTLIB_ExitCode_t sync)
 {
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
-    msg.set_result(sync);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, application_pid, prec->id);
+	msg.set_result(sync);
 	rpc_fifo_BBQ_SYNCP_SYNCCHANGE_RESP_t rf_BBQ_SYNCP_SYNCCHANGE_RESP = {
 		{
 			FIFO_PKT_SIZE(BBQ_SYNCP_SYNCCHANGE_RESP),
@@ -812,9 +812,9 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_SyncpPostChangeResp(
         rpc_msg_token_t token, pRegisteredEXC_t prec,
         RTLIB_ExitCode_t result)
 {
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
-    msg.set_result(result);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, application_pid, prec->id);
+	msg.set_result(result);
 	rpc_fifo_BBQ_SYNCP_POSTCHANGE_RESP_t rf_BBQ_SYNCP_POSTCHANGE_RESP = {
 		{
 			FIFO_PKT_SIZE(BBQ_SYNCP_POSTCHANGE_RESP),
@@ -902,8 +902,8 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_GetRuntimeProfileResp(
         uint32_t mem_time)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
-    PB_rpc_msg msg;
-    PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, channel_thread_pid, prec->id);
+	PB_rpc_msg msg;
+	PBMessageFactory::pb_set_header(msg, RPC_BBQ_RESP, token, application_pid, prec->id);
 	msg.mutable_hdr()->set_resp_type(PB_BBQ_GET_PROFILE_RESP);
 	msg.set_exec_time(exc_time);
 	msg.set_mem_time(mem_time);

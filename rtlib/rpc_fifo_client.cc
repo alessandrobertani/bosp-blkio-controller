@@ -85,7 +85,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelRelease()
 			{
 				RPC_APP_EXIT,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid,
 				0
 			}
 		}
@@ -258,7 +258,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char * name)
 			{
 				RPC_APP_PAIR,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid,
 				0
 			},
 			BBQUE_RPC_FIFO_MAJOR_VERSION,
@@ -269,7 +269,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char * name)
 	::strncpy(rf_APP_PAIR.rpc_fifo, app_fifo_filename, BBQUE_FIFO_NAME_LENGTH);
 	::strncpy(rf_APP_PAIR.pyl.app_name, name, RTLIB_APP_NAME_LENGTH);
 	logger->Debug("Pairing FIFO channels [app: %s, pid: %d]", name,
-		channel_thread_pid);
+	              application_pid);
 	// Sending RPC Request
 	RPC_FIFO_SEND(APP_PAIR);
 	logger->Debug("Waiting BBQUE response...");
@@ -341,7 +341,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(
 	trdStatus_cv.wait(trdStatus_ul);
 	// Setting up application FIFO filename
 	snprintf(app_fifo_filename, BBQUE_FIFO_NAME_LENGTH,
-		"bbque_%05d_%s", channel_thread_pid, name);
+	         "bbque_%05d_%s", application_pid, name);
 	// Setting up the communication channel
 	result = ChannelSetup();
 
@@ -377,7 +377,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Register(pRegisteredEXC_t prec)
 			{
 				RPC_EXC_REGISTER,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 			"\0",
@@ -419,7 +419,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Unregister(pRegisteredEXC_t prec)
 			{
 				RPC_EXC_UNREGISTER,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 			"\0"
@@ -451,7 +451,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Enable(pRegisteredEXC_t prec)
 			{
 				RPC_EXC_START,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid, //channel_thread_pid,
 				prec->id
 			},
 		}
@@ -479,7 +479,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Disable(pRegisteredEXC_t prec)
 			{
 				RPC_EXC_STOP,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid, //channel_thread_pid,
 				prec->id
 			},
 		}
@@ -515,7 +515,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Set(pRegisteredEXC_t prec,
 	// Init RPC header
 	prf_EXC_SET->pyl.hdr.typ = RPC_EXC_SET;
 	prf_EXC_SET->pyl.hdr.token = RpcMsgToken();
-	prf_EXC_SET->pyl.hdr.app_pid = channel_thread_pid;
+	prf_EXC_SET->pyl.hdr.app_pid = application_pid; //channel_thread_pid;
 	prf_EXC_SET->pyl.hdr.exc_id = prec->id;
 	logger->Debug("_Set: Copying [%d] constraints using buffer @%p "
 	              "of [%" PRIu64 "] Bytes...",
@@ -552,7 +552,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Clear(pRegisteredEXC_t prec)
 			{
 				RPC_EXC_CLEAR,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 		}
@@ -581,7 +581,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int gap,
 			{
 				RPC_EXC_RTNOTIFY,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 			gap,
@@ -616,7 +616,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_ScheduleRequest(pRegisteredEXC_t prec)
 			{
 				RPC_EXC_SCHEDULE,
 				RpcMsgToken(),
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 		}
@@ -653,7 +653,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPreChangeResp(
 			{
 				RPC_BBQ_RESP,
 				token,
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 			syncLatency,
@@ -734,7 +734,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpSyncChangeResp(
 			{
 				RPC_BBQ_RESP,
 				token,
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 			(uint8_t) sync
@@ -808,7 +808,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPostChangeResp(
 			{
 				RPC_BBQ_RESP,
 				token,
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 			(uint8_t) result
@@ -881,7 +881,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GetRuntimeProfileResp(
 			{
 				RPC_BBQ_RESP,
 				token,
-				channel_thread_pid,
+				application_pid,
 				prec->id
 			},
 			exc_time,

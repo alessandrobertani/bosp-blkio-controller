@@ -926,8 +926,6 @@ protected:
 		         channel_thread_pid, name);
 	}
 
-private:
-
 	/**
 	 * @brief The PID of the application using the library
 	 *
@@ -936,6 +934,8 @@ private:
 	 * applications accessing its managed resources.
 	 */
 	pid_t application_pid = 0;
+
+private:
 
 	/**
 	 * @brief True if the library has been properly initialized
