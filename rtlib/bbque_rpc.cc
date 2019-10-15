@@ -148,10 +148,10 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 
 			if (option[1] == 's' || option[1] == 'S') {
 				rtlib_configuration.duration.max_ms_before_termination = 1000 * atoi(
-							option + 2);
+				                        option + 2);
 				rtlib_configuration.duration.time_limit = true;
 				logger->Warn("Enabling DURATION timeout %u [s]",
-							 rtlib_configuration.duration.max_cycles_before_termination / 1000);
+				             rtlib_configuration.duration.max_cycles_before_termination / 1000);
 				break;
 			}
 
@@ -159,7 +159,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 				rtlib_configuration.duration.max_cycles_before_termination = atoi(option + 2);
 				rtlib_configuration.duration.time_limit = false;
 				logger->Warn("Enabling DURATION timeout %u [cycles]",
-							 rtlib_configuration.duration.max_cycles_before_termination);
+				             rtlib_configuration.duration.max_cycles_before_termination);
 				break;
 			}
 
@@ -190,7 +190,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 				sscanf(option + 1, "%d", &rtlib_configuration.unmanaged.awm_id);
 
 			logger->Warn("Enabling UNMANAGED mode, selected AWM [%d]",
-						 rtlib_configuration.unmanaged.awm_id);
+			             rtlib_configuration.unmanaged.awm_id);
 			break;
 
 		case 'b':
@@ -224,41 +224,41 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 			*next = 0;
 			cg_cpuset_cpus = pos;
 			rtlib_configuration.cgroup_support.cpuset.cpus = (char *)
-					cg_cpuset_cpus.c_str();
+			                cg_cpuset_cpus.c_str();
 			pos = ++ next;
 			next = strchr(pos, ' ');
 			*next = 0;
 			cg_cpu_cfs_period_us = pos;
 			rtlib_configuration.cgroup_support.cpu.cfs_period_us = (char *)
-					cg_cpu_cfs_period_us.c_str();
+			                cg_cpu_cfs_period_us.c_str();
 			pos = ++ next;
 			next = strchr(pos, ' ');
 			*next = 0;
 			cg_cpu_cfs_quota_us  = pos;
 			rtlib_configuration.cgroup_support.cpu.cfs_quota_us = (char *)
-					cg_cpu_cfs_quota_us.c_str();
+			                cg_cpu_cfs_quota_us.c_str();
 			pos = ++ next;
 			next = strchr(pos, ' ');
 			*next = 0;
 			cg_cpuset_mems = pos;
 			rtlib_configuration.cgroup_support.cpuset.mems = (char *)
-					cg_cpuset_mems.c_str();
+			                cg_cpuset_mems.c_str();
 			pos = ++ next; //next = strchr(pos, ' '); *next = 0;
 			cg_memory_limit_in_bytes = pos;
 			rtlib_configuration.cgroup_support.memory.limit_in_bytes = (char *)
-					cg_memory_limit_in_bytes.c_str();
+			                cg_memory_limit_in_bytes.c_str();
 			// Report CGroup configuration
 			logger->Debug("CGroup Forcing Setup:");
 			logger->Debug("   cpuset.cpus............. %s",
-						  rtlib_configuration.cgroup_support.cpuset.cpus);
+			              rtlib_configuration.cgroup_support.cpuset.cpus);
 			logger->Debug("   cpuset.mems............. %s",
-						  rtlib_configuration.cgroup_support.cpuset.mems);
+			              rtlib_configuration.cgroup_support.cpuset.mems);
 			logger->Debug("   cpu.cfs_period_us....... %s",
-						  rtlib_configuration.cgroup_support.cpu.cfs_period_us);
+			              rtlib_configuration.cgroup_support.cpu.cfs_period_us);
 			logger->Debug("   cpu.cfs_quota_us........ %s",
-						  rtlib_configuration.cgroup_support.cpu.cfs_quota_us);
+			              rtlib_configuration.cgroup_support.cpu.cfs_quota_us);
 			logger->Debug("   memory.limit_in_bytes... %s",
-						  rtlib_configuration.cgroup_support.memory.limit_in_bytes);
+			              rtlib_configuration.cgroup_support.memory.limit_in_bytes);
 			logger->Warn("Enabling CGroup FORCING mode");
 			break;
 #endif // CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
@@ -274,13 +274,12 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 			rtlib_configuration.profile.enabled = BBQUE_RTLIB_PERF_ENABLE;
 			// ... with the specified verbosity level
 			sscanf(option + 1, "%d",
-				   &rtlib_configuration.profile.perf_counters.detailed_run);
+			       &rtlib_configuration.profile.perf_counters.detailed_run);
 
 			if (rtlib_configuration.profile.enabled) {
 				logger->Notice("Enabling Perf Counters [verbosity: %d]",
-							   rtlib_configuration.profile.perf_counters.detailed_run);
-			}
-			else {
+				               rtlib_configuration.profile.perf_counters.detailed_run);
+			} else {
 				logger->Error("WARN: Perf Counters NOT available");
 			}
 
@@ -295,9 +294,8 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 
 			if (rtlib_configuration.profile.perf_counters.raw > 0) {
 				logger->Info("Enabling %d RAW Perf Counters",
-							 rtlib_configuration.profile.perf_counters.raw);
-			}
-			else {
+				             rtlib_configuration.profile.perf_counters.raw);
+			} else {
 				logger->Warn("Expected RAW Perf Counters");
 				break;
 			}
@@ -331,7 +329,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 			rtlib_configuration.profile.opencl.enabled = true;
 			sscanf(option + 1, "%d", &rtlib_configuration.profile.opencl.level);
 			logger->Notice("Enabling OpenCL profiling [verbosity: %d]",
-						   rtlib_configuration.profile.opencl.level);
+			               rtlib_configuration.profile.opencl.level);
 			break;
 #endif //CONFIG_BBQUE_OPENCL
 
@@ -358,7 +356,8 @@ RTLIB_ExitCode_t BbqueRPC::InitializeApplication(const char * name)
 
 	application_name = name;
 	application_pid  = gettid();
-	logger->Debug("Initializing app [%d:%s]", application_pid, application_name);
+	logger->Debug("Initializing pid=%d name=%s parent=%d",
+	              application_pid, application_name, getppid());
 	RTLIB_ExitCode_t exitCode = _Init(name);
 
 	if (exitCode != RTLIB_OK) {
@@ -388,8 +387,8 @@ uint8_t BbqueRPC::NextExcID()
 }
 
 RTLIB_EXCHandler_t BbqueRPC::Register(
-	const char * name,
-	const RTLIB_EXCParameters_t * params)
+        const char * name,
+        const RTLIB_EXCParameters_t * params)
 {
 	RTLIB_ExitCode_t result;
 	assert(rtlib_is_initialized);
@@ -402,7 +401,7 @@ RTLIB_EXCHandler_t BbqueRPC::Register(
 
 		if (exc->name == name) {
 			logger->Error("Registering EXC [%s] FAILED "
-						  "(Error: EXC already registered)", name);
+			              "(Error: EXC already registered)", name);
 			assert(exc->name != name);
 			return nullptr;
 		}
@@ -410,15 +409,15 @@ RTLIB_EXCHandler_t BbqueRPC::Register(
 
 	// Build the new EXC
 	auto new_exc =
-		pRegisteredEXC_t(new RegisteredExecutionContext_t(name, NextExcID()));
+	        pRegisteredEXC_t(new RegisteredExecutionContext_t(name, NextExcID()));
 	memcpy((void *) & (new_exc->parameters), (void *) params,
-		   sizeof (RTLIB_EXCParameters_t));
+	       sizeof (RTLIB_EXCParameters_t));
 	// Calling the Low-level registration
 	result = _Register(new_exc);
 
 	if (result != RTLIB_OK) {
 		logger->Error("Registering EXC [%s] FAILED "
-					  "(Error %d: %s)", name, result, RTLIB_ErrorStr(result));
+		              "(Error %d: %s)", name, result, RTLIB_ErrorStr(result));
 		return nullptr;
 	}
 
@@ -430,7 +429,7 @@ RTLIB_EXCHandler_t BbqueRPC::Register(
 }
 
 RTLIB_ExitCode_t BbqueRPC::SetupCGroup(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	auto exc = getRegistered(exc_handler);
 
@@ -442,14 +441,14 @@ RTLIB_ExitCode_t BbqueRPC::SetupCGroup(
 }
 
 BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	assert(exc_handler);
 
 	// Checking for library initialization
 	if (! rtlib_is_initialized) {
 		logger->Error("EXC [%p] lookup FAILED "
-					  "(Error: RTLIB not initialized)", (void *) exc_handler);
+		              "(Error: RTLIB not initialized)", (void *) exc_handler);
 		assert(rtlib_is_initialized);
 		return nullptr;
 	}
@@ -470,7 +469,7 @@ BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(
 	// Handle EXC not found
 	if (exc_found == false) {
 		logger->Error("EXC [%p] lookup FAILED "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		assert(exc_found != false);
 		return nullptr;
 	}
@@ -483,7 +482,7 @@ BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(uint8_t exc_id)
 	// Checking for library initialization
 	if (! rtlib_is_initialized) {
 		logger->Error("EXC [uid %d] lookup FAILED "
-					  "(Error: RTLIB not initialized)", exc_id);
+		              "(Error: RTLIB not initialized)", exc_id);
 		assert(rtlib_is_initialized);
 		return nullptr;
 	}
@@ -504,7 +503,7 @@ BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(uint8_t exc_id)
 	// Handle EXC not found
 	if (exc_found == false) {
 		logger->Error("EXC [uid %d] lookup FAILED "
-					  "(Error: EXC not registered)", exc_id);
+		              "(Error: EXC not registered)", exc_id);
 		assert(exc_found != false);
 		return nullptr;
 	}
@@ -513,7 +512,7 @@ BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(uint8_t exc_id)
 }
 
 void BbqueRPC::Unregister(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -522,7 +521,7 @@ void BbqueRPC::Unregister(
 
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
@@ -534,7 +533,7 @@ void BbqueRPC::Unregister(
 
 	if (result != RTLIB_OK) {
 		logger->Error("Unregister EXC [%p:%s] FAILED (Error %d: %s)",
-					  (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
+		              (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
 		return;
 	}
 
@@ -568,7 +567,7 @@ void BbqueRPC::UnregisterAll()
 
 		if (result != RTLIB_OK) {
 			logger->Error("Unregister EXC [%s] FAILED (Error %d: %s)",
-						  exc->name.c_str(), result, RTLIB_ErrorStr(result));
+			              exc->name.c_str(), result, RTLIB_ErrorStr(result));
 			return;
 		}
 
@@ -578,7 +577,7 @@ void BbqueRPC::UnregisterAll()
 }
 
 RTLIB_ExitCode_t BbqueRPC::Enable(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -587,7 +586,7 @@ RTLIB_ExitCode_t BbqueRPC::Enable(
 
 	if (! exc) {
 		logger->Error("Enabling EXC [%p] FAILED "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -597,7 +596,7 @@ RTLIB_ExitCode_t BbqueRPC::Enable(
 
 	if (result != RTLIB_OK) {
 		logger->Error("Enabling EXC [%p:%s] FAILED (Error %d: %s)",
-					  (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
+		              (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -609,7 +608,7 @@ RTLIB_ExitCode_t BbqueRPC::Enable(
 }
 
 RTLIB_ExitCode_t BbqueRPC::Disable(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -618,7 +617,7 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 
 	if (! exc) {
 		logger->Error("Disabling EXC [%p] STOP "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -628,7 +627,7 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 
 	if (result != RTLIB_OK) {
 		logger->Error("Disabling EXC [%p:%s] FAILED (Error %d: %s)",
-					  (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
+		              (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
 		return RTLIB_EXC_DISABLE_FAILED;
 	}
 
@@ -650,7 +649,7 @@ RTLIB_ExitCode_t BbqueRPC::SetupStatistics(pRegisteredEXC_t exc)
 	if (! awm_stats) {
 		logger->Debug("Setup stats for AWM [%d]", exc->current_awm_id);
 		awm_stats = exc->awm_stats[exc->current_awm_id] =
-						pAwmStats_t(new AwmStats_t);
+		                    pAwmStats_t(new AwmStats_t);
 
 		// Setup Performance Counters (if required)
 		if (PerfRegisteredEvents(exc)) {
@@ -666,13 +665,13 @@ RTLIB_ExitCode_t BbqueRPC::SetupStatistics(pRegisteredEXC_t exc)
 }
 
 #define STATS_HEADER \
-"# EXC    AWM   Uses Cycles   Total |      Min      Max |      Avg      Var"
+	"# EXC    AWM   Uses Cycles   Total |      Min      Max |      Avg      Var"
 #define STATS_AWM_SPLIT \
-"#==================================+===================+=================="
+	"#==================================+===================+=================="
 #define STATS_CYCLE_SPLIT \
-"#-------------------------+        +-------------------+------------------"
+	"#-------------------------+        +-------------------+------------------"
 #define STATS_CONF_SPLIT \
-"#-------------------------+--------+-------------------+------------------"
+	"#-------------------------+--------+-------------------+------------------"
 
 void BbqueRPC::DumpStatsHeader()
 {
@@ -708,14 +707,13 @@ void BbqueRPC::DumpStatsConsole(pRegisteredEXC_t exc, bool verbose)
 		if (verbose) {
 			fprintf(output_file, STATS_AWM_SPLIT"\n");
 			fprintf(output_file, "%8s %03d %6d %6d %7u | %8.3f %8.3f | %8.3f %8.3f\n",
-					exc->name.c_str(), awm_id, awm_stats->number_of_uses, cycles_count,
-					awm_stats->time_spent_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
-		}
-		else {
+			        exc->name.c_str(), awm_id, awm_stats->number_of_uses, cycles_count,
+			        awm_stats->time_spent_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
+		} else {
 			logger->Debug(STATS_AWM_SPLIT);
 			logger->Debug("%8s %03d %6d %6d %7u | %8.3f %8.3f | %8.3f %8.3f",
-						  exc->name.c_str(), awm_id, awm_stats->number_of_uses, cycles_count,
-						  awm_stats->time_spent_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
+			              exc->name.c_str(), awm_id, awm_stats->number_of_uses, cycles_count,
+			              awm_stats->time_spent_processing, cycle_min, cycle_max, cycle_avg, cycle_var);
 		}
 
 		// Monitor statistics extraction
@@ -727,28 +725,27 @@ void BbqueRPC::DumpStatsConsole(pRegisteredEXC_t exc, bool verbose)
 		if (verbose) {
 			fprintf(output_file, STATS_CYCLE_SPLIT "\n");
 			fprintf(output_file, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
-					exc->name.c_str(), awm_id, "onRun",
-					awm_stats->time_spent_processing - awm_stats->time_spent_monitoring,
-					cycle_min - monitor_min,
-					cycle_max - monitor_max,
-					cycle_avg - monitor_avg,
-					cycle_var - monitor_var);
+			        exc->name.c_str(), awm_id, "onRun",
+			        awm_stats->time_spent_processing - awm_stats->time_spent_monitoring,
+			        cycle_min - monitor_min,
+			        cycle_max - monitor_max,
+			        cycle_avg - monitor_avg,
+			        cycle_var - monitor_var);
 			fprintf(output_file, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
-					exc->name.c_str(), awm_id, "onMonitor", awm_stats->time_spent_monitoring,
-					monitor_min, monitor_max, monitor_avg, monitor_var);
-		}
-		else {
+			        exc->name.c_str(), awm_id, "onMonitor", awm_stats->time_spent_monitoring,
+			        monitor_min, monitor_max, monitor_avg, monitor_var);
+		} else {
 			logger->Debug(STATS_AWM_SPLIT);
 			logger->Debug("%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
-						  exc->name.c_str(), awm_id, "onRun",
-						  awm_stats->time_spent_processing - awm_stats->time_spent_monitoring,
-						  cycle_min - monitor_min,
-						  cycle_max - monitor_max,
-						  cycle_avg - monitor_avg,
-						  cycle_var - monitor_var);
+			              exc->name.c_str(), awm_id, "onRun",
+			              awm_stats->time_spent_processing - awm_stats->time_spent_monitoring,
+			              cycle_min - monitor_min,
+			              cycle_max - monitor_max,
+			              cycle_avg - monitor_avg,
+			              cycle_var - monitor_var);
 			logger->Debug("%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
-						  exc->name.c_str(), awm_id, "onMonitor", awm_stats->time_spent_monitoring,
-						  monitor_min, monitor_max, monitor_avg, monitor_var);
+			              exc->name.c_str(), awm_id, "onMonitor", awm_stats->time_spent_monitoring,
+			              monitor_min, monitor_max, monitor_avg, monitor_var);
 		}
 
 		// Reconfiguration statistics extraction
@@ -760,14 +757,13 @@ void BbqueRPC::DumpStatsConsole(pRegisteredEXC_t exc, bool verbose)
 		if (verbose) {
 			fprintf(output_file, STATS_CONF_SPLIT "\n");
 			fprintf(output_file, "%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
-					exc->name.c_str(), awm_id, "onConfigure", awm_stats->time_spent_configuring,
-					config_min, config_max, config_avg, config_var);
-		}
-		else {
+			        exc->name.c_str(), awm_id, "onConfigure", awm_stats->time_spent_configuring,
+			        config_min, config_max, config_avg, config_var);
+		} else {
 			logger->Debug(STATS_CONF_SPLIT);
 			logger->Debug("%8s %03d %13s %7u | %8.3f %8.3f | %8.3f %8.3f\n",
-						  exc->name.c_str(), awm_id, "onConfigure", awm_stats->time_spent_configuring,
-						  config_min, config_max, config_avg, config_var);
+			              exc->name.c_str(), awm_id, "onConfigure", awm_stats->time_spent_configuring,
+			              config_min, config_max, config_avg, config_var);
 		}
 	}
 
@@ -780,7 +776,7 @@ void BbqueRPC::DumpStatsConsole(pRegisteredEXC_t exc, bool verbose)
 		awm_stats = awm.second;
 		cycles_count = count(awm_stats->cycle_samples);
 		fprintf(output_file, "\nPerf counters stats for '%s-%d' (%d cycles):\n\n",
-				exc->name.c_str(), awm_id, cycles_count);
+		        exc->name.c_str(), awm_id, cycles_count);
 		PerfPrintStats(exc, awm_stats);
 	}
 }
@@ -821,13 +817,13 @@ RTLIB_ExitCode_t BbqueRPC::CGroupPathSetup(pRegisteredEXC_t exc)
 	char cgpath[] = "/user.slice/res/12345:APPLICATION_NAME:00";
 	// Setup the application specific CGroup
 	snprintf(cgpath, sizeof (cgpath), "/user.slice/res/%05d:%.6s:%02d",
-			 channel_thread_pid,
-			 application_name,
-			 exc->id);
+	         channel_thread_pid,
+	         application_name,
+	         exc->id);
 	logger->Notice("CGroup of EXC %.05d:%s is: %s",
-				   channel_thread_pid,
-				   application_name,
-				   cgpath);
+	               channel_thread_pid,
+	               application_name,
+	               cgpath);
 	// Keep track of the configured CGroup path
 	exc->cgroup_path = cgpath;
 	return RTLIB_OK;
@@ -866,23 +862,22 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCreate(pRegisteredEXC_t exc, int pid)
 	if (rtlib_configuration.cgroup_support.static_configuration) {
 		logger->Warn("Setting up fixed configuration CGroups values");
 		cgsetup.cpuset.cpus =
-			rtlib_configuration.cgroup_support.cpuset.cpus;
+		        rtlib_configuration.cgroup_support.cpuset.cpus;
 		cgsetup.cpuset.mems =
-			rtlib_configuration.cgroup_support.cpuset.mems;
+		        rtlib_configuration.cgroup_support.cpuset.mems;
 		cgsetup.cpu.cfs_period_us =
-			rtlib_configuration.cgroup_support.cpu.cfs_period_us;
+		        rtlib_configuration.cgroup_support.cpu.cfs_period_us;
 		cgsetup.cpu.cfs_quota_us =
-			rtlib_configuration.cgroup_support.cpu.cfs_quota_us;
+		        rtlib_configuration.cgroup_support.cpu.cfs_quota_us;
 		cgsetup.memory.limit_in_bytes =
-			rtlib_configuration.cgroup_support.memory.limit_in_bytes;
-	}
-	else {
+		        rtlib_configuration.cgroup_support.memory.limit_in_bytes;
+	} else {
 		bu::CGroups::Read("/user.slice/res", cgsetup);
 	}
 
 	// Setup CGroup PATH
 	if (bu::CGroups::WriteCgroup(cgroup_path, cgsetup, 0) !=
-		bu::CGroups::CGResult::OK) {
+	    bu::CGroups::CGResult::OK) {
 		logger->Error("CGroup setup [%s] FAILED");
 		return RTLIB_ERROR;
 	}
@@ -894,7 +889,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCommitAllocation(pRegisteredEXC_t exc)
 {
 	// Proceed only in case of cgroup support and dynamic assignment
 	if (! rtlib_configuration.cgroup_support.enabled ||
-		rtlib_configuration.cgroup_support.static_configuration)
+	    rtlib_configuration.cgroup_support.static_configuration)
 		return RTLIB_OK;
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
@@ -906,31 +901,31 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCommitAllocation(pRegisteredEXC_t exc)
 
 	// CPUSET representing the allocated processing elements
 	logger->Debug("Updating cpuset.cpus: %s -> %s",
-		 cgsetup.cpuset.cpus.c_str(),
-		 exc->cg_current_allocation.cpuset_cpus.c_str());
+	              cgsetup.cpuset.cpus.c_str(),
+	              exc->cg_current_allocation.cpuset_cpus.c_str());
 
 	cgsetup.cpuset.cpus = exc->cg_current_allocation.cpuset_cpus;
 
 	// MEMS representing the allocated memory nodes, if any
 	if (exc->cg_current_allocation.cpuset_mems != "") {
 		logger->Debug("Updating cpuset.mems: %s -> %s",
-			cgsetup.cpuset.mems.c_str(),
-			 exc->cg_current_allocation.cpuset_mems.c_str());
+		              cgsetup.cpuset.mems.c_str(),
+		              exc->cg_current_allocation.cpuset_mems.c_str());
 
 		cgsetup.cpuset.mems = exc->cg_current_allocation.cpuset_mems;
 	} else
 		logger->Debug("Keeping previous cpuset.mems value: %s",
-				cgsetup.cpuset.mems.c_str());
+		              cgsetup.cpuset.mems.c_str());
 
 
 	// CFS_PERIOD: the period over which cpu bandwidth. limit is enforced
 	uint32_t cycletime_mean_us = 1000u * exc->cycletime_analyser_system.GetMean();
 	//if (cycletime_mean_us == 0 || cycletime_mean_us > MAX_ALLOWED_CFS_PERIOD)
-		cycletime_mean_us = DEFAULT_CFS_PERIOD;
+	cycletime_mean_us = DEFAULT_CFS_PERIOD;
 
 	logger->Debug("Updating cpu.cfs_period_us: %s to %u",
-		cgsetup.cpu.cfs_period_us.c_str(),
-		cycletime_mean_us);
+	              cgsetup.cpu.cfs_period_us.c_str(),
+	              cycletime_mean_us);
 
 	cgsetup.cpu.cfs_period_us = std::to_string(cycletime_mean_us);
 
@@ -941,29 +936,29 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCommitAllocation(pRegisteredEXC_t exc)
 	cfs_quota /= 100u;
 
 	logger->Debug("Updating cpu.cfs_quota_us: %s to %s",
-		cgsetup.cpu.cfs_quota_us.c_str(),
-		std::to_string(cfs_quota).c_str());
+	              cgsetup.cpu.cfs_quota_us.c_str(),
+	              std::to_string(cfs_quota).c_str());
 
 	cgsetup.cpu.cfs_quota_us = std::to_string(cfs_quota);
 
 	// Memory limit in bytes
 	if (exc->cg_current_allocation.memory_limit_bytes != "") {
 		logger->Debug("Updating memory.limit_in_bytes: %s -> %s",
-			cgsetup.memory.limit_in_bytes.c_str(),
-			exc->cg_current_allocation.memory_limit_bytes.c_str());
+		              cgsetup.memory.limit_in_bytes.c_str(),
+		              exc->cg_current_allocation.memory_limit_bytes.c_str());
 
 		cgsetup.memory.limit_in_bytes = exc->cg_current_allocation.memory_limit_bytes;
 	} else
 		logger->Debug("Keeping previous memory.limit_in_bytes value: %s",
-				cgsetup.memory.limit_in_bytes.c_str());
+		              cgsetup.memory.limit_in_bytes.c_str());
 
 
 	logger->Debug("Cgroup write: [pes %s] [mem %s - %s bytes] [cfs %s/%s]",
-		cgsetup.cpuset.cpus.c_str(),
-		cgsetup.cpuset.mems.c_str(),
-		cgsetup.memory.limit_in_bytes.c_str(),
-		cgsetup.cpu.cfs_quota_us.c_str(),
-		cgsetup.cpu.cfs_period_us.c_str());
+	              cgsetup.cpuset.cpus.c_str(),
+	              cgsetup.cpuset.mems.c_str(),
+	              cgsetup.memory.limit_in_bytes.c_str(),
+	              cgsetup.cpu.cfs_quota_us.c_str(),
+	              cgsetup.cpu.cfs_period_us.c_str());
 
 	bu::CGroups::WriteCgroup(cgroup_path, cgsetup, channel_thread_pid);
 #else
@@ -1029,15 +1024,14 @@ void BbqueRPC::DumpStats(pRegisteredEXC_t exc, bool verbose)
 
 	if (verbose) {
 		fprintf(output_file, "Cumulative execution stats for '%s':\n",
-				exc->name.c_str());
+		        exc->name.c_str());
 		fprintf(output_file, "  TotCycles    : %7lu\n", exc->cycles_count);
 		fprintf(output_file, "  StartLatency : %7u [ms]\n", exc->starting_time_ms);
 		fprintf(output_file, "  AwmWait      : %7u [ms]\n", exc->blocked_time_ms);
 		fprintf(output_file, "  Configure    : %7u [ms]\n", exc->config_time_ms);
 		fprintf(output_file, "  Process      : %7u [ms]\n", exc->processing_time_ms);
 		fprintf(output_file, "\n");
-	}
-	else {
+	} else {
 		logger->Debug("Cumulative execution stats for '%s':", exc->name.c_str());
 		logger->Debug("  TotCycles    : %7lu", exc->cycles_count);
 		logger->Debug("  StartLatency : %7u [ms]", exc->starting_time_ms);
@@ -1072,7 +1066,7 @@ bool BbqueRPC::CheckDurationTimeout(pRegisteredEXC_t exc)
 		return false;
 
 	if (exc->processing_time_ms >=
-		rtlib_configuration.duration.max_ms_before_termination) {
+	    rtlib_configuration.duration.max_ms_before_termination) {
 		rtlib_configuration.duration.max_ms_before_termination = 0;
 		return true;
 	}
@@ -1088,11 +1082,11 @@ void BbqueRPC::_SyncTimeEstimation(pRegisteredEXC_t exc)
 	double user_cycletime_ms = exc->execution_timer.getElapsedTimeMs();
 	// Cycletime as seen by bbque, which could insert sleeps to enforce low CPS
 	double bbque_cycletime_ms =
-		user_cycletime_ms - exc->cps_enforcing_sleep_time_ms;
+	        user_cycletime_ms - exc->cps_enforcing_sleep_time_ms;
 	exc->cps_enforcing_sleep_time_ms = 0;
 	logger->Debug("Last cycle time %10.3f[ms] (%10.3f without sleeps) for EXC "
-				  "[%s:%02hu]", user_cycletime_ms, bbque_cycletime_ms,
-				  exc->name.c_str(), exc->id);
+	              "[%s:%02hu]", user_cycletime_ms, bbque_cycletime_ms,
+	              exc->name.c_str(), exc->id);
 	// Update running counters
 	awm_stats->time_spent_processing += user_cycletime_ms;
 	exc->processing_time_ms += user_cycletime_ms;
@@ -1149,11 +1143,11 @@ RTLIB_ExitCode_t BbqueRPC::UpdateCPUBandwidthStats(pRegisteredEXC_t exc)
 {
 	exc->cpu_usage_info.current_time = times(&exc->cpu_usage_info.time_sample);
 	clock_t elapsed_time = exc->cpu_usage_info.current_time
-						   - exc->cpu_usage_info.previous_time;
+	                       - exc->cpu_usage_info.previous_time;
 	clock_t system_time = exc->cpu_usage_info.time_sample.tms_stime
-						  - exc->cpu_usage_info.previous_tms_stime;
+	                      - exc->cpu_usage_info.previous_tms_stime;
 	clock_t user_time = exc->cpu_usage_info.time_sample.tms_utime
-						- exc->cpu_usage_info.previous_tms_utime;
+	                    - exc->cpu_usage_info.previous_tms_utime;
 
 	if (elapsed_time <= 0 || system_time < 0 || user_time < 0)
 		return RTLIB_ERROR;
@@ -1161,12 +1155,12 @@ RTLIB_ExitCode_t BbqueRPC::UpdateCPUBandwidthStats(pRegisteredEXC_t exc)
 	double cpu_usage = 100.0 * (system_time + user_time) / elapsed_time;
 	exc->cpu_usage_analyser.InsertValue(cpu_usage);
 	logger->Debug("Measured CPU Usage: %f, average: %f",
-				  cpu_usage, exc->cpu_usage_analyser.GetMean());
+	              cpu_usage, exc->cpu_usage_analyser.GetMean());
 	exc->cpu_usage_info.previous_time = exc->cpu_usage_info.current_time;
 	exc->cpu_usage_info.previous_tms_stime =
-		exc->cpu_usage_info.time_sample.tms_stime;
+	        exc->cpu_usage_info.time_sample.tms_stime;
 	exc->cpu_usage_info.previous_tms_utime =
-		exc->cpu_usage_info.time_sample.tms_utime;
+	        exc->cpu_usage_info.time_sample.tms_utime;
 	return RTLIB_OK;
 }
 
@@ -1176,9 +1170,9 @@ void BbqueRPC::InitCPUBandwidthStats(pRegisteredEXC_t exc)
 	//exc->cpu_usage_info.previous_time = exc->cpu_usage_info.current_time;
 	exc->cpu_usage_info.previous_time = times(&exc->cpu_usage_info.time_sample);
 	exc->cpu_usage_info.previous_tms_stime =
-		exc->cpu_usage_info.time_sample.tms_stime;
+	        exc->cpu_usage_info.time_sample.tms_stime;
 	exc->cpu_usage_info.previous_tms_utime =
-		exc->cpu_usage_info.time_sample.tms_utime;
+	        exc->cpu_usage_info.time_sample.tms_utime;
 }
 
 RTLIB_ExitCode_t BbqueRPC::UpdateMonitorStatistics(pRegisteredEXC_t exc)
@@ -1194,11 +1188,11 @@ RTLIB_ExitCode_t BbqueRPC::UpdateMonitorStatistics(pRegisteredEXC_t exc)
 
 void BbqueRPC::ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler)
 {
-        pRegisteredEXC_t exc;
-        // Get a reference to the EXC to control
-        assert(exc_handler);
-        exc = getRegistered(exc_handler);
-        assert(isRegistered(exc) == true);
+	pRegisteredEXC_t exc;
+	// Get a reference to the EXC to control
+	assert(exc_handler);
+	exc = getRegistered(exc_handler);
+	assert(isRegistered(exc) == true);
 
 	logger->Debug("SetCPSGoal: Resetting cycle time history");
 	exc->last_cycletime_ms = exc->cycletime_analyser_user.GetMean();
@@ -1212,8 +1206,8 @@ void BbqueRPC::ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler)
 }
 
 RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
-	pRegisteredEXC_t exc,
-	RTLIB_WorkingModeParams_t * wm)
+        pRegisteredEXC_t exc,
+        RTLIB_WorkingModeParams_t * wm)
 {
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
 
@@ -1246,8 +1240,8 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 	wm->awm_id = exc->current_awm_id;
 	wm->nr_sys = exc->resource_assignment.size();
 	wm->systems = (RTLIB_SystemResources_t *) malloc(sizeof (
-					  RTLIB_SystemResources_t)
-				  * wm->nr_sys);
+	                        RTLIB_SystemResources_t)
+	                * wm->nr_sys);
 	int i = 0;
 
 	for (auto & system_resources : exc->resource_assignment) {
@@ -1261,7 +1255,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 		wm->res_allocation[i].gpu_bandwidth  = allocation->gpu_bandwidth;
 		wm->res_allocation[i].accelerator_bandwidth  =
-			allocation->accelerator_bandwidth;
+		        allocation->accelerator_bandwidth;
 #endif
 #endif // CONFIG_BBQUE_OPENCL
 		i ++;
@@ -1273,8 +1267,8 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 }
 
 RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
-	pRegisteredEXC_t exc,
-	RTLIB_WorkingModeParams_t * wm)
+        pRegisteredEXC_t exc,
+        RTLIB_WorkingModeParams_t * wm)
 {
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
 
@@ -1311,8 +1305,8 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 	wm->awm_id = exc->current_awm_id;
 	wm->nr_sys = exc->resource_assignment.size();
 	wm->systems = (RTLIB_SystemResources_t *) malloc(sizeof (
-					  RTLIB_SystemResources_t)
-				  * wm->nr_sys);
+	                        RTLIB_SystemResources_t)
+	                * wm->nr_sys);
 	int i = 0;
 
 	for (auto system : exc->resource_assignment) {
@@ -1326,7 +1320,7 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 		wm->res_allocation[i].gpu_bandwidth  = resource_assignment->gpu_bandwidth;
 		wm->res_allocation[i].accelerator_bandwidth  =
-			resource_assignment->accelerator_bandwidth;
+		        resource_assignment->accelerator_bandwidth;
 #endif
 #endif
 	}
@@ -1337,30 +1331,30 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 }
 
 RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
-	RTLIB_EXCHandler_t exc_handler,
-	const RTLIB_WorkingModeParams_t * wm,
-	RTLIB_ResourceType_t r_type,
-	int32_t & r_amount)
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * wm,
+        RTLIB_ResourceType_t r_type,
+        int32_t & r_amount)
 {
 	pRegisteredEXC_t exc = getRegistered(exc_handler);
 
 	if (! exc) {
 		logger->Error("Getting resources for EXC [%p] FAILED "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		r_amount = - 1;
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	if (! isAwmAssigned(exc)) {
 		logger->Error("Getting resources for EXC [%p] FAILED "
-					  "(Error: No resources assigned yet)", (void *) exc_handler);
+		              "(Error: No resources assigned yet)", (void *) exc_handler);
 		r_amount = - 1;
 		return RTLIB_EXC_NOT_STARTED;
 	}
 
 	if (rtlib_configuration.unmanaged.enabled) {
 		logger->Warn("Getting resources for EXC [%p] SKIPPED "
-					  "(UNMANAGED mode)", (void *) exc_handler);
+		             "(UNMANAGED mode)", (void *) exc_handler);
 		r_amount = - 1;
 		return RTLIB_OK;
 	}
@@ -1406,17 +1400,18 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 }
 
 RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
-		RTLIB_EXCHandler_t exc_handler,
-		const RTLIB_WorkingModeParams_t * wm,
-		int32_t * ids_vector,
-                int vector_size) {
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * wm,
+        int32_t * ids_vector,
+        int vector_size)
+{
 	UNUSED(wm);
 
-    pRegisteredEXC_t exc = getRegistered(exc_handler);
+	pRegisteredEXC_t exc = getRegistered(exc_handler);
 
-    if (! exc) {
+	if (! exc) {
 		logger->Error("Getting resources for EXC [%p] FAILED "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -1424,34 +1419,34 @@ RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
 		ids_vector[id] = -1;
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
-    int ids_number = std::min(
-			vector_size, (int) exc->cg_current_allocation.cpu_affinity_mask.size());
+	int ids_number = std::min(
+	                         vector_size, (int) exc->cg_current_allocation.cpu_affinity_mask.size());
 
-    for (int id = 0; id < ids_number; id ++)
+	for (int id = 0; id < ids_number; id ++)
 		ids_vector[id] = exc->cg_current_allocation.cpu_affinity_mask[id];
 #endif
 
-    return RTLIB_OK;
+	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
-	RTLIB_EXCHandler_t exc_handler,
-	const RTLIB_WorkingModeParams_t * wm,
-	RTLIB_ResourceType_t r_type,
-	int32_t * sys_array,
-	uint16_t array_size)
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * wm,
+        RTLIB_ResourceType_t r_type,
+        int32_t * sys_array,
+        uint16_t array_size)
 {
 	pRegisteredEXC_t exc = getRegistered(exc_handler);
 
 	if (! exc) {
 		logger->Error("Getting resources for EXC [%p] FAILED "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	if (! isAwmAssigned(exc)) {
 		logger->Error("Getting resources for EXC [%p] FAILED "
-					  "(Error: No resources assigned yet)", (void *) exc_handler);
+		              "(Error: No resources assigned yet)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_STARTED;
 	}
 
@@ -1514,7 +1509,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 }
 
 void BbqueRPC::StartPCountersMonitoring(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
@@ -1522,7 +1517,7 @@ void BbqueRPC::StartPCountersMonitoring(
 
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
@@ -1532,10 +1527,9 @@ void BbqueRPC::StartPCountersMonitoring(
 		PerfSetupEvents(exc);
 
 		if (rtlib_configuration.profile.perf_counters.global
-			&& PerfRegisteredEvents(exc))
+		    && PerfRegisteredEvents(exc))
 			PerfEnable(exc);
-	}
-	else
+	} else
 		logger->Info("Performance counters monitoring is disabled");
 }
 
@@ -1555,9 +1549,9 @@ RTLIB_ExitCode_t BbqueRPC::WaitForSyncDone(pRegisteredEXC_t exc)
 }
 
 RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
-	const RTLIB_EXCHandler_t exc_handler,
-	RTLIB_WorkingModeParams_t * working_mode_params,
-	RTLIB_SyncType_t synch_type)
+        const RTLIB_EXCHandler_t exc_handler,
+        RTLIB_WorkingModeParams_t * working_mode_params,
+        RTLIB_SyncType_t synch_type)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -1568,7 +1562,7 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 	if (! exc) {
 		logger->Error("Getting WM for EXC [%p] FAILED "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -1576,7 +1570,7 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 		// Keep track of the Control Thread PID
 		exc->control_thread_pid = gettid();
 		logger->Debug("Tracking control thread PID [%d] for EXC [%d]...",
-					  exc->control_thread_pid, exc->id);
+		              exc->control_thread_pid, exc->id);
 	}
 
 #ifdef CONFIG_BBQUE_RTLIB_UNMANAGED_SUPPORT
@@ -1629,18 +1623,17 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 			if (result != RTLIB_OK) {
 				logger->Error("Execution context [%s] ScheduleRequest FAILED "
-							  "(Error %d: %s)", exc->name.c_str(), result,
-							  RTLIB_ErrorStr(result));
+				              "(Error %d: %s)", exc->name.c_str(), result,
+				              RTLIB_ErrorStr(result));
 				return RTLIB_EXC_GWM_FAILED;
 			}
 
-		}
-		else {
+		} else {
 			// At this point, the EXC should be either in Synchronization Mode
 			// or Blocked, and thus it should wait for an EXC being
 			// assigned by the RTRM
 			assert((result == RTLIB_EXC_SYNC_MODE) ||
-				   (result == RTLIB_EXC_GWM_BLOCKED));
+			       (result == RTLIB_EXC_GWM_BLOCKED));
 		}
 
 		logger->Debug("Waiting for assigned AWM...");
@@ -1649,8 +1642,8 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 		if (result != RTLIB_OK) {
 			logger->Error("Execution context [%s] WaitForWorkingMode FAILED "
-						  "(Error %d: %s)", exc->name.c_str(), result,
-						  RTLIB_ErrorStr(result));
+			              "(Error %d: %s)", exc->name.c_str(), result,
+			              RTLIB_ErrorStr(result));
 			return RTLIB_EXC_GWM_FAILED;
 		}
 
@@ -1671,18 +1664,18 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 	case RTLIB_EXC_GWM_MIGREC:
 	case RTLIB_EXC_GWM_MIGRATE:
 		logger->Debug("[%s:%02hu] <------------- AWM [%02d] --",
-					  exc->name.c_str(), exc->id, exc->current_awm_id);
+		              exc->name.c_str(), exc->id, exc->current_awm_id);
 		break;
 
 	case RTLIB_EXC_GWM_BLOCKED:
 		logger->Debug("[%s:%02hu] <---------------- BLOCKED --",
-					  exc->name.c_str(), exc->id);
+		              exc->name.c_str(), exc->id);
 		break;
 
 	default:
 		logger->Error("Execution context [%s] GWM FAILED "
-					  "(Error: Invalid event [%d])",
-					  exc->name.c_str(), exc->event);
+		              "(Error: Invalid event [%d])",
+		              exc->name.c_str(), exc->event);
 		assert(exc->event >= RTLIB_EXC_GWM_START);
 		assert(exc->event <= RTLIB_EXC_GWM_BLOCKED);
 		break;
@@ -1716,7 +1709,7 @@ uint32_t BbqueRPC::GetSyncLatency(pRegisteredEXC_t exc)
 		syncDelay = 0;
 
 	logger->Debug("Expected sync time in %10.3f[ms] for EXC [%s:%02hu]",
-				  syncDelay, exc->name.c_str(), exc->id);
+	              syncDelay, exc->name.c_str(), exc->id);
 	return std::ceil(syncDelay);
 }
 
@@ -1737,8 +1730,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(pRegisteredEXC_t exc)
 }
 
 RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
-		msg,
-		std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> & systems)
+                msg,
+                std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> & systems)
 {
 	RTLIB_ExitCode_t result;
 	uint32_t syncLatency;
@@ -1747,8 +1740,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 
 	if (! exc) {
 		logger->Error("SyncP_1 (Pre-Change) EXC [%d] FAILED "
-					  "(Error: Execution Context not registered)",
-					  msg.hdr.exc_id);
+		              "(Error: Execution Context not registered)",
+		              msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -1781,132 +1774,131 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 
-	// Initializing budget info:
-	exc->cg_budget.cpuset_cpus_isolation = ""; // PEs allocated in isolation
-	exc->cg_budget.cpuset_cpus_global    = ""; // All the allocated PEs
-	exc->cg_budget.cpuset_mems           = ""; // Allocated mem nodes
-	exc->cg_budget.memory_limit_bytes    = ""; // Allocated memory bw (bytes)
-	exc->cg_budget.cpu_budget_isolation  = 0.0;
-	exc->cg_budget.cpu_budget_shared = 0.0;
+		// Initializing budget info:
+		exc->cg_budget.cpuset_cpus_isolation = ""; // PEs allocated in isolation
+		exc->cg_budget.cpuset_cpus_global    = ""; // All the allocated PEs
+		exc->cg_budget.cpuset_mems           = ""; // Allocated mem nodes
+		exc->cg_budget.memory_limit_bytes    = ""; // Allocated memory bw (bytes)
+		exc->cg_budget.cpu_budget_isolation  = 0.0;
+		exc->cg_budget.cpu_budget_shared = 0.0;
 
-	unsigned long proc_elements = msg.cpu_ids;
-	unsigned long proc_elements_isolation = msg.cpu_ids_isolation;
-	unsigned long mem_nodes = msg.mem_ids;
+		unsigned long proc_elements = msg.cpu_ids;
+		unsigned long proc_elements_isolation = msg.cpu_ids_isolation;
+		unsigned long mem_nodes = msg.mem_ids;
 
-	////////////////////////////////////////////////////////////////////////
-	// Retrieving processing elements info /////////////////////////////////
-	////////////////////////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////
+		// Retrieving processing elements info /////////////////////////////////
+		////////////////////////////////////////////////////////////////////////
 
-	// All the proc elements that have been assigned to the application
-	for (int pe_id = 0; pe_id < BBQUE_MAX_R_ID_NUM; pe_id ++) {
+		// All the proc elements that have been assigned to the application
+		for (int pe_id = 0; pe_id < BBQUE_MAX_R_ID_NUM; pe_id ++) {
 
-		// Skip if this processing element is NOT assigned to this app
-		if (! ((1ll << pe_id) & proc_elements))
-			continue;
+			// Skip if this processing element is NOT assigned to this app
+			if (! ((1ll << pe_id) & proc_elements))
+				continue;
 
-		// Adding the processing element id in the global control group
-		// setup string, which contains a comma-separated list of ids
-		exc->cg_budget.cpuset_cpus_global +=
-			(exc->cg_budget.cpuset_cpus_global == "")
-			? std::to_string(pe_id)
-			: "," + std::to_string(pe_id);
+			// Adding the processing element id in the global control group
+			// setup string, which contains a comma-separated list of ids
+			exc->cg_budget.cpuset_cpus_global +=
+			        (exc->cg_budget.cpuset_cpus_global == "")
+			        ? std::to_string(pe_id)
+			        : "," + std::to_string(pe_id);
 
-                exc->cg_budget.cpu_global_ids.push_back(pe_id);
-	}
+			exc->cg_budget.cpu_global_ids.push_back(pe_id);
+		}
 
-	// Setting the global PE bandwidth as the global available one
-	exc->cg_budget.cpu_budget_shared =
-		(double) exc->resource_assignment[0]->cpu_bandwidth / 100.0f;
+		// Setting the global PE bandwidth as the global available one
+		exc->cg_budget.cpu_budget_shared =
+		        (double) exc->resource_assignment[0]->cpu_bandwidth / 100.0f;
 
-	// Proc elements that have been EXCLUSIVELY assigned to application
-	for (int pe_id = 0; pe_id < BBQUE_MAX_R_ID_NUM; pe_id ++) {
+		// Proc elements that have been EXCLUSIVELY assigned to application
+		for (int pe_id = 0; pe_id < BBQUE_MAX_R_ID_NUM; pe_id ++) {
 
-		// Skip if this processing element is NOT exclusively to this app
-		if (! ((1ll << pe_id) & proc_elements_isolation))
-			continue;
+			// Skip if this processing element is NOT exclusively to this app
+			if (! ((1ll << pe_id) & proc_elements_isolation))
+				continue;
 
-		// Adding the processing element id in the global control group
-		// setup string, which contains a comma-separated list of ids
-		exc->cg_budget.cpuset_cpus_isolation +=
-			(exc->cg_budget.cpuset_cpus_isolation == "")
-			? std::to_string(pe_id)
-			: "," + std::to_string(pe_id);
+			// Adding the processing element id in the global control group
+			// setup string, which contains a comma-separated list of ids
+			exc->cg_budget.cpuset_cpus_isolation +=
+			        (exc->cg_budget.cpuset_cpus_isolation == "")
+			        ? std::to_string(pe_id)
+			        : "," + std::to_string(pe_id);
 
-		exc->cg_budget.cpu_budget_isolation++;
-                exc->cg_budget.cpu_isolation_ids.push_back(pe_id);
-	}
+			exc->cg_budget.cpu_budget_isolation++;
+			exc->cg_budget.cpu_isolation_ids.push_back(pe_id);
+		}
 
-	// If one of the pes list is empty, it means that the proc elements
-	// are all either shared or isolated. Hence, there is only a valid list.
-	if (exc->cg_budget.cpuset_cpus_isolation == "")
-		exc->cg_budget.cpuset_cpus_isolation =
-			exc->cg_budget.cpuset_cpus_global;
+		// If one of the pes list is empty, it means that the proc elements
+		// are all either shared or isolated. Hence, there is only a valid list.
+		if (exc->cg_budget.cpuset_cpus_isolation == "")
+			exc->cg_budget.cpuset_cpus_isolation =
+			        exc->cg_budget.cpuset_cpus_global;
 
-	if (exc->cg_budget.cpuset_cpus_global == "")
-		exc->cg_budget.cpuset_cpus_global =
-			exc->cg_budget.cpuset_cpus_isolation;
+		if (exc->cg_budget.cpuset_cpus_global == "")
+			exc->cg_budget.cpuset_cpus_global =
+			        exc->cg_budget.cpuset_cpus_isolation;
 
-	if (exc->cg_budget.cpu_budget_isolation > exc->cg_budget.cpu_budget_shared)
-		exc->cg_budget.cpu_budget_isolation = exc->cg_budget.cpu_budget_shared;
+		if (exc->cg_budget.cpu_budget_isolation > exc->cg_budget.cpu_budget_shared)
+			exc->cg_budget.cpu_budget_isolation = exc->cg_budget.cpu_budget_shared;
 
-	////////////////////////////////////////////////////////////////////////
-	// Retrieving memory nodes info ////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////
-	for (int mem_id = 0; mem_id < BBQUE_MAX_R_ID_NUM; mem_id ++) {
+		////////////////////////////////////////////////////////////////////////
+		// Retrieving memory nodes info ////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////
+		for (int mem_id = 0; mem_id < BBQUE_MAX_R_ID_NUM; mem_id ++) {
 
-		// Skip if this memory node is NOT assigned to this app
-		if (! ((1ll << mem_id) & mem_nodes))
-			continue;
+			// Skip if this memory node is NOT assigned to this app
+			if (! ((1ll << mem_id) & mem_nodes))
+				continue;
 
-		// Adding the memory node id in the global control group
-		// setup string, which contains a comma-separated list of ids
-		exc->cg_budget.cpuset_mems +=
-			(exc->cg_budget.cpuset_mems == "")
-			? std::to_string(mem_id)
-			: "," + std::to_string(mem_id);
-	}
+			// Adding the memory node id in the global control group
+			// setup string, which contains a comma-separated list of ids
+			exc->cg_budget.cpuset_mems +=
+			        (exc->cg_budget.cpuset_mems == "")
+			        ? std::to_string(mem_id)
+			        : "," + std::to_string(mem_id);
+		}
 
-	// Setting the global memory bandwidth as the global available one
-	exc->cg_budget.memory_limit_bytes =
-		(exc->resource_assignment[0]->mem_bandwidth)
-		? std::to_string(exc->resource_assignment[0]->mem_bandwidth)
-		: "";
+		// Setting the global memory bandwidth as the global available one
+		exc->cg_budget.memory_limit_bytes =
+		        (exc->resource_assignment[0]->mem_bandwidth)
+		        ? std::to_string(exc->resource_assignment[0]->mem_bandwidth)
+		        : "";
 
-	logger->Debug("New allocation: [PE shared - %s isolation - %s - bw %.2f "
-		"- %.2f] [mem: %s - %s bytes]]",
-		exc->cg_budget.cpuset_cpus_global.c_str(),
-		exc->cg_budget.cpuset_cpus_isolation.c_str(),
-		exc->cg_budget.cpu_budget_shared,
-		exc->cg_budget.cpu_budget_isolation,
-		(exc->cg_budget.cpuset_mems == "")
-			? "unchanged" : exc->cg_budget.cpuset_mems.c_str(),
-		exc->cg_budget.memory_limit_bytes.c_str());
+		logger->Debug("New allocation: [PE shared - %s isolation - %s - bw %.2f "
+		              "- %.2f] [mem: %s - %s bytes]]",
+		              exc->cg_budget.cpuset_cpus_global.c_str(),
+		              exc->cg_budget.cpuset_cpus_isolation.c_str(),
+		              exc->cg_budget.cpu_budget_shared,
+		              exc->cg_budget.cpu_budget_isolation,
+		              (exc->cg_budget.cpuset_mems == "")
+		              ? "unchanged" : exc->cg_budget.cpuset_mems.c_str(),
+		              exc->cg_budget.memory_limit_bytes.c_str());
 
-	if (exc->cycles_count == 0) {
-		// On first cycle, apply all the budget
-		exc->cg_current_allocation.cpu_budget =
-			exc->cg_budget.cpu_budget_shared;
-		exc->cg_current_allocation.cpuset_cpus =
-			exc->cg_budget.cpuset_cpus_global;
-		exc->cg_current_allocation.cpuset_mems =
-			exc->cg_budget.cpuset_mems;
-		exc->cg_current_allocation.memory_limit_bytes =
-			exc->cg_budget.memory_limit_bytes;
+		if (exc->cycles_count == 0) {
+			// On first cycle, apply all the budget
+			exc->cg_current_allocation.cpu_budget =
+			        exc->cg_budget.cpu_budget_shared;
+			exc->cg_current_allocation.cpuset_cpus =
+			        exc->cg_budget.cpuset_cpus_global;
+			exc->cg_current_allocation.cpuset_mems =
+			        exc->cg_budget.cpuset_mems;
+			exc->cg_current_allocation.memory_limit_bytes =
+			        exc->cg_budget.memory_limit_bytes;
 
-		exc->cg_current_allocation.cpu_affinity_mask =
-			exc->cg_budget.cpu_global_ids;
-	}
+			exc->cg_current_allocation.cpu_affinity_mask =
+			        exc->cg_budget.cpu_global_ids;
+		}
 
 #endif
 
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned AWM [%d]",
-					 msg.hdr.exc_id, msg.event, msg.awm);
+		             msg.hdr.exc_id, msg.event, msg.awm);
 		logger->Debug("SyncP_1 (Pre-Change) EXC [%d], Action [%d], Assigned PROC=<%d>",
-					  msg.hdr.exc_id, msg.event, systems[0].r_proc);
-	}
-	else {
+		              msg.hdr.exc_id, msg.event, systems[0].r_proc);
+	} else {
 		logger->Info("SyncP_1 (Pre-Change) EXC [%d], Action [%d:BLOCKED]",
-					 msg.hdr.exc_id, msg.event);
+		             msg.hdr.exc_id, msg.event);
 	}
 
 	// FIXME add a string representation of the required action
@@ -1919,7 +1911,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 
 	exc_u_lock.unlock();
 	logger->Debug("SyncP_1 (Pre-Change) EXC [%d], SyncLatency [%u]",
-				  msg.hdr.exc_id, syncLatency);
+	              msg.hdr.exc_id, syncLatency);
 	result = _SyncpPreChangeResp(msg.hdr.token, exc, syncLatency);
 #ifndef CONFIG_BBQUE_YM_SYNC_FORCE
 
@@ -1947,7 +1939,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(pRegisteredEXC_t exc)
 }
 
 RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(
-	rpc_msg_BBQ_SYNCP_SYNCCHANGE_t & msg)
+        rpc_msg_BBQ_SYNCP_SYNCCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -1955,8 +1947,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(
 
 	if (! exc) {
 		logger->Error("SyncP_2 (Sync-Change) EXC [%d] FAILED "
-					  "(Error: Execution Context not registered)",
-					  msg.hdr.exc_id);
+		              "(Error: Execution Context not registered)",
+		              msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -1964,12 +1956,12 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(
 
 	if (result != RTLIB_OK) {
 		logger->Warn("SyncP_2 (Sync-Change) EXC [%d] CRITICAL "
-					 "(Warning: Overpassing Synchronization time)",
-					 msg.hdr.exc_id);
+		             "(Warning: Overpassing Synchronization time)",
+		             msg.hdr.exc_id);
 	}
 
 	logger->Info("SyncP_2 (Sync-Change) EXC [%d]",
-				 msg.hdr.exc_id);
+	             msg.hdr.exc_id);
 	_SyncpSyncChangeResp(msg.hdr.token, exc, result);
 	return RTLIB_OK;
 }
@@ -1981,8 +1973,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(pRegisteredEXC_t exc)
 	// Update the EXC status based on the last required re-configuration action
 	if (exc->event == RTLIB_EXC_GWM_BLOCKED) {
 		setBlocked(exc);
-	}
-	else {
+	} else {
 		clearBlocked(exc);
 		setAwmAssigned(exc);
 	}
@@ -1994,7 +1985,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(pRegisteredEXC_t exc)
 }
 
 RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(
-	rpc_msg_BBQ_SYNCP_DOCHANGE_t & msg)
+        rpc_msg_BBQ_SYNCP_DOCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -2002,8 +1993,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(
 
 	if (! exc) {
 		logger->Error("SyncP_3 (Do-Change) EXC [%d] FAILED "
-					  "(Error: Execution Context not registered)",
-					  msg.hdr.exc_id);
+		              "(Error: Execution Context not registered)",
+		              msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2021,7 +2012,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(pRegisteredEXC_t exc)
 }
 
 RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
-	rpc_msg_BBQ_SYNCP_POSTCHANGE_t & msg)
+        rpc_msg_BBQ_SYNCP_POSTCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -2029,8 +2020,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
 
 	if (! exc) {
 		logger->Error("SyncP_4 (Post-Change) EXC [%d] FAILED "
-					  "(Error: Execution Context not registered)",
-					  msg.hdr.exc_id);
+		              "(Error: Execution Context not registered)",
+		              msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2038,8 +2029,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
 
 	if (result != RTLIB_OK) {
 		logger->Warn("SyncP_4 (Post-Change) EXC [%d] CRITICAL "
-					 "(Warning: Reconfiguration timeout)",
-					 msg.hdr.exc_id);
+		             "(Warning: Reconfiguration timeout)",
+		             msg.hdr.exc_id);
 	}
 
 	logger->Info("SyncP_4 (Post-Change) EXC [%d]", msg.hdr.exc_id);
@@ -2053,9 +2044,9 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
  ******************************************************************************/
 
 RTLIB_ExitCode_t BbqueRPC::SetAWMConstraints(
-	const RTLIB_EXCHandler_t exc_handler,
-	RTLIB_Constraint_t * constraints,
-	uint8_t count)
+        const RTLIB_EXCHandler_t exc_handler,
+        RTLIB_Constraint_t * constraints,
+        uint8_t count)
 {
 	RTLIB_ExitCode_t result;
 	assert(exc_handler);
@@ -2063,7 +2054,7 @@ RTLIB_ExitCode_t BbqueRPC::SetAWMConstraints(
 
 	if (! exc) {
 		logger->Error("Constraining EXC [%p] "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2072,7 +2063,10 @@ RTLIB_ExitCode_t BbqueRPC::SetAWMConstraints(
 
 	if (result != RTLIB_OK) {
 		logger->Error("Constraining EXC [%p:%s] FAILED (Error %d: %s)",
-					  (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
+		              (void *) exc_handler,
+		              exc->name.c_str(),
+		              result,
+		              RTLIB_ErrorStr(result));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -2080,7 +2074,7 @@ RTLIB_ExitCode_t BbqueRPC::SetAWMConstraints(
 }
 
 RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -2089,7 +2083,7 @@ RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
 
 	if (! exc) {
 		logger->Error("Clear constraints for EXC [%p] "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2098,7 +2092,10 @@ RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
 
 	if (result != RTLIB_OK) {
 		logger->Error("Clear constraints for EXC [%p:%s] FAILED (Error %d: %s)",
-					  (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
+		              (void *) exc_handler,
+		              exc->name.c_str(),
+		              result,
+		              RTLIB_ErrorStr(result));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -2106,7 +2103,7 @@ RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
 }
 
 RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	// Get the execution context ///////////////////////////////////////////////
 	pRegisteredEXC_t exc;
@@ -2115,7 +2112,7 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 
 	if (! exc) {
 		logger->Error("[%p] RTP forward FAILED (EXC not registered)",
-					  (void *) exc_handler);
+		              (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2165,11 +2162,11 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 			bad_allocation = current_cps > target_cps;
 		} else {
 			target_cps =
-				0.5f * (exc->cps_goal_min + exc->cps_goal_max);
+			        0.5f * (exc->cps_goal_min + exc->cps_goal_max);
 			current_cps = cps_avg;
 			bad_allocation =
-				(current_cps < exc->cps_goal_min) ||
-				(current_cps > exc->cps_goal_max);
+			        (current_cps < exc->cps_goal_min) ||
+			        (current_cps > exc->cps_goal_max);
 		}
 
 		if (bad_allocation) {
@@ -2185,7 +2182,7 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 
 		logger->Debug("Performance goal gap is %f", 100.0f * goal_gap);
 
-	} else if (exc->explicit_ggap_assertion){
+	} else if (exc->explicit_ggap_assertion) {
 		goal_gap = exc->explicit_ggap_value / 100.0f;
 		exc->explicit_ggap_assertion = false;
 		exc->explicit_ggap_value = 0.0;
@@ -2212,27 +2209,27 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 		}
 
 		logger->Debug("Updating CPU allocation: %f -> %f",
-					avg_cpu_usage, ideal_cpu_usage);
+		              avg_cpu_usage, ideal_cpu_usage);
 
 		// Actuate the ideal_allocation choice
 		if (ideal_cpu_usage / 100.0f > exc->cg_budget.cpu_budget_shared)
 			logger->Debug("Total budget: SATURATION");
 
 		exc->cg_current_allocation.cpu_budget =
-			std::min(ideal_cpu_usage / 100.0f, exc->cg_budget.cpu_budget_shared);
+		        std::min(ideal_cpu_usage / 100.0f, exc->cg_budget.cpu_budget_shared);
 		exc->cg_current_allocation.cpuset_cpus =
-			(exc->cg_current_allocation.cpu_budget <= exc->cg_budget.cpu_budget_isolation)
-			? exc->cg_budget.cpuset_cpus_isolation
-			: exc->cg_budget.cpuset_cpus_global;
+		        (exc->cg_current_allocation.cpu_budget <= exc->cg_budget.cpu_budget_isolation)
+		        ? exc->cg_budget.cpuset_cpus_isolation
+		        : exc->cg_budget.cpuset_cpus_global;
 
-                exc->cg_current_allocation.cpu_affinity_mask =
-                        (exc->cg_current_allocation.cpu_budget <= exc->cg_budget.cpu_budget_isolation)
-			? exc->cg_budget.cpu_isolation_ids
-			: exc->cg_budget.cpu_global_ids;
+		exc->cg_current_allocation.cpu_affinity_mask =
+		        (exc->cg_current_allocation.cpu_budget <= exc->cg_budget.cpu_budget_isolation)
+		        ? exc->cg_budget.cpu_isolation_ids
+		        : exc->cg_budget.cpu_global_ids;
 
 		logger->Debug("Applying CGroup configuration: CPU %.2f/%.2f",
-			100.0f * exc->cg_current_allocation.cpu_budget,
-			100.0f * exc->cg_budget.cpu_budget_shared);
+		              100.0f * exc->cg_current_allocation.cpu_budget,
+		              100.0f * exc->cg_budget.cpu_budget_shared);
 		CGroupCommitAllocation(exc);
 	}
 #ifndef CONFIG_TARGET_ANDROID
@@ -2247,10 +2244,10 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 	exc->runtime_profiling.rtp_forward = false;
 	// CPU usage for the next cycle will be less than this value with 90% probability
 	float cpu_usage_90 = ideal_cpu_usage +
-		exc->cpu_usage_analyser.GetConfidenceInterval90();
+	                     exc->cpu_usage_analyser.GetConfidenceInterval90();
 	// CPU usage for the next cycle will be less than this value with 99% probability
 	float cpu_usage_99 = ideal_cpu_usage +
-		exc->cpu_usage_analyser.GetConfidenceInterval99();
+	                     exc->cpu_usage_analyser.GetConfidenceInterval99();
 
 
 	// Maximum CPU usage as decreed by the BarbequeRTRM
@@ -2259,32 +2256,32 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 	// I want the CPU budget to be enough from 90 to 95% of the time
 	if (cpu_usage_budget > cpu_usage_99 && goal_gap >= 0.0f) {
 		logger->Debug("CPU budget too high: should be %f but it is %f",
-			cpu_usage_99, cpu_usage_budget);
+		              cpu_usage_99, cpu_usage_budget);
 		exc->runtime_profiling.rtp_forward = true;
 		exc->runtime_profiling.cpu_goal_gap = 100.0f *
-			(cpu_usage_budget - cpu_usage_99) / cpu_usage_99;
+		                                      (cpu_usage_budget - cpu_usage_99) / cpu_usage_99;
 	} else if (cpu_usage_budget < cpu_usage_90) {
 		logger->Debug("CPU budget too low: should be %f but it is %f",
-			cpu_usage_90, cpu_usage_budget);
+		              cpu_usage_90, cpu_usage_budget);
 		exc->runtime_profiling.rtp_forward = true;
 		exc->runtime_profiling.cpu_goal_gap = 100.0f *
-			(cpu_usage_budget - cpu_usage_90) / cpu_usage_90;
+		                                      (cpu_usage_budget - cpu_usage_90) / cpu_usage_90;
 	}
 
 	logger->Debug("CPU budget goal gap is %f",
-		exc->runtime_profiling.cpu_goal_gap);
+	              exc->runtime_profiling.cpu_goal_gap);
 
 	// Constraining gap to avoid harsh allocation changes:
 	// Never request less than half the budget
 	exc->runtime_profiling.cpu_goal_gap =
-		std::max(-33.3f, exc->runtime_profiling.cpu_goal_gap);
+	        std::max(-33.3f, exc->runtime_profiling.cpu_goal_gap);
 #endif
 
-return RTLIB_OK;
+	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
-	const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	// Get the execution context ///////////////////////////////////////////////
 	pRegisteredEXC_t exc;
@@ -2293,7 +2290,7 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
 
 	if (! exc) {
 		logger->Error("[%p] RTP forward FAILED (EXC not registered)",
-					  (void *) exc_handler);
+		              (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2304,11 +2301,11 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
 	int ms_from_last_allocation = exc->cycletime_analyser_user.GetSum();
 
 	if (ms_from_last_allocation <
-		rtlib_configuration.runtime_profiling.rt_profile_rearm_time_ms
-		&& exc->is_waiting_for_sync) {
+	    rtlib_configuration.runtime_profiling.rt_profile_rearm_time_ms
+	    && exc->is_waiting_for_sync) {
 		logger->Info("RTP forward SKIPPED (inhibited for %d more ms)",
-					  rtlib_configuration.runtime_profiling.rt_profile_rearm_time_ms -
-					  ms_from_last_allocation);
+		             rtlib_configuration.runtime_profiling.rt_profile_rearm_time_ms -
+		             ms_from_last_allocation);
 		return RTLIB_OK;
 	}
 
@@ -2320,7 +2317,7 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
 #ifndef CONFIG_TARGET_ANDROID
 	if (exc->waiting_sync_timeout_ms > 0) {
 		logger->Info("RTP forward SKIPPED (waiting sync for %d more ms)",
-					  exc->waiting_sync_timeout_ms);
+		             exc->waiting_sync_timeout_ms);
 		return RTLIB_OK;
 	}
 #endif
@@ -2333,23 +2330,26 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
 #endif
 	float goal_gap = exc->runtime_profiling.cpu_goal_gap;
 	float cycle_time_avg_ms = exc->cycletime_analyser_system.GetMean() +
-		exc->cycletime_analyser_system.GetConfidenceInterval99();
+	                          exc->cycletime_analyser_system.GetConfidenceInterval99();
 
 	exc->waiting_sync_timeout_ms =
-			rtlib_configuration.runtime_profiling.rt_profile_wait_for_sync_ms;
+	        rtlib_configuration.runtime_profiling.rt_profile_wait_for_sync_ms;
 	exc->is_waiting_for_sync = true;
 
 	logger->Debug("[%p:%s] Profile notification : {Gap: %.2f, CPU: "
-				 "%.2f, CTime: %.2f ms}", (void *) exc_handler, exc->name.c_str(),
-				 goal_gap, cpu_usage, cycle_time_avg_ms);
+	              "%.2f, CTime: %.2f ms}", (void *) exc_handler, exc->name.c_str(),
+	              goal_gap, cpu_usage, cycle_time_avg_ms);
 	// Forward the RTP
 	RTLIB_ExitCode_t result =
-		_RTNotify(exc, std::round(goal_gap), std::round(cpu_usage),
-				  std::round(cycle_time_avg_ms));
+	        _RTNotify(exc, std::round(goal_gap), std::round(cpu_usage),
+	                  std::round(cycle_time_avg_ms));
 
 	if (result != RTLIB_OK) {
 		logger->Error("[%p:%s] Profile notification FAILED (Error %d: %s)",
-					  (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
+		              (void *) exc_handler,
+		              exc->name.c_str(),
+		              result,
+		              RTLIB_ErrorStr(result));
 		return RTLIB_EXC_ENABLE_FAILED;
 	}
 
@@ -2357,8 +2357,8 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
 }
 
 RTLIB_ExitCode_t BbqueRPC::SetExplicitGoalGap(
-	const RTLIB_EXCHandler_t exc_handler,
-	int ggap)
+        const RTLIB_EXCHandler_t exc_handler,
+        int ggap)
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
@@ -2366,7 +2366,7 @@ RTLIB_ExitCode_t BbqueRPC::SetExplicitGoalGap(
 
 	if (! exc) {
 		logger->Error("Set Goal-Gap for EXC [%p] "
-					  "(Error: EXC not registered)", (void *) exc_handler);
+		              "(Error: EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2376,8 +2376,8 @@ RTLIB_ExitCode_t BbqueRPC::SetExplicitGoalGap(
 }
 
 RTLIB_ExitCode_t BbqueRPC::StopExecution(
-	RTLIB_EXCHandler_t exc_handler,
-	struct timespec timeout)
+        RTLIB_EXCHandler_t exc_handler,
+        struct timespec timeout)
 {
 	//Silence "args not used" warning.
 	(void) exc_handler;
@@ -2386,13 +2386,13 @@ RTLIB_ExitCode_t BbqueRPC::StopExecution(
 }
 
 RTLIB_ExitCode_t BbqueRPC::GetRuntimeProfile(
-	rpc_msg_BBQ_GET_PROFILE_t & msg)
+        rpc_msg_BBQ_GET_PROFILE_t & msg)
 {
 	pRegisteredEXC_t exc = getRegistered(msg.hdr.exc_id);
 
 	if (! exc) {
 		logger->Error("Set runtime profile for EXC [%d] "
-					  "(Error: EXC not registered)", msg.hdr.exc_id);
+		              "(Error: EXC not registered)", msg.hdr.exc_id);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -2496,8 +2496,8 @@ uint8_t BbqueRPC::InsertRAWPerfCounter(const char * perf_str)
 	// Allocate the raw events array
 	if (! raw_events)
 		raw_events = (PerfEventAttr_t *)
-					 malloc(sizeof (PerfEventAttr_t) *
-							rtlib_configuration.profile.perf_counters.raw);
+		             malloc(sizeof (PerfEventAttr_t) *
+		                    rtlib_configuration.profile.perf_counters.raw);
 
 	// Set the event attributes
 	raw_events[idx ++] = {PERF_TYPE_RAW, event_code_ul};
@@ -2505,7 +2505,7 @@ uint8_t BbqueRPC::InsertRAWPerfCounter(const char * perf_str)
 }
 
 BbqueRPC::pPerfEventStats_t BbqueRPC::PerfGetEventStats(pAwmStats_t awm_stats,
-		perf_type_id type, uint64_t config)
+                perf_type_id type, uint64_t config)
 {
 	PerfEventStatsMapByConf_t::iterator it;
 	pPerfEventStats_t event_stats;
@@ -2524,7 +2524,7 @@ BbqueRPC::pPerfEventStats_t BbqueRPC::PerfGetEventStats(pAwmStats_t awm_stats,
 
 		// Check if we found the required event
 		if ((event_stats->pattr->type == type) &&
-			(event_stats->pattr->config == config))
+		    (event_stats->pattr->config == config))
 			return event_stats;
 	}
 
@@ -2543,8 +2543,8 @@ void BbqueRPC::PerfSetupEvents(pRegisteredEXC_t exc)
 	// Adding raw events
 	for (uint8_t e = 0; e < rtlib_configuration.profile.perf_counters.raw; e ++) {
 		fd = exc->perf.AddCounter(
-				 PERF_TYPE_RAW, raw_events[e].config,
-				 rtlib_configuration.profile.perf_counters.no_kernel);
+		             PERF_TYPE_RAW, raw_events[e].config,
+		             rtlib_configuration.profile.perf_counters.no_kernel);
 		exc->events_map[fd] = & (raw_events[e]);
 	}
 
@@ -2555,8 +2555,8 @@ void BbqueRPC::PerfSetupEvents(pRegisteredEXC_t exc)
 	// Adding default events
 	for (uint8_t e = 0; e < tot_counters; e ++) {
 		fd = exc->perf.AddCounter(
-				 default_events[e].type, default_events[e].config,
-				 rtlib_configuration.profile.perf_counters.no_kernel);
+		             default_events[e].type, default_events[e].config,
+		             rtlib_configuration.profile.perf_counters.no_kernel);
 		exc->events_map[fd] = & (default_events[e]);
 	}
 
@@ -2566,8 +2566,8 @@ void BbqueRPC::PerfSetupEvents(pRegisteredEXC_t exc)
 	// Append detailed run extra attributes
 	for (uint8_t e = 0; e < ARRAY_SIZE(detailed_events); e ++) {
 		fd = exc->perf.AddCounter(
-				 detailed_events[e].type, detailed_events[e].config,
-				 rtlib_configuration.profile.perf_counters.no_kernel);
+		             detailed_events[e].type, detailed_events[e].config,
+		             rtlib_configuration.profile.perf_counters.no_kernel);
 		exc->events_map[fd] = & (detailed_events[e]);
 	}
 
@@ -2577,8 +2577,8 @@ void BbqueRPC::PerfSetupEvents(pRegisteredEXC_t exc)
 	// Append detailed run extra attributes
 	for (uint8_t e = 0; e < ARRAY_SIZE(very_detailed_events); e ++) {
 		fd = exc->perf.AddCounter(
-				 very_detailed_events[e].type, very_detailed_events[e].config,
-				 rtlib_configuration.profile.perf_counters.no_kernel);
+		             very_detailed_events[e].type, very_detailed_events[e].config,
+		             rtlib_configuration.profile.perf_counters.no_kernel);
 		exc->events_map[fd] = & (very_detailed_events[e]);
 	}
 
@@ -2588,8 +2588,8 @@ void BbqueRPC::PerfSetupEvents(pRegisteredEXC_t exc)
 	// Append detailed run extra attributes
 	for (uint8_t e = 0; e < ARRAY_SIZE(very_very_detailed_events); e ++) {
 		fd = exc->perf.AddCounter(
-				 very_very_detailed_events[e].type, very_very_detailed_events[e].config,
-				 rtlib_configuration.profile.perf_counters.no_kernel);
+		             very_very_detailed_events[e].type, very_very_detailed_events[e].config,
+		             rtlib_configuration.profile.perf_counters.no_kernel);
 		exc->events_map[fd] = & (very_very_detailed_events[e]);
 	}
 }
@@ -2619,7 +2619,7 @@ void BbqueRPC::PerfSetupStats(pRegisteredEXC_t exc, pAwmStats_t awm_stats)
 		// Index statistics by configuration (radix)
 		configuration_key = (uint8_t) (0xFF & event_attributes->config);
 		awm_stats->events_conf_map.insert(
-			PerfEventStatsMapByConfEntry_t(configuration_key, event_stats));
+		        PerfEventStatsMapByConfEntry_t(configuration_key, event_stats));
 	}
 }
 
@@ -2644,15 +2644,15 @@ void BbqueRPC::PerfCollectStats(pRegisteredEXC_t exc)
 }
 
 void BbqueRPC::PerfPrintNsec(pAwmStats_t awm_stats,
-							 pPerfEventStats_t event_stats)
+                             pPerfEventStats_t event_stats)
 {
 	pPerfEventAttr_t event_attributes = event_stats->pattr;
 	double avg = mean(event_stats->perf_samples);
 	double total, ratio = 0.0;
 	double msecs = avg / 1e6;
 	fprintf(output_file, "%19.6f%s%-25s", msecs,
-			rtlib_configuration.profile.output.CSV.separator,
-			bu::Perf::EventName(event_attributes->type, event_attributes->config));
+	        rtlib_configuration.profile.output.CSV.separator,
+	        bu::Perf::EventName(event_attributes->type, event_attributes->config));
 
 	if (rtlib_configuration.profile.output.CSV.enabled)
 		return;
@@ -2670,7 +2670,7 @@ void BbqueRPC::PerfPrintNsec(pAwmStats_t awm_stats,
 }
 
 void BbqueRPC::PerfPrintMissesRatio(double avg_missed, double tot_branches,
-									const char * text)
+                                    const char * text)
 {
 	double ratio = 0.0;
 	const char * color;
@@ -2693,7 +2693,7 @@ void BbqueRPC::PerfPrintMissesRatio(double avg_missed, double tot_branches,
 }
 
 void BbqueRPC::PerfPrintAbs(pAwmStats_t awm_stats,
-							pPerfEventStats_t event_stats)
+                            pPerfEventStats_t event_stats)
 {
 	pPerfEventAttr_t event_attributes = event_stats->pattr;
 	double avg = mean(event_stats->perf_samples);
@@ -2711,7 +2711,7 @@ void BbqueRPC::PerfPrintAbs(pAwmStats_t awm_stats,
 		fmt = "%19.0f%s%-25s";
 
 	fprintf(output_file, fmt, avg, rtlib_configuration.profile.output.CSV.separator,
-			bu::Perf::EventName(event_attributes->type, event_attributes->config));
+	        bu::Perf::EventName(event_attributes->type, event_attributes->config));
 
 	if (rtlib_configuration.profile.output.CSV.enabled)
 		return;
@@ -2799,7 +2799,7 @@ bool BbqueRPC::IsNsecCounter(pRegisteredEXC_t exc, int fd)
 	pPerfEventAttr_t event_attributes = exc->events_map[fd];
 
 	if (PerfEventMatch(event_attributes, PERF_SW(CPU_CLOCK)) ||
-		PerfEventMatch(event_attributes, PERF_SW(TASK_CLOCK)))
+	    PerfEventMatch(event_attributes, PERF_SW(TASK_CLOCK)))
 		return true;
 
 	return false;
@@ -2816,13 +2816,13 @@ void BbqueRPC::PerfPrintStats(pRegisteredEXC_t exc, pAwmStats_t awm_stats)
 
 	// For each registered counter
 	for (it = awm_stats->events_map.begin(); it != awm_stats->events_map.end();
-		 ++ it) {
+	     ++ it) {
 		event_stats = (*it).second;
 		fd = (*it).first;
 		// Keep track of current Performance Counter name
 		event_attributes = exc->events_map[fd];
 		_perfCounterName = bu::Perf::EventName(event_attributes->type,
-											   event_attributes->config);
+		                                       event_attributes->config);
 
 		if (IsNsecCounter(exc, fd))
 			PerfPrintNsec(awm_stats, event_stats);
@@ -2875,7 +2875,7 @@ void BbqueRPC::PrintNoisePct(double total, double avg)
 
 	if (rtlib_configuration.profile.output.CSV.enabled) {
 		fprintf(output_file, "%s%.2f%%",
-				rtlib_configuration.profile.output.CSV.separator, pct);
+		        rtlib_configuration.profile.output.CSV.separator, pct);
 		return;
 	}
 
@@ -2924,32 +2924,32 @@ void BbqueRPC::OclClearStats()
 void BbqueRPC::OclCollectStats(int8_t current_awm_id, OclEventsStatsMap_t & ocl_events_map)
 {
 	rtlib_ocl_prof_run(
-		current_awm_id, ocl_events_map, rtlib_configuration.profile.opencl.level);
+	        current_awm_id, ocl_events_map, rtlib_configuration.profile.opencl.level);
 }
 
 
 #define OCL_STATS_HEADER \
-"#           Command Queue          ||      Command Type       ||                 queue[ms]                   ||                 submit[ms]                  ||                     exec[ms]                ||\n"\
-"# ---------------------------------++-------------------------++---------------------------------------------++---------------------------------------------++---------------------------------------------||\n"\
-"#                                  ||                         ||        Ʃ (%%h %%v)      |     μ    |     σ    ||        Ʃ (%%h %%v)      |     μ    |     σ    ||        Ʃ (%%h %%v)      |     μ    |     σ    ||\n"\
-"# ---------------------------------++-------------------------++-----------------------+----------+----------++-----------------------+----------+----------++-----------------------+----------+----------||\n"
+	"#           Command Queue          ||      Command Type       ||                 queue[ms]                   ||                 submit[ms]                  ||                     exec[ms]                ||\n"\
+	"# ---------------------------------++-------------------------++---------------------------------------------++---------------------------------------------++---------------------------------------------||\n"\
+	"#                                  ||                         ||        Ʃ (%%h %%v)      |     μ    |     σ    ||        Ʃ (%%h %%v)      |     μ    |     σ    ||        Ʃ (%%h %%v)      |     μ    |     σ    ||\n"\
+	"# ---------------------------------++-------------------------++-----------------------+----------+----------++-----------------------+----------+----------++-----------------------+----------+----------||\n"
 
 #define OCL_STATS_HEADER_ADDR \
-"#   Command Queue  || Code Address ||      Command Type       ||             queue[ms]          ||            submit[ms]          ||             exec[ms]           ||\n"\
-"# -----------------++--------------++-------------------------++--------------------------------++--------------------------------++--------------------------------||\n"\
-"#                  ||              ||                         ||    Ʃ     |    μ     |     σ    ||    Ʃ     |     μ    |    σ     ||     Ʃ    |     μ    |     σ    ||\n"\
-"# -----------------++--------------++-------------------------++----------+----------+----------++----------+----------+----------++----------+----------+----------||\n"
+	"#   Command Queue  || Code Address ||      Command Type       ||             queue[ms]          ||            submit[ms]          ||             exec[ms]           ||\n"\
+	"# -----------------++--------------++-------------------------++--------------------------------++--------------------------------++--------------------------------||\n"\
+	"#                  ||              ||                         ||    Ʃ     |    μ     |     σ    ||    Ʃ     |     μ    |    σ     ||     Ʃ    |     μ    |     σ    ||\n"\
+	"# -----------------++--------------++-------------------------++----------+----------+----------++----------+----------+----------++----------+----------+----------||\n"
 
 #define OCL_EXC_AWM_HEADER \
-"##=========================================================================================================================================================================================================##\n" \
-"## %100s-%-99d##\n" \
-"##=========================================================================================================================================================================================================##\n"
+	"##=========================================================================================================================================================================================================##\n" \
+	"## %100s-%-99d##\n" \
+	"##=========================================================================================================================================================================================================##\n"
 
 #define OCL_STATS_BAR \
-"#==========================================================================================================================================================================================================##\n"
+	"#==========================================================================================================================================================================================================##\n"
 
 #define OCL_STATS_BAR_ADDR \
-"#===================================================================================================================================================================##\n"
+	"#===================================================================================================================================================================##\n"
 
 void BbqueRPC::OclDumpStats(pRegisteredEXC_t exc)
 {
@@ -2968,7 +2968,7 @@ void BbqueRPC::OclDumpStats(pRegisteredEXC_t exc)
 		fprintf(output_file, OCL_STATS_HEADER);
 
 		for (it_cq = awm_stats->ocl_events_map.begin();
-			 it_cq != awm_stats->ocl_events_map.end(); it_cq ++) {
+		     it_cq != awm_stats->ocl_events_map.end(); it_cq ++) {
 			QueueProfPtr_t stPtr = it_cq->second;
 			OclDumpCmdStats(stPtr, it_cq->first);
 
@@ -2988,26 +2988,26 @@ void BbqueRPC::OclDumpCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue)
 	double_t otot = 0, vtot_q = 0, vtot_s = 0, vtot_e = 0;
 
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end();
-			it_ct ++) {
+	     it_ct ++) {
 		vtot_q += SUM(QUEUED);
 		vtot_s += SUM(SUBMIT);
 		vtot_e += SUM(EXEC);
 	}
 
 	for (it_ct = stPtr->cmd_prof.begin(); it_ct != stPtr->cmd_prof.end();
-		 it_ct ++) {
+	     it_ct ++) {
 		otot = SUM(QUEUED) + SUM(SUBMIT) + SUM(EXEC);
 		fprintf(output_file, "# %-32p || %-23s || "
-				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
-				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
-				"%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f ||\n",
-				(void *) cmd_queue, ocl_cmd_str[it_ct->first].c_str(),
-				SUM(QUEUED), (100 * SUM(QUEUED)) / otot, (100 * SUM(QUEUED)) / vtot_q,
-				MEAN(QUEUED), STDDEV(QUEUED),
-				SUM(SUBMIT), (100 * SUM(SUBMIT)) / otot, (100 * SUM(SUBMIT)) / vtot_s,
-				MEAN(SUBMIT), STDDEV(SUBMIT),
-				SUM(EXEC), (100 * SUM(EXEC)) / otot, (100 * SUM(EXEC)) / vtot_e,
-				MEAN(EXEC), STDDEV(EXEC));
+		        "%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
+		        "%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f || "
+		        "%7.3f ( %5.2f %5.2f ) | %8.3f | %8.3f ||\n",
+		        (void *) cmd_queue, ocl_cmd_str[it_ct->first].c_str(),
+		        SUM(QUEUED), (100 * SUM(QUEUED)) / otot, (100 * SUM(QUEUED)) / vtot_q,
+		        MEAN(QUEUED), STDDEV(QUEUED),
+		        SUM(SUBMIT), (100 * SUM(SUBMIT)) / otot, (100 * SUM(SUBMIT)) / vtot_s,
+		        MEAN(SUBMIT), STDDEV(SUBMIT),
+		        SUM(EXEC), (100 * SUM(EXEC)) / otot, (100 * SUM(EXEC)) / vtot_e,
+		        MEAN(EXEC), STDDEV(EXEC));
 	}
 
 	fprintf(output_file, OCL_STATS_BAR);
@@ -3021,16 +3021,16 @@ void BbqueRPC::OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue
 	fprintf(output_file, OCL_STATS_HEADER_ADDR);
 
 	for (it_ct = stPtr->addr_prof.begin(); it_ct != stPtr->addr_prof.end();
-		 it_ct ++) {
+	     it_ct ++) {
 		cmd_type = rtlib_ocl_get_command_type(it_ct->first);
 		fprintf(output_file, "# %-16p || %-12p || %-23s || "
-				"%8.3f | %8.3f | %8.3f || "
-				"%8.3f | %8.3f | %8.3f || "
-				"%8.3f | %8.3f | %8.3f ||\n",
-				(void *) cmd_queue, it_ct->first, ocl_cmd_str[cmd_type].c_str(),
-				SUM(QUEUED), MEAN(QUEUED), STDDEV(QUEUED),
-				SUM(SUBMIT), MEAN(SUBMIT), STDDEV(SUBMIT),
-				SUM(EXEC), MEAN(EXEC), STDDEV(EXEC));
+		        "%8.3f | %8.3f | %8.3f || "
+		        "%8.3f | %8.3f | %8.3f || "
+		        "%8.3f | %8.3f | %8.3f ||\n",
+		        (void *) cmd_queue, it_ct->first, ocl_cmd_str[cmd_type].c_str(),
+		        SUM(QUEUED), MEAN(QUEUED), STDDEV(QUEUED),
+		        SUM(SUBMIT), MEAN(SUBMIT), STDDEV(SUBMIT),
+		        SUM(EXEC), MEAN(EXEC), STDDEV(EXEC));
 	}
 
 	fprintf(output_file, OCL_STATS_BAR_ADDR);
@@ -3052,7 +3052,7 @@ AppUid_t BbqueRPC::GetUniqueID(RTLIB_EXCHandler_t exc_handler)
 
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3068,7 +3068,7 @@ uint32_t BbqueRPC::GetExecutionTimeMs(RTLIB_EXCHandler_t exc_handler)
 	exc = getRegistered(exc_handler);
 	if (!exc) {
 		fprintf(stderr, FE("Get execution time for EXC [%p] FAILED "
-						   "(EXC not registered)\n"), (void *) exc_handler);
+		                   "(EXC not registered)\n"), (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3082,8 +3082,8 @@ uint32_t BbqueRPC::GetExecutionTimeMs(RTLIB_EXCHandler_t exc_handler)
  ******************************************************************************/
 
 RTLIB_ExitCode_t BbqueRPC::SetCPS(
-	RTLIB_EXCHandler_t exc_handler,
-	float cps)
+        RTLIB_EXCHandler_t exc_handler,
+        float cps)
 {
 	pRegisteredEXC_t exc;
 	// Get a reference to the EXC to control
@@ -3092,7 +3092,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3106,12 +3106,12 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 	}
 
 	logger->Notice("Set max cycle-rate @ %.3f[Hz] (min %.3f[ms])",
-				   exc->cps_max_allowed, exc->cycle_time_enforced_ms);
+	               exc->cps_max_allowed, exc->cycle_time_enforced_ms);
 	return RTLIB_OK;
 }
 
 float BbqueRPC::GetCPS(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	float ctime = 0;
@@ -3122,7 +3122,7 @@ float BbqueRPC::GetCPS(
 
 	if (! exc) {
 		fprintf(stderr, FE("Get CPS for EXC [%p] FAILED "
-						   "(EXC not registered)\n"), (void *) exc_handler);
+		                   "(EXC not registered)\n"), (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3131,7 +3131,7 @@ float BbqueRPC::GetCPS(
 	// If cycle was reset, return CPS up to last forward window
 	if (exc->cycletime_analyser_user.GetMean() == 0.0)
 		return (exc->last_cycletime_ms == 0.0) ?
-			   0.0 : 1000.0 / exc->last_cycletime_ms;
+		       0.0 : 1000.0 / exc->last_cycletime_ms;
 
 	// Get the current measured CPS
 	ctime = exc->cycletime_analyser_user.GetMean();
@@ -3143,7 +3143,7 @@ float BbqueRPC::GetCPS(
 }
 
 float BbqueRPC::GetJPS(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	// Get a reference to the EXC to control
@@ -3152,7 +3152,7 @@ float BbqueRPC::GetJPS(
 
 	if (! exc) {
 		fprintf(stderr, FE("Get CPS for EXC [%p] FAILED "
-						   "(EXC not registered)\n"), (void *) exc_handler);
+		                   "(EXC not registered)\n"), (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3186,7 +3186,7 @@ void BbqueRPC::ForceCPS(pRegisteredEXC_t exc)
 	if (delay_ms > 0.0f) {
 		sleep_us = 1e3 * static_cast<uint32_t> (delay_ms);
 		logger->Debug("Cycle Time: %3.3f[ms], ET: %3.3f[ms], Sleep time %u [us]",
-					  cycle_time, exc->cycle_time_enforced_ms, sleep_us);
+		              cycle_time, exc->cycle_time_enforced_ms, sleep_us);
 		exc->cps_enforcing_sleep_time_ms = delay_ms;
 		usleep(sleep_us);
 	}
@@ -3196,8 +3196,8 @@ void BbqueRPC::ForceCPS(pRegisteredEXC_t exc)
 }
 
 RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
-	RTLIB_EXCHandler_t exc_handler,
-	float _cps_min, float _cps_max)
+        RTLIB_EXCHandler_t exc_handler,
+        float _cps_min, float _cps_max)
 {
 	pRegisteredEXC_t exc;
 	// Get a reference to the EXC to control
@@ -3206,7 +3206,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
 
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3219,13 +3219,13 @@ RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
 
 	if (cps_max == 0.0)
 		logger->Notice("Set cycle-rate Goal to %.3f - inf [Hz]"
-					   " (%.3f to inf [ms])",
-					   exc->cps_goal_min, 1000.0 / exc->cps_goal_min);
+		               " (%.3f to inf [ms])",
+		               exc->cps_goal_min, 1000.0 / exc->cps_goal_min);
 	else {
 		logger->Notice("Set cycle-rate Goal to %.3f - %.3f [Hz]"
-					   " (%.3f to %.3f [ms])",
-					   exc->cps_goal_min, exc->cps_goal_max,
-					   1000.0 / exc->cps_goal_max, 1000.0 / exc->cps_goal_min);
+		               " (%.3f to %.3f [ms])",
+		               exc->cps_goal_min, exc->cps_goal_max,
+		               1000.0 / exc->cps_goal_max, 1000.0 / exc->cps_goal_min);
 		if (! rtlib_configuration.unmanaged.enabled)
 			SetCPS(exc_handler, exc->cps_goal_max);
 	}
@@ -3234,7 +3234,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCPSGoal(
 }
 
 RTLIB_ExitCode_t BbqueRPC::UpdateJPC(
-	RTLIB_EXCHandler_t exc_handler, int jpc)
+        RTLIB_EXCHandler_t exc_handler, int jpc)
 {
 	if (jpc == 0) {
 		logger->Error("UpdateJPC: invalid args");
@@ -3248,7 +3248,7 @@ RTLIB_ExitCode_t BbqueRPC::UpdateJPC(
 
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3266,8 +3266,8 @@ RTLIB_ExitCode_t BbqueRPC::UpdateJPC(
 }
 
 RTLIB_ExitCode_t BbqueRPC::SetJPSGoal(
-	RTLIB_EXCHandler_t exc_handler,
-	float jps_min, float jps_max, int jpc)
+        RTLIB_EXCHandler_t exc_handler,
+        float jps_min, float jps_max, int jpc)
 {
 	if (jpc == 0) {
 		logger->Error("SetJPSGoal: JPC cannot be null");
@@ -3289,7 +3289,7 @@ RTLIB_ExitCode_t BbqueRPC::SetJPSGoal(
 
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3304,20 +3304,20 @@ RTLIB_ExitCode_t BbqueRPC::SetJPSGoal(
  ******************************************************************************/
 
 void BbqueRPC::NotifyExit(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	assert(exc_handler);
 	auto exc = getRegistered(exc_handler);
 
 	if (! exc) {
 		logger->Error("NotifyExit EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
 	assert(isRegistered(exc) == true);
 	bool pcounters_collected_systemwide =
-		rtlib_configuration.profile.perf_counters.global;
+	        rtlib_configuration.profile.perf_counters.global;
 	bool pcounters_to_be_monitored = PerfRegisteredEvents(exc);
 
 	if (pcounters_collected_systemwide && pcounters_to_be_monitored > 0) {
@@ -3327,7 +3327,7 @@ void BbqueRPC::NotifyExit(
 }
 
 void BbqueRPC::NotifyPreConfigure(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	logger->Debug("===> NotifyConfigure");
 	(void) exc_handler;
@@ -3337,7 +3337,7 @@ void BbqueRPC::NotifyPreConfigure(
 
 	if (! exc) {
 		logger->Error("NotifyPreConfigure EXC [%p] FAILED (EXC not registered)",
-					  (void *) exc_handler);
+		              (void *) exc_handler);
 		return;
 	}
 
@@ -3351,7 +3351,7 @@ void BbqueRPC::NotifyPreConfigure(
 }
 
 void BbqueRPC::NotifyPostConfigure(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
@@ -3359,7 +3359,7 @@ void BbqueRPC::NotifyPostConfigure(
 
 	if (! exc) {
 		logger->Error("NotifyPostConfigure EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
@@ -3384,7 +3384,7 @@ void BbqueRPC::NotifyPostConfigure(
 }
 
 void BbqueRPC::NotifyPreRun(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	logger->Debug("Pre-Run: retrieving execution context info");
 	// Retrieving the requested execution context
@@ -3393,27 +3393,26 @@ void BbqueRPC::NotifyPreRun(
 
 	if (! exc) {
 		logger->Error("NotifyPreRun EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
 	assert(isRegistered(exc) == true);
 	logger->Debug("Pre-Run: Checking if perf counters are activated");
 	bool pcounters_collected_systemwide =
-		rtlib_configuration.profile.perf_counters.global;
+	        rtlib_configuration.profile.perf_counters.global;
 	bool pcounters_to_be_monitored = PerfRegisteredEvents(exc);
 
 	if (! pcounters_collected_systemwide && pcounters_to_be_monitored > 0) {
 		logger->Debug("Pre-Run: per-EXC perf counter support: ACTIVE");
 		bool pcounters_monitor_rtlib_overheads =
-			rtlib_configuration.profile.perf_counters.overheads;
+		        rtlib_configuration.profile.perf_counters.overheads;
 
 		if (unlikely(pcounters_monitor_rtlib_overheads)) {
 			logger->Debug("Pre-Run: RTLIB overheads mode: disabling perf");
 			PerfDisable(exc);
 			PerfCollectStats(exc);
-		}
-		else {
+		} else {
 			logger->Debug("Pre-Run: standard profiling mode: enabling perf");
 			PerfEnable(exc);
 		}
@@ -3424,7 +3423,7 @@ void BbqueRPC::NotifyPreRun(
 }
 
 void BbqueRPC::NotifyPostRun(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	logger->Debug("Post-Run: retrieving execution context info");
 	assert(exc_handler);
@@ -3432,26 +3431,25 @@ void BbqueRPC::NotifyPostRun(
 
 	if (! exc) {
 		logger->Error("NotifyPostRun EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
 	assert(isRegistered(exc) == true);
 	logger->Debug("Post-Run: Checking if perf counters are activated");
 	bool pcounters_collected_systemwide =
-		rtlib_configuration.profile.perf_counters.global;
+	        rtlib_configuration.profile.perf_counters.global;
 	bool pcounters_to_be_monitored = PerfRegisteredEvents(exc);
 
 	if (! pcounters_collected_systemwide && pcounters_to_be_monitored > 0) {
 		logger->Debug("Post-Run: per-EXC perf counter support: ACTIVE");
 		bool pcounters_monitor_rtlib_overheads =
-			rtlib_configuration.profile.perf_counters.overheads;
+		        rtlib_configuration.profile.perf_counters.overheads;
 
 		if (unlikely(pcounters_monitor_rtlib_overheads)) {
 			logger->Debug("Post-Run: RTLIB overheads mode: enabling perf");
 			PerfEnable(exc);
-		}
-		else {
+		} else {
 			logger->Debug("Post-Run: standard profiling mode: disabling perf");
 			PerfDisable(exc);
 			PerfCollectStats(exc);
@@ -3472,7 +3470,7 @@ void BbqueRPC::NotifyPostRun(
 }
 
 void BbqueRPC::NotifyPreMonitor(
-	RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
@@ -3480,7 +3478,7 @@ void BbqueRPC::NotifyPreMonitor(
 
 	if (! exc) {
 		logger->Error("NotifyPreMonitor EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
@@ -3498,7 +3496,7 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 
 	if (! exc) {
 		logger->Error("NotifyPostMonitor EXC [%p] FAILED "
-					  "(EXC not registered)", (void *) exc_handler);
+		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
 
@@ -3529,7 +3527,7 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 #ifdef CONFIG_BBQUE_OPENCL
 
 void BbqueRPC::OclGetRuntimeProfile(
-	pRegisteredEXC_t exc, uint32_t & exec_time, uint32_t & mem_time)
+        pRegisteredEXC_t exc, uint32_t & exec_time, uint32_t & mem_time)
 {
 	pAwmStats_t awm_stats = exc->current_awm_stats;
 	CmdProf_t::const_iterator cmd_it;
@@ -3576,7 +3574,7 @@ void BbqueRPC::OclGetRuntimeProfile(
 	exec_time = (cum_exec_time - cum_exec_time_prev) / delta_cycles_count;
 	mem_time  = (cum_mem_time  - cum_mem_time_prev)  / delta_cycles_count;
 	logger->Fatal("OCL: Runtime profile %d cycles {exec_time=%d [us], mem_time=%d [us]}",
-				  delta_cycles_count, exec_time, mem_time);
+	              delta_cycles_count, exec_time, mem_time);
 	cum_exec_time_prev = cum_exec_time;
 	cum_mem_time_prev  = cum_mem_time;
 	last_cycles_count  = exc->cycles_count;
