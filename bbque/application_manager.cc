@@ -1864,6 +1864,7 @@ ApplicationManager::SetAsFrozen(AppPid_t uid)
 	AppPtr_t papp(GetApplication(uid));
 	if (!papp) {
 		logger->Error("SetAsFrozen: uid=[%d] not an application", uid);
+		return AM_EXC_NOT_FOUND;
 	}
 
 	auto curr_state = papp->State();
@@ -1894,6 +1895,7 @@ ApplicationManager::SetToThaw(AppPid_t uid)
 	AppPtr_t papp(GetApplication(uid));
 	if (!papp) {
 		logger->Error("SetToThaw: uid=[%d] not an application", uid);
+		return AM_EXC_NOT_FOUND;
 	}
 
 	auto curr_state = papp->State();
