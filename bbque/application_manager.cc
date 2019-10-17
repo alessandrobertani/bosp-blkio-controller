@@ -1601,7 +1601,8 @@ ApplicationManager::ExitCode_t ApplicationManager::Reschedule(
 	}
 
 	// Otherwise, the application should be running...
-	if (papp->State() != app::Schedulable::RUNNING) {
+	if ((papp->State() != app::Schedulable::RUNNING)
+	    && (papp->State() != app::Schedulable::THAWED)) {
 		logger->Crit("(Re)schedule: [%s] wrong status {%s/%s}",
 		             papp->StrId(),
 		             papp->StateStr(papp->State()),
