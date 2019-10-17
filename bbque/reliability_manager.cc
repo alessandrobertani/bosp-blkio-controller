@@ -255,7 +255,8 @@ void ReliabilityManager::Freeze(
 {
 	app::SchedPtr_t psched;
 	if (type == app::Schedulable::Type::ADAPTIVE) {
-		psched = am.GetApplication(app::Application::Uid(pid, 0));
+		AppUid_t uid = app::Application::Uid(pid, 0);
+		psched = am.GetApplication(uid);
 		if (psched)
 			logger->Debug("Freeze: moving application <%s> into freezer...",
 			              psched->StrId());
@@ -277,32 +278,34 @@ void ReliabilityManager::Freeze(
 	logger->Debug("Freeze: is <%s> frozen for you?", psched->StrId());
 }
 
+
 void ReliabilityManager::Thaw(
         app::AppPid_t pid, app::Schedulable::Type type)
 {
-	app::SchedPtr_t psched;
+	bool exec_found = false;
 	if (type == app::Schedulable::Type::ADAPTIVE) {
-		psched = am.GetApplication(app::Application::Uid(pid, 0));
-		if (psched)
-			logger->Debug("Thaw: moving application <%s> into freezer...",
-			              psched->StrId());
+		AppUid_t uid = app::Application::Uid(pid, 0);
+		logger->Debug("Thaw: moving application uid=<%d> into freezer...", uid);
+		auto ret = am.SetToThaw(uid);
+		if (ret == ApplicationManager::ExitCode_t::AM_SUCCESS)
+			exec_found = true;
 	}
+
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	else if (type == app::Schedulable::Type::PROCESS) {
-		psched = prm.GetProcess(pid);
-		if (psched)
-			logger->Debug("Thaw: moving process <%s> into freezer",
-			              psched->StrId());
+	else if ((!exec_found) && (type == app::Schedulable::Type::PROCESS)) {
+		logger->Debug("Thaw: moving process pid=<%d> into freezer", pid);
+		auto ret = prm.SetToThaw(pid);
+		if (ret == ProcessManager::ExitCode_t::SUCCESS)
+			exec_found = true;
 	}
 #endif
 
-	if (!psched) {
-		logger->Warn("Thaw: uid=<%d> no application or process", pid);
+	if (!exec_found) {
+		logger->Warn("Thaw: pid=<%d> no application or process", pid);
 		return;
 	}
 
-	prm.SetToThaw(pid);
-	logger->Debug("Thaw: trigger re-scheduling", psched->StrId());
+	logger->Debug("Thaw: triggering re-scheduling");
 	ResourceManager & rm = ResourceManager::GetInstance();
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
 }
