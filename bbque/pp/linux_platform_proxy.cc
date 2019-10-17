@@ -1515,7 +1515,7 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 	}
 
 	// add the task to the freeze
-	std::string freezer_tasks(freezer_dir + "/tasks");
+	std::string freezer_tasks(freezer_dir + "/cgroup.procs");
 	std::ofstream tasks_ofs(freezer_tasks, std::ofstream::out);
 	try {
 		tasks_ofs << psched->Pid();
