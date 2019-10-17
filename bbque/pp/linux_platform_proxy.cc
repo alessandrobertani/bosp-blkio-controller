@@ -1500,7 +1500,6 @@ LinuxPlatformProxy::Restore(app::SchedPtr_t psched)
 }
 
 
-
 CheckpointRestoreIF::ExitCode_t
 LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 {
@@ -1575,7 +1574,7 @@ std::string LinuxPlatformProxy::ApplicationPath(
 {
 	return std::string(
 	               prefix_dir
-	               + "/" + std::to_string(psched->Uid())
+	               + "/" + std::to_string(psched->Pid())
 	               + "_" + psched->Name());
 }
 
