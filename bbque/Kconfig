@@ -195,12 +195,14 @@ menu "Reliability Management"
     Add the support for checkpoint/restore and execution freezing.
 
   config BBQUE_FREEZER_PATH
+    depends on BBQUE_RELIABILITY
     string "Freezer interfaces path"
     default "/sys/fs/cgroup/freezer/bbque"
     ---help---
     The path under which freezer interfaces are located.
 
   config BBQUE_CHECKPOINT_IMAGE_PATH
+    depends on BBQUE_RELIABILITY
     string "Checkpoint dump image path"
     default "/tmp/bbque/dump"
     ---help---
