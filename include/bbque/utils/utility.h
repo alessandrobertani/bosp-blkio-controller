@@ -132,7 +132,8 @@
 
 #ifndef CONFIG_TARGET_ANDROID
 /** Return the PID of the calling process/thread */
-inline pid_t gettid() {
+inline pid_t gettid()
+{
 	return syscall(SYS_gettid);
 }
 #endif
@@ -148,16 +149,18 @@ extern bbque::utils::Timer bbque_tmr;
  * class type
  */
 template<class T>
-class CompareSP {
+class CompareSP
+{
 public:
 	bool operator() (
-			const std::shared_ptr<T> & sp1,
-			const std::shared_ptr<T> & sp2) const {
+	        const std::shared_ptr<T> & sp1,
+	        const std::shared_ptr<T> & sp2) const {
 		return *sp1 < *sp2;
 	}
 };
 
-inline bool IsNumber(const std::string & str) {
+inline bool IsNumber(const std::string & str)
+{
 	size_t p = 0;
 	while (p < str.length())
 		if (!isdigit(str[p++])) return false;
@@ -171,10 +174,12 @@ inline bool IsNumber(const std::string & str) {
  * @param The input string to be hashed
  * @see http://stackoverflow.com/a/16388610/835146
  */
-unsigned constexpr ConstHashString(char const *input) {
-    return *input ?
-        static_cast<unsigned int>(*input) + 33 * ConstHashString(input + 1) :
-        5381;
+unsigned constexpr ConstHashString(char const *input)
+{
+	return *input ?
+	       static_cast<unsigned int>(*input) + 33 * ConstHashString(input + 1) :
+	       5381;
 }
+
 
 #endif // BBQUE_UTILITY_H_
