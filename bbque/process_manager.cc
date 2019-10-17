@@ -157,8 +157,9 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	*(managed_procs[name].sched_req) = sched_req;
-	logger->Notice("CommandsCb: <%s> schedule request: cpus=%d accs=%d mem=%d",
+	logger->Notice("CommandsCb: <%s> (pid=%d) schedule request: cpus=%d accs=%d mem=%d",
 	               name.c_str(),
+	               pid,
 	               managed_procs[name].sched_req->cpu_cores,
 	               managed_procs[name].sched_req->acc_cores,
 	               managed_procs[name].sched_req->memory_mb);
@@ -446,7 +447,9 @@ ProcessManager::ExitCode_t ProcessManager::ScheduleRequest(
 
 	// Checking for resources availability: unschedule if not
 	auto ra_result = ra.BookResources(
-	                         proc, awm->GetSchedResourceBinding(b_refn), status_view);
+	                         proc,
+	                         awm->GetSchedResourceBinding(b_refn),
+	                         status_view);
 	if (ra_result != ResourceAccounter::RA_SUCCESS) {
 		logger->Debug("ScheduleRequest: [%s] not enough resources...",
 		              proc->StrId());
