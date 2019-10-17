@@ -310,6 +310,7 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 		             papp->StrId());
 		return PLATFORM_OK;
 	}
+
 	if (papp->IsLocal()) {
 		ec = lpp->ReclaimResources(papp);
 		if (unlikely(ec != PLATFORM_OK)) {
@@ -650,7 +651,7 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 	// Update application (frozen) status
 	if (psched->GetType() == ba::Schedulable::Type::ADAPTIVE) {
 		ApplicationManager & am(ApplicationManager::GetInstance());
-		am.SetAsFrozen(psched->Uid());
+		am.SetAsFrozen(Application::Uid(psched->Pid(), 0));
 		return CheckpointRestoreIF::ExitCode_t::OK;
 	}
 
@@ -659,7 +660,7 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 	// Update process (frozen) status
 	if (psched->GetType() == ba::Schedulable::Type::PROCESS) {
 		ProcessManager & prm(ProcessManager::GetInstance());
-		prm.SetAsFrozen(psched->Uid());
+		prm.SetAsFrozen(psched->Pid());
 		return CheckpointRestoreIF::ExitCode_t::OK;
 	}
 #endif
