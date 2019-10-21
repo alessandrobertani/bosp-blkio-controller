@@ -23,7 +23,7 @@
 #include "bbque/modules_factory.h"
 #include "bbque/res/resource_assignment.h"
 #include "bbque/pp/platform_description.h"
-#include "bbque/pp/cr/checkpoint_restore_if.h"
+#include "bbque/pp/cr/reliability_actions_if.h"
 
 #include <cstdint>
 
@@ -32,7 +32,7 @@
 using bbque::res::ResourceAssignmentMapPtr_t;
 using bbque::res::RViewToken_t;
 using bbque::app::SchedPtr_t;
-using bbque::pp::CheckpointRestoreIF;
+using bbque::pp::ReliabilityActionsIF;
 
 namespace bbque
 {
@@ -42,12 +42,12 @@ namespace bbque
  * @brief The PlatformProxy class is the interface for all PlatformProxy
  * classes. The access to these classes is provided by the PlatformManager
  */
-class PlatformProxy: public CheckpointRestoreIF
+class PlatformProxy: public ReliabilityActionsIF
 {
 
 public:
 
-	PlatformProxy(): CheckpointRestoreIF("/tmp") { }
+	PlatformProxy(): ReliabilityActionsIF("/tmp") { }
 
 	virtual ~PlatformProxy() {}
 
@@ -163,24 +163,24 @@ public:
 	static const pp::PlatformDescription & GetPlatformDescription();
 #endif
 
-	virtual CheckpointRestoreIF::ExitCode_t Dump(uint32_t exe_id) override;
+	virtual ReliabilityActionsIF::ExitCode_t Dump(uint32_t exe_id) override;
 
-	virtual CheckpointRestoreIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
-
-
-	virtual CheckpointRestoreIF::ExitCode_t Restore(uint32_t exe_id) override;
-
-	virtual CheckpointRestoreIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+	virtual ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
 
 
-	virtual CheckpointRestoreIF::ExitCode_t Freeze(uint32_t exe_id) override;
+	virtual ReliabilityActionsIF::ExitCode_t Restore(uint32_t exe_id) override;
 
-	virtual CheckpointRestoreIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
+	virtual ReliabilityActionsIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
 
 
-	virtual CheckpointRestoreIF::ExitCode_t Thaw(uint32_t exe_id) override;
+	virtual ReliabilityActionsIF::ExitCode_t Freeze(uint32_t exe_id) override;
 
-	virtual CheckpointRestoreIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
+	virtual ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
+
+
+	virtual ReliabilityActionsIF::ExitCode_t Thaw(uint32_t exe_id) override;
+
+	virtual ReliabilityActionsIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
 
 
 protected:

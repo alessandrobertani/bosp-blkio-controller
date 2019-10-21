@@ -565,13 +565,13 @@ int PlatformManager::CommandsCb(int argc, char * argv[])
 }
 
 
-CheckpointRestoreIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 {
-	CheckpointRestoreIF::ExitCode_t ec;
+	ReliabilityActionsIF::ExitCode_t ec;
 
 	if (psched->IsLocal()) {
 		ec = lpp->Dump(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Dump: [%s] failed local checkpoint dump"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -581,24 +581,24 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (psched->IsRemote()) {
 		ec = rpp->Dump(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Dump: [%s] failed remote checkpoint dump"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
 #endif
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 
-CheckpointRestoreIF::ExitCode_t PlatformManager::Restore(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(app::SchedPtr_t psched)
 {
-	CheckpointRestoreIF::ExitCode_t ec;
+	ReliabilityActionsIF::ExitCode_t ec;
 
 	if (psched->IsLocal()) {
 		ec = lpp->Restore(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Restore: [%s] failed local restore"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -608,24 +608,24 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Restore(app::SchedPtr_t psched)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (psched->IsRemote()) {
 		ec = rpp->Restore(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Restore: [%s] failed remote restore"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
 #endif
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 
-CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 {
-	CheckpointRestoreIF::ExitCode_t ec;
+	ReliabilityActionsIF::ExitCode_t ec;
 
 	if (psched->IsLocal()) {
 		ec = lpp->Freeze(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Freeze: [%s] failed local freezing"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -635,7 +635,7 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (psched->IsRemote()) {
 		ec = rpp->Freeze(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Freeze: [%s] failed remote freezing"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -643,7 +643,7 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 	}
 #endif
 
-	if (ec != CheckpointRestoreIF::ExitCode_t::OK) {
+	if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
 		logger->Error("Freeze: <%s> freezing failed", psched->StrId());
 		return ec;
 	}
@@ -652,7 +652,7 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 	if (psched->GetType() == ba::Schedulable::Type::ADAPTIVE) {
 		ApplicationManager & am(ApplicationManager::GetInstance());
 		am.SetAsFrozen(Application::Uid(psched->Pid(), 0));
-		return CheckpointRestoreIF::ExitCode_t::OK;
+		return ReliabilityActionsIF::ExitCode_t::OK;
 	}
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
@@ -661,21 +661,21 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 	if (psched->GetType() == ba::Schedulable::Type::PROCESS) {
 		ProcessManager & prm(ProcessManager::GetInstance());
 		prm.SetAsFrozen(psched->Pid());
-		return CheckpointRestoreIF::ExitCode_t::OK;
+		return ReliabilityActionsIF::ExitCode_t::OK;
 	}
 #endif
 
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 
-CheckpointRestoreIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 {
-	CheckpointRestoreIF::ExitCode_t ec;
+	ReliabilityActionsIF::ExitCode_t ec;
 
 	if (psched->IsLocal()) {
 		ec = lpp->Thaw(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Thaw: [%s] failed local thawning"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -685,7 +685,7 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (psched->IsRemote()) {
 		ec = rpp->Thaw(psched);
-		if (unlikely(ec != CheckpointRestoreIF::ExitCode_t::OK)) {
+		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Thaw: [%s] failed remote thawing"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -693,7 +693,7 @@ CheckpointRestoreIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 	}
 #endif
 
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 

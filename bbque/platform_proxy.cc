@@ -57,55 +57,55 @@ const pp::PlatformDescription & PlatformProxy::GetPlatformDescription()
 
 
 /************************************************
- * CheckpointRestoreIF                          *
+ * ReliabilityActionsIF                          *
  ************************************************/
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Dump(uint32_t exe_id)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Dump(uint32_t exe_id)
 {
 	(void) exe_id;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Dump(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Dump(app::SchedPtr_t psched)
 {
 	(void) psched;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Restore(uint32_t exe_id)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Restore(uint32_t exe_id)
 {
 	(void) exe_id;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Restore(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Restore(app::SchedPtr_t psched)
 {
 	(void) psched;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Freeze(uint32_t exe_id)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Freeze(uint32_t exe_id)
 {
 	(void) exe_id;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Freeze(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Freeze(app::SchedPtr_t psched)
 {
 	(void) psched;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Thaw(uint32_t exe_id)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Thaw(uint32_t exe_id)
 {
 	(void) exe_id;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-CheckpointRestoreIF::ExitCode_t PlatformProxy::Thaw(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Thaw(app::SchedPtr_t psched)
 {
 	(void) psched;
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 } //namespace bbque

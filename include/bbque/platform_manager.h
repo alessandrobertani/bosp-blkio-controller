@@ -109,16 +109,16 @@ public:
 	void Exit() override;
 
 	/******************************************************************
-	 * CheckpointRestoreIF inherithed member functions                *
+	 * ReliabilityActionsIF inherithed member functions                *
 	 ******************************************************************/
 
-	CheckpointRestoreIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
 
-	CheckpointRestoreIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
 
-	CheckpointRestoreIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
 
-	CheckpointRestoreIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
+	ReliabilityActionsIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
 
 
 	/**

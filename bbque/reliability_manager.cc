@@ -119,7 +119,7 @@ void ReliabilityManager::NotifyFaultDetection(res::ResourcePtr_t rsrc)
 		              psched->StrId());
 
 		auto ret = plm.Freeze(psched);
-		if (ret != CheckpointRestoreIF::ExitCode_t::OK) {
+		if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
 			logger->Error("NotifyFaultDetection: <%s> => <%s> "
 			              "platform failure while freezing",
 			              rsrc->Path()->ToString().c_str(),

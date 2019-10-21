@@ -97,13 +97,13 @@ public:
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 
 
-	CheckpointRestoreIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
 
-	CheckpointRestoreIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
 
-	CheckpointRestoreIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
 
-	CheckpointRestoreIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
+	ReliabilityActionsIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
 
 private:
 //-------------------- CONSTS

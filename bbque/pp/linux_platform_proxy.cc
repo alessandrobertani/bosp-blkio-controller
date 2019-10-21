@@ -1460,8 +1460,7 @@ LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept 
 }
 
 
-
-CheckpointRestoreIF::ExitCode_t
+ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 {
 
@@ -1474,14 +1473,14 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 
 
 
-CheckpointRestoreIF::ExitCode_t
+ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Restore(app::SchedPtr_t psched)
 {
 	if (psched->State() != ba::Application::State_t::FROZEN) {
 		logger->Warn("Restore: [%s] not FROZEN [state=%s]",
 		             psched->StrId(),
 		             ba::Schedulable::StateStr(psched->State()));
-		return CheckpointRestoreIF::ExitCode_t::ERROR_WRONG_STATE;
+		return ReliabilityActionsIF::ExitCode_t::ERROR_WRONG_STATE;
 	}
 
 	std::string image_dir(ApplicationPath(image_prefix_dir, psched));
@@ -1491,16 +1490,16 @@ LinuxPlatformProxy::Restore(app::SchedPtr_t psched)
 	if (!boost::filesystem::exists(image_dir)) {
 		logger->Debug("Restore: [%s] missing directory [%s]",
 		              psched->StrId(), image_dir.c_str());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
 	/** CRIU restore here **/
 
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 
-CheckpointRestoreIF::ExitCode_t
+ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 {
 	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
@@ -1522,7 +1521,7 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 	} catch(...) {
 		tasks_ofs.close();
 		logger->Error("Freeze: [%s] filesystem error", psched->StrId());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
 	// change state to frozen
@@ -1534,14 +1533,14 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 	} catch(...) {
 		fstate_ofs.close();
 		logger->Error("Freeze: [%s] filesystem error", psched->StrId());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 
-CheckpointRestoreIF::ExitCode_t
+ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 {
 	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
@@ -1550,7 +1549,7 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 
 	if (!boost::filesystem::exists(freezer_dir)) {
 		logger->Error("Thaw: [%s] not frozen", psched->StrId());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_PROCESS_ID;
+		return ReliabilityActionsIF::ExitCode_t::ERROR_PROCESS_ID;
 	}
 
 	std::string freezer_attr(freezer_dir + BBQUE_LINUXPP_FREEZER_STATE);
@@ -1561,10 +1560,10 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 	} catch(...) {
 		fofs.close();
 		logger->Error("Thaw: [%s] filesystem error", psched->StrId());
-		return CheckpointRestoreIF::ExitCode_t::ERROR_FILESYSTEM;
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
-	return CheckpointRestoreIF::ExitCode_t::OK;
+	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
 

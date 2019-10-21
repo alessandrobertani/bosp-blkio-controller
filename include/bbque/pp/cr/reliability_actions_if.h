@@ -30,12 +30,12 @@ namespace pp
 {
 
 /**
- * @class CheckpointRestoreIF
- * @file checkpoint_restore_if.h
+ * @class ReliabilityActionsIF
+ * @file reliability_actions_if.h
  * @brief Interface for performing checkpoint/restore (and similar) operations
  * on running applications/tasks.
  */
-class CheckpointRestoreIF
+class ReliabilityActionsIF
 {
 public:
 
@@ -50,9 +50,9 @@ public:
 	        ERROR_UNKNOWN
 	};
 
-	CheckpointRestoreIF(std::string const & ipd): image_prefix_dir(ipd) { }
+	ReliabilityActionsIF(std::string const & ipd): image_prefix_dir(ipd) { }
 
-	virtual ~CheckpointRestoreIF() { };
+	virtual ~ReliabilityActionsIF() { };
 
 	/**
 	 * @brief Perform the checkpoint (dump) of an application/process/task
