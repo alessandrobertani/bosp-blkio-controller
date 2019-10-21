@@ -54,25 +54,20 @@ ReliabilityManager::ReliabilityManager():
 	                   static_cast<CommandHandler*>(this),
 	                   "Simulate the occurrence of a resource fault");
 
-#define CMD_FREEZE_APPLICATION "freeze_application"
-	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_FREEZE_APPLICATION,
+#define CMD_FREEZE "freeze"
+	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_FREEZE,
 	                   static_cast<CommandHandler*>(this),
-	                   "Freeze an adaptive application");
+	                   "Freeze a managed application or process");
 
-#define CMD_FREEZE_PROCESS "freeze_process"
-	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_FREEZE_PROCESS,
+#define CMD_THAW "thaw"
+	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_THAW,
 	                   static_cast<CommandHandler*>(this),
-	                   "Freeze a generic process");
+	                   "Thaw a managed application or process");
 
-#define CMD_THAW_APPLICATION "thaw_application"
-	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_THAW_APPLICATION,
+#define CMD_CHECKPOINT "checkpoint"
+	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_CHECKPOINT,
 	                   static_cast<CommandHandler*>(this),
-	                   "Thaw an adaptive application");
-
-#define CMD_THAW_PROCESS "thaw_process"
-	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_THAW_PROCESS,
-	                   static_cast<CommandHandler*>(this),
-	                   "Thaw a generic process");
+	                   "Checkpoint of a managed application or process");
 
 }
 
@@ -178,53 +173,40 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 		return 0;
 	}
 
-	if (!strncmp(CMD_FREEZE_APPLICATION, cmd_id, strlen(CMD_FREEZE_APPLICATION))) {
-		if (argc < 2) {
-			logger->Error("'%s.%s' expecting application unique id.",
-			              MODULE_NAMESPACE, CMD_FREEZE_APPLICATION);
-			logger->Error("Example: '%s.%s 12319",
-			              MODULE_NAMESPACE, CMD_FREEZE_APPLICATION);
-			return 3;
-		}
-		Freeze(std::stoi(argv[1]), app::Schedulable::Type::ADAPTIVE);
-		return 0;
-	}
-
-
-	if (!strncmp(CMD_THAW_APPLICATION, cmd_id, strlen(CMD_THAW_APPLICATION))) {
-		if (argc < 2) {
-			logger->Error("'%s.%s' expecting application unique id.",
-			              MODULE_NAMESPACE, CMD_THAW_APPLICATION);
-			logger->Error("Example: '%s.%s 12319",
-			              MODULE_NAMESPACE, CMD_THAW_APPLICATION);
-			return 3;
-		}
-		Thaw(std::stoi(argv[1]), app::Schedulable::Type::ADAPTIVE);
-		return 0;
-	}
-
-
-	if (!strncmp(CMD_FREEZE_PROCESS, cmd_id, strlen(CMD_FREEZE_PROCESS))) {
+	if (!strncmp(CMD_FREEZE, cmd_id, strlen(CMD_FREEZE))) {
 		if (argc < 2) {
 			logger->Error("'%s.%s' expecting process id.",
-			              MODULE_NAMESPACE, CMD_FREEZE_PROCESS);
-			logger->Error("Example: '%s.%s 8823",
-			              MODULE_NAMESPACE, CMD_FREEZE_PROCESS);
-			return 4;
+			              MODULE_NAMESPACE, CMD_FREEZE);
+			logger->Error("Example: '%s.%s 12319",
+			              MODULE_NAMESPACE, CMD_FREEZE);
+			return 3;
 		}
-		Freeze(std::stoi(argv[1]), app::Schedulable::Type::PROCESS);
+		Freeze(std::stoi(argv[1]));
 		return 0;
 	}
 
-	if (!strncmp(CMD_THAW_PROCESS, cmd_id, strlen(CMD_THAW_PROCESS))) {
+
+	if (!strncmp(CMD_THAW, cmd_id, strlen(CMD_THAW))) {
 		if (argc < 2) {
 			logger->Error("'%s.%s' expecting process id.",
-			              MODULE_NAMESPACE, CMD_THAW_PROCESS);
+			              MODULE_NAMESPACE, CMD_THAW);
+			logger->Error("Example: '%s.%s 12319",
+			              MODULE_NAMESPACE, CMD_THAW);
+			return 3;
+		}
+		Thaw(std::stoi(argv[1]));
+		return 0;
+	}
+
+	if (!strncmp(CMD_CHECKPOINT, cmd_id, strlen(CMD_CHECKPOINT))) {
+		if (argc < 2) {
+			logger->Error("'%s.%s' expecting process id.",
+			              MODULE_NAMESPACE, CMD_CHECKPOINT);
 			logger->Error("Example: '%s.%s 8823",
-			              MODULE_NAMESPACE, CMD_THAW_PROCESS);
+			              MODULE_NAMESPACE, CMD_CHECKPOINT);
 			return 5;
 		}
-		Thaw(std::stoi(argv[1]), app::Schedulable::Type::PROCESS);
+		Dump(std::stoi(argv[1]));
 		return 0;
 	}
 
@@ -250,19 +232,16 @@ void ReliabilityManager::SimulateFault(std::string const & resource_path)
 }
 
 
-void ReliabilityManager::Freeze(
-        app::AppPid_t pid, app::Schedulable::Type type)
+void ReliabilityManager::Freeze(app::AppPid_t pid)
 {
-	app::SchedPtr_t psched;
-	if (type == app::Schedulable::Type::ADAPTIVE) {
-		AppUid_t uid = app::Application::Uid(pid, 0);
-		psched = am.GetApplication(uid);
-		if (psched)
-			logger->Debug("Freeze: moving application <%s> into freezer...",
-			              psched->StrId());
+	AppUid_t uid = app::Application::Uid(pid, 0);
+	app::SchedPtr_t psched = am.GetApplication(uid);
+	if (psched) {
+		logger->Debug("Freeze: moving application <%s> into freezer...",
+		              psched->StrId());
 	}
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	else if (type == app::Schedulable::Type::PROCESS) {
+	else  {
 		psched = prm.GetProcess(pid);
 		if (psched)
 			logger->Debug("Freeze: moving process <%s> into freezer",
@@ -279,24 +258,22 @@ void ReliabilityManager::Freeze(
 }
 
 
-void ReliabilityManager::Thaw(
-        app::AppPid_t pid, app::Schedulable::Type type)
+void ReliabilityManager::Thaw(app::AppPid_t pid)
 {
 	bool exec_found = false;
-	if (type == app::Schedulable::Type::ADAPTIVE) {
-		AppUid_t uid = app::Application::Uid(pid, 0);
+	AppUid_t uid = app::Application::Uid(pid, 0);
+	auto ret = am.SetToThaw(uid);
+	if (ret == ApplicationManager::ExitCode_t::AM_SUCCESS) {
 		logger->Debug("Thaw: moving application uid=<%d> into freezer...", uid);
-		auto ret = am.SetToThaw(uid);
-		if (ret == ApplicationManager::ExitCode_t::AM_SUCCESS)
-			exec_found = true;
+		exec_found = true;
 	}
-
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	else if ((!exec_found) && (type == app::Schedulable::Type::PROCESS)) {
-		logger->Debug("Thaw: moving process pid=<%d> into freezer", pid);
+	else {
 		auto ret = prm.SetToThaw(pid);
-		if (ret == ProcessManager::ExitCode_t::SUCCESS)
+		if (ret == ProcessManager::ExitCode_t::SUCCESS) {
+			logger->Debug("Thaw: moving process pid=<%d> into freezer", pid);
 			exec_found = true;
+		}
 	}
 #endif
 
@@ -310,6 +287,38 @@ void ReliabilityManager::Thaw(
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
 }
 
+
+void ReliabilityManager::Dump(app::AppPid_t pid)
+{
+	app::SchedPtr_t psched;
+	AppUid_t uid = app::Application::Uid(pid, 0);
+	psched = am.GetApplication(uid);
+	if (psched) {
+		logger->Debug("Dump: <%s> application checkpoint...",
+		              psched->StrId());
+	}
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	else {
+		psched = prm.GetProcess(pid);
+		if (psched)
+			logger->Debug("Dump: <%s> process checkpoint...",
+			              psched->StrId());
+	}
+#endif
+
+	if (!psched) {
+		logger->Warn("Dump: pid=<%d> no application or process "
+		             "to checkpoint", pid);
+		return;
+	}
+
+	auto ret = plm.Dump(psched);
+	if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
+		logger->Error("Dump: <%s> checkpoint failed", psched->StrId());
+		return;
+	}
+	logger->Debug("Dump: <%s> checkpointed", psched->StrId());
+}
 
 
 int ReliabilityManager::ResourceDegradationHandler(int argc, char * argv[])

@@ -117,17 +117,21 @@ private:
 
 	/**
 	 * @brief Force the freezing of a given process/application
-	 * @param uid Application or process id
-	 * @param type ADATIVE or PROCESS
+	 * @param pid Process id
 	 */
-	void Freeze(app::AppUid_t uid, app::Schedulable::Type type);
+	void Freeze(app::AppPid_t pid);
 
 	/**
 	 * @brief Thaw a previously frozen application or process
-	 * @param uid Application or process id
-	 * @param type ADATIVE or PROCESS
+	 * @param pid Process id
 	 */
-	void Thaw(app::AppUid_t uid, app::Schedulable::Type type);
+	void Thaw(app::AppPid_t pid);
+
+	/**
+	 * @brief Perform the checkpoint of an application or process
+	 * @param pid Process id
+	 */
+	void Dump(app::AppPid_t pid);
 
 };
 
