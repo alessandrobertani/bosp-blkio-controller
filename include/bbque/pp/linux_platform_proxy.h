@@ -75,7 +75,7 @@ public:
 	/**
 	 * @brief Linux specific resources release interface.
 	 */
-	ExitCode_t Release(SchedPtr_t papp) noexcept override final;
+	ExitCode_t Release(SchedPtr_t papp) override final;
 
 	/**
 	 * @brief Linux specific resource claiming interface.
@@ -142,6 +142,15 @@ private:
 	 * application to run the RTLib
 	 */
 	CGroupDataPtr_t psilos;
+
+
+#ifdef CONFIG_BBQUE_RELIABILITY
+	/**
+	 * @brief Initialize the support for freezing, checkpoint, restore actions
+	 */
+	void InitReliabilitySupport();
+#endif
+
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	/**

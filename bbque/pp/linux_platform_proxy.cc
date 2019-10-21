@@ -25,6 +25,7 @@
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include <criu/criu.h>
 #include <fstream>
 #include <libcgroup.h>
 #include <linux/ethtool.h>
@@ -34,7 +35,12 @@
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <stdio.h>
 #include <sstream>
+#include <unistd.h>
 
 #ifdef CONFIG_BBQUE_WM
 #include "bbque/power_monitor.h"
@@ -96,7 +102,6 @@ namespace bbque
 namespace pp
 {
 
-
 LinuxPlatformProxy * LinuxPlatformProxy::GetInstance()
 {
 	static LinuxPlatformProxy * instance;
@@ -114,7 +119,6 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 	proc_listener(ProcessListener::GetInstance())
 #endif
 {
-
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(LINUX_PP_NAMESPACE);
 	assert(logger);
@@ -131,34 +135,9 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 	}
 
 #ifdef CONFIG_BBQUE_RELIABILITY
-
-	// Checkpoint image path
-	image_prefix_dir.assign(BBQUE_CHECKPOINT_IMAGE_PATH);
-	logger->Info("Reliability support: checkpoint images path:  %s",
-	             image_prefix_dir.c_str());
-
-	if (!boost::filesystem::exists(image_prefix_dir)) {
-		if (boost::filesystem::create_directory(image_prefix_dir))
-			logger->Debug("Reliability support: "
-			              "image directory created");
-		else
-			logger->Error("Reliability support: "
-			              "image directory not created");
-	}
-
-	// Freezer initialization
-	freezer_prefix_dir.assign(BBQUE_FREEZER_PATH);
-	logger->Info("Reliability support: freezer interfaces path: %s",
-	             freezer_prefix_dir.c_str());
-
-	if (!boost::filesystem::exists(freezer_prefix_dir)) {
-		if (boost::filesystem::create_directory(freezer_prefix_dir))
-			logger->Debug("Reliability support: freezer created");
-		else
-			logger->Error("Reliability support: freezer created");
-	}
-
+	InitReliabilitySupport();
 #endif
+
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	InitCoresType();
 #endif
@@ -207,10 +186,63 @@ void LinuxPlatformProxy::InitCoresType()
 	//	while (std::getline(ss, core_str, ',')) {	}
 }
 
-#endif
+#endif // CONFIG_TARGET_ARM_BIG_LITTLE
+
+
+#ifdef CONFIG_BBQUE_RELIABILITY
+
+void LinuxPlatformProxy::InitReliabilitySupport()
+{
+//	char criu_exec_path[] = BBQUE_CRIU_BINARY_PATH);
+//	char criu_serv_addr[] = BBQUE_PATH_VAR;
+
+	// Checkpoint image path
+	image_prefix_dir.assign(BBQUE_CHECKPOINT_IMAGE_PATH);
+	logger->Debug("Reliability: checkpoint images directory:  %s",
+	              image_prefix_dir.c_str());
+
+	if (!boost::filesystem::exists(image_prefix_dir)) {
+		if (boost::filesystem::create_directories(image_prefix_dir))
+			logger->Debug("Reliability: "
+			              "checkpoint images directory created");
+		else
+			logger->Error("Reliability: "
+			              "checkpoint images directory not created");
+	}
+
+	// Freezer initialization
+	freezer_prefix_dir.assign(BBQUE_FREEZER_PATH);
+	logger->Debug("Reliability: freezer interfaces path: %s",
+	              freezer_prefix_dir.c_str());
+
+	if (!boost::filesystem::exists(freezer_prefix_dir)) {
+		if (boost::filesystem::create_directory(freezer_prefix_dir))
+			logger->Debug("Reliability: freezer created");
+		else
+			logger->Error("Reliability: freezer created");
+	}
+
+	// CRIU initialization
+	int c_ret = criu_init_opts();
+	if (c_ret == 0) {
+		logger->Info("Reliability: CRIU successfully initialized");
+		//	criu_set_service_address(BBQUE_PATH_VAR);
+		logger->Info("Reliability: CRIU service address = [%s]",
+		             BBQUE_PATH_VAR);
+
+		criu_set_service_binary(BBQUE_CRIU_BINARY_PATH);
+		logger->Info("Reliability: CRIU service binary = [%s]",
+		             BBQUE_CRIU_BINARY_PATH);
+	} else {
+		logger->Error("Reliability: CRIU initialization failed [ret=%d]",
+		              c_ret);
+	}
+}
+#endif // CONFIG_BBQUE_RELIABILITY
 
 
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
+
 void LinuxPlatformProxy::InitNetworkManagement()
 {
 	bbque_assert ( 0 == rtnl_open(&network_info.rth_1, 0) );
@@ -465,30 +497,36 @@ void LinuxPlatformProxy::LoadConfiguration() noexcept {
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::Release(SchedPtr_t papp) noexcept {
+LinuxPlatformProxy::Release(SchedPtr_t papp)
+{
 	// Release CGroup plugin data
 	// ... thus releasing the corresponding control group
 	logger->Debug("Release: releasing platform-specific data [%s]", papp->StrId());
 	papp->ClearPluginData(LINUX_PP_NAMESPACE);
 
 #ifdef CONFIG_BBQUE_RELIABILITY
-	// Remove checkpoint image path
-	std::string image_dir(ApplicationPath(image_prefix_dir, papp));
 
-	if (boost::filesystem::exists(image_dir)) {
-		logger->Debug("Release: image directory [%s] ", image_dir.c_str());
-		if (boost::filesystem::remove(image_dir))
-			logger->Info("Release: image directory [%s] removed",
-			image_dir.c_str());
-	}
+	try {
+		// Remove checkpoint image path
+		std::string image_dir(ApplicationPath(image_prefix_dir, papp));
+		if (boost::filesystem::exists(image_dir)) {
+			logger->Debug("Release: image directory [%s] ", image_dir.c_str());
+			if (boost::filesystem::remove_all(image_dir))
+				logger->Info("Release: image directory [%s] removed",
+				             image_dir.c_str());
+		}
 
-	// Remove freezer directory
-	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, papp));
-	if (boost::filesystem::exists(freezer_dir)) {
-		logger->Debug("Release: freezer directory [%s] ", freezer_dir.c_str());
-		if (boost::filesystem::remove(freezer_dir))
-			logger->Info("Release feezer directory [%s] removed",
-			freezer_dir.c_str());
+		// Remove freezer directory
+		std::string freezer_dir(ApplicationPath(freezer_prefix_dir, papp));
+		if (boost::filesystem::exists(freezer_dir)) {
+			logger->Debug("Release: freezer directory [%s] ", freezer_dir.c_str());
+			if (boost::filesystem::remove(freezer_dir))
+				logger->Info("Release feezer directory [%s] removed",
+				             freezer_dir.c_str());
+
+		}
+	} catch(boost::filesystem::filesystem_error & ex) {
+		logger->Crit("Release: %s", ex.what());
 	}
 #endif
 
@@ -536,9 +574,10 @@ void LinuxPlatformProxy::Exit()
 #endif
 
 #ifdef CONFIG_BBQUE_RELIABILITY
+
 	// Remove checkpoint image path
 	if (boost::filesystem::exists(image_prefix_dir)) {
-		if (boost::filesystem::remove(image_prefix_dir))
+		if (boost::filesystem::remove_all(image_prefix_dir))
 			logger->Info("Reliability: "
 			             "image directory [%s] removed",
 			             image_prefix_dir.c_str());
@@ -549,7 +588,7 @@ void LinuxPlatformProxy::Exit()
 	}
 	// Remove freezer directory
 	if (boost::filesystem::exists(freezer_prefix_dir)) {
-		if (!boost::filesystem::remove(freezer_prefix_dir))
+		if (!boost::filesystem::remove_all(freezer_prefix_dir))
 			logger->Info("Reliability: "
 			             "freezer directory [%s] removed",
 			             freezer_prefix_dir.c_str());
@@ -1463,14 +1502,94 @@ LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept 
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 {
+	logger->Debug("Dump: [%s] checkpointing [pid=%d]... (user=%d)",
+	              psched->StrId(), psched->Pid(), getuid());
+
+	std::string image_dir(ApplicationPath(image_prefix_dir, psched));
+	if (!boost::filesystem::exists(image_dir)) {
+		logger->Debug("Dump: [%s] creating directory [%s]",
+		              psched->StrId(), image_dir.c_str());
+		boost::filesystem::create_directory(image_dir);
+	}
+
+	// CRIU image directory
+	int fd = open(image_dir.c_str(), O_DIRECTORY);
+	if (fd < 0) {
+		logger->Warn("Dump: [%s] image directory [%s] not accessible",
+		             psched->StrId(), image_dir.c_str());
+		perror("CRIU");
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
+	} else {
+		logger->Debug("Dump: [%s] image directory [%s] open",
+		              psched->StrId(), image_dir.c_str());
+	}
+
+	criu_set_images_dir_fd(fd);
+	criu_set_log_level(4);
+	criu_set_log_file("dump.log");
+	criu_set_pid(psched->Pid());
+	criu_set_leave_running(true);
+	criu_set_shell_job(true);
+
+	int c_ret = criu_dump();
+	switch (c_ret) {
+	case -EBADE:
+		logger->Error("Dump: [%s] CRIU: RPC error", psched->StrId());
+		break;
+	case -ECONNREFUSED:
+		logger->Error("Dump: [%s] CRIU: connection refused (%s)",
+		              psched->StrId(),
+		              strerror(c_ret));
+		break;
+	case -ECOMM:
+		logger->Error("Dump: [%s] CRIU: unable to send/receive "
+		              "messages (%s)",
+		              psched->StrId(),
+		              strerror(c_ret));
+		break;
+	case -EBADMSG:
+		logger->Error("Dump: [%s] CRIU: unexpected response",
+		              psched->StrId());
+		break;
+	}
+
+	if (c_ret < 0) {
+		logger->Error("Dump: [%s] checkpointing failed", psched->StrId());
+		close(fd);
+		return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
+	}
+
+	close(fd);
+	logger->Info("Dump: [%s] checkpoint done [image_dir=%s]",
+	             psched->StrId(), image_dir.c_str());
+	return ReliabilityActionsIF::ExitCode_t::OK;
+
+	/*
+		char pid_str[10];
+		sprintf(pid_str, "%d", psched->Pid()); // (std::to_string(psched->Pid())).c_str();
+		logger->Crit("Dump: pid=%s", pid_str);
 
 
-	/** CRIU dump here **/
+		int status;
+		pid_t executor_pid = fork();
+		if (executor_pid == 0) {
+			logger->Debug("exec: executing...");
+			execl("/home/giuseppe/Development/_workspace/General/CheckRestore/Debug/check_restore_proof",
+			      "check_restore_proof",
+			      pid_str,
+			      "dump",
+			      image_dir.c_str(),
+			      (char *) NULL);
+		} else {
+			logger->Debug("exec: waiting...");
+			//waitpid(executor_pid, &status, 0);
+			wait(nullptr);
+		}
 
-	return CheckpointRestoreIF::ExitCode_t::OK;
+		logger->Debug("Dump: [%s] checkpointing performed (status=%d)",
+		              psched->StrId(), status);
+	*/
 }
-
-
 
 
 ReliabilityActionsIF::ExitCode_t
@@ -1493,8 +1612,41 @@ LinuxPlatformProxy::Restore(app::SchedPtr_t psched)
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
-	/** CRIU restore here **/
+	/*
+	criu_set_pid(psched->Pid());
+	criu_set_leave_running(true);
+	criu_set_shell_job(true);
+	int c_ret = criu_restore_child();
+	*/
 
+	char pid_str[10];
+	sprintf(pid_str, "%d", psched->Pid()); // (std::to_string(psched->Pid())).c_str();
+	logger->Crit("Restore: pid=%s", pid_str);
+
+	int status;
+	pid_t executor_pid = fork();
+	if (executor_pid == 0) {
+		logger->Debug("exec: executing...");
+		execl("/home/giuseppe/Development/_workspace/General/CheckRestore/Debug/check_restore_proof",
+		      "check_restore_proof",
+		      pid_str,
+		      "restore",
+		      image_dir.c_str(),
+		      (char *) NULL);
+	} else {
+		logger->Debug("exec: waiting...");
+		//waitpid(executor_pid, &status, 0);
+		wait(nullptr);
+	}
+
+	logger->Debug("Restore: [%s] resumed (status=%d)", psched->StrId(), status);
+
+	/*
+		if (c_ret != 0) {
+			logger->Error("Restore: [%s] error=%d", psched->StrId(), c_ret);
+			return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
+		}
+	*/
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 

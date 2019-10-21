@@ -194,6 +194,13 @@ menu "Reliability Management"
     ---help---
     Add the support for checkpoint/restore and execution freezing.
 
+  config BBQUE_CRIU_BINARY_PATH
+    depends on BBQUE_RELIABILITY
+    string "CRIU binary path"
+    default "/usr/sbin/criu"
+    ---help---
+    The path under which the CRIU executable is located.
+
   config BBQUE_FREEZER_PATH
     depends on BBQUE_RELIABILITY
     string "Freezer interfaces path"
