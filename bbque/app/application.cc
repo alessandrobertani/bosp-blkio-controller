@@ -24,7 +24,11 @@
 # include <cstdint>
 # include <cmath>
 #endif
+
+#include <iomanip>
 #include <limits>
+#include <sstream>
+
 
 #include "bbque/application_manager.h"
 #include "bbque/app/working_mode.h"
@@ -79,12 +83,17 @@ Application::Application(std::string const & _name,
 	assert(logger);
 
 	// Format the application string identifier for logging purpose
-	snprintf(str_id, SCHEDULABLE_ID_MAX_LEN, "%05d:%5s:%02d",
-	         Pid(), Name().substr(0, 5).c_str(), ExcId());
+	std::stringstream pid_stream;
+	pid_stream << std::right << std::setfill('0') << std::setw(5)
+	           << std::to_string(Pid());
+	std::stringstream excid_stream;
+	excid_stream << std::right << std::setfill('0') << std::setw(2)
+	             << std::to_string(ExcId());
+	str_id = pid_stream.str() + ":" + Name().substr(0, 5) + excid_stream.str();
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 	// Task-graph file paths
-	std::string app_str(std::string(str_id).substr(0, 6) + Name());
+	std::string app_str(str_id.substr(0, 6) + Name());
 	tg_path.assign(BBQUE_TG_FILE_PREFIX + app_str);
 	std::replace(app_str.begin(), app_str.end(), ':', '.');
 	tg_sem_name.assign("/" + app_str);

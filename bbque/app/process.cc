@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iomanip>
+#include <sstream>
+
 #include "bbque/app/process.h"
 
 #define MODULE_NAMESPACE "bq.pr"
@@ -35,9 +38,12 @@ Process::Process(
 	schedule.syncState = _sync;
 
 	logger = bbque::utils::Logger::GetLogger(MODULE_NAMESPACE);
+
 	// Format the application string identifier for logging purpose
-	snprintf(str_id, SCHEDULABLE_ID_MAX_LEN, "%05d:%s",
-		Pid(), Name().substr(0,10).c_str());
+	std::stringstream pid_stream;
+	pid_stream << std::right << std::setfill('0')
+	           << std::setw(5) << std::to_string(Pid());
+	str_id = pid_stream.str() + ":" + Name().substr(0, 8);
 }
 
 } // namespace app

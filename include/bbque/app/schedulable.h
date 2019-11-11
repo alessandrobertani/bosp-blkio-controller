@@ -210,7 +210,7 @@ public:
 	 * @return String ID
 	 */
 	virtual const char *StrId() const  {
-		return str_id;
+		return str_id.c_str();
 	}
 
 	/**
@@ -411,7 +411,7 @@ protected:
 #endif
 
 	/** A string id with information for logging */
-	char str_id[SCHEDULABLE_ID_MAX_LEN];
+	std::string str_id;
 
 	/**
 	 * @brief Update the application state and synchronization state
