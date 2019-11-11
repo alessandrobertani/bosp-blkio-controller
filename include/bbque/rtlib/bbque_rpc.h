@@ -43,6 +43,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <iomanip>
+#include <sstream>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
@@ -234,7 +236,10 @@ public:
 	        const RTLIB_EXCHandler_t exc_handler);
 
 	const char * GetCharUniqueID() const {
-		return channel_thread_unique_id;
+		std::stringstream ss;
+		ss << std::right << std::setfill('0') << std::setw(5) << std::to_string(application_pid);
+		std::string unique_id_str(ss.str() + ":");
+		return unique_id_str.c_str();
 	}
 
 	AppUid_t GetUniqueID(RTLIB_EXCHandler_t exc_handler);

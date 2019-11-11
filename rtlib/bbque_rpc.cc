@@ -3057,7 +3057,7 @@ AppUid_t BbqueRPC::GetUniqueID(RTLIB_EXCHandler_t exc_handler)
 	}
 
 	assert(isRegistered(exc) == true);
-	return ((channel_thread_pid << BBQUE_UID_SHIFT) + exc->id);
+	return 	((application_pid << BBQUE_UID_SHIFT) + exc->id);
 }
 
 
