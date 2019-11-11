@@ -23,13 +23,16 @@
 #define MODULE_NAMESPACE "bq.pr"
 #define MODULE_CONFIG    "Process"
 
-namespace bbque { namespace app {
-
+namespace bbque
+{
+namespace app
+{
 
 Process::Process(
-		std::string const & _name,
-		AppPid_t _pid, AppPrio_t _prio,
-		State_t _state, SyncState_t _sync) {
+        std::string const & _name,
+        AppPid_t _pid, AppPrio_t _prio,
+        State_t _state, SyncState_t _sync)
+{
 	name = _name;
 	pid = _pid;
 	priority = _prio;
@@ -49,4 +52,3 @@ Process::Process(
 } // namespace app
 
 } // namespace bbque
-

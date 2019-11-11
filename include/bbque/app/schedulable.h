@@ -52,21 +52,21 @@ public:
 	 * @brief Error codes returned by methods
 	 */
 	enum ExitCode_t {
-	        APP_SUCCESS = 0,	/** Success */
-	        APP_DISABLED,   	/** Application being DISABLED */
-	        APP_FINISHED,   	/** Application being FINISHED */
-	        APP_STATUS_NOT_EXP,   	/** Application in unexpected status */
-	        APP_SYNC_NOT_EXP,  	/** Application in unexpected synchronization status */
-	        APP_RECP_NULL,  	/** Null recipe object passed */
-	        APP_WM_NOT_FOUND,	/** Application working mode not found */
-	        APP_RSRC_NOT_FOUND,	/** Resource not found */
-	        APP_CONS_NOT_FOUND,	/** Constraint not found */
-	        APP_WM_REJECTED,	/** The working mode is not schedulable */
-	        APP_WM_ENAB_CHANGED,	/** Enabled working modes list has changed */
-	        APP_WM_ENAB_UNCHANGED,	/** Enabled working modes list has not changed */
-	        APP_TG_SEM_ERROR,	/** Error while accessing task-graph semaphore */
-	        APP_TG_FILE_ERROR,	/** Error while accessing task-graph serial file */
-	        APP_ABORT         	/** Unexpected error */
+		APP_SUCCESS = 0,	/** Success */
+		APP_DISABLED,   	/** Application being DISABLED */
+		APP_FINISHED,   	/** Application being FINISHED */
+		APP_STATUS_NOT_EXP,   	/** Application in unexpected status */
+		APP_SYNC_NOT_EXP,  	/** Application in unexpected synchronization status */
+		APP_RECP_NULL,  	/** Null recipe object passed */
+		APP_WM_NOT_FOUND,	/** Application working mode not found */
+		APP_RSRC_NOT_FOUND,	/** Resource not found */
+		APP_CONS_NOT_FOUND,	/** Constraint not found */
+		APP_WM_REJECTED,	/** The working mode is not schedulable */
+		APP_WM_ENAB_CHANGED,	/** Enabled working modes list has changed */
+		APP_WM_ENAB_UNCHANGED,	/** Enabled working modes list has not changed */
+		APP_TG_SEM_ERROR,	/** Error while accessing task-graph semaphore */
+		APP_TG_FILE_ERROR,	/** Error while accessing task-graph serial file */
+		APP_ABORT         	/** Unexpected error */
 	};
 
 	/**
@@ -76,15 +76,15 @@ public:
 	 * This is the set of possible state an application could be.
 	 */
 	typedef enum State {
-	        NEW = 0, 	/** Registered within Barbeque but currently disabled */
-	        READY,      	/** Registered within Barbeque and waiting to start */
-	        SYNC,     	/** (Re-)scheduled but not reconfigured yet */
-	        RUNNING,  	/** Running */
-	        FROZEN,         /** Frozen */
-	        THAWED,         /** Thawed after freezing - need new resource assignment */
-	        FINISHED, 	/** Regular termination */
+		NEW = 0, 	/** Registered within Barbeque but currently disabled */
+		READY,      	/** Registered within Barbeque and waiting to start */
+		SYNC,     	/** (Re-)scheduled but not reconfigured yet */
+		RUNNING,  	/** Running */
+		FROZEN,         /** Frozen */
+		THAWED,         /** Thawed after freezing - need new resource assignment */
+		FINISHED, 	/** Regular termination */
 
-	        STATE_COUNT	/** This must alwasy be the last entry */
+		STATE_COUNT	/** This must alwasy be the last entry */
 	} State_t;
 
 	/**
@@ -97,26 +97,25 @@ public:
 	 * the schedulable entity.
 	 */
 	typedef enum SyncState {
-	        // NOTE These values should be reported to match (in number and order)
-	        //      those defined by the RTLIB::RTLIB_ExitCode.
-	        STARTING = 0, 	/** The application is entering the system */
-	        RECONF ,      	/** Must change working mode */
-	        MIGREC,       	/** Must migrate and change working mode */
-	        MIGRATE,    	/** Must migrate into another cluster */
-	        BLOCKED,    	/** Must be blocked because of resource are not more available */
-	        DISABLED, 	/** Terminated */
+		// NOTE These values should be reported to match (in number and order)
+		//      those defined by the RTLIB::RTLIB_ExitCode.
+		STARTING = 0, 	/** The application is entering the system */
+		RECONF,      	/** Must change working mode */
+		MIGREC,       	/** Must migrate and change working mode */
+		MIGRATE,    	/** Must migrate into another cluster */
+		BLOCKED,    	/** Must be blocked because of resource are not more available */
+		DISABLED, 	/** Terminated */
 
-	        SYNC_STATE_COUNT /** This must alwasy be the last entry */
+		SYNC_STATE_COUNT /** This must alwasy be the last entry */
 	} SyncState_t;
 
 	/**
 	 * @enum Type
 	 * @brief The type of schedulable object
 	 */
-	enum class Type
-	{
-	        ADAPTIVE, /// Adaptive Execution Model integrated
-	        PROCESS   /// Not integrated generic process
+	enum class Type {
+		ADAPTIVE, /// Adaptive Execution Model integrated
+		PROCESS   /// Not integrated generic process
 	};
 
 
@@ -148,7 +147,8 @@ public:
 		float value;
 
 		/** Overloading of operator != for structure comparisons */
-		bool operator!=(SchedulingInfo_t const &other) const {
+		bool operator!=(SchedulingInfo_t const &other) const
+		{
 			return ((this->state != other.state) ||
 			        (this->preSyncState != other.preSyncState) ||
 			        (this->syncState != other.syncState) ||
@@ -165,13 +165,15 @@ public:
 
 	void SetCGroupSetupData(
 	        unsigned long cpu_ids, unsigned long mem_ids,
-	        unsigned long cpu_ids_isolation) {
+	        unsigned long cpu_ids_isolation)
+	{
 		cgroup_data.cpu_ids = cpu_ids;
 		cgroup_data.cpus_ids_isolation = cpu_ids_isolation;
 		cgroup_data.mem_ids = mem_ids;
 	}
 
-	CGroupSetupData_t GetCGroupSetupData() {
+	CGroupSetupData_t GetCGroupSetupData()
+	{
 		return cgroup_data;
 	}
 #endif
@@ -180,7 +182,8 @@ public:
 	 * @brief Get the name of the application
 	 * @return The name string
 	 */
-	virtual std::string const & Name() const noexcept {
+	virtual std::string const & Name() const noexcept
+	{
 		return name;
 	}
 
@@ -188,7 +191,8 @@ public:
 	 * @brief Get the process ID of the application
 	 * @return PID value
 	 */
-	virtual AppPid_t Pid() const noexcept {
+	virtual AppPid_t Pid() const noexcept
+	{
 		return pid;
 	}
 
@@ -199,7 +203,8 @@ public:
 	 * Pid()
 	 * @return PID value
 	 */
-	virtual AppPid_t Uid() const {
+	virtual AppPid_t Uid() const
+	{
 		return pid;
 	}
 
@@ -209,7 +214,8 @@ public:
 	 * PID:TASK_NAME:EXC_ID
 	 * @return String ID
 	 */
-	virtual const char *StrId() const  {
+	virtual const char *StrId() const
+	{
 		return str_id.c_str();
 	}
 
@@ -217,7 +223,8 @@ public:
 	 * @brief Get the priority associated to
 	 * @return The priority value
 	 */
-	virtual	AppPrio_t Priority() const noexcept {
+	virtual	AppPrio_t Priority() const noexcept
+	{
 		return priority;
 	}
 
@@ -225,7 +232,8 @@ public:
 	 * @brief The type of schedulable object
 	 * @return ADAPTIVE or PROCESS
 	 */
-	virtual Type GetType() const noexcept {
+	virtual Type GetType() const noexcept
+	{
 		return type;
 	}
 
@@ -259,7 +267,8 @@ public:
 	/**
 	 * @brief String of the given state
 	 */
-	static char const *StateStr(State_t state) {
+	static char const *StateStr(State_t state)
+	{
 		assert(state < STATE_COUNT);
 		return stateStr[state];
 	}
@@ -267,7 +276,8 @@ public:
 	/**
 	 * @brief String of the given synchronization state
 	 */
-	static char const *SyncStateStr(SyncState_t state) {
+	static char const *SyncStateStr(SyncState_t state)
+	{
 		assert(state < SYNC_STATE_COUNT + 1);
 		if (state > SYNC_STATE_COUNT)
 			return syncStateStr[SYNC_STATE_COUNT];
@@ -356,13 +366,17 @@ public:
 	 *
 	 * Mark the application as remote or local
 	 */
-	void SetRemote(bool is_remote) noexcept { schedule.remote = is_remote; }
+	void SetRemote(bool is_remote) noexcept
+	{
+		schedule.remote = is_remote;
+	}
 
 	/**
 	 * @brief Return true if the application is executing or will be
 	 *        executed remotely, false if not.
 	 */
-	bool IsRemote() const noexcept {
+	bool IsRemote() const noexcept
+	{
 		return schedule.remote;
 	}
 
@@ -371,13 +385,17 @@ public:
 	 *
 	 * Mark the application as remote or local
 	 */
-	void SetLocal(bool is_local) noexcept { schedule.remote = !is_local; }
+	void SetLocal(bool is_local) noexcept
+	{
+		schedule.remote = !is_local;
+	}
 
 	/**
 	 * @brief Return true if the application is executing or will be
 	 *        executed locally, false if not.
 	 */
-	bool IsLocal() const noexcept {
+	bool IsLocal() const noexcept
+	{
 		return !schedule.remote;
 	}
 
