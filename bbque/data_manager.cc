@@ -677,7 +677,7 @@ void DataManager::UpdateResourcesData(){
 	// Updating resource status list
 	res_stats.clear();
 	for (auto & resource_ptr : resource_set) {
-		br::ResourcePathPtr_t resource_path = ra.GetPath(resource_ptr->Path());
+		br::ResourcePathPtr_t resource_path = resource_ptr->Path();
 		logger->Debug("UpdateData: <%lu>: used=%lu  unreserved=%lu total=%lu",
 			BuildResourceBitset(resource_path),
 			resource_ptr->Used(),
@@ -744,14 +744,15 @@ void DataManager::UpdateApplicationsData(){
 		uint32_t mapped_sys_id;
 
 		// Resource bitset for all the assigned resources
-		for(auto bind : temp_res_bind){
+		for(auto bind : temp_res_bind) {
 			res::ResourcePtrList_t res_list = bind.second->GetResourcesList();
-			logger->Debug("UpdateData: resource request = <%s>", bind.first->ToString().c_str());
-			for(auto res : res_list){
-				auto app_res_path = ra.GetPath(res->Path());
-				mapped_sys_id = app_res_path->GetID(res::ResourceType::SYSTEM);
-				app_res_list.push_back(BuildResourceBitset(app_res_path));
-				logger->Debug("UpdateData: resource mapped = <%s>", res->Path().c_str());
+			logger->Debug("UpdateData: resource request = <%s>",
+			              bind.first->ToString().c_str());
+			for(auto res : res_list) {
+				mapped_sys_id = res->Path()->GetID(res::ResourceType::SYSTEM);
+				app_res_list.push_back(BuildResourceBitset(res->Path()));
+				logger->Debug("UpdateData: resource mapped = <%s>",
+				              res->Path()->ToString().c_str());
 				res_counter++;
 			}
 		}
@@ -827,7 +828,7 @@ std::string DataManager::FindResourceAssigned(
 	for(auto bind : res_map){
 		res::ResourcePtrList_t res_list = bind.second->GetResourcesList();
 		for(auto res : res_list){
-			auto res_path = ra.GetPath(res->Path());
+			auto res_path = res->Path();
 			//logger->Error("FindResourceAssigned: sys%d.grp%d.cpu%d - %s",
 			//	mapped_sys_id, mapped_cluster, mapped_proc, res->Path().c_str());
 			//logger->Error("Type: <%s>", br::GetResourceTypeString(res_path->Type(-1)));
