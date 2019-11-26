@@ -510,8 +510,8 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 		for(auto bind : binding){
 			for(auto res : bind.second->GetResourcesList()){
 
-			res->SetPowerSettings(new_settings);
-
+			logger->Error("AssignWorkingMode: %s",res->Path()->ToString().c_str());
+			ra.EnqueueResourceToPowerManage(res, new_settings);
 			}
 
 		}
