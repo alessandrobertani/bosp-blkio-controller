@@ -496,7 +496,6 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 			continue;
 		}
 
-
 		// Power setting
 		br::Resource::PowerSettings new_settings;
 		new_settings.SetPerformanceState(next_ps);
@@ -506,7 +505,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 								new_settings.ClockFrequency(),
 								new_settings.PerformanceState());
 
-		auto binding_map = next_pawm->GetResourceBinding();
+		auto binding_map = next_pawm->GetSchedResourceBinding(ref_num);
 		auto & binding = *(binding_map.get());
 		for(auto bind : binding){
 			for(auto res : bind.second->GetResourcesList()){
