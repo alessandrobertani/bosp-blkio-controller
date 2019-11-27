@@ -1,6 +1,6 @@
 config BBQUE_SCHEDPOL_THROTTLE
   bool "Throttle"
-  default y
+  default n
   ---help---
   Policy to manage Android application performance/power constraints.
 
