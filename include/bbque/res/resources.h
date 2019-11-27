@@ -239,7 +239,8 @@ public:
 		}
 
 		bool SetFrequencyGovernor(std::string const & freq_governor){
-			if (this->freq_governor.compare(freq_governor) != 0) {
+			if (this->freq_governor.compare(freq_governor) != 0
+				&& !freq_governor.empty()) {
 				pending_actions |= CHANGE_GOVERNOR;
 				this->freq_governor.assign(freq_governor);
 				return true;
@@ -248,7 +249,8 @@ public:
 		}
 
 		bool SetClockFrequency(uint32_t freq_khz){
-			if (this->freq_khz != freq_khz) {
+			if (this->freq_khz != freq_khz
+				&& freq_khz != 0) {
 				pending_actions |= SET_FREQUENCY;
 				this->freq_khz = freq_khz;
 				return true;
@@ -257,7 +259,8 @@ public:
 		}
 
 		bool SetPerformanceState(int32_t perf_state){
-			if (this->perf_state != perf_state) {
+			if (this->perf_state != perf_state
+				&& perf_state != -1) {
 				pending_actions |= SET_PERF_STATE;
 				this->perf_state = perf_state;
 				return true;
