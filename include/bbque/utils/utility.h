@@ -25,12 +25,15 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cctype>
+#include <fstream>
 #include <string>
 
 #include <sys/prctl.h>
 #include <sys/syscall.h>
 
+#include <bbque/utils/iofs.h>
 #include <bbque/utils/timer.h>
+
 
 #define COLOR_WHITE  "\033[1;37m"
 #define COLOR_LGRAY  "\033[37m"
@@ -143,6 +146,7 @@ inline pid_t gettid()
 /** The High-Resolution timer exported by either the Barbeque and the RTLib */
 extern bbque::utils::Timer bbque_tmr;
 
+
 /**
  * Comparison between shared pointer objects.
  * This is performed by forwarding the call to the operator '<' of the pointed
@@ -154,7 +158,8 @@ class CompareSP
 public:
 	bool operator() (
 	        const std::shared_ptr<T> & sp1,
-	        const std::shared_ptr<T> & sp2) const {
+	        const std::shared_ptr<T> & sp2) const
+	{
 		return *sp1 < *sp2;
 	}
 };
@@ -179,6 +184,51 @@ unsigned constexpr ConstHashString(char const *input)
 	return *input ?
 	       static_cast<unsigned int>(*input) + 33 * ConstHashString(input + 1) :
 	       5381;
+}
+
+
+inline uint32_t GetParentPid(uint32_t pid)
+{
+	uint32_t parent_pid = 0;
+	char procfs_stat_path[25];
+	sprintf(procfs_stat_path, "/proc/%d/stat", pid);
+
+	std::string procfs_stat;
+	std::ifstream ifs(procfs_stat_path);
+	if (ifs.is_open()) {
+		int i = 0;
+		while (i++ < 4) // 4th column = parent PID
+			ifs >> procfs_stat;
+	}
+	ifs.close();
+
+	try {
+		parent_pid = std::stoi(procfs_stat);
+	} catch (std::exception const &e) {
+		parent_pid = 0;
+	}
+
+	return parent_pid;
+}
+
+
+inline std::string GetParentProcessName(uint32_t pid)
+{
+	auto parent_pid = GetParentPid(pid);
+	if (parent_pid == 0) {
+		return "";
+	}
+	char parent_proc_line[25];
+	sprintf(parent_proc_line, "/proc/%d/comm", parent_pid);
+
+	std::string parent_name;
+	bbque::utils::IoFs::ReadValueFrom(parent_proc_line, parent_name);
+	size_t space_pos;
+	do {
+		space_pos = parent_name.find_last_of(" ");
+		parent_name[space_pos] = '\0';
+	} while (space_pos != std::string::npos);
+	return parent_name;
 }
 
 
