@@ -592,22 +592,27 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 }
 
 
-ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(
+        uint32_t pid, std::string exec_name, int remote_sys_id)
 {
 	ReliabilityActionsIF::ExitCode_t ec;
 
-	if (psched->IsLocal()) {
-		ec = lpp->Restore(psched);
+	if (remote_sys_id < 0) {
+		logger->Debug("Restore: [pid=%d name=%s] on local system",
+		              pid, exec_name.c_str());
+		ec = lpp->Restore(pid, exec_name);
 		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
-			logger->Error("Restore: [%s] failed local restore"
-			              "(error code: %i)", psched->StrId(), ec);
+			logger->Error("Restore: [pid=%d] failed local restore"
+			              "(error code: %i)", pid, ec);
 			return ec;
 		}
 	}
 
 #ifdef CONFIG_BBQUE_DIST_MODE
-	if (psched->IsRemote()) {
-		ec = rpp->Restore(psched);
+	if ((remote_sys_id >= 0) && (remote_sys_id != local_system_id)) {
+		logger->Debug("Restore: [pid=%d name=%s] on system id=%d",
+		              pid, name.c_str(), remote_sys_id);
+		ec = rpp->Restore(psched, exec_name, remote_sys_id);
 		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Restore: [%s] failed remote restore"
 			              "(error code: %i)", psched->StrId(), ec);
