@@ -1525,13 +1525,23 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 		              psched->StrId(), image_dir.c_str());
 	}
 
+	// CRIU settings
 	criu_set_images_dir_fd(fd);
 	criu_set_log_level(4);
 	criu_set_log_file("dump.log");
 	criu_set_pid(psched->Pid());
 	criu_set_leave_running(true);
-	criu_set_shell_job(true);
 
+	// Is the application a shell job?
+	std::string parent_name(GetParentProcessName(psched->Pid()));
+	logger->Debug("Dump: [%s] parent process: [%s]",
+	              psched->StrId(), parent_name.c_str());
+	if (parent_name.compare("bash") >= 0) {
+		logger->Debug("Dump: [%s] is a shell job", psched->StrId());
+		criu_set_shell_job(true);
+	}
+
+	// Checkpoint image dump
 	int c_ret = criu_dump();
 	switch (c_ret) {
 	case -EBADE:
@@ -1564,90 +1574,51 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 	logger->Info("Dump: [%s] checkpoint done [image_dir=%s]",
 	             psched->StrId(), image_dir.c_str());
 	return ReliabilityActionsIF::ExitCode_t::OK;
-
-	/*
-		char pid_str[10];
-		sprintf(pid_str, "%d", psched->Pid()); // (std::to_string(psched->Pid())).c_str();
-		logger->Crit("Dump: pid=%s", pid_str);
-
-
-		int status;
-		pid_t executor_pid = fork();
-		if (executor_pid == 0) {
-			logger->Debug("exec: executing...");
-			execl("/home/giuseppe/Development/_workspace/General/CheckRestore/Debug/check_restore_proof",
-			      "check_restore_proof",
-			      pid_str,
-			      "dump",
-			      image_dir.c_str(),
-			      (char *) NULL);
-		} else {
-			logger->Debug("exec: waiting...");
-			//waitpid(executor_pid, &status, 0);
-			wait(nullptr);
-		}
-
-		logger->Debug("Dump: [%s] checkpointing performed (status=%d)",
-		              psched->StrId(), status);
-	*/
 }
 
 
 ReliabilityActionsIF::ExitCode_t
-LinuxPlatformProxy::Restore(app::SchedPtr_t psched)
+LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 {
-	if (psched->State() != ba::Application::State_t::FROZEN) {
-		logger->Warn("Restore: [%s] not FROZEN [state=%s]",
-		             psched->StrId(),
-		             ba::Schedulable::StateStr(psched->State()));
-		return ReliabilityActionsIF::ExitCode_t::ERROR_WRONG_STATE;
-	}
+	// Retrieve checkpoint image directory
+	std::string image_dir(image_prefix_dir
+	                      + "/" + std::to_string(pid)
+	                      + "_" + exe_name);
 
-	std::string image_dir(ApplicationPath(image_prefix_dir, psched));
-	logger->Debug("Restore: [%s] recovering checkpoint from = [%s]",
-	              psched->StrId(), image_dir.c_str());
+	logger->Debug("Restore: [pid=%d] recovering checkpoint from = [%s]",
+	              pid, image_dir.c_str());
 
 	if (!boost::filesystem::exists(image_dir)) {
-		logger->Debug("Restore: [%s] missing directory [%s]",
-		              psched->StrId(), image_dir.c_str());
+		logger->Debug("Restore: [pid=%d] missing directory [%s]",
+		              pid, image_dir.c_str());
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
-	/*
-	criu_set_pid(psched->Pid());
-	criu_set_leave_running(true);
-	criu_set_shell_job(true);
-	int c_ret = criu_restore_child();
-	*/
-
-	char pid_str[10];
-	sprintf(pid_str, "%d", psched->Pid()); // (std::to_string(psched->Pid())).c_str();
-	logger->Crit("Restore: pid=%s", pid_str);
-
-	int status;
-	pid_t executor_pid = fork();
-	if (executor_pid == 0) {
-		logger->Debug("exec: executing...");
-		execl("/home/giuseppe/Development/_workspace/General/CheckRestore/Debug/check_restore_proof",
-		      "check_restore_proof",
-		      pid_str,
-		      "restore",
-		      image_dir.c_str(),
-		      (char *) NULL);
+	int fd = open(image_dir.c_str(), O_DIRECTORY);
+	if (fd < 0) {
+		logger->Warn("Restore: [pid=%d] image directory [%s] not accessible",
+		             pid, image_dir.c_str());
+		perror("CRIU");
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	} else {
-		logger->Debug("exec: waiting...");
-		//waitpid(executor_pid, &status, 0);
-		wait(nullptr);
+		logger->Debug("Restore: [pid=%d] image directory [%s] open",
+		              pid, image_dir.c_str());
 	}
 
-	logger->Debug("Restore: [%s] resumed (status=%d)", psched->StrId(), status);
+	// CRIU settings
+	criu_set_images_dir_fd(fd);
+	criu_set_log_level(4);
+	criu_set_log_file("restore.log");
+	criu_set_pid(pid);
 
-	/*
-		if (c_ret != 0) {
-			logger->Error("Restore: [%s] error=%d", psched->StrId(), c_ret);
-			return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
-		}
-	*/
+	// Do restore
+	int c_ret = criu_restore_child();
+	if (c_ret != 0) {
+		logger->Error("Restore: [pid=%d] error=%d", pid, c_ret);
+		return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
+	}
+
+	logger->Debug("Restore: [pid=%d] resumed", pid);
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
