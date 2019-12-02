@@ -69,6 +69,11 @@ ReliabilityManager::ReliabilityManager():
 	                   static_cast<CommandHandler*>(this),
 	                   "Checkpoint of a managed application or process");
 
+#define CMD_RESTORE "restore"
+	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_RESTORE,
+	                   static_cast<CommandHandler*>(this),
+	                   "Restore a managed application or process");
+
 }
 
 
@@ -210,6 +215,18 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 		return 0;
 	}
 
+	if (!strncmp(CMD_RESTORE, cmd_id, strlen(CMD_RESTORE))) {
+		if (argc < 3) {
+			logger->Error("'%s.%s' expecting process id and executable name",
+			              MODULE_NAMESPACE, CMD_RESTORE);
+			logger->Error("Example: '%s.%s 8823 myprogram",
+			              MODULE_NAMESPACE, CMD_RESTORE);
+			return 5;
+		}
+		Restore(std::stoi(argv[1]), argv[2]);
+		return 0;
+	}
+
 	logger->Error("CommandsCb: unexpected value [%s]", cmd_id);
 
 	return 0;
@@ -318,6 +335,40 @@ void ReliabilityManager::Dump(app::AppPid_t pid)
 		return;
 	}
 	logger->Debug("Dump: <%s> checkpointed", psched->StrId());
+}
+
+
+void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
+{
+	AppUid_t uid = app::Application::Uid(pid, 0);
+	app::SchedPtr_t psched = am.GetApplication(uid);
+	if (psched) {
+		logger->Debug("Restore: trying to restore a "
+		              "running application: <%s>",
+		              psched->StrId());
+		return;
+	}
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	else  {
+		psched = prm.GetProcess(pid);
+		if (psched) {
+			logger->Warn("Restore: trying to restore a "
+			             "running process: <%s>",
+			             psched->StrId());
+			return;
+		}
+	}
+#endif
+
+	auto ret = plm.Restore(pid, exe_name);
+	if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
+		logger->Error("Restore: [pid=%d name=%s] restore failed",
+		              pid, exe_name.c_str());
+		return;
+	}
+
+	logger->Debug("Restore: [pid=%d name=%s] resumed",
+	              pid, exe_name.c_str());
 }
 
 

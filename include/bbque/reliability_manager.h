@@ -133,6 +133,12 @@ private:
 	 */
 	void Dump(app::AppPid_t pid);
 
+	/**
+	 * @brief Restore a checkpointed application or process
+	 * @param pid Process id
+	 * @param exe_name Executable name
+	 */
+	void Restore(app::AppPid_t pid, std::string exe_name);
 };
 
 }
