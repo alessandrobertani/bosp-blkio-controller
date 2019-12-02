@@ -23,9 +23,13 @@
 #include <string>
 #include <algorithm>
 
-namespace bbque { namespace utils {
+namespace bbque
+{
+namespace utils
+{
 
-class IoFs {
+class IoFs
+{
 
 public:
 
@@ -43,7 +47,8 @@ public:
 	 * @param len The size of the buffer
 	 */
 	static ExitCode_t ReadValueFrom(
-			std::string const & filepath, char * value, int len = 1) {
+	        std::string const & filepath, char * value, int len = 1)
+	{
 		try {
 			memset(value, '\0', len);
 			std::ifstream fd(filepath);
@@ -54,11 +59,10 @@ public:
 			fd.read(value, len);
 			fd.close();
 
-			*std::remove(value, value+strlen(value), '\n') = '\0';
+			*std::remove(value, value + strlen(value), '\n') = '\0';
 
 			return ExitCode_t::OK;
-		}
-		catch(std::exception & ex) {
+		} catch(std::exception & ex) {
 			fprintf(stderr, " (%s)\n\n ", ex.what());
 			return ExitCode_t::ERR_ACCESS;
 		}
@@ -70,33 +74,38 @@ public:
 	 * @param path The attribute file path
 	 * @param value The string object to set to the value
 	 */
-	static ExitCode_t ReadValueFrom(std::string const & filepath, std::string & value) {
+	static ExitCode_t ReadValueFrom(std::string const & filepath, std::string & value)
+	{
 		try {
 			std::ifstream fd(filepath);
 			if (!fd.is_open()) {
 				fprintf(stderr, "File not found (%s)\n\n ", filepath.c_str());
 				return ExitCode_t::ERR_FILE_NOT_FOUND;
 			}
+
+
 			while (!fd.eof()) {
 				std::string substr;
 				fd >> substr;
 				value += substr;
 				value += " ";
+
 			}
+			value[value.length() - 1] = '\0';
 			fd.close();
 			return ExitCode_t::OK;
-		}
-		catch(std::exception & ex) {
+		} catch(std::exception & ex) {
 			fprintf(stderr, " (%s)\n\n ", ex.what());
 			return ExitCode_t::ERR_ACCESS;
 		}
 	}
 
 	static ExitCode_t ReadValueFromWithOffset(
-			std::string const & filepath,
-			std::string & value,
-			int len,
-			int offset) {
+	        std::string const & filepath,
+	        std::string & value,
+	        int len,
+	        int offset)
+	{
 		ExitCode_t result;
 		std::string buffer;
 		result = ReadValueFrom(filepath, buffer);
@@ -110,7 +119,8 @@ public:
 
 	template<class T>
 	static ExitCode_t ReadIntValueFrom(
-			std::string const & filepath, T & value, int scale = 1) {
+	        std::string const & filepath, T & value, int scale = 1)
+	{
 		ExitCode_t result;
 		std::string value_str;
 		result = ReadValueFrom(filepath, value_str);
@@ -118,15 +128,15 @@ public:
 			return result;
 		try {
 			value = std::stoi(value_str) * scale;
-		}
-		catch (const std::invalid_argument & ia) {
+		} catch (const std::invalid_argument & ia) {
 			value = 0;
 		}
 		return ExitCode_t::OK;
-	 }
+	}
 
 	static ExitCode_t ReadFloatValueFrom(
-			std::string const & filepath, float & value, int scale = 1) {
+	        std::string const & filepath, float & value, int scale = 1)
+	{
 		ExitCode_t result;
 		std::string value_str;
 		result = ReadValueFrom(filepath, value_str);
@@ -134,15 +144,15 @@ public:
 			return result;
 		try {
 			value = std::stof(value_str) * scale;
-		}
-		catch (const std::invalid_argument & ia) {
+		} catch (const std::invalid_argument & ia) {
 			value = 0.0;
 		}
 		return ExitCode_t::OK;
-	 }
+	}
 
 	template<class T>
-	static ExitCode_t WriteValueTo(std::string const & filepath, T value) {
+	static ExitCode_t WriteValueTo(std::string const & filepath, T value)
+	{
 		std::ofstream fd(filepath);
 		if (!fd) {
 			return ExitCode_t::ERR_FILE_NOT_FOUND;
@@ -162,10 +172,11 @@ public:
 	 * @param len The size of the buffer
 	 */
 	static ExitCode_t ParseValue(
-			std::string const & filepath,
-			std::string const & pattern,
-			char * value,
-			int len) {
+	        std::string const & filepath,
+	        std::string const & pattern,
+	        char * value,
+	        int len)
+	{
 		std::string line;
 		size_t b_pos, e_pos;
 		std::ifstream fd(filepath);
@@ -181,7 +192,7 @@ public:
 			// Value substring
 			b_pos = line.find_first_of("0123456789");
 			e_pos = line.find_last_of("0123456789") - b_pos;
-			strncpy(value, (line.substr(b_pos, e_pos+1)).c_str(), len);
+			strncpy(value, (line.substr(b_pos, e_pos + 1)).c_str(), len);
 			break;
 		}
 		fd.close();
