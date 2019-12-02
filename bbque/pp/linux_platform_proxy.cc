@@ -440,18 +440,19 @@ const char* LinuxPlatformProxy::GetHardwareID(int16_t system_id) const noexcept
 	return BBQUE_TARGET_HARDWARE_ID;    // Defined in bbque.conf
 }
 
-LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexcept {
+LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexcept
+{
 	ExitCode_t result = PLATFORM_OK;
 	CGroupDataPtr_t pcgd;
 
 	RLinuxBindingsPtr_t prlb = std::make_shared<RLinuxBindings_t>(
-	        MaxCpusCount, MaxMemsCount);
+	                                   MaxCpusCount, MaxMemsCount);
 
 	// Setup a new CGroup data for this application
 	result = GetCGroupData(papp, pcgd);
 	if (unlikely(result != PLATFORM_OK)) {
 		logger->Error("Setup: [%s] CGroup initialization FAILED "
-		"(Error: CGroupData setup)", papp->StrId());
+		              "(Error: CGroupData setup)", papp->StrId());
 		return result;
 	}
 
@@ -462,7 +463,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexce
 	result = this->ReclaimResources(papp);
 	if (unlikely(result != PLATFORM_OK)) {
 		logger->Error("Setup: [%s] CGroup initialization FAILED "
-		"(Error: failed moving app into silos)", papp->StrId());
+		              "(Error: failed moving app into silos)", papp->StrId());
 		return result;
 	}
 
@@ -470,16 +471,17 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexce
 }
 
 
-void LinuxPlatformProxy::LoadConfiguration() noexcept {
+void LinuxPlatformProxy::LoadConfiguration() noexcept
+{
 	po::options_description opts_desc("Linux Platform Proxy Options");
 	opts_desc.add_options()
 	(MODULE_CONFIG ".cfs_bandwidth.margin_pct",
-	po::value<int> (&cfs_margin_pct)->default_value(0),
-	"The safety margin [%] to add for CFS bandwidth enforcement");
+	 po::value<int> (&cfs_margin_pct)->default_value(0),
+	 "The safety margin [%] to add for CFS bandwidth enforcement");
 	opts_desc.add_options()
 	(MODULE_CONFIG ".cfs_bandwidth.threshold_pct",
-	po::value<int> (&cfs_threshold_pct)->default_value(100),
-	"The threshold [%] under which we enable CFS bandwidth enforcement");
+	 po::value<int> (&cfs_threshold_pct)->default_value(100),
+	 "The threshold [%] under which we enable CFS bandwidth enforcement");
 	po::variables_map opts_vm;
 	ConfigurationManager::GetInstance().
 	ParseConfigurationFile(opts_desc, opts_vm);
@@ -493,7 +495,7 @@ void LinuxPlatformProxy::LoadConfiguration() noexcept {
 		cfs_threshold_pct = 100 - cfs_margin_pct;
 
 	logger->Info("LoadConfiguration: CFS bandwidth control, margin %d, threshold: %d",
-	cfs_margin_pct, cfs_threshold_pct);
+	             cfs_margin_pct, cfs_threshold_pct);
 }
 
 
@@ -535,7 +537,8 @@ LinuxPlatformProxy::Release(SchedPtr_t papp)
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept {
+LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept
+{
 	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(MaxCpusCount, MaxMemsCount));
 	// FIXME: update once a better SetAttributes support is available
 	//CGroupDataPtr_t pcgd(new CGroupData_t);
@@ -546,17 +549,17 @@ LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept {
 
 	// Move this app into "silos" CGroup
 	cgroup_set_value_uint64(psilos->pc_cpuset,
-	BBQUE_LINUXPP_PROCS_PARAM,
-	papp->Pid());
+	                        BBQUE_LINUXPP_PROCS_PARAM,
+	                        papp->Pid());
 
 	// Configure the CGroup based on resource bindings
 	logger->Info("ReclaimResources: [%s] => SILOS[%s]",
-	papp->StrId(), psilos->cgpath);
+	             papp->StrId(), psilos->cgpath);
 	error = cgroup_modify_cgroup(psilos->pcg);
 	if (unlikely(error)) {
 		logger->Error("ReclaimResources: CGroup resource reclaiming FAILED "
-		"(Error: libcgroup, kernel cgroup update "
-		"[%d: %s]", errno, strerror(errno));
+		              "(Error: libcgroup, kernel cgroup update "
+		              "[%d: %s]", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -604,7 +607,8 @@ void LinuxPlatformProxy::Exit()
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept {
+LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept
+{
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();
 	RViewToken_t rvt = ra.GetScheduledView();
 
@@ -631,7 +635,7 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 
 	// Map resources for each node (e.g., CPU)
 	RLinuxBindingsPtr_t prlb = std::make_shared<RLinuxBindings_t>
-	(MaxCpusCount, MaxMemsCount);
+	                           (MaxCpusCount, MaxMemsCount);
 	for (; node_id <= nodes.LastSet(); ++node_id) {
 		logger->Debug("MapResources: CGroup resource mapping node [%d]", node_id);
 		if (!nodes.Test(node_id)) continue;
@@ -814,14 +818,15 @@ LinuxPlatformProxy::GetResourceMapping(
         ResourceAssignmentMapPtr_t assign_map,
         RLinuxBindingsPtr_t prlb,
         BBQUE_RID_TYPE node_id,
-        br::RViewToken_t rvt) noexcept {
+        br::RViewToken_t rvt) noexcept
+{
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 	// CPU core set
 	br::ResourceBitset core_ids(
 	        br::ResourceBinder::GetMask(assign_map,
-	br::ResourceType::PROC_ELEMENT,
-	br::ResourceType::CPU, node_id, papp, rvt));
+	                                    br::ResourceType::PROC_ELEMENT,
+	                                    br::ResourceType::CPU, node_id, papp, rvt));
 	if (strlen(prlb->cpus) > 0)
 		strcat(prlb->cpus, ",");
 	strncat(prlb->cpus, + core_ids.ToStringCG().c_str(), 3 * MaxCpusCount);
@@ -845,8 +850,8 @@ LinuxPlatformProxy::GetResourceMapping(
 	// CPU quota
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	prlb->amount_cpus += ra.GetAssignedAmount(
-	        assign_map, papp, rvt,
-	        br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
+	                             assign_map, papp, rvt,
+	                             br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
 #else
 	prlb->amount_cpus = -1;
 #endif
@@ -855,7 +860,7 @@ LinuxPlatformProxy::GetResourceMapping(
 	// Memory amount
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	uint64_t memb = ra.GetAssignedAmount(
-	        assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
+	                        assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;
 #else
@@ -866,34 +871,37 @@ LinuxPlatformProxy::GetResourceMapping(
 	// Network bandwidth
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 	uint64_t netb = ra.GetAssignedAmount(
-	        assign_map, papp, rvt, br::ResourceType::NETWORK_IF, br::ResourceType::SYSTEM);
+	                        assign_map, papp, rvt, br::ResourceType::NETWORK_IF, br::ResourceType::SYSTEM);
 	if (netb > 0)
 		prlb->amount_net_bw = netb;
 #else
 	prlb->amount_net_bw = -1;
 #endif
 	logger->Debug("GetResourceMapping: cpu[%d] network bandwidth: { %lld }",
-	node_id, prlb->amount_net_bw);
+	              node_id, prlb->amount_net_bw);
 
 	return PLATFORM_OK;
 }
 
 
-LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Refresh() noexcept {
+LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Refresh() noexcept
+{
 	logger->Info("Refresh: Updating CGroups resources description...");
 	refreshMode = true;
 	return this->ScanPlatformDescription();
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::LoadPlatformData() noexcept {
+LinuxPlatformProxy::LoadPlatformData() noexcept
+{
 	logger->Info("LoadPlatformData: Starting...");
 	return this->ScanPlatformDescription();
 }
 
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::ScanPlatformDescription() noexcept {
+LinuxPlatformProxy::ScanPlatformDescription() noexcept
+{
 	const PlatformDescription *pd;
 
 	try {
@@ -910,7 +918,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 		auto sys = sys_entry.second;
 
 		logger->Debug("ScanPlatformDescription: [%s@%s] CPUs...",
-		sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+		              sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu, sys.IsLocal());
 			if (unlikely(PLATFORM_OK != result)) {
@@ -966,14 +974,15 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept {
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterCPU(
         const PlatformDescription::CPU &cpu,
-        bool is_local) noexcept {
+        bool is_local) noexcept
+{
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 	for (const auto pe : cpu.GetProcessingElementsAll()) {
 		auto pe_type = pe.GetPartitionType();
 		if ((PlatformDescription::MDEV == pe_type)
-		|| (PlatformDescription::SHARED == pe_type)) {
+		    || (PlatformDescription::SHARED == pe_type)) {
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
 			logger->Debug("RegisterCPU: <%s>: total=%d", resource_path.c_str(), share);
@@ -995,23 +1004,22 @@ LinuxPlatformProxy::RegisterCPU(
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterMEM(
         const PlatformDescription::Memory &mem,
-        bool is_local) noexcept {
+        bool is_local) noexcept
+{
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	UNUSED(is_local);
 
 	std::string resource_path = mem.GetPath();
 	const auto q_bytes = mem.GetQuantity();
-	logger->Debug("RegisterMEM: Registration of <%s>: %d Kb",
-	resource_path.c_str(), q_bytes);
+	logger->Debug("RegisterMEM: Registration of <%s>: %lu Kb", resource_path.c_str(), q_bytes);
 
 	if (refreshMode) {
 		ra.UpdateResource(resource_path, "", q_bytes);
 	} else {
 		ra.RegisterResource(resource_path, "", q_bytes);
 	}
-	logger->Debug("RegisterMEM: Registration of <%s> successfully performed",
-	resource_path.c_str());
+	logger->Debug("RegisterMEM: Registration of <%s> successfully performed", resource_path.c_str());
 
 	return PLATFORM_OK;
 }
@@ -1019,21 +1027,22 @@ LinuxPlatformProxy::RegisterMEM(
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterNET(
         const PlatformDescription::NetworkIF &net,
-        bool is_local) noexcept {
+        bool is_local) noexcept
+{
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	UNUSED(is_local);
 
 	std::string resource_path = net.GetPath();
 	logger->Debug("RegisterNET: Registration of netif %d <%s>",
-	net.GetId(), net.GetName().c_str());
+	              net.GetId(), net.GetName().c_str());
 
 	uint64_t bw;
 	try {
 		bw = GetNetIFBandwidth(net.GetName());
 	} catch(std::runtime_error &e) {
 		logger->Error("RegisterNET: Unable to get the Bandwidth of %s: %s",
-		net.GetName().c_str(), e.what());
+		              net.GetName().c_str(), e.what());
 		return PLATFORM_GENERIC_ERROR;
 	}
 
@@ -1048,15 +1057,15 @@ LinuxPlatformProxy::RegisterNET(
 
 	int interface_idx = if_nametoindex(net.GetName().c_str());
 	logger->Debug("RegisterNET: netif %d (%s) has the kernel index %d", net.GetId(),
-			net.GetName().c_str(), interface_idx);
+	              net.GetName().c_str(), interface_idx);
 	if (PLATFORM_OK != MakeQDisk(interface_idx)) {
 		logger->Error("RegisterNET: MakeQDisk FAILED on device #%d (%s)",
-					net.GetId(), net.GetName().c_str());
+		              net.GetId(), net.GetName().c_str());
 		return PLATFORM_GENERIC_ERROR;
 	}
 	if (PLATFORM_OK != MakeCLS(interface_idx)) {
 		logger->Error("RegisterNET: MakeCLS FAILED on device #%d (%s)",
-					net.GetId(), net.GetName().c_str());
+		              net.GetId(), net.GetName().c_str());
 		return PLATFORM_GENERIC_ERROR;
 	}
 #endif
@@ -1119,7 +1128,8 @@ void LinuxPlatformProxy::InitPowerInfo(
  * cgroup manipulation
  ******************************************************************************/
 
-LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::InitCGroups() noexcept {
+LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::InitCGroups() noexcept
+{
 	ExitCode_t pp_result;
 	char *mount_path = NULL;
 	int cg_result;
@@ -1128,18 +1138,18 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::InitCGroups() noexcept {
 	cg_result = cgroup_init();
 	if (unlikely(cg_result)) {
 		logger->Error("InitCGroups: CGroup Library initializaton FAILED! "
-		"(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
+		              "(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
 		return PLATFORM_INIT_FAILED;
 	}
 
 	cg_result = cgroup_get_subsys_mount_point(controller, &mount_path);
 	if (unlikely(cg_result)) {
 		logger->Error("InitCGroups: CGroup Library mountpoint lookup FAILED! "
-		"(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
+		              "(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
 		return PLATFORM_GENERIC_ERROR;
 	}
 	logger->Info("InitCGroups: controller [%s] mounted at [%s]",
-	controller, mount_path);
+	             controller, mount_path);
 
 
 	// TODO: check that the "bbq" cgroup already existis
@@ -1161,9 +1171,10 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::InitCGroups() noexcept {
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept {
+LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept
+{
 	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(
-	        MaxCpusCount, MaxMemsCount));
+	                                 MaxCpusCount, MaxMemsCount));
 	ExitCode_t result;
 	int error;
 
@@ -1188,8 +1199,8 @@ LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept {
 	error = cgroup_modify_cgroup(pcgd->pcg);
 	if (unlikely(error)) {
 		logger->Error("BuildSilosCG: CGroup resource mapping FAILED "
-		"(Error: libcgroup, kernel cgroup update "
-		"[%d: %s]", errno, strerror(errno));
+		              "(Error: libcgroup, kernel cgroup update "
+		              "[%d: %s]", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1197,7 +1208,8 @@ LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept {
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
+LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
+{
 
 	logger->Debug("BuildCGroup: Building CGroup [%s]...", pcgd->cgpath);
 
@@ -1205,7 +1217,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	pcgd->pcg = cgroup_new_cgroup(pcgd->cgpath);
 	if (unlikely(!pcgd->pcg)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		"(Error: libcgroup, \"cgroup\" creation)");
+		              "(Error: libcgroup, \"cgroup\" creation)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1213,8 +1225,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	pcgd->pc_cpuset = cgroup_add_controller(pcgd->pcg, "cpuset");
 	if (unlikely(!pcgd->pc_cpuset)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		"(Error: libcgroup, [cpuset] \"controller\" "
-		"creation failed)");
+		              "(Error: libcgroup, [cpuset] \"controller\" "
+		              "creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1223,8 +1235,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	pcgd->pc_memory = cgroup_add_controller(pcgd->pcg, "memory");
 	if (unlikely(!pcgd->pc_memory)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		"(Error: libcgroup, [memory] \"controller\" "
-		"creation failed)");
+		              "(Error: libcgroup, [memory] \"controller\" "
+		              "creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 #endif
@@ -1234,8 +1246,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	pcgd->pc_cpu = cgroup_add_controller(pcgd->pcg, "cpu");
 	if (unlikely(!pcgd->pc_cpu)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		"(Error: libcgroup, [cpu] \"controller\" "
-		"creation failed)");
+		              "(Error: libcgroup, [cpu] \"controller\" "
+		              "creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1246,8 +1258,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	pcgd->pc_net_cls = cgroup_add_controller(pcgd->pcg, "net_cls");
 	if (!pcgd->pc_net_cls) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		"(Error: libcgroup, [net_cls] \"controller\" "
-		"creation failed)");
+		              "(Error: libcgroup, [net_cls] \"controller\" "
+		              "creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 #endif
@@ -1259,8 +1271,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	int result = cgroup_create_cgroup(pcgd->pcg, 0);
 	if (unlikely(result && errno)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		"(Error: libcgroup, kernel cgroup creation "
-		"[%d: %s]", errno, strerror(errno));
+		              "(Error: libcgroup, kernel cgroup creation "
+		              "[%d: %s]", errno, strerror(errno));
 		cgroup_delete_cgroup(pcgd->pcg, 1); // As suggested by doc
 		return PLATFORM_MAPPING_FAILED;
 	}
@@ -1272,7 +1284,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 	assert(temp_cg != NULL);
 	if (unlikely(0 != cgroup_get_cgroup(temp_cg))) {
 		logger->Error("BuildCGroup: Cannot re-open CGroup [%s], continuing with cpu quota"
-		"disabled", pcgd->cgpath);
+		              "disabled", pcgd->cgpath);
 		pcgd->cfs_quota_available = false;
 		return PLATFORM_OK;
 	}
@@ -1292,17 +1304,18 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept {
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::GetCGroupData(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept {
+LinuxPlatformProxy::GetCGroupData(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept
+{
 	ExitCode_t result;
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	logger->Warn("Distributed cgroup actuation: cgroup will be written by "
-				 "the EXC itself.");
+	             "the EXC itself.");
 	return PLATFORM_OK;
 #endif
 	// Loop-up for application control group data
 	pcgd = std::static_pointer_cast<CGroupData_t>(
-	        papp->GetPluginData(LINUX_PP_NAMESPACE, "cgroup")
-	);
+	               papp->GetPluginData(LINUX_PP_NAMESPACE, "cgroup")
+	       );
 	if (pcgd)
 		return PLATFORM_OK;
 
@@ -1324,10 +1337,11 @@ LinuxPlatformProxy::SetupCGroup(
         CGroupDataPtr_t & pcgd,
         RLinuxBindingsPtr_t prlb,
         bool excl,
-        bool move) noexcept {
+        bool move) noexcept
+{
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	logger->Warn("SetupCGroup: Distributed cgroup actuation: cgroup will be setup by "
-				 "the EXC itself.");
+	             "the EXC itself.");
 	return PLATFORM_OK;
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
@@ -1338,12 +1352,11 @@ LinuxPlatformProxy::SetupCGroup(
 	/**********************************************************************
 	 *    CPUSET Controller
 	 **********************************************************************/
-
 #if 0
 	// Setting CPUs as EXCLUSIVE if required
 	if (excl) {
 		cgroup_set_value_string(pcgd->pc_cpuset,
-		BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM, "1");
+		                        BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM, "1");
 	}
 #else
 	excl = false;
@@ -1363,12 +1376,12 @@ LinuxPlatformProxy::SetupCGroup(
 		        prlb->mems);
 
 		logger->Debug("SetupCGroup: CPUSET for [%s]: {cpus [%c: %s], mems[%s]}",
-		pcgd->papp->StrId(),
-		excl ? 'E' : 'S',
-		prlb->cpus, prlb->mems);
+		              pcgd->papp->StrId(),
+		              excl ? 'E' : 'S',
+		              prlb->cpus, prlb->mems);
 	} else {
 		logger->Debug("SetupCGroup: CPUSET for [%s]: {cpus [NONE], mems[NONE]}",
-		pcgd->papp->StrId());
+		              pcgd->papp->StrId());
 	}
 
 
@@ -1389,7 +1402,7 @@ LinuxPlatformProxy::SetupCGroup(
 	cgroup_set_value_string(pcgd->pc_memory, BBQUE_LINUXPP_MEMB_PARAM, quota);
 
 	logger->Debug("SetupCGroup: MEMORY for [%s]: {bytes_limit [%s]}",
-		pcgd->papp->StrId(), quota);
+	              pcgd->papp->StrId(), quota);
 #endif
 
 	/**********************************************************************
@@ -1449,15 +1462,15 @@ LinuxPlatformProxy::SetupCGroup(
 #endif
 
 	/**********************************************************************
-	 *    CGroup Configuraiton
+	 *    CGroup Configuration
 	 **********************************************************************/
 
 	logger->Debug("SetupCGroup: Updating cgroup [%s]", pcgd->cgpath);
 	result = cgroup_modify_cgroup(pcgd->pcg);
 	if (unlikely(result)) {
 		logger->Error("SetupCGroup: cgroup resource mapping FAILED "
-		"(Error: libcgroup, kernel cgroup update "
-		"[%d: %s])", errno, strerror(errno));
+		              "(Error: libcgroup, kernel cgroup update "
+		              "[%d: %s])", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1466,17 +1479,19 @@ LinuxPlatformProxy::SetupCGroup(
 		return PLATFORM_OK;
 
 	/**********************************************************************
-	 *    CGroup Task Assignement
+	 *    CGroup Task Assignment
 	 **********************************************************************/
 	// NOTE: task assignement must be done AFTER CGroup configuration, to
 	// ensure all the controller have been properly setup to manage the
 	// task. Otherwise a task could be killed if being assigned to a
 	// CGroup not yet configure.
 
-	logger->Notice("SetupCGroup: [%s] => {cpus [%s: %ld], mems[%s: %ld B]}",
-		pcgd->papp->StrId(),
-		prlb->cpus, prlb->amount_cpus,
-		prlb->mems, prlb->amount_memb);
+	logger->Info("SetupCGroup: [%s] => {cpus [%s: %ld], mems[%s: %ld B]}",
+	             pcgd->papp->StrId(),
+	             prlb->cpus,
+	             prlb->amount_cpus,
+	             prlb->mems,
+	             prlb->amount_memb);
 	cgroup_set_value_uint64(
 	        pcgd->pc_cpuset, BBQUE_LINUXPP_PROCS_PARAM, pcgd->papp->Pid());
 
@@ -1484,8 +1499,8 @@ LinuxPlatformProxy::SetupCGroup(
 	result = cgroup_modify_cgroup(pcgd->pcg);
 	if (unlikely(result)) {
 		logger->Error("SetupCGroup: cgroup resource mapping FAILED "
-		"(Error: libcgroup, kernel cgroup update "
-		"[%d: %s])", errno, strerror(errno));
+		              "(Error: libcgroup, kernel cgroup update "
+		              "[%d: %s])", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1493,7 +1508,8 @@ LinuxPlatformProxy::SetupCGroup(
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept {
+LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept
+{
 	// Build new CGroup data for the specified application
 	pcgd = CGroupDataPtr_t(new CGroupData_t(papp));
 	return BuildCGroup(pcgd);
