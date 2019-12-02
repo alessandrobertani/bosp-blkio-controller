@@ -507,32 +507,6 @@ LinuxPlatformProxy::Release(SchedPtr_t papp)
 	logger->Debug("Release: releasing platform-specific data [%s]", papp->StrId());
 	papp->ClearPluginData(LINUX_PP_NAMESPACE);
 
-#ifdef CONFIG_BBQUE_RELIABILITY
-
-	try {
-		// Remove checkpoint image path
-		std::string image_dir(ApplicationPath(image_prefix_dir, papp));
-		if (boost::filesystem::exists(image_dir)) {
-			logger->Debug("Release: image directory [%s] ", image_dir.c_str());
-			if (boost::filesystem::remove_all(image_dir))
-				logger->Info("Release: image directory [%s] removed",
-				             image_dir.c_str());
-		}
-
-		// Remove freezer directory
-		std::string freezer_dir(ApplicationPath(freezer_prefix_dir, papp));
-		if (boost::filesystem::exists(freezer_dir)) {
-			logger->Debug("Release: freezer directory [%s] ", freezer_dir.c_str());
-			if (boost::filesystem::remove(freezer_dir))
-				logger->Info("Release feezer directory [%s] removed",
-				             freezer_dir.c_str());
-
-		}
-	} catch(boost::filesystem::filesystem_error & ex) {
-		logger->Crit("Release: %s", ex.what());
-	}
-#endif
-
 	return PLATFORM_OK;
 }
 
