@@ -39,15 +39,14 @@ class ReliabilityActionsIF
 {
 public:
 
-	enum class ExitCode_t
-	{
-	        OK,
-	        ERROR_PROCESS_ID,
-	        ERROR_TASK_ID,
-	        ERROR_FILESYSTEM,
-	        ERROR_PERMISSIONS,
-	        ERROR_WRONG_STATE,
-	        ERROR_UNKNOWN
+	enum class ExitCode_t {
+		OK,
+		ERROR_PROCESS_ID,
+		ERROR_TASK_ID,
+		ERROR_FILESYSTEM,
+		ERROR_PERMISSIONS,
+		ERROR_WRONG_STATE,
+		ERROR_UNKNOWN
 	};
 
 	ReliabilityActionsIF(std::string const & ipd): image_prefix_dir(ipd) { }
@@ -82,6 +81,14 @@ public:
 	 * @return
 	 */
 	virtual ExitCode_t Restore(app::SchedPtr_t psched) = 0;
+
+	/**
+	 * @brief Perform the restore of an application/process/task
+	 * @param exe_id the executable (task, process, application) id number
+	 * @param exe_name the executable name
+	 * @return
+	 */
+	virtual ExitCode_t Restore(uint32_t exe_id, std::string exe_name) = 0;
 
 	/**
 	 * @brief Freeze the execution of a ask, process, application...

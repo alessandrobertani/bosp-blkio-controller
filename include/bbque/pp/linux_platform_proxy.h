@@ -99,7 +99,7 @@ public:
 
 	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
 
-	ReliabilityActionsIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Restore(uint32_t pid, std::string exe_name) override;
 
 	ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
 

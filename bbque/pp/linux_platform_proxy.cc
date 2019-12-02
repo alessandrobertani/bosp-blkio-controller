@@ -20,8 +20,9 @@
 #include "bbque/pp/linux_platform_proxy.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_path.h"
-
 #include "bbque/utils/assert.h"
+#include "bbque/utils/iofs.h"
+#include "bbque/utils/utility.h"
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>

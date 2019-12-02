@@ -84,6 +84,14 @@ ReliabilityActionsIF::ExitCode_t PlatformProxy::Restore(app::SchedPtr_t psched)
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
+ReliabilityActionsIF::ExitCode_t PlatformProxy::Restore(
+        uint32_t task_id, std::string exec_name)
+{
+	(void) task_id;
+	(void) exec_name;
+	return ReliabilityActionsIF::ExitCode_t::OK;
+}
+
 ReliabilityActionsIF::ExitCode_t PlatformProxy::Freeze(uint32_t exe_id)
 {
 	(void) exe_id;

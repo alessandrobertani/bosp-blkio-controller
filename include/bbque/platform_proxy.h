@@ -55,19 +55,19 @@ public:
 	 * @brief Exit codes returned by methods of this class
 	 */
 	typedef enum ExitCode {
-	        PLATFORM_OK = 0,
-	        PLATFORM_GENERIC_ERROR,
-	        PLATFORM_INIT_FAILED,
-	        PLATFORM_ENUMERATION_FAILED,
-	        PLATFORM_LOADING_FAILED,
-	        PLATFORM_NODE_PARSING_FAILED,
-	        PLATFORM_DATA_NOT_FOUND,
-	        PLATFORM_DATA_PARSING_ERROR,
-	        PLATFORM_COMM_ERROR,
-	        PLATFORM_MAPPING_FAILED,
-	        PLATFORM_PWR_MONITOR_ERROR,
-	        PLATFORM_PWR_SETTING_ERROR,
-	        PLATFORM_AGENT_PROXY_ERROR
+		PLATFORM_OK = 0,
+		PLATFORM_GENERIC_ERROR,
+		PLATFORM_INIT_FAILED,
+		PLATFORM_ENUMERATION_FAILED,
+		PLATFORM_LOADING_FAILED,
+		PLATFORM_NODE_PARSING_FAILED,
+		PLATFORM_DATA_NOT_FOUND,
+		PLATFORM_DATA_PARSING_ERROR,
+		PLATFORM_COMM_ERROR,
+		PLATFORM_MAPPING_FAILED,
+		PLATFORM_PWR_MONITOR_ERROR,
+		PLATFORM_PWR_SETTING_ERROR,
+		PLATFORM_AGENT_PROXY_ERROR
 	} ExitCode_t;
 
 	/**
@@ -171,6 +171,9 @@ public:
 	virtual ReliabilityActionsIF::ExitCode_t Restore(uint32_t exe_id) override;
 
 	virtual ReliabilityActionsIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+
+	virtual ReliabilityActionsIF::ExitCode_t Restore(
+	        uint32_t task_id, std::string exec_name) override;
 
 
 	virtual ReliabilityActionsIF::ExitCode_t Freeze(uint32_t exe_id) override;

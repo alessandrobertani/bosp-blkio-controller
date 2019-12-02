@@ -114,7 +114,8 @@ public:
 
 	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
 
-	ReliabilityActionsIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
+	ReliabilityActionsIF::ExitCode_t Restore(
+	        uint32_t pid, std::string exec_name, int remote_sys_id = -1);
 
 	ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
 
@@ -133,7 +134,8 @@ public:
 	 * @brief Get a reference to the local platform proxy
 	 * @return A PlatformProxy reference
 	 */
-	inline PlatformProxy const & GetLocalPlatformProxy() {
+	inline PlatformProxy const & GetLocalPlatformProxy()
+	{
 		return *lpp;
 	}
 
@@ -142,7 +144,8 @@ public:
 	 * @brief Get a reference to the remote platform proxy
 	 * @return A PlatformProxy reference
 	 */
-	inline PlatformProxy const & GetRemotePlatformProxy() {
+	inline PlatformProxy const & GetRemotePlatformProxy()
+	{
 		return *rpp;
 	}
 #endif
@@ -151,7 +154,8 @@ public:
 	 * @brief Retrieve the local system ID
 	 * @return the id number -1 if not set)
 	 */
-	int16_t GetLocalSystemId() const noexcept {
+	int16_t GetLocalSystemId() const noexcept
+	{
 		return local_system_id;
 	}
 

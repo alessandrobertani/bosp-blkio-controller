@@ -316,17 +316,20 @@ ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Dump(app::SchedPtr_t psched
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Restore(app::SchedPtr_t psched)
+ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Restore(
+        uint32_t pid, std::string exec_name)
 {
 	ReliabilityActionsIF::ExitCode_t ec;
 
-	ec = this->host->Restore(psched);
+	ec = this->host->Restore(pid, exec_name);
 	if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
 		return ec;
 	}
 
+	// TODO: Need to retrieve the set of tasks of the application, first...
+
 	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
-		ec = (*it)->Restore(psched);
+		ec = (*it)->Restore(pid);
 		if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
 			return ec;
 		}
