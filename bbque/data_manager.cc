@@ -35,7 +35,8 @@
 #define BBQUE_DM_DEFAULT_SLEEP_TIME  1000
 #define BBQUE_DM_DEFAULT_SERVER_PORT 30200
 
-namespace bbque {
+namespace bbque
+{
 
 using namespace bbque::stat;
 using namespace boost::asio;
@@ -49,19 +50,21 @@ namespace po = boost::program_options;
 
 #define LOAD_CONFIG_OPTION(name, type, var, default) \
 	opts_desc.add_options() \
-		(MODULE_CONFIG "." name, po::value<type>(&var)->default_value(default), "");
+	(MODULE_CONFIG "." name, po::value<type>(&var)->default_value(default), "");
 
 
-DataManager & DataManager::GetInstance() {
+DataManager & DataManager::GetInstance()
+{
 	static DataManager instance;
 	return instance;
 }
 
 DataManager::DataManager() : Worker(),
-		cfm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()),
-		am(ApplicationManager::GetInstance()),
-		is_terminating(false) {
+	cfm(ConfigurationManager::GetInstance()),
+	ra(ResourceAccounter::GetInstance()),
+	am(ApplicationManager::GetInstance()),
+	is_terminating(false)
+{
 
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	logger->Debug("Publisher setup...");
@@ -76,8 +79,7 @@ DataManager::DataManager() : Worker(),
 		LOAD_CONFIG_OPTION("client_attempts", uint16_t, max_client_attempts, MAX_SUB_COMM_FAILURE);
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
-	}
-	catch(boost::program_options::invalid_option_value ex) {
+	} catch(boost::program_options::invalid_option_value ex) {
 		logger->Error("Errors in configuration file [%s]", ex.what());
 	}
 
@@ -97,11 +99,13 @@ DataManager::DataManager() : Worker(),
 	event_handler.detach();
 }
 
-DataManager::~DataManager() {
+DataManager::~DataManager()
+{
 
 }
 
-void DataManager::_PreTerminate() {
+void DataManager::_PreTerminate()
+{
 	logger->Debug("Worker[%s]: Pre-termination...", name.c_str());
 	is_terminating = true;
 	{
@@ -121,66 +125,72 @@ void DataManager::_PreTerminate() {
 	::kill(event_handler_tid, SIGUSR1);
 }
 
-void DataManager::_PostTerminate() {
+void DataManager::_PostTerminate()
+{
 
 }
 
-void DataManager::PrintSubscribers(){
+void DataManager::PrintSubscribers()
+{
 	// Subscribers on rate
-	for (auto s : subscribers_on_rate){
-		logger->Debug("Subscribers on rate: ip: %s port: %d deadline: %d filter: %s period: %d",
-			s->ip_address.c_str(),
-			s->port_num,
-			s->period_deadline_ms,
-			s->subscription.filter.to_string().c_str(),
-			s->subscription.period_ms);
+	for (auto s : subscribers_on_rate) {
+		logger->Debug("Subscribers on rate: ip: %s port: %d deadline: "
+		              "%d filter: %s period: %d",
+		              s->ip_address.c_str(),
+		              s->port_num,
+		              s->period_deadline_ms,
+		              s->subscription.filter.to_string().c_str(),
+		              s->subscription.period_ms);
 	}
 
 	// Subscribers on event
-	for (auto s : subscribers_on_event){
+	for (auto s : subscribers_on_event) {
 		logger->Debug("Subscribers on event: ip: %s port: %d event: %s",
-			s->ip_address.c_str(),
-			s->port_num,
-			s->subscription.event.to_string().c_str());
+		              s->ip_address.c_str(),
+		              s->port_num,
+		              s->subscription.event.to_string().c_str());
 	}
 }
 
 SubscriberPtr_t DataManager::FindSubscriber(
-		SubscriberPtr_t & sub_to_find,
-		SubscriberPtrList_t & subscribers){
-	for (auto sub: subscribers){
+        SubscriberPtr_t & sub_to_find,
+        SubscriberPtrList_t & subscribers)
+{
+	for (auto sub : subscribers) {
 		if (*sub.get() == *sub_to_find.get())
 			return sub;
 	}
 	return nullptr;
 }
 
-void DataManager::CheckpointSubscribers() {
-		logger->Debug("Storing all subscribers...");
+void DataManager::CheckpointSubscribers()
+{
+	logger->Debug("Storing all subscribers...");
 
-		std::ofstream ofs_rate(archive_path_rate);
-		std::ofstream ofs_event(archive_path_event);
-		text_oarchive oa_rate(ofs_rate);
-		text_oarchive oa_event(ofs_event);
+	std::ofstream ofs_rate(archive_path_rate);
+	std::ofstream ofs_event(archive_path_event);
+	text_oarchive oa_rate(ofs_rate);
+	text_oarchive oa_event(ofs_event);
 
-		// Checkpointing subscribers on rate
-		if (!subscribers_on_rate.empty()){
-			oa_rate << subscribers_on_rate;
-			logger->Info("CheckpointSubscribers: subscribers on rate stored");
-		} else {
-			remove(archive_path_rate.c_str());
-		}
-		// Checkpointing subscribers on event
-		if (!subscribers_on_event.empty()){
-			oa_event << subscribers_on_event;
-			logger->Info("CheckpointSubscribers: subscribers on event stored");
-		} else {
-			remove(archive_path_event.c_str());
-		}
+	// Checkpointing subscribers on rate
+	if (!subscribers_on_rate.empty()) {
+		oa_rate << subscribers_on_rate;
+		logger->Info("CheckpointSubscribers: subscribers on rate stored");
+	} else {
+		remove(archive_path_rate.c_str());
+	}
+	// Checkpointing subscribers on event
+	if (!subscribers_on_event.empty()) {
+		oa_event << subscribers_on_event;
+		logger->Info("CheckpointSubscribers: subscribers on event stored");
+	} else {
+		remove(archive_path_event.c_str());
+	}
 
 }
 
-void DataManager::RestoreSubscribers(){
+void DataManager::RestoreSubscribers()
+{
 	logger->Debug("Loading all stored subscribers...");
 
 	std::ifstream ifs_rate(archive_path_rate);
@@ -190,8 +200,7 @@ void DataManager::RestoreSubscribers(){
 		try {
 			boost::archive::text_iarchive ia_rate(ifs_rate);
 			ia_rate >> subscribers_on_rate;
-		}
-		catch(std::exception & ex) {
+		} catch(std::exception & ex) {
 			logger->Error("RestoreSubscribers: exception [%s]", ex.what());
 			return;
 		}
@@ -207,8 +216,7 @@ void DataManager::RestoreSubscribers(){
 		try {
 			boost::archive::text_iarchive ia_event(ifs_event);
 			ia_event >> subscribers_on_event;
-		}
-		catch(std::exception & ex) {
+		} catch(std::exception & ex) {
 			logger->Error("RestoreSubscribers: exception [%s]", ex.what());
 			return;
 		}
@@ -225,28 +233,29 @@ void DataManager::RestoreSubscribers(){
 /*                      Subscription handling                      */
 /*******************************************************************/
 
-void DataManager::SubscriptionHandler() {
+void DataManager::SubscriptionHandler()
+{
 	/* ---------------- Server setup ---------------- */
 
 	// Getting the id of the subscription server thread
 	subscription_server_tid = gettid();
 	logger->Info("SubscriptionHandler: starting server [tid=%d]... ",
-		subscription_server_tid);
+	             subscription_server_tid);
 
 	// Local address settings
 	io_service ios;
 	ip::tcp::endpoint endpoint =
-		ip::tcp::endpoint(ip::tcp::v4(), server_port);
+	        ip::tcp::endpoint(ip::tcp::v4(), server_port);
 	ip::tcp::acceptor acceptor(ios);
 
 	// Creating the socket
 	try {
 		logger->Debug("SubscriptionHandler: opening socket @<%s:%d>...",
-			ip_address.c_str(), server_port);
+		              ip_address.c_str(), server_port);
 		acceptor.open(endpoint.protocol());
 		acceptor.set_option(ip::tcp::acceptor::reuse_address(true));
 		acceptor.bind(endpoint);
-	} catch(boost::exception const& ex){
+	} catch(boost::exception const& ex) {
 		if (!done && !is_terminating)
 			logger->Error("SubscriptionHandler: error during socket creation");
 		return;
@@ -286,26 +295,26 @@ void DataManager::SubscriptionHandler() {
 
 		// Subscription information
 		Subscription subscription_info(
-			bd::sub_bitset_t(sub_msg.filter),
-			bd::sub_bitset_t(sub_msg.event),
-			sub_msg.period_ms);
+		        bd::sub_bitset_t(sub_msg.filter),
+		        bd::sub_bitset_t(sub_msg.event),
+		        sub_msg.period_ms);
 
 		// Subscriber
 		SubscriberPtr_t subscriber = boost::make_shared<Subscriber>
-			(client_addr, (uint32_t) sub_msg.port_num, subscription_info);
+		                             (client_addr, (uint32_t) sub_msg.port_num, subscription_info);
 
 		// Logging messages
 		logger->Info("SubscriptionHandler: client <%s:%d>",
-			client_addr.c_str(), sub_msg.port_num);
+		             client_addr.c_str(), sub_msg.port_num);
 		logger->Debug("SubscriptionHandler: message size: %u", sizeof(sub_msg));
 		logger->Info("Client subscriber:");
-		logger->Info("\tPort: %d",subscriber->port_num);
+		logger->Info("\tPort: %d", subscriber->port_num);
 		logger->Info("\tFilter: %s",
-			data::sub_bitset_t(subscriber->subscription.filter).to_string().c_str());
+		             data::sub_bitset_t(subscriber->subscription.filter).to_string().c_str());
 		logger->Info("\tEvent: %s",
-			data::sub_bitset_t(subscriber->subscription.event).to_string().c_str());
-		logger->Info("\tPeriod: %d ms",subscriber->subscription.period_ms);
-		logger->Info("\tMode: %d",sub_msg.mode);
+		             data::sub_bitset_t(subscriber->subscription.event).to_string().c_str());
+		logger->Info("\tPeriod: %d ms", subscriber->subscription.period_ms);
+		logger->Info("\tMode: %d", sub_msg.mode);
 
 		std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
 
@@ -325,46 +334,44 @@ void DataManager::SubscriptionHandler() {
 }
 
 
-void DataManager::Subscribe(SubscriberPtr_t subscr, bool event_based) {
+void DataManager::Subscribe(SubscriberPtr_t subscr, bool event_based)
+{
 	logger->Debug("Subscribe: client <%s:%d>",
-			subscr->ip_address.c_str(),subscr->port_num);
+	              subscr->ip_address.c_str(), subscr->port_num);
 
 	if (event_based) { // If event-based subscription
 		auto sub = FindSubscriber(subscr, subscribers_on_event);
 		// If the client is already a subscriber just update its event filter
 		if (sub != nullptr) {
 			logger->Debug("Subscribe: <%s> current events: %s",
-				subscr->ip_address.c_str(),
-				sub->subscription.event.to_string().c_str());
+			              subscr->ip_address.c_str(),
+			              sub->subscription.event.to_string().c_str());
 
 			sub->subscription.event |= subscr->subscription.event;
 			logger->Debug("Subscribe: <%s> updated events: %s",
-				subscr->ip_address.c_str(),
-				sub->subscription.event.to_string().c_str());
-		}
-		else {
+			              subscr->ip_address.c_str(),
+			              sub->subscription.event.to_string().c_str());
+		} else {
 			// If new just add it to the list
 			subscribers_on_event.push_back(subscr);
 		}
-	}
-	else { // If rate-based subscription
+	} else { // If rate-based subscription
 		auto sub = FindSubscriber(subscr, subscribers_on_rate);
 		// If the client is already a subscriber just update its filter and rate
 		if (sub != nullptr) {
 			logger->Debug("Subscribe: <%s> current filter: %s period: %d ms",
-				subscr->ip_address.c_str(),
-				sub->subscription.filter.to_string().c_str(),
-				sub->subscription.period_ms);
+			              subscr->ip_address.c_str(),
+			              sub->subscription.filter.to_string().c_str(),
+			              sub->subscription.period_ms);
 
 			sub->subscription.filter |= subscr->subscription.filter;
 			sub->subscription.period_ms = subscr->subscription.period_ms;
 			sub->period_deadline_ms     = sub->subscription.period_ms;
 			logger->Debug("Subscribe: <%s> updated filter: %s period: %d m",
-				subscr->ip_address.c_str(),
-				sub->subscription.filter.to_string().c_str(),
-				sub->subscription.period_ms);
-		}
-		else {
+			              subscr->ip_address.c_str(),
+			              sub->subscription.filter.to_string().c_str(),
+			              sub->subscription.period_ms);
+		} else {
 			subscribers_on_rate.push_back(subscr);
 			subs_cv.notify_one();
 		}
@@ -378,9 +385,10 @@ void DataManager::Subscribe(SubscriberPtr_t subscr, bool event_based) {
 }
 
 
-void DataManager::Unsubscribe(SubscriberPtr_t subscr, bool event_based) {
+void DataManager::Unsubscribe(SubscriberPtr_t subscr, bool event_based)
+{
 	logger->Info("Unsubscribe: client <%s:%d>",
-		subscr->ip_address.c_str(), subscr->port_num);
+	             subscr->ip_address.c_str(), subscr->port_num);
 
 	if (event_based) {
 		auto sub = FindSubscriber(subscr, subscribers_on_event);
@@ -388,19 +396,16 @@ void DataManager::Unsubscribe(SubscriberPtr_t subscr, bool event_based) {
 			sub->subscription.event &= ~(subscr->subscription.event);
 			if (sub->subscription.event.none())
 				subscribers_on_event.remove(sub);
-		}
-		else
+		} else
 			logger->Error("Unsubscribe: client not found!");
-	}
-	else {
+	} else {
 		auto sub = FindSubscriber(subscr, subscribers_on_rate);
-		if (sub != nullptr){
+		if (sub != nullptr) {
 			sub->subscription.filter &= ~(subscr->subscription.filter);
 			if (sub->subscription.filter.none())
 				subscribers_on_rate.remove(sub);
 			subscribers_on_rate.sort();
-		}
-		else
+		} else
 			logger->Error("Unsubscribe: client not found!");
 	}
 
@@ -415,7 +420,8 @@ void DataManager::Unsubscribe(SubscriberPtr_t subscr, bool event_based) {
 /*                       Publishing handling                       */
 /*******************************************************************/
 
-void DataManager::Task() {
+void DataManager::Task()
+{
 	logger->Debug("Task: starting worker...");
 	while (!done) {
 		std::unique_lock<std::mutex> subs_lock(subscribers_mtx);
@@ -428,14 +434,16 @@ void DataManager::Task() {
 	}
 }
 
-void DataManager::NotifyUpdate(status_event_t event) {
-	logger->Notice("NotifyUpdate: update notified: %d",event);
+void DataManager::NotifyUpdate(status_event_t event)
+{
+	logger->Notice("NotifyUpdate: update notified: %d", event);
 	std::unique_lock<std::mutex> events_lock(events_mtx);
 	event_queue.push_back(event);
 	event_cv.notify_one();
 }
 
-void DataManager::EventHandler() {
+void DataManager::EventHandler()
+{
 	event_handler_tid = gettid();
 	logger->Info("EventHandler: starting handler..,.[tid=%d]", event_handler_tid);
 	std::unique_lock<std::mutex> events_lock(events_mtx, std::defer_lock);
@@ -445,20 +453,21 @@ void DataManager::EventHandler() {
 		events_lock.lock();
 		while (event_queue.empty())
 			event_cv.wait(events_lock);
-		for (auto & event: event_queue)
+		for (auto & event : event_queue)
 			events_vec.push_back(event);
 		event_queue.clear();
 		events_lock.unlock();
 		// Avoiding blocking function due to long execution time
 		// of PublishOnEvent
-		for (const auto & event: events_vec) {
+		for (const auto & event : events_vec) {
 			logger->Debug("EventHandler: publishing for event %d", event);
 			PublishOnEvent(event);
 		}
 	}
 }
 
-void DataManager::PublishOnEvent(status_event_t event){
+void DataManager::PublishOnEvent(status_event_t event)
+{
 	ExitCode_t result;
 	std::list<SubscriberPtr_t> push_list;
 	std::unique_lock<std::mutex> subs_lock(subscribers_mtx, std::defer_lock);
@@ -468,28 +477,29 @@ void DataManager::PublishOnEvent(status_event_t event){
 
 	for (const auto s : subscribers_on_event) {
 		// If event matched
-		if((s->subscription.event & bd::sub_bitset_t(event)) == bd::sub_bitset_t(event)){
+		if((s->subscription.event & bd::sub_bitset_t(event)) == bd::sub_bitset_t(event)) {
 			push_list.push_back(s);
 		}
 	}
 
 	// Publishing information
-	for(auto s: push_list){
+	for(auto s : push_list) {
 		result = Push(s);
-		if(result == ERR_CLIENT_TIMEOUT){
+		if(result == ERR_CLIENT_TIMEOUT) {
 			logger->Error("PublishOnEvent: attempts limit reached, the client is removed");
 			continue;
-		} else if (result != OK){
+		} else if (result != OK) {
 			logger->Error("PublishOnEvent: error in publishing to <%s:%d>",
-				s->ip_address.c_str(),s->port_num);
+			              s->ip_address.c_str(), s->port_num);
 		} else {
 			logger->Info("PublishOnEvent: published information to <%s:%d>",
-				s->ip_address.c_str(),s->port_num);
+			             s->ip_address.c_str(), s->port_num);
 		}
 	}
 }
 
-void DataManager::PublishOnRate(){
+void DataManager::PublishOnRate()
+{
 	uint16_t tmp_sleep_time;
 	ExitCode_t result;
 	utils::Timer tmr;
@@ -502,11 +512,11 @@ void DataManager::PublishOnRate(){
 	subs_lock.lock();
 	tmr.start();
 
-	for (const auto s: subscribers_on_rate) {
+	for (const auto s : subscribers_on_rate) {
 		// Update deadline after sleep
 		s->period_deadline_ms = s->period_deadline_ms - actual_sleep_time;
 		logger->Debug("PublishOnRate: subscriber: <%s:%d> next_deadline: %d",
-			s->ip_address.c_str(), s->port_num, s->period_deadline_ms);
+		              s->ip_address.c_str(), s->port_num, s->period_deadline_ms);
 
 		// Deadline passed => push the updated information
 		if (s->period_deadline_ms <= 0) {
@@ -514,7 +524,7 @@ void DataManager::PublishOnRate(){
 			// Reset the deadline
 			s->period_deadline_ms = s->subscription.period_ms;
 			logger->Debug("PublishOnRate: subscriber: <%s:%d> updated next_deadline: %d",
-				s->ip_address.c_str(), s->port_num, s->period_deadline_ms);
+			              s->ip_address.c_str(), s->port_num, s->period_deadline_ms);
 		}
 		// Calculating the earlier sleep time the sleep time with the earlier
 		if(s->period_deadline_ms < tmp_sleep_time)
@@ -522,17 +532,17 @@ void DataManager::PublishOnRate(){
 	}
 
 	// Publishing information
-	for(auto s: push_list){
+	for(auto s : push_list) {
 		result = Push(s);
-		if(result == ERR_CLIENT_TIMEOUT){
+		if(result == ERR_CLIENT_TIMEOUT) {
 			logger->Error("PublishOnRate: attempts limit reached, the client is removed");
 			continue;
-		} else if (result != OK){
+		} else if (result != OK) {
 			logger->Error("PublishOnRate: error in publishing to <%s:%d>",
-				s->ip_address.c_str(),s->port_num);
+			              s->ip_address.c_str(), s->port_num);
 		} else {
 			logger->Info("PublishOnRate: published information to <%s:%d>",
-				s->ip_address.c_str(),s->port_num);
+			             s->ip_address.c_str(), s->port_num);
 		}
 	}
 	tmr.stop();
@@ -545,7 +555,8 @@ void DataManager::PublishOnRate(){
 	subscribers_on_rate.sort();
 }
 
-DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
+DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub)
+{
 	status_message_t updated_status;
 	updated_status.ts = static_cast<uint32_t>(utils::Timer::getTimestamp());
 	updated_status.n_app_status_msgs = 0;
@@ -554,30 +565,30 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 
 	// Subscriber has "resource" subscription?
 	if ((sub->subscription.filter & bd::sub_bitset_t(FILTER_RESOURCE)) ==
-		bd::sub_bitset_t(FILTER_RESOURCE)) {
+	    bd::sub_bitset_t(FILTER_RESOURCE)) {
 		logger->Debug("Push: adding resources info for subscriber <%s>...",
-			sub->ip_address.c_str());
+		              sub->ip_address.c_str());
 
 		updated_status.n_res_status_msgs = num_resources;
-		for (auto res_stat: res_stats)
+		for (auto res_stat : res_stats)
 			updated_status.res_status_msgs.push_back(res_stat);
 
 		// Debug logging
 		for (auto res_stat : updated_status.res_status_msgs) {
 			logger->Debug("Resource: id=%ld, occupancy=%d, load=%d, power=%d, temp=%d",
-				res_stat.id,
-				res_stat.occupancy,
-				res_stat.load,
-				res_stat.power,
-				res_stat.temp);
+			              res_stat.id,
+			              res_stat.occupancy,
+			              res_stat.load,
+			              res_stat.power,
+			              res_stat.temp);
 		}
 	}
 
 	// Subscriber filter has "application" subscription?
 	if ((sub->subscription.filter & bd::sub_bitset_t(FILTER_APPLICATION)) ==
-		bd::sub_bitset_t(FILTER_APPLICATION)) {
+	    bd::sub_bitset_t(FILTER_APPLICATION)) {
 		logger->Debug("Push: adding applications info for subscriber <%s>...",
-			sub->ip_address.c_str());
+		              sub->ip_address.c_str());
 
 		updated_status.n_app_status_msgs = num_applications;
 		for (auto app_stat : app_stats)
@@ -586,17 +597,17 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 		// Debug logging
 		for (auto app_stat : updated_status.app_status_msgs) {
 			logger->Debug("Push: Application: id=%d, name=%s, nr_tasks=%d, mapping=%d",
-				app_stat.id,
-				app_stat.name.c_str(),
-				app_stat.n_task,
-				app_stat.mapping);
-			for(auto task_stat : app_stat.tasks){
+			              app_stat.id,
+			              app_stat.name.c_str(),
+			              app_stat.n_task,
+			              app_stat.mapping);
+			for(auto task_stat : app_stat.tasks) {
 				logger->Debug("Push: Task: id=%d, THR:%d, CT:%d, mapping=%d, n_threads=%d",
-				task_stat.id,
-				task_stat.throughput,
-				task_stat.completion_time,
-				task_stat.mapping,
-				task_stat.n_threads);
+				              task_stat.id,
+				              task_stat.throughput,
+				              task_stat.completion_time,
+				              task_stat.mapping,
+				              task_stat.n_threads);
 			}
 		}
 	}
@@ -605,11 +616,11 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 	tcp::iostream client_sock(sub->ip_address, std::to_string(sub->port_num));
 	if (!client_sock) {
 		logger->Error("Push: cannot connect to <%s:%d>",
-			sub->ip_address.c_str(), sub->port_num);
+		              sub->ip_address.c_str(), sub->port_num);
 		sub->comm_failures++;
-		if(sub->comm_failures > max_client_attempts){
+		if(sub->comm_failures > max_client_attempts) {
 			// Unsubscribing the unreachable client
-			Unsubscribe(sub,sub->subscription.event != 0);
+			Unsubscribe(sub, sub->subscription.event != 0);
 			return ERR_CLIENT_TIMEOUT;
 		}
 		return ERR_CLIENT_COMM;
@@ -620,7 +631,7 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 	text_oarchive archive(client_sock);
 	try {
 		archive << updated_status;  // Send
-	} catch(boost::exception const& ex){
+	} catch(boost::exception const& ex) {
 		logger->Error("Boost archive exception");
 		return ERR_CLIENT_COMM;
 	}
@@ -628,37 +639,39 @@ DataManager::ExitCode_t DataManager::Push(SubscriberPtr_t sub) {
 	return OK;
 }
 
-res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_path) {
+res_bitset_t DataManager::BuildResourceBitset(br::ResourcePathPtr_t resource_path)
+{
 	res_bitset_t res_bitset = 0;
-	for(auto resource_identifier: resource_path->GetIdentifiers()){
-		switch(resource_identifier->Type()){
-			case res::ResourceType::SYSTEM:
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_SYS;
-				break;
-			case res::ResourceType::GROUP:
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_GRP;
-				break;
-			case res::ResourceType::CPU:
-			case res::ResourceType::GPU:
-			case res::ResourceType::ACCELERATOR:
-			case res::ResourceType::MEMORY:
-			case res::ResourceType::NETWORK_IF:
-				res_bitset |=
-					static_cast<uint64_t>(resource_identifier->Type()) << BBQUE_DCI_OFFSET_UNIT_TYPE;
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_UNIT_ID;
-				break;
-			case res::ResourceType::PROC_ELEMENT:
-				res_bitset |= static_cast<uint64_t>(1) << BBQUE_DCI_OFFSET_PE_TYPE;
-				res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_PE_ID;
-				break;
-			default:
-				break;
+	for(auto resource_identifier : resource_path->GetIdentifiers()) {
+		switch(resource_identifier->Type()) {
+		case res::ResourceType::SYSTEM:
+			res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_SYS;
+			break;
+		case res::ResourceType::GROUP:
+			res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_GRP;
+			break;
+		case res::ResourceType::CPU:
+		case res::ResourceType::GPU:
+		case res::ResourceType::ACCELERATOR:
+		case res::ResourceType::MEMORY:
+		case res::ResourceType::NETWORK_IF:
+			res_bitset |=
+			        static_cast<uint64_t>(resource_identifier->Type()) << BBQUE_DCI_OFFSET_UNIT_TYPE;
+			res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_UNIT_ID;
+			break;
+		case res::ResourceType::PROC_ELEMENT:
+			res_bitset |= static_cast<uint64_t>(1) << BBQUE_DCI_OFFSET_PE_TYPE;
+			res_bitset |= static_cast<uint64_t>(resource_identifier->ID()) << BBQUE_DCI_OFFSET_PE_ID;
+			break;
+		default:
+			break;
 		}
 	}
 	return res_bitset;
 }
 
-void DataManager::UpdateData(){
+void DataManager::UpdateData()
+{
 
 	UpdateResourcesData();
 
@@ -667,7 +680,8 @@ void DataManager::UpdateData(){
 	logger->Info("UpdateData: completed");
 }
 
-void DataManager::UpdateResourcesData(){
+void DataManager::UpdateResourcesData()
+{
 	logger->Debug("UpdateData: resources status...");
 
 	// Taking data from Resource accounter and Power Manager
@@ -679,41 +693,41 @@ void DataManager::UpdateResourcesData(){
 	for (auto & resource_ptr : resource_set) {
 		br::ResourcePathPtr_t resource_path = resource_ptr->Path();
 		logger->Debug("UpdateData: <%lu>: used=%lu  unreserved=%lu total=%lu",
-			BuildResourceBitset(resource_path),
-			resource_ptr->Used(),
-			resource_ptr->Unreserved(),
-			resource_ptr->Total());
+		              BuildResourceBitset(resource_path),
+		              resource_ptr->Used(),
+		              resource_ptr->Unreserved(),
+		              resource_ptr->Total());
 
 #ifdef CONFIG_BBQUE_PM
 		logger->Debug("UpdateData: <%ld>: temp=%d freq=%d power=%2.2f",
-			BuildResourceBitset(resource_path),
-			static_cast<uint32_t>(
-				resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, br::Resource::ValueType::INSTANT)),
-			static_cast<uint32_t>(
-				resource_ptr->GetPowerInfo(PowerManager::InfoType::FREQUENCY, br::Resource::ValueType::INSTANT)),
-			static_cast<uint32_t>(
-				resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, br::Resource::ValueType::INSTANT)));
+		              BuildResourceBitset(resource_path),
+		              static_cast<uint32_t>(
+		                      resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, br::Resource::ValueType::INSTANT)),
+		              static_cast<uint32_t>(
+		                      resource_ptr->GetPowerInfo(PowerManager::InfoType::FREQUENCY, br::Resource::ValueType::INSTANT)),
+		              static_cast<uint32_t>(
+		                      resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, br::Resource::ValueType::INSTANT)));
 #endif // CONFIG_BBQUE_PM
 
 		resource_status_t temp_res;
 		temp_res.id = BuildResourceBitset(resource_path);
 		temp_res.model = resource_ptr->Model();
 		temp_res.occupancy = static_cast<uint8_t>(
-			(float(resource_ptr->Used()) / resource_ptr->Total()) * 100 );
+		                             (float(resource_ptr->Used()) / resource_ptr->Total()) * 100 );
 #ifdef CONFIG_BBQUE_PM
 		temp_res.load = static_cast<uint8_t>(
-			resource_ptr->GetPowerInfo(PowerManager::InfoType::LOAD, br::Resource::ValueType::INSTANT));
+		                        resource_ptr->GetPowerInfo(PowerManager::InfoType::LOAD, br::Resource::ValueType::INSTANT));
 		temp_res.power = static_cast<uint32_t>(
-			resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, br::Resource::ValueType::INSTANT));
+		                         resource_ptr->GetPowerInfo(PowerManager::InfoType::POWER, br::Resource::ValueType::INSTANT));
 		temp_res.temp = static_cast<uint32_t>(
-			resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, br::Resource::ValueType::INSTANT));
+		                        resource_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, br::Resource::ValueType::INSTANT));
 #endif // CONFIG_BBQUE_PM
 		res_stats.push_back(temp_res);
 	}
 }
 
-void DataManager::UpdateApplicationsData(){
-
+void DataManager::UpdateApplicationsData()
+{
 	logger->Debug("UpdateData: applications status...");
 	app_stats.clear();
 
@@ -739,7 +753,7 @@ void DataManager::UpdateApplicationsData(){
 		}
 
 		logger->Debug("UpdateData: app = <%d>, current AWM = <%s:%d>",
-	                      temp_app.id, temp_awm->Name().c_str(), temp_awm->Id());
+		              temp_app.id, temp_awm->Name().c_str(), temp_awm->Id());
 
 		// Application resource assignment
 		res::ResourceAssignmentMapPtr_t temp_res_bind_ptr =
@@ -774,7 +788,7 @@ void DataManager::UpdateApplicationsData(){
 		auto temp_tg = app_ptr->GetTaskGraph();
 		if (temp_tg == nullptr) {
 			logger->Warn("UpdateData: <%s-%s>: no task-graph",
-		              temp_app.name.c_str(), app_ptr->StrId());
+			             temp_app.name.c_str(), app_ptr->StrId());
 			continue;
 		}
 
@@ -786,7 +800,7 @@ void DataManager::UpdateApplicationsData(){
 		auto tasks_map = temp_tg->Tasks();
 		int mapped_cluster = temp_tg->GetCluster();
 
-		for(auto task : tasks_map){
+		for(auto task : tasks_map) {
 			task_status_t temp_task;
 
 			// Task Id
@@ -796,7 +810,7 @@ void DataManager::UpdateApplicationsData(){
 			// Performance data
 			task_ptr->GetProfiling(temp_task.throughput, temp_task.completion_time);
 			logger->Debug("UpdateData: performance { THR=%d, CT=%d }",
-				temp_task.throughput, temp_task.completion_time);
+			              temp_task.throughput, temp_task.completion_time);
 
 			// Resource mapping
 			int mapped_proc = task_ptr->GetAssignedProcessor();
@@ -804,22 +818,21 @@ void DataManager::UpdateApplicationsData(){
 
 			// Build complete resource path
 			std::string assigned_res_path =
-				FindResourceAssigned(temp_awm->GetResourceBinding(),
-					mapped_sys_id, mapped_cluster, mapped_proc);
-			if(assigned_res_path.size() != 0){
+			        FindResourceAssigned(temp_awm->GetResourceBinding(),
+			                             mapped_sys_id, mapped_cluster, mapped_proc);
+			if(assigned_res_path.size() != 0) {
 				br::ResourcePathPtr_t mapping_path = ra.GetPath(assigned_res_path);
 				if (mapping_path == nullptr) {
 					logger->Warn("UpdateData: <%s> is not a valid path",
-						assigned_res_path.c_str());
-				}
-				else {
+					             assigned_res_path.c_str());
+				} else {
 					logger->Debug("UpdateData: Task <%d>:<%s>",
-					temp_task.id, assigned_res_path.c_str());
+					              temp_task.id, assigned_res_path.c_str());
 					temp_task.mapping = BuildResourceBitset(mapping_path);
 				}
 			} else {
 				logger->Error("UpdateData: no resource assignment found for task %d",
-					temp_task.id);
+				              temp_task.id);
 			}
 
 			temp_app.tasks.push_back(temp_task);
@@ -832,30 +845,31 @@ void DataManager::UpdateApplicationsData(){
 }
 
 std::string DataManager::FindResourceAssigned(
-	res::ResourceAssignmentMapPtr_t res_map_ptr,
-	int mapped_sys_id,
-	int mapped_cluster,
-	int mapped_proc) const{
+        res::ResourceAssignmentMapPtr_t res_map_ptr,
+        int mapped_sys_id,
+        int mapped_cluster,
+        int mapped_proc) const
+{
 
 	auto & res_map = *(res_map_ptr.get());
-	for(auto bind : res_map){
+	for(auto bind : res_map) {
 		res::ResourcePtrList_t res_list = bind.second->GetResourcesList();
-		for(auto res : res_list){
+		for(auto res : res_list) {
 			auto res_path = res->Path();
 			//logger->Error("FindResourceAssigned: sys%d.grp%d.cpu%d - %s",
 			//	mapped_sys_id, mapped_cluster, mapped_proc, res->Path().c_str());
 			//logger->Error("Type: <%s>", br::GetResourceTypeString(res_path->Type(-1)));
 			// Considering only path without memory assignment
 			if (res_path->GetID(res::ResourceType::GROUP) == mapped_cluster &&
-					res_path->GetID(res_path->Type(-1)) == mapped_proc && 
-					!res_path->IncludesType(res::ResourceType::MEMORY)){
+			    res_path->GetID(res_path->Type(-1)) == mapped_proc &&
+			    !res_path->IncludesType(res::ResourceType::MEMORY)) {
 				std::string res_path_str(std::string("sys")
-							+ std::to_string(mapped_sys_id)
-							+".grp"
-							+ std::to_string(mapped_cluster)
-							+ "."
-							+ br::GetResourceTypeString(res_path->Type(-1))
-							+ std::to_string(mapped_proc));
+				                         + std::to_string(mapped_sys_id)
+				                         + ".grp"
+				                         + std::to_string(mapped_cluster)
+				                         + "."
+				                         + br::GetResourceTypeString(res_path->Type(-1))
+				                         + std::to_string(mapped_proc));
 				logger->Debug("FindResourceAssigned: %s", res_path_str.c_str());
 				return res_path_str;
 			}
@@ -865,4 +879,3 @@ std::string DataManager::FindResourceAssigned(
 }
 
 } // namespace bbque
-
