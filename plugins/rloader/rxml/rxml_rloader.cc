@@ -221,7 +221,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 			LoadConstraints(pp_node);
 			LoadPluginsData<ba::RecipePtr_t>(recipe_ptr, pp_node);
 
-		} catch(rapidxml::parse_error ex) {
+		} catch(rapidxml::parse_error &ex) {
 			logger->Error(ex.what());
 			result = RL_ABORTED;
 			throw std::runtime_error("XML parsing failed.");
@@ -320,7 +320,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		logger->Warn("TPD enabled: no platform ID check performed");
 #endif
 
-	} catch(rapidxml::parse_error ex) {
+	} catch(rapidxml::parse_error &ex) {
 		logger->Error(ex.what());
 		return nullptr;
 	}
@@ -872,7 +872,7 @@ void RXMLRecipeLoader::GetPluginData(T _container,
 		pattr->str = plugdata_node->value();
 		_container->SetPluginData(pattr);
 
-	} catch (rapidxml::parse_error ex) {
+	} catch (rapidxml::parse_error &ex) {
 		logger->Error(ex.what());
 	}
 }
@@ -922,7 +922,7 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node)
 			// Next constraint
 			con_elem = con_elem->next_sibling("constraint",0 , true);
 		}
-	} catch (rapidxml::parse_error ex) {
+	} catch (rapidxml::parse_error &ex) {
 		logger->Error(ex.what());
 	}
 
