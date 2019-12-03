@@ -160,6 +160,19 @@ const char * PlatformManager::GetPlatformID(int16_t system_id) const
 
 }
 
+const std::string & PlatformManager::GetIpAddress(int16_t system_id) const
+{
+	logger->Info("GetIpAddress: requested ip address for system %d", system_id);
+
+	assert(system_id >= -1);
+
+	const auto systems = this->GetPlatformDescription().GetSystemsAll();
+	const auto & addr = systems.at(system_id).GetNetAddress();
+	logger->Info("GetIpAddress: found ip address %s", addr.c_str());
+
+	return addr;
+}
+
 const char * PlatformManager::GetHardwareID(int16_t system_id) const
 {
 	logger->Debug("GetHardwareID: requested HW id for system %d", system_id);

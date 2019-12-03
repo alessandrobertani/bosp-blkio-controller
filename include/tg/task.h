@@ -113,6 +113,9 @@ public:
 	 */
 	inline int GetAssignedSystem() const { return system_node_id; }
 
+	inline void SetAssignedSystemIp(const std::string& ip) { system_node_ip = ip; }
+
+	inline std::string const GetAssignedSystemIp() const { return system_node_ip; }
 
 	/**
 	 * \brief Set the processor assigned to the task
@@ -264,6 +267,8 @@ private:
 	int processor_id = -1;
 
 	int system_node_id = -1;
+
+	std::string system_node_ip;
 
 	int nr_cores = 0;
 

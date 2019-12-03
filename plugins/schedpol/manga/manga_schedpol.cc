@@ -27,6 +27,7 @@
 #include "bbque/utils/assert.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/res/binder.h"
+#include "bbque/platform_manager.h"
 #include "tg/task_graph.h"
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
@@ -578,16 +579,20 @@ MangASchedPol::SelectWorkingMode(
 	uint32_t nr_cores = 1;
 	auto tg = papp->GetTaskGraph();
 	uint32_t cluster_id = selected_partition.GetClusterId();
+	auto & plat_mgr = bbque::PlatformManager::GetInstance();
 
 	for (auto & task_entry: tg->Tasks()) {
 		auto & task(task_entry.second);
 
 		// System node id
 		auto sys_rsrc = ra.GetResources("sys");
-		task->SetAssignedSystem(sys_rsrc.front()->ID());
-		logger->Debug("SelectWorkingMode: task=%d system=%d",
+		auto sysid = sys_rsrc.front()->ID();
+		task->SetAssignedSystem(sysid);
+		task->SetAssignedSystemIp(plat_mgr.GetIpAddress(sysid));
+		logger->Info("SelectWorkingMode: task=%d system=%d ipaddr=%s",
 			task->Id(),
-			task->GetAssignedSystem());
+			task->GetAssignedSystem(),
+			task->GetAssignedSystemIp().c_str());
 
 		// Tile id
 		uint32_t tile_id = selected_partition.GetUnit(task);

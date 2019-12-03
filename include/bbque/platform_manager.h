@@ -39,6 +39,8 @@ public:
 	 */
 	const char* GetHardwareID(int16_t system_id = -1) const override;
 
+	const std::string & GetIpAddress(int16_t system_id=-1) const;
+
 	/**
 	 * @brief Platform specific resource setup interface.
 	 * @warning Not implemented in PlatformManager!
