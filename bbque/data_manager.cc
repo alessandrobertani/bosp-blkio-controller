@@ -723,7 +723,7 @@ void DataManager::UpdateApplicationsData(){
 	AppsUidMapIt app_it;
 	AppPtr_t app_ptr = am.GetFirst(ApplicationStatusIF::RUNNING, app_it);
 
-	while(app_ptr != nullptr){
+	while(app_ptr != nullptr) {
 		app_status_t temp_app;
 
 		temp_app.id   = app_ptr->Pid();
@@ -731,12 +731,19 @@ void DataManager::UpdateApplicationsData(){
 		temp_app.state = app_ptr->State();
 		auto temp_awm = app_ptr->CurrentAWM();
 		logger->Debug("UpdateData: app = <%d>, state = <%s>, current AWM = <%s:%d>",
-			temp_app.id, ApplicationStatusIF::StateStr(app_ptr->State()),
-			temp_awm->Name().c_str(), temp_awm->Id());
+		              temp_app.id, ApplicationStatusIF::StateStr(app_ptr->State()));
+
+		if (temp_awm == nullptr) {
+			logger->Debug("UpdateData: app = <%d>, no AWM", temp_app.id);
+			continue;
+		}
+
+		logger->Debug("UpdateData: app = <%d>, current AWM = <%s:%d>",
+	                      temp_app.id, temp_awm->Name().c_str(), temp_awm->Id());
 
 		// Application resource assignment
 		res::ResourceAssignmentMapPtr_t temp_res_bind_ptr =
-			temp_awm->GetResourceBinding();
+		        temp_awm->GetResourceBinding();
 
 		auto & temp_res_bind = *(temp_res_bind_ptr.get());
 		std::list<res_bitset_t> app_res_list;
@@ -765,9 +772,15 @@ void DataManager::UpdateApplicationsData(){
 
 		// Per-task information
 		auto temp_tg = app_ptr->GetTaskGraph();
+		if (temp_tg == nullptr) {
+			logger->Warn("UpdateData: <%s-%s>: no task-graph",
+		              temp_app.name.c_str(), app_ptr->StrId());
+			continue;
+		}
+
 		temp_app.n_task = temp_tg->TaskCount();
 		logger->Debug("UpdateData: <%s-%s>: n_task=%d",
-			temp_app.name.c_str(), app_ptr->StrId(), temp_app.n_task);
+		              temp_app.name.c_str(), app_ptr->StrId(), temp_app.n_task);
 
 		// List of tasks
 		auto tasks_map = temp_tg->Tasks();
