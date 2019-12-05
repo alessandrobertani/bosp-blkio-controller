@@ -108,7 +108,8 @@ public:
 	 *
 	 * @return A reference to the RTLib configuration options.
 	 */
-	static const RTLIB_Conf_t * Configuration() {
+	static const RTLIB_Conf_t * Configuration()
+	{
 		return &rtlib_configuration;
 	};
 
@@ -117,9 +118,9 @@ public:
 	 */
 	virtual ~BbqueRPC(void);
 
-	/******************************************************************************
+	/**********************************************************************
 	 * Channel Independent interface
-	 ******************************************************************************/
+	 **********************************************************************/
 
 	/**
 	 * @brief Notify the resource manager about application and setup cgroups
@@ -168,33 +169,118 @@ public:
 	        const RTLIB_EXCHandler_t exc_handler);
 
 	/**
-	 * @brief Check if it's time to send a runtime feedback to the res. manager
+	 * @brief Synchronization function
+	 * @param exc_handler
+	 * @param working_mode_params
+	 * @param st
+	 * @return
 	 */
-	RTLIB_ExitCode_t ForwardRuntimeProfile(
-	        const RTLIB_EXCHandler_t exc_handler);
-
-	//TODO document me
-	RTLIB_ExitCode_t UpdateAllocation(
-	        const RTLIB_EXCHandler_t exc_handler);
-
-	/**
-	 * @brief Set an explicit Goal Gap
-	 *
-	 * aka explicitely ask for more/less resources to the resource manager
-	 */
-	RTLIB_ExitCode_t SetExplicitGoalGap(
-	        const RTLIB_EXCHandler_t exc_handler,
-	        int goal_gap_percent);
-
 	RTLIB_ExitCode_t GetWorkingMode(
 	        RTLIB_EXCHandler_t exc_handler,
 	        RTLIB_WorkingModeParams_t * working_mode_params,
 	        RTLIB_SyncType_t st);
 
+
+	/***********************************************************************
+	 *    Profiling Functions
+	 **********************************************************************/
+
+	/**
+	 * @brief Check if it's time to send a runtime feedback to the
+	 * resource manager
+	 */
+	RTLIB_ExitCode_t ForwardRuntimeProfile(const RTLIB_EXCHandler_t exc_handler);
+
+	/**
+	 * @brief
+	 * @param exc_handler
+	 * @return
+	 */
+	RTLIB_ExitCode_t UpdateAllocation(const RTLIB_EXCHandler_t exc_handler);
+
+	/**
+	 * @brief
+	 * @param msg
+	 * @return
+	 */
 	RTLIB_ExitCode_t GetRuntimeProfile(rpc_msg_BBQ_GET_PROFILE_t & msg);
 
 	/**
+	 * @brief Start monitoring performance counters for this EXC
+	 */
+	void StartPCountersMonitoring(RTLIB_EXCHandler_t exc_handler);
+
+	/**
+	 * @brief
+	 * @param exc_handler
+	 */
+	void ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler);
+
+	/**
+	 * @brief Set an explicit goal gap value (ka explicitely ask for
+	 * more/less resources to the resource manager
+	 *
+	 * @param exc_handler
+	 * @param goal_gap_percent
+	 * @return
+	 */
+	RTLIB_ExitCode_t SetExplicitGoalGap(
+	        const RTLIB_EXCHandler_t exc_handler,
+	        int goal_gap_percent);
+
+
+	/*********************************************************************
+	 *    cgroup functions
+	 *********************************************************************/
+
+	/**
+	 * @brief
+	 * @return
+	 */
+	const std::string GetCGroupPath_APP() const
+	{
+		return pathCGroup;
+	}
+
+	/**
+	 * @brief
+	 * @param exc_handler
+	 * @return
+	 */
+	RTLIB_ExitCode_t SetupCGroup(const RTLIB_EXCHandler_t exc_handler);
+
+
+	/**********************************************************************
+	 *    Utility functions
+	 *********************************************************************/
+
+	/**
+	 * @brief
+	 * @return
+	 */
+	const char * GetCharUniqueID() const
+	{
+		std::stringstream ss;
+		ss << std::right << std::setfill('0') << std::setw(5)
+		   << std::to_string(application_pid);
+		std::string unique_id_str(ss.str() + ":");
+		return unique_id_str.c_str();
+	}
+
+	/**
+	 * @brief
+	 * @param exc_handler
+	 * @return
+	 */
+	AppUid_t GetUniqueID(RTLIB_EXCHandler_t exc_handler);
+
+	/**
 	 * @brief Get a breakdown of the allocated resources
+	 * @param exc_handler
+	 * @param wm
+	 * @param r_type
+	 * @param r_amount
+	 * @return
 	 */
 	RTLIB_ExitCode_t GetAssignedResources(
 	        RTLIB_EXCHandler_t exc_handler,
@@ -202,14 +288,14 @@ public:
 	        RTLIB_ResourceType_t r_type,
 	        int32_t & r_amount);
 
-	RTLIB_ExitCode_t GetAffinityMask(
-	        RTLIB_EXCHandler_t exc_handler,
-	        const RTLIB_WorkingModeParams_t * wm,
-	        int32_t * ids_vector,
-	        int vector_size);
-
 	/**
-	 * @brief Get a breakdown of the allocated resources
+	 * @brief
+	 * @param exc_handler
+	 * @param wm
+	 * @param r_type
+	 * @param sys_array
+	 * @param array_size
+	 * @return
 	 */
 	RTLIB_ExitCode_t GetAssignedResources(
 	        RTLIB_EXCHandler_t exc_handler,
@@ -219,34 +305,22 @@ public:
 	        uint16_t array_size);
 
 	/**
-	 * @brief Start monitoring performance counters for this EXC
+	 * @brief
+	 * @param exc_handler
+	 * @param wm
+	 * @param ids_vector
+	 * @param vector_size
+	 * @return
 	 */
-	void StartPCountersMonitoring(RTLIB_EXCHandler_t exc_handler);
+	RTLIB_ExitCode_t GetAffinityMask(
+	        RTLIB_EXCHandler_t exc_handler,
+	        const RTLIB_WorkingModeParams_t * wm,
+	        int32_t * ids_vector,
+	        int vector_size);
 
-
-	/*******************************************************************************
-	 *    Utility Functions
-	 ******************************************************************************/
-
-	const std::string GetCGroupPath_APP() const {
-		return pathCGroup;
-	}
-
-	RTLIB_ExitCode_t SetupCGroup(
-	        const RTLIB_EXCHandler_t exc_handler);
-
-	const char * GetCharUniqueID() const {
-		std::stringstream ss;
-		ss << std::right << std::setfill('0') << std::setw(5) << std::to_string(application_pid);
-		std::string unique_id_str(ss.str() + ":");
-		return unique_id_str.c_str();
-	}
-
-	AppUid_t GetUniqueID(RTLIB_EXCHandler_t exc_handler);
-
-	/*******************************************************************************
+	/***********************************************************************
 	 *    Cycles Per Second (CPS) Control Support
-	 ******************************************************************************/
+	 **********************************************************************/
 
 	/**
 	 * @brief Set the required Cycles Per Second (CPS)
@@ -289,9 +363,6 @@ public:
 	        RTLIB_EXCHandler_t exc_handler,
 	        float cps_min, float cps_max);
 
-
-	void ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler);
-
 	/**
 	 * @brief Set the required Jobs Per Second goal (JPS)
 	 */
@@ -313,10 +384,12 @@ public:
 	 * duration.
 	 */
 	RTLIB_ExitCode_t SetMinimumCycleTimeUs(
-	        RTLIB_EXCHandler_t exc_handler, uint32_t max_cycle_time_us) {
+	        RTLIB_EXCHandler_t exc_handler, uint32_t max_cycle_time_us)
+	{
 		return SetCPS(exc_handler,
 		              static_cast<float>(US_IN_A_SECOND) / max_cycle_time_us);
 	}
+
 	/**
 	 * @brief Get the current execution time
 	 *
@@ -324,9 +397,10 @@ public:
 	 */
 	uint32_t GetExecutionTimeMs(RTLIB_EXCHandler_t exc_handler);
 
-	/*******************************************************************************
-	 *    Performance Monitoring Support
-	 ******************************************************************************/
+
+	/**********************************************************************
+	 *    Pre/Post Functions
+	 *********************************************************************/
 
 	void NotifySetup(
 	        RTLIB_EXCHandler_t exc_handler);
@@ -385,16 +459,22 @@ protected:
 	typedef std::pair<int, pPerfEventAttr_t> PerfRegisteredEventsMapEntry_t;
 
 	typedef	struct PerfEventStats {
+
 		/** Per AWM perf counter value */
 		uint64_t value;
+
 		/** Per AWM perf counter enable time */
 		uint64_t time_enabled;
+
 		/** Per AWM perf counter running time */
 		uint64_t time_running;
+
 		/** Perf counter attrs */
 		pPerfEventAttr_t pattr;
+
 		/** Perf counter ID */
 		int id;
+
 		/** The statistics collected for this PRE */
 		accumulator_set < uint32_t,
 		                stats<tag::min, tag::max, tag::variance >> perf_samples;
@@ -420,12 +500,16 @@ protected:
 	 * @brief Statistics on AWM usage
 	 */
 	typedef struct AwmStats {
+
 		/** Count of times this AWM has been in used */
 		uint32_t number_of_uses;
+
 		/** The time [ms] spent on processing into this AWM */
 		uint32_t time_spent_processing;
+
 		/** The time [ms] spent on monitoring this AWM */
 		uint32_t time_spent_monitoring;
+
 		/** The time [ms] spent on configuring this AWM */
 		uint32_t time_spent_configuring;
 
@@ -442,10 +526,13 @@ protected:
 		                stats<tag::min, tag::max, tag::variance >> monitor_samples;
 
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
+
 		/** Map of registered Perf counters */
 		PerfEventStatsMap_t events_map;
+
 		/** Map registered Perf counters to their type */
 		PerfEventStatsMapByConf_t events_conf_map;
+
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
 #ifdef CONFIG_BBQUE_OPENCL
@@ -486,14 +573,19 @@ protected:
 	typedef std::map<uint16_t, pSystemResources_t> SysResMap_t;
 
 	typedef struct RegisteredExecutionContext {
+
 		/** The Execution Context data */
 		RTLIB_EXCParameters_t parameters;
+
 		/** The name of this Execuion Context */
 		std::string name;
+
 		/** The RTLIB assigned ID for this Execution Context */
 		uint8_t id;
+
 		/** The PID of the control thread managing this EXC */
 		pid_t control_thread_pid = 0;
+
 #ifdef CONFIG_BBQUE_RTLIB_CGROUPS_SUPPORT
 		/** The path of the CGroup for this EXC */
 		std::string cgroup_path;
@@ -506,10 +598,13 @@ protected:
 #define EXC_FLAGS_EXC_REGISTERED 0x20 ///< The EXC is registered
 #define EXC_FLAGS_EXC_ENABLED    0x40 ///< The EXC is enabled
 #define EXC_FLAGS_EXC_BLOCKED    0x80 ///< The EXC is blocked
+
 		/** A set of flags to define the state of this EXC */
 		uint8_t flags = 0x00;
+
 		/** The last required synchronization action */
 		RTLIB_ExitCode_t event = RTLIB_OK;
+
 		/** The ID of the assigned AWM (if valid) */
 		int8_t current_awm_id = 0;
 
@@ -518,7 +613,9 @@ protected:
 
 		/** The mutex protecting access to this structure */
 		std::mutex exc_mutex;
-		/** The conditional variable to be notified on changes for this EXC */
+
+		/** The conditional variable to be notified on changes for
+		 * this EXC */
 		std::condition_variable exc_condition_variable;
 
 		/** The High-Resolution timer used for profiling */
@@ -526,24 +623,32 @@ protected:
 
 		/** The time [ms] latency to start the first execution */
 		uint32_t starting_time_ms   = 0;
+
 		/** The time [ms] spent on waiting for an AWM being assigned */
 		uint32_t blocked_time_ms    = 0;
+
 		/** The time [ms] spent on reconfigurations */
 		uint32_t config_time_ms     = 0;
+
 		/** The time [ms] spent on processing */
 		uint32_t processing_time_ms = 0;
 
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
+
 		/** Performance counters */
 		bu::Perf perf;
+
 		/** Map of registered Perf counter IDs */
 		PerfRegisteredEventsMap_t events_map;
+
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
 		/** Overall cycles for this EXC */
 		uint64_t cycles_count = 0;
+
 		/** Statistics on AWM's of this EXC */
 		AwmStatsMap_t awm_stats;
+
 		/** Statistics of currently selected AWM */
 		pAwmStats_t current_awm_stats;
 
@@ -597,12 +702,13 @@ protected:
 		bu::StatsAnalysis cycletime_analyser_system;
 		double last_cycletime_ms = 0.0;
 
-		// Applications can explicitely ask for a runtime profile notification
+		// Applications can explicitely ask for a runtime profile
+		// notification
 		bool 	explicit_ggap_assertion = false;
 		float 	explicit_ggap_value = 0.0;
 
-		// Once a runtime profile has been forwarded to bbque, there is no need
-		// to send another one before a reconfiguration happens.
+		// Once a runtime profile has been forwarded to bbque, there is
+		// no need to send another one before a reconfiguration happens
 		int waiting_sync_timeout_ms = 0;
 		bool is_waiting_for_sync = false;
 
@@ -611,13 +717,15 @@ protected:
 		bu::StatsAnalysis cpu_usage_analyser;
 
 		RegisteredExecutionContext(const char * _name, uint8_t id) :
-			name(_name), id(id) {
+			name(_name), id(id)
+		{
 			//cycletime_analyser_system.EnablePhaseDetection();
 			//cycletime_analyser_user.EnablePhaseDetection();
 			//cpu_usage_analyser.EnablePhaseDetection();
 		}
 
-		~RegisteredExecutionContext() {
+		~RegisteredExecutionContext()
+		{
 			awm_stats.clear();
 			current_awm_stats = pAwmStats_t();
 		}
@@ -627,130 +735,155 @@ protected:
 	typedef std::shared_ptr<RegisteredExecutionContext_t> pRegisteredEXC_t;
 
 	//--- AWM Validity
-	bool isAwmValid(pRegisteredEXC_t exc) const {
+	bool isAwmValid(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_AWM_VALID);
 	}
-	void setAwmValid(pRegisteredEXC_t exc) const {
+	void setAwmValid(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("AWM  <= Valid [%d:%s:%d]",
 		              exc->id, exc->name.c_str(), exc->current_awm_id);
 		exc->flags |= EXC_FLAGS_AWM_VALID;
 	}
-	void clearAwmValid(pRegisteredEXC_t exc) const {
+	void clearAwmValid(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("AWM  <= Invalid [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_AWM_VALID;
 	}
 
 	//--- AWM Wait
-	bool isAwmWaiting(pRegisteredEXC_t exc) const {
+	bool isAwmWaiting(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_AWM_WAITING);
 	}
-	void setAwmWaiting(pRegisteredEXC_t exc) const {
+	void setAwmWaiting(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("AWM  <= Waiting [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_AWM_WAITING;
 	}
-	void clearAwmWaiting(pRegisteredEXC_t exc) const {
+	void clearAwmWaiting(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("AWM  <= NOT Waiting [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_AWM_WAITING;
 	}
 
 	//--- AWM Assignment
-	bool isAwmAssigned(pRegisteredEXC_t exc) const {
+	bool isAwmAssigned(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_AWM_ASSIGNED);
 	}
-	void setAwmAssigned(pRegisteredEXC_t exc) const {
+	void setAwmAssigned(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("AWM  <= Assigned [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_AWM_ASSIGNED;
 	}
-	void clearAwmAssigned(pRegisteredEXC_t exc) const {
+	void clearAwmAssigned(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("AWM  <= NOT Assigned [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_AWM_ASSIGNED;
 	}
 
 	//--- Sync Mode Status
-	bool isSyncMode(pRegisteredEXC_t exc) const {
+	bool isSyncMode(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_EXC_SYNC);
 	}
-	void setSyncMode(pRegisteredEXC_t exc) const {
+	void setSyncMode(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("SYNC <= Enter [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_SYNC;
 	}
-	void clearSyncMode(pRegisteredEXC_t exc) const {
+	void clearSyncMode(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("SYNC <= Exit [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_EXC_SYNC;
 	}
 
 	//--- Sync Done
-	bool isSyncDone(pRegisteredEXC_t exc) const {
+	bool isSyncDone(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_EXC_SYNC_DONE);
 	}
-	void setSyncDone(pRegisteredEXC_t exc) const {
+	void setSyncDone(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("SYNC <= Done [%d:%s:%d]",
 		              exc->id, exc->name.c_str(), exc->current_awm_id);
 		exc->flags |= EXC_FLAGS_EXC_SYNC_DONE;
 	}
-	void clearSyncDone(pRegisteredEXC_t exc) const {
+	void clearSyncDone(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("SYNC <= Pending [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_EXC_SYNC_DONE;
 	}
 
 	//--- EXC Registration status
-	bool isRegistered(pRegisteredEXC_t exc) const {
+	bool isRegistered(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_EXC_REGISTERED);
 	}
-	void setRegistered(pRegisteredEXC_t exc) const {
+	void setRegistered(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("EXC  <= Registered [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_REGISTERED;
 	}
-	void clearRegistered(pRegisteredEXC_t exc) const {
+	void clearRegistered(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("EXC  <= Unregistered [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_EXC_REGISTERED;
 	}
 
 	//--- EXC Enable status
-	bool isEnabled(pRegisteredEXC_t exc) const {
+	bool isEnabled(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_EXC_ENABLED);
 	}
-	void setEnabled(pRegisteredEXC_t exc) const {
+	void setEnabled(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("EXC  <= Enabled [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_ENABLED;
 	}
-	void clearEnabled(pRegisteredEXC_t exc) const {
+	void clearEnabled(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("EXC  <= Disabled [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_EXC_ENABLED;
 	}
 
 	//--- EXC Blocked status
-	bool isBlocked(pRegisteredEXC_t exc) const {
+	bool isBlocked(pRegisteredEXC_t exc) const
+	{
 		return (exc->flags & EXC_FLAGS_EXC_BLOCKED);
 	}
-	void setBlocked(pRegisteredEXC_t exc) const {
+	void setBlocked(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("EXC  <= Blocked [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_BLOCKED;
 	}
-	void clearBlocked(pRegisteredEXC_t exc) const {
+	void clearBlocked(pRegisteredEXC_t exc) const
+	{
 		logger->Debug("EXC  <= UnBlocked [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags &= ~EXC_FLAGS_EXC_BLOCKED;
 	}
 
 
-	/*******************************************************************************
-	 *    OpenCL support
-	 ******************************************************************************/
 #ifdef CONFIG_BBQUE_OPENCL
+
+	/**********************************************************************
+	 *    OpenCL support
+	 **********************************************************************/
 
 	void OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status);
 	void OclClearStats();
@@ -768,9 +901,9 @@ protected:
 
 #endif // CONFIG_BBQUE_OPENCL
 
-	/******************************************************************************
+	/***********************************************************************
 	 * RTLib Run-Time Configuration
-	 ******************************************************************************/
+	 **********************************************************************/
 
 	static RTLIB_Conf_t rtlib_configuration;
 
@@ -789,9 +922,9 @@ protected:
 	 */
 	static uint8_t InsertRAWPerfCounter(const char * perf_str);
 
-	/******************************************************************************
+	/***********************************************************************
 	 * Channel Dependant interface
-	 ******************************************************************************/
+	 **********************************************************************/
 
 	virtual RTLIB_ExitCode_t _Init(
 	        const char * name) = 0;
@@ -821,9 +954,10 @@ protected:
 
 	virtual void _Exit() = 0;
 
-	/******************************************************************************
+
+	/**********************************************************************
 	 * Runtime profiling
-	 ******************************************************************************/
+	 **********************************************************************/
 
 	virtual RTLIB_ExitCode_t _GetRuntimeProfileResp(
 	        rpc_msg_token_t token,
@@ -831,10 +965,9 @@ protected:
 	        uint32_t exc_time,
 	        uint32_t mem_time) = 0;
 
-
-	/******************************************************************************
+	/***********************************************************************
 	 * Synchronization Protocol Messages
-	 ******************************************************************************/
+	 **********************************************************************/
 
 //----- PreChange
 
@@ -904,7 +1037,6 @@ protected:
 	 */
 	const char * application_name;
 
-
 	/**
 	 * @brief The PID of the Channel Thread
 	 *
@@ -915,7 +1047,6 @@ protected:
 	 */
 	pid_t channel_thread_pid = 0;
 
-
 	/**
 	 * @brief The channel thread UID
 	 *
@@ -925,7 +1056,8 @@ protected:
 	 */
 	char channel_thread_unique_id[20] = "00000:undef";
 
-	void SetChannelThreadID(pid_t id, const char * name) {
+	void SetChannelThreadID(pid_t id, const char * name)
+	{
 		channel_thread_pid = id;
 		snprintf(channel_thread_unique_id, 20, "%05d:%-.13s",
 		         channel_thread_pid, name);
@@ -976,9 +1108,9 @@ private:
 	uint8_t NextExcID();
 
 
-	/*******************************************************************************
+	/***********************************************************************
 	 *   AWM Profiling
-	 ******************************************************************************/
+	 **********************************************************************/
 
 	/**
 	 * @brief Setup statistics for a new selecte AWM
@@ -990,8 +1122,17 @@ private:
 	 */
 	RTLIB_ExitCode_t UpdateStatistics(pRegisteredEXC_t exc);
 
+	/**
+	 * @brief
+	 * @param exc
+	 * @return
+	 */
 	RTLIB_ExitCode_t UpdateCPUBandwidthStats(pRegisteredEXC_t exc);
 
+	/**
+	 * @brief
+	 * @param exc
+	 */
 	void InitCPUBandwidthStats(pRegisteredEXC_t exc);
 
 	/**
@@ -1036,6 +1177,15 @@ private:
 	void SyncTimeEstimation(pRegisteredEXC_t exc);
 
 	/**
+	 * @brief Get an extimation of the Synchronization Latency
+	 */
+	uint32_t GetSyncLatency(pRegisteredEXC_t exc);
+
+	/***********************************************************************
+	 *   Synchronization functions
+	 **********************************************************************/
+
+	/**
 	 * @brief Get the assigned AWM (if valid)
 	 *
 	 * @return RTLIB_OK if a valid AWM has been returned, RTLIB_EXC_GWM_FAILED
@@ -1073,14 +1223,10 @@ private:
 	 */
 	RTLIB_ExitCode_t WaitForSyncDone(pRegisteredEXC_t exc);
 
-	/**
-	 * @brief Get an extimation of the Synchronization Latency
-	 */
-	uint32_t GetSyncLatency(pRegisteredEXC_t exc);
 
-	/***********************************************************************
+	/**********************************************************************
 	 * Synchronization Protocol Messages
-	 ***********************************************************************/
+	 **********************************************************************/
 
 	/**
 	 * @brief A synchronization protocol Pre-Change for the specified EXC.
@@ -1103,17 +1249,17 @@ private:
 	RTLIB_ExitCode_t SyncP_PostChangeNotify(pRegisteredEXC_t exc);
 
 
-	/***********************************************************************
+	/**********************************************************************
 	 * Application Callbacks Proxies
-	 ***********************************************************************/
+	 **********************************************************************/
 
 	RTLIB_ExitCode_t StopExecution(
 	        RTLIB_EXCHandler_t exc_handler,
 	        struct timespec timeout);
 
-	/******************************************************************************
+	/**********************************************************************
 	 * Utility functions
-	 ******************************************************************************/
+	 **********************************************************************/
 
 	pRegisteredEXC_t getRegistered(
 	        const RTLIB_EXCHandler_t exc_handler);
@@ -1135,12 +1281,12 @@ private:
 	 */
 	bool CheckDurationTimeout(pRegisteredEXC_t exc);
 
-	/******************************************************************************
+	/*********************************************************************
 	 * Performance Counters
-	 ******************************************************************************/
+	 *********************************************************************/
 #ifdef CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
-# define BBQUE_RTLIB_PERF_ENABLE true
+#define BBQUE_RTLIB_PERF_ENABLE true
 
 	/** Default performance attributes to collect for each task */
 	static PerfEventAttr_t * raw_events;
@@ -1158,20 +1304,24 @@ private:
 	/** Very, very detailed stats (-d -d -d), adding prefetch events */
 	static PerfEventAttr_t very_very_detailed_events[];
 
-	uint8_t PerfRegisteredEvents(pRegisteredEXC_t exc) {
+	uint8_t PerfRegisteredEvents(pRegisteredEXC_t exc)
+	{
 		return exc->events_map.size();
 	}
 
 	bool PerfEventMatch(pPerfEventAttr_t ppea,
-	                    perf_type_id type, uint64_t config) {
+	                    perf_type_id type, uint64_t config)
+	{
 		return (ppea->type == type && ppea->config == config);
 	}
 
-	void PerfDisable(pRegisteredEXC_t exc) {
+	void PerfDisable(pRegisteredEXC_t exc)
+	{
 		exc->perf.Disable();
 	}
 
-	void PerfEnable(pRegisteredEXC_t exc) {
+	void PerfEnable(pRegisteredEXC_t exc)
+	{
 		exc->perf.Enable();
 	}
 
