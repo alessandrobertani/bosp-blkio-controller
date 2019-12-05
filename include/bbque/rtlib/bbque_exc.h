@@ -115,8 +115,8 @@ public:
 	 * @ingroup rtlib_sec02_aem_exc
 	 */
 	BbqueEXC(std::string const & name,
-			 std::string const & recipe,
-			 RTLIB_Services_t * rtlib);
+	         std::string const & recipe,
+	         RTLIB_Services_t * rtlib);
 
 	/**
 	 * @brief Destory the EXC
@@ -267,10 +267,10 @@ public:
 	 * @ingroup rtlib_sec02_aem_constr
 	 */
 	RTLIB_ExitCode_t SetAWMConstraints(
-		RTLIB_Constraint_t * constraints,
-		uint8_t count);
+	        RTLIB_Constraint_t * constraints,
+	        uint8_t count);
 
-	#define SetConstraints SetAWMConstraints
+#define SetConstraints SetAWMConstraints
 
 	/**
 	 * @brief Clear all constraints on AWM selection
@@ -345,13 +345,14 @@ public:
 	 *
 	 * @return the numeric UID idenfitying this EXC
 	 */
-	inline AppUid_t GetUniqueID() const {
+	inline AppUid_t GetUniqueID() const
+	{
 		return exc_unique_id;
 	};
 
 
 
-	#define GetUid GetUniqueID
+#define GetUid GetUniqueID
 
 	/**
 	 * @brief Get the amount of resource assigned by the BarbequeRTRM
@@ -364,12 +365,12 @@ public:
 	 * scheduled application.
 	 */
 	RTLIB_ExitCode_t GetAssignedResources(
-		RTLIB_ResourceType_t r_type,
-		int32_t & r_amount);
+	        RTLIB_ResourceType_t r_type,
+	        int32_t & r_amount);
 
-        RTLIB_ExitCode_t GetAffinityMask(
-                int32_t * ids_vector,
-                int vector_size);
+	RTLIB_ExitCode_t GetAffinityMask(
+	        int32_t * ids_vector,
+	        int vector_size);
 
 	/**
 	 * @brief Get the amount of resource assigned by the BarbequeRTRM
@@ -385,9 +386,9 @@ public:
 	 * scheduled application.
 	 */
 	RTLIB_ExitCode_t GetAssignedResources(
-		RTLIB_ResourceType_t r_type,
-		int32_t * systems,
-		uint16_t number_of_systems
+	        RTLIB_ResourceType_t r_type,
+	        int32_t * systems,
+	        uint16_t number_of_systems
 	);
 
 
@@ -478,7 +479,7 @@ public:
 	 * @ingroup rtlib_sec02_aem_utils
 	 */
 	RTLIB_ExitCode_t SetCPSGoal(
-		float cps_min, float cps_max);
+	        float cps_min, float cps_max);
 
 	// SetCPSGoal specifying only a minimum value
 	inline RTLIB_ExitCode_t SetCPSGoal(float cps)
