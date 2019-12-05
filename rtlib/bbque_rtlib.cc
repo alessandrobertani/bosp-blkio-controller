@@ -80,7 +80,7 @@ std::map<void *, cl_command_type> ocl_addr_cmd;
 #endif // CONFIG_BBQUE_OPENCL
 
 static RTLIB_EXCHandler_t rtlib_register(const char * name,
-					 const RTLIB_EXCParameters_t * params)
+                const RTLIB_EXCParameters_t * params)
 {
 	return rpc->Register(name, params);
 }
@@ -91,47 +91,47 @@ static RTLIB_ExitCode_t rtlib_cgsetup(const RTLIB_EXCHandler_t exc_handler)
 }
 
 static void rtlib_unregister(
-			     const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	return rpc->Unregister(exc_handler);
 }
 
 static RTLIB_ExitCode_t rtlib_enable(
-				     const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	return rpc->Enable(exc_handler);
 }
 
 static RTLIB_ExitCode_t rtlib_disable(
-				      const RTLIB_EXCHandler_t exc_handler)
+        const RTLIB_EXCHandler_t exc_handler)
 {
 	return rpc->Disable(exc_handler);
 }
 
 static RTLIB_ExitCode_t rtlib_getwm(
-				    const RTLIB_EXCHandler_t exc_handler,
-				    RTLIB_WorkingModeParams_t * wm,
-				    RTLIB_SyncType_t st)
+        const RTLIB_EXCHandler_t exc_handler,
+        RTLIB_WorkingModeParams_t * wm,
+        RTLIB_SyncType_t st)
 {
 	return rpc->GetWorkingMode(exc_handler, wm, st);
 }
 
 static RTLIB_ExitCode_t rtlib_set(
-				  RTLIB_EXCHandler_t exc_handler,
-				  RTLIB_Constraint_t * constraints, uint8_t count)
+        RTLIB_EXCHandler_t exc_handler,
+        RTLIB_Constraint_t * constraints, uint8_t count)
 {
 	return rpc->SetAWMConstraints(exc_handler, constraints, count);
 }
 
 static RTLIB_ExitCode_t rtlib_clear(
-				    RTLIB_EXCHandler_t exc_handler)
+        RTLIB_EXCHandler_t exc_handler)
 {
 	return rpc->ClearAWMConstraints(exc_handler);
 }
 
 static RTLIB_ExitCode_t rtlib_ggap(
-				   RTLIB_EXCHandler_t exc_handler,
-				   int gap)
+        RTLIB_EXCHandler_t exc_handler,
+        int gap)
 {
 	return rpc->SetExplicitGoalGap(exc_handler, gap);
 }
@@ -140,7 +140,8 @@ static RTLIB_ExitCode_t rtlib_ggap(
  *    Utility Functions
  ******************************************************************************/
 
-static const char * rtlib_utils_getchuid() {
+static const char * rtlib_utils_getchuid()
+{
 	return rpc->GetCharUniqueID();
 }
 
@@ -150,36 +151,41 @@ static AppUid_t rtlib_utils_getuid(RTLIB_EXCHandler_t exc_handler)
 }
 
 static RTLIB_ExitCode_t rtlib_utils_get_resources(
-		RTLIB_EXCHandler_t exc_handler,
-		const RTLIB_WorkingModeParams_t * wm,
-		RTLIB_ResourceType_t r_type,
-		int32_t & r_amount) {
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * wm,
+        RTLIB_ResourceType_t r_type,
+        int32_t & r_amount)
+{
 	return rpc->GetAssignedResources(exc_handler, wm, r_type, r_amount);
 }
 
 static RTLIB_ExitCode_t rtlib_utils_get_affinity_mask(
-		RTLIB_EXCHandler_t exc_handler,
-		const RTLIB_WorkingModeParams_t * wm,
-		int32_t * ids_vector,
-		int vector_size) {
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * wm,
+        int32_t * ids_vector,
+        int vector_size)
+{
 	return rpc->GetAffinityMask(exc_handler, wm, ids_vector, vector_size);
 }
 
 static RTLIB_ExitCode_t rtlib_utils_get_resources_array(
-		RTLIB_EXCHandler_t exc_handler,
-		const RTLIB_WorkingModeParams_t * wm,
-		RTLIB_ResourceType_t r_type,
-		int32_t * sys_array,
-		uint16_t array_size) {
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * wm,
+        RTLIB_ResourceType_t r_type,
+        int32_t * sys_array,
+        uint16_t array_size)
+{
 	return rpc->GetAssignedResources(exc_handler, wm, r_type, sys_array,
-					array_size);
+	                                 array_size);
 }
 
-static void rtlib_utils_start_pcounters_monitoring(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_utils_start_pcounters_monitoring(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->StartPCountersMonitoring(exc_handler);
 }
 
-static uint32_t rtlib_utils_get_ctime_ms(RTLIB_EXCHandler_t exc_handler) {
+static uint32_t rtlib_utils_get_ctime_ms(RTLIB_EXCHandler_t exc_handler)
+{
 	return rpc->GetExecutionTimeMs(exc_handler);
 }
 
@@ -187,39 +193,46 @@ static uint32_t rtlib_utils_get_ctime_ms(RTLIB_EXCHandler_t exc_handler) {
  *    Cycles Per Second (CPS) and Jobs Per Secon (JPS) Control Support
  ******************************************************************************/
 
-static RTLIB_ExitCode_t rtlib_cps_set(RTLIB_EXCHandler_t exc_handler, float cps) {
+static RTLIB_ExitCode_t rtlib_cps_set(RTLIB_EXCHandler_t exc_handler, float cps)
+{
 	return rpc->SetCPS(exc_handler, cps);
 }
 
-static float rtlib_cps_get(RTLIB_EXCHandler_t exc_handler) {
+static float rtlib_cps_get(RTLIB_EXCHandler_t exc_handler)
+{
 	return rpc->GetCPS(exc_handler);
 }
 
-static float rtlib_jps_get(RTLIB_EXCHandler_t exc_handler) {
+static float rtlib_jps_get(RTLIB_EXCHandler_t exc_handler)
+{
 	return rpc->GetJPS(exc_handler);
 }
 
 static RTLIB_ExitCode_t rtlib_cps_goal_set(
-		RTLIB_EXCHandler_t exc_handler,
-		float cps_min, float cps_max) {
+        RTLIB_EXCHandler_t exc_handler,
+        float cps_min, float cps_max)
+{
 	rpc->ResetRuntimeProfileStats(exc_handler);
 	return rpc->SetCPSGoal(exc_handler, cps_min, cps_max);
 }
 
 static RTLIB_ExitCode_t rtlib_jps_goal_set(
-		RTLIB_EXCHandler_t exc_handler,
-		float jps_min, float jps_max, int jpc) {
+        RTLIB_EXCHandler_t exc_handler,
+        float jps_min, float jps_max, int jpc)
+{
 	rpc->ResetRuntimeProfileStats(exc_handler);
 	return rpc->SetJPSGoal(exc_handler, jps_min, jps_max, jpc);
 }
 
 static RTLIB_ExitCode_t rtlib_jps_goal_update(
-		RTLIB_EXCHandler_t exc_handler, int jpc) {
+        RTLIB_EXCHandler_t exc_handler, int jpc)
+{
 	return rpc->UpdateJPC(exc_handler, jpc);
 }
 
 static RTLIB_ExitCode_t rtlib_cps_set_ctime_us(
-		RTLIB_EXCHandler_t exc_handler, uint32_t us) {
+        RTLIB_EXCHandler_t exc_handler, uint32_t us)
+{
 	return rpc->SetMinimumCycleTimeUs(exc_handler, us);
 }
 
@@ -227,31 +240,38 @@ static RTLIB_ExitCode_t rtlib_cps_set_ctime_us(
  *    Performance Monitoring Support
  ******************************************************************************/
 
-static void rtlib_notify_exit(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_notify_exit(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->NotifyExit(exc_handler);
 }
 
-static void rtlib_notify_pre_configure(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_notify_pre_configure(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->NotifyPreConfigure(exc_handler);
 }
 
-static void rtlib_notify_post_configure(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_notify_post_configure(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->NotifyPostConfigure(exc_handler);
 }
 
-static void rtlib_notify_pre_run(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_notify_pre_run(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->NotifyPreRun(exc_handler);
 }
 
-static void rtlib_notify_post_run(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_notify_post_run(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->NotifyPostRun(exc_handler);
 }
 
-static void rtlib_notify_pre_monitor(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_notify_pre_monitor(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->NotifyPreMonitor(exc_handler);
 }
 
-static void rtlib_notify_post_monitor(RTLIB_EXCHandler_t exc_handler) {
+static void rtlib_notify_post_monitor(RTLIB_EXCHandler_t exc_handler)
+{
 	rpc->NotifyPostMonitor(exc_handler);
 }
 
@@ -267,7 +287,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	(*rtlib) = NULL;
 	// Checking error string array consistency
 	static_assert(ARRAY_SIZE(RTLIB_errorStr) == RTLIB_EXIT_CODE_COUNT,
-		"RTLIB error strings not matching errors count");
+	              "RTLIB error strings not matching errors count");
 	assert(rtlib_initialized == 0);
 	// Get a Logger module
 	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
@@ -293,7 +313,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	rtlib_services.Utils.GetAffinityMask = rtlib_utils_get_affinity_mask;
 	rtlib_services.Utils.GetResourcesArray = rtlib_utils_get_resources_array;
 	rtlib_services.Utils.MonitorPerfCounters =
-		rtlib_utils_start_pcounters_monitoring;
+	        rtlib_utils_start_pcounters_monitoring;
 	// Cycles Time Control interface
 	rtlib_services.CPS.ExecTime_ms = rtlib_utils_get_ctime_ms;
 	rtlib_services.CPS.Set = rtlib_cps_set;
@@ -331,8 +351,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 
 	// Setup configuration descriptor
 	rtlib_services.config = bl::BbqueRPC::Configuration();
-	// Marking library as intialized
-	rtlib_initialized = 1;
+	rtlib_initialized = 1; // Marking library as intialized
 	rtlib_app_name = name;
 	(*rtlib) = & rtlib_services;
 	atexit(RTLIB_Exit);
@@ -350,11 +369,8 @@ static void RTLIB_Exit(void)
 	// Close the RPC FIFO channel thus releasing all BBQUE resource used by
 	// this application
 	assert(rpc);
-	// Ensure all the EXCs are unregistered
-	rpc->UnregisterAll();
+	rpc->UnregisterAll(); // Ensure all the EXCs are unregistered
 	delete rpc;
 
 	if (0) RTLIB_Exit(); // Fix compilation warning
 }
-
-

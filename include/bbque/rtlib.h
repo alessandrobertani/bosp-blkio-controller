@@ -360,8 +360,6 @@ struct RTLIB_Constraint {
 /**
  * @name EXC Management Functions
  *
- * ADD DESCRIPTION HERE
- *
  * @{
  */
 
@@ -384,8 +382,8 @@ struct RTLIB_Constraint {
  * computation fabric resources based on its proper "working modes".
  */
 typedef RTLIB_EXCHandler_t (*RTLIB_Register_t)(
-	const char * name,
-	const RTLIB_EXCParameters_t * params);
+        const char * name,
+        const RTLIB_EXCParameters_t * params);
 
 /**
  * @brief Sets up cgroups for this exc
@@ -393,7 +391,7 @@ typedef RTLIB_EXCHandler_t (*RTLIB_Register_t)(
  *
  */
 typedef RTLIB_ExitCode_t (*RTLIB_SetupCGroups_t)(
-	const RTLIB_EXCHandler_t exc_handler);
+        const RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Pointer to an EXC enabling function
@@ -414,7 +412,7 @@ typedef RTLIB_ExitCode_t (*RTLIB_SetupCGroups_t)(
  * an AWM assigned.
  */
 typedef RTLIB_ExitCode_t (*RTLIB_Enable_t)(
-	const RTLIB_EXCHandler_t exc_handler);
+        const RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Pointer to an EXC disabling function.
@@ -434,7 +432,7 @@ typedef RTLIB_ExitCode_t (*RTLIB_Enable_t)(
  * this EXC as soon as possible.
  */
 typedef RTLIB_ExitCode_t (*RTLIB_Disable_t)(
-	const RTLIB_EXCHandler_t exc_handler);
+        const RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Pointer to an EXC un-registration function.
@@ -447,7 +445,7 @@ typedef RTLIB_ExitCode_t (*RTLIB_Disable_t)(
  * @param ech the handler of the EXCs to undergister.
  */
 typedef void (*RTLIB_Unregister_t)(
-	const RTLIB_EXCHandler_t exc_handler);
+        const RTLIB_EXCHandler_t exc_handler);
 
 /**@}*/
 
@@ -481,16 +479,16 @@ typedef void (*RTLIB_Unregister_t)(
  * working mode currently in use).
  */
 typedef RTLIB_ExitCode_t (*RTLIB_SetConstraints_t)(
-	RTLIB_EXCHandler_t exc_handler,
-	RTLIB_Constraint_t * constraints,
-	uint8_t count);
+        RTLIB_EXCHandler_t exc_handler,
+        RTLIB_Constraint_t * constraints,
+        uint8_t count);
 
 /**
  * @brief Pointer to an EXC contraint release function.
  * @ingroup rtlib_sec03_plain_constr
  */
 typedef RTLIB_ExitCode_t (*RTLIB_ClearConstraints_t)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Pointer to an EXC Goal Gap assert function.
@@ -519,8 +517,8 @@ typedef RTLIB_ExitCode_t (*RTLIB_ClearConstraints_t)(
  * the range (0,100].
  */
 typedef RTLIB_ExitCode_t (*RTLIB_SetGoalGap_t)(
-	RTLIB_EXCHandler_t exc_handler,
-	int gap);
+        RTLIB_EXCHandler_t exc_handler,
+        int gap);
 /**@}*/
 
 /**
@@ -581,9 +579,9 @@ typedef RTLIB_ExitCode_t (*RTLIB_SetGoalGap_t)(
  * call until a new working mode has been assigned to it.
  */
 typedef RTLIB_ExitCode_t (*RTLIB_GetWorkingMode_t)(
-	RTLIB_EXCHandler_t exc_handler,
-	RTLIB_WorkingModeParams_t * wm,
-	RTLIB_SyncType_t st);
+        RTLIB_EXCHandler_t exc_handler,
+        RTLIB_WorkingModeParams_t * wm,
+        RTLIB_SyncType_t st);
 
 /**@}*/
 
@@ -632,16 +630,16 @@ typedef AppUid_t (*RTLIB_Utils_GetUniqueID)(RTLIB_EXCHandler_t exc_handler);
  * assigned amount.
  */
 typedef RTLIB_ExitCode_t (*RTLIB_Utils_GetResources) (
-	RTLIB_EXCHandler_t exc_handler,
-	const RTLIB_WorkingModeParams_t * working_mode_params,
-	RTLIB_ResourceType_t resource_type,
-	int32_t & resource_amount);
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * working_mode_params,
+        RTLIB_ResourceType_t resource_type,
+        int32_t & resource_amount);
 
 typedef RTLIB_ExitCode_t (*RTLIB_Utils_GetAffinityMask) (
-	RTLIB_EXCHandler_t exc_handler,
-	const RTLIB_WorkingModeParams_t * working_mode_params,
-	int32_t * ids_vector,
-	int vector_size);
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * working_mode_params,
+        int32_t * ids_vector,
+        int vector_size);
 
 /**
  * @brief Get the amount of resources assigned by the BarbequeRTRM to the
@@ -653,14 +651,14 @@ typedef RTLIB_ExitCode_t (*RTLIB_Utils_GetAffinityMask) (
  * assigned amount.
  */
 typedef RTLIB_ExitCode_t (*RTLIB_Utils_GetResourcesArray) (
-	RTLIB_EXCHandler_t exc_handler,
-	const RTLIB_WorkingModeParams_t * working_mode_params,
-	RTLIB_ResourceType_t resource_type,
-	int32_t * assignment_per_system,
-	uint16_t number_of_systems);
+        RTLIB_EXCHandler_t exc_handler,
+        const RTLIB_WorkingModeParams_t * working_mode_params,
+        RTLIB_ResourceType_t resource_type,
+        int32_t * assignment_per_system,
+        uint16_t number_of_systems);
 
 typedef void (*RTLIB_Utils_StartPCountersMonitoring) (
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 
 /**@}*/
@@ -690,8 +688,8 @@ typedef void (*RTLIB_Utils_StartPCountersMonitoring) (
  * @param cps the required Cycles Per Seconds [Hz]
  */
 typedef RTLIB_ExitCode_t (*RTLIB_CPS_Set)(
-	RTLIB_EXCHandler_t exc_handler,
-	float cycles_per_second);
+        RTLIB_EXCHandler_t exc_handler,
+        float cycles_per_second);
 
 /**
  * @brief Get the measured Cycles Per Seconds (CPS)
@@ -706,7 +704,7 @@ typedef RTLIB_ExitCode_t (*RTLIB_CPS_Set)(
  * @return the measured cycle rate
  */
 typedef float (*RTLIB_CPS_Get)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Get the measured execution time
@@ -715,7 +713,7 @@ typedef float (*RTLIB_CPS_Get)(
  * @return the measured execution time
  */
 typedef uint32_t (*RTLIB_CPS_GetExecTime)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 
 /**
@@ -731,7 +729,7 @@ typedef uint32_t (*RTLIB_CPS_GetExecTime)(
  * @return the measured jobs rate
  */
 typedef float (*RTLIB_JPS_Get)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Update JPC value
@@ -749,7 +747,7 @@ typedef float (*RTLIB_JPS_Get)(
  * @return the measured jobs rate
  */
 typedef RTLIB_ExitCode_t (*RTLIB_JPC_Update)(
-	RTLIB_EXCHandler_t exc_handler, int jpc);
+        RTLIB_EXCHandler_t exc_handler, int jpc);
 
 /**
  * @brief Setup the Cycles Per Seconds (CPS) goal
@@ -764,7 +762,7 @@ typedef RTLIB_ExitCode_t (*RTLIB_JPC_Update)(
  * @param cps_max the maximum required Cycles Per Seconds [Hz]
  */
 typedef RTLIB_ExitCode_t (*RTLIB_CPS_Goal_Set)(
-	RTLIB_EXCHandler_t exc_handler, float cps_min, float cps_max);
+        RTLIB_EXCHandler_t exc_handler, float cps_min, float cps_max);
 
 /**
  * @brief Setup the Jobs Per Seconds (JPS) goal
@@ -780,8 +778,8 @@ typedef RTLIB_ExitCode_t (*RTLIB_CPS_Goal_Set)(
  * @param jpc the number of jobs that are currently processed each cycle
  */
 typedef RTLIB_ExitCode_t (*RTLIB_JPS_Goal_Set)(
-	RTLIB_EXCHandler_t exc_handler,
-	float jps_min, float jps_max, int jpc);
+        RTLIB_EXCHandler_t exc_handler,
+        float jps_min, float jps_max, int jpc);
 
 /**
  * @brief Setup the Cycles Time [us] support
@@ -796,8 +794,8 @@ typedef RTLIB_ExitCode_t (*RTLIB_JPS_Goal_Set)(
  * @param cps the required Cycles Per Seconds [Hz]
  */
 typedef RTLIB_ExitCode_t (*RTLIB_CPS_CTimeUs)(
-	RTLIB_EXCHandler_t exc_handler,
-	uint32_t us);
+        RTLIB_EXCHandler_t exc_handler,
+        uint32_t us);
 
 /**@}*/
 
@@ -826,7 +824,7 @@ typedef RTLIB_ExitCode_t (*RTLIB_CPS_CTimeUs)(
  * @param ech the handler of the EXC to configure
   */
 typedef void (*RTLIB_Notify_Exit)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Notify the RTLib a "reconfiguration" is starting
@@ -840,7 +838,7 @@ typedef void (*RTLIB_Notify_Exit)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PreConfigure)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Notify the RTLib a "reconfiguration" has completed
@@ -854,7 +852,7 @@ typedef void (*RTLIB_Notify_PreConfigure)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PostConfigure)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Notify the RTLib a "run" is starting
@@ -868,7 +866,7 @@ typedef void (*RTLIB_Notify_PostConfigure)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PreRun)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 
 /**
@@ -883,7 +881,7 @@ typedef void (*RTLIB_Notify_PreRun)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PostRun)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Notify the RTLib a "monitor" is starting
@@ -897,7 +895,7 @@ typedef void (*RTLIB_Notify_PostRun)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PreMonitor)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 
 /**
@@ -912,7 +910,7 @@ typedef void (*RTLIB_Notify_PreMonitor)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PostMonitor)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Notify the RTLib a "suspend" is starting
@@ -926,7 +924,7 @@ typedef void (*RTLIB_Notify_PostMonitor)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PreSuspend)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 
 /**
@@ -941,7 +939,7 @@ typedef void (*RTLIB_Notify_PreSuspend)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PostSuspend)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Notify the RTLib a "resume" is starting
@@ -955,7 +953,7 @@ typedef void (*RTLIB_Notify_PostSuspend)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PreResume)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 
 /**
@@ -970,7 +968,7 @@ typedef void (*RTLIB_Notify_PreResume)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_PostResume)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 
 /**
@@ -985,7 +983,7 @@ typedef void (*RTLIB_Notify_PostResume)(
  * @param ech the handler of the EXC to configure
  */
 typedef void (*RTLIB_Notify_Release)(
-	RTLIB_EXCHandler_t exc_handler);
+        RTLIB_EXCHandler_t exc_handler);
 
 /**@}*/
 
@@ -1041,9 +1039,9 @@ typedef struct RTLIB_Config {
 	// Application-Specific RTM
 	struct {
 		uint16_t rt_profile_rearm_time_ms =
-			BBQUE_DEFAULT_RTLIB_RTPROF_REARM_TIME_MS;
+		        BBQUE_DEFAULT_RTLIB_RTPROF_REARM_TIME_MS;
 		uint16_t rt_profile_wait_for_sync_ms =
-			BBQUE_DEFAULT_RTLIB_RTPROF_WAIT_FOR_SYNC_MS;
+		        BBQUE_DEFAULT_RTLIB_RTPROF_WAIT_FOR_SYNC_MS;
 	} runtime_profiling;
 
 	// Unmanaged execution
@@ -1158,7 +1156,7 @@ struct RTLIB_Services {
 		RTLIB_Utils_GetCharUniqueID GetUniqueID_String;
 		RTLIB_Utils_GetUniqueID GetUniqueID;
 		RTLIB_Utils_GetResources GetResources;
-                RTLIB_Utils_GetAffinityMask GetAffinityMask;
+		RTLIB_Utils_GetAffinityMask GetAffinityMask;
 		RTLIB_Utils_GetResourcesArray GetResourcesArray;
 		RTLIB_Utils_StartPCountersMonitoring MonitorPerfCounters;
 	} Utils;
@@ -1243,8 +1241,8 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** services);
  * advanced suspension/hibernation features.
  */
 typedef RTLIB_ExitCode_t (*RTLIB_Stop_t)(
-	RTLIB_EXCHandler_t exc_handler,
-	struct timespec timeout);
+        RTLIB_EXCHandler_t exc_handler,
+        struct timespec timeout);
 
 /*******************************************************************************
  *    RTLib Utils
