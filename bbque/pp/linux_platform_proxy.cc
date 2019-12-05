@@ -26,7 +26,11 @@
 
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+
+#ifdef CONFIG_BBQUE_RELIABILITY
 #include <criu/criu.h>
+#endif
+
 #include <fstream>
 #include <libcgroup.h>
 #include <linux/ethtool.h>
@@ -1490,6 +1494,9 @@ LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept
 }
 
 
+#ifdef CONFIG_BBQUE_RELIABILITY
+
+
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 {
@@ -1570,6 +1577,7 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 {
+
 	// Retrieve checkpoint image directory
 	std::string image_dir(image_prefix_dir
 	                      + "/" + std::to_string(pid)
@@ -1609,6 +1617,7 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 	}
 
 	logger->Debug("Restore: [pid=%d] resumed", pid);
+
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
@@ -1679,6 +1688,9 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
+
+#endif
+
 
 
 std::string LinuxPlatformProxy::ApplicationPath(

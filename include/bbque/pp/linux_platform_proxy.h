@@ -96,6 +96,7 @@ public:
 
 	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const override;
 
+#ifdef CONFIG_BBQUE_RELIABILITY
 
 	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
 
@@ -104,6 +105,8 @@ public:
 	ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
 
 	ReliabilityActionsIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
+
+#endif
 
 private:
 //-------------------- CONSTS
