@@ -41,9 +41,9 @@ namespace rtlib
 {
 
 BbqueEXC::BbqueEXC(
-		std::string const & name,
-		std::string const & recipe,
-		RTLIB_Services_t * const rtl) :
+        std::string const & name,
+        std::string const & recipe,
+        RTLIB_Services_t * const rtl) :
 	exc_name(name),
 	rpc_name(recipe),
 	rtlib(rtl),
@@ -108,13 +108,13 @@ RTLIB_ExitCode_t BbqueEXC::_Enable()
 		return RTLIB_OK;
 
 	logger->Info("Enabling EXC [%s] (@%p)...",
-				 exc_name.c_str(), (void *) exc_handler);
+	             exc_name.c_str(), (void *) exc_handler);
 	assert(rtlib->EnableEXC);
 	RTLIB_ExitCode_t result = rtlib->EnableEXC(exc_handler);
 
 	if (result != RTLIB_OK) {
 		logger->Error("Enabling EXC [%s] (@%p) FAILED",
-					  exc_name.c_str(), (void *) exc_handler);
+		              exc_name.c_str(), (void *) exc_handler);
 		return result;
 	}
 
@@ -145,10 +145,10 @@ RTLIB_ExitCode_t BbqueEXC::Disable()
 		return RTLIB_OK;
 
 	logger->Info("Disabling control loop for EXC [%s] (@%p)...",
-				 exc_name.c_str(), (void *) exc_handler);
+	             exc_name.c_str(), (void *) exc_handler);
 	// Disable the EXC
 	logger->Info("Disabling EXC [%s] (@%p)...",
-				 exc_name.c_str(), (void *) exc_handler);
+	             exc_name.c_str(), (void *) exc_handler);
 	assert(rtlib->Disable);
 	result = rtlib->Disable(exc_handler);
 
@@ -186,7 +186,7 @@ RTLIB_ExitCode_t BbqueEXC::Terminate()
 
 	// Unregister the EXC
 	logger->Info("Unregistering EXC [%s] (@%p)...",
-				 exc_name.c_str(), (void *) exc_handler);
+	             exc_name.c_str(), (void *) exc_handler);
 	assert(rtlib->Unregister);
 	rtlib->Unregister(exc_handler);
 
@@ -201,7 +201,7 @@ RTLIB_ExitCode_t BbqueEXC::Terminate()
 	}
 
 	logger->Info("Terminating control loop for EXC [%s] (@%p)...",
-				 exc_name.c_str(), (void *) exc_handler);
+	             exc_name.c_str(), (void *) exc_handler);
 	// Notify the control thread we are done
 	exc_status.has_finished_processing = true;
 	control_cond_variable.notify_all();
@@ -215,7 +215,7 @@ RTLIB_ExitCode_t BbqueEXC::WaitCompletion()
 {
 	std::unique_lock<std::mutex> control_u_lock(control_mutex);
 	logger->Info("Waiting for EXC [%s] control loop termination...",
-				 exc_name.c_str());
+	             exc_name.c_str());
 
 	while (! exc_status.is_terminated)
 		control_cond_variable.wait(control_u_lock);
@@ -236,21 +236,21 @@ RTLIB_ExitCode_t BbqueEXC::onSetup()
 RTLIB_ExitCode_t BbqueEXC::onConfigure(int8_t awm_id)
 {
 	logger->Warn("<< Default switching of EXC [%s] into AWM [%d], latency 10[ms] >>",
-				 exc_name.c_str(), awm_id);
+	             exc_name.c_str(), awm_id);
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t BbqueEXC::onSuspend()
 {
 	logger->Warn("<< Default suspending of EXC [%s], latency 10[ms] >>",
-				 exc_name.c_str());
+	             exc_name.c_str());
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t BbqueEXC::onResume()
 {
 	logger->Debug("<< Default resume of EXC [%s], latency 10[ms] >>",
-				  exc_name.c_str());
+	              exc_name.c_str());
 	return RTLIB_OK;
 }
 
@@ -261,15 +261,15 @@ RTLIB_ExitCode_t BbqueEXC::onRun()
 		return RTLIB_EXC_WORKLOAD_NONE;
 
 	logger->Warn("<< Default onRun: EXC [%s], AWM[%02d], cycle [%d/%d], latency %d[ms] >>",
-				 exc_name.c_str(), wmp.awm_id, cycles_count + 1,
-				 BBQUE_RTLIB_DEFAULT_CYCLES, 100 * (wmp.awm_id + 1));
+	             exc_name.c_str(), wmp.awm_id, cycles_count + 1,
+	             BBQUE_RTLIB_DEFAULT_CYCLES, 100 * (wmp.awm_id + 1));
 	return RTLIB_OK;
 }
 
 RTLIB_ExitCode_t BbqueEXC::onMonitor()
 {
 	logger->Warn("<< Default monitoring of EXC [%s], latency 1[ms] >>",
-				 exc_name.c_str());
+	             exc_name.c_str());
 	return RTLIB_OK;
 }
 
@@ -289,27 +289,27 @@ const char * BbqueEXC::GetUniqueID_String() const
 }
 
 RTLIB_ExitCode_t BbqueEXC::GetAssignedResources(
-	RTLIB_ResourceType_t r_type,
-	int32_t & r_amount)
+        RTLIB_ResourceType_t r_type,
+        int32_t & r_amount)
 {
 	return rtlib->Utils.GetResources(exc_handler, &wmp, r_type, r_amount);
 }
 
 RTLIB_ExitCode_t BbqueEXC::GetAffinityMask(
-	int32_t * ids_vector,
+        int32_t * ids_vector,
         int vector_size)
 {
 	return rtlib->Utils.GetAffinityMask(exc_handler, &wmp, ids_vector,
-                vector_size);
+	                                    vector_size);
 }
 
 RTLIB_ExitCode_t BbqueEXC::GetAssignedResources(
-	RTLIB_ResourceType_t r_type,
-	int32_t * sys_array,
-	uint16_t array_size)
+        RTLIB_ResourceType_t r_type,
+        int32_t * sys_array,
+        uint16_t array_size)
 {
 	return rtlib->Utils.GetResourcesArray(exc_handler, &wmp, r_type, sys_array,
-										  array_size);
+	                                      array_size);
 }
 
 /*******************************************************************************
@@ -319,28 +319,28 @@ RTLIB_ExitCode_t BbqueEXC::GetAssignedResources(
 RTLIB_ExitCode_t BbqueEXC::SetCPS(float cps)
 {
 	logger->Debug("Set cycles-rate to [%.3f] [Hz] for EXC [%s] (@%p)...",
-				  cps, exc_name.c_str(), (void *) exc_handler);
+	              cps, exc_name.c_str(), (void *) exc_handler);
 	return rtlib->CPS.Set(exc_handler, cps);
 }
 
 RTLIB_ExitCode_t BbqueEXC::SetJPSGoal(float jps_min, float jps_max, int jpc)
 {
 	logger->Debug("Set jobs-rate goal to [%.3f - %.3f] [Hz] for EXC [%s] (@%p)...",
-				  jps_min, jps_max, exc_name.c_str(), (void *) exc_handler);
+	              jps_min, jps_max, exc_name.c_str(), (void *) exc_handler);
 	return rtlib->JPS.SetGoal(exc_handler, jps_min, jps_max, jpc);
 }
 
 RTLIB_ExitCode_t BbqueEXC::SetCPSGoal(float cps_min, float cps_max)
 {
 	logger->Debug("Set cycles-rate goal to [%.3f - %.3f] [Hz] for EXC [%s] (@%p)...",
-				  cps_min, cps_max, exc_name.c_str(), (void *) exc_handler);
+	              cps_min, cps_max, exc_name.c_str(), (void *) exc_handler);
 	return rtlib->CPS.SetGoal(exc_handler, cps_min, cps_max);
 }
 
 RTLIB_ExitCode_t BbqueEXC::SetMinimumCycleTimeUs(uint32_t min_cycle_time_us)
 {
 	logger->Debug("Set cycles-time to [%" PRIu32 "] [us] for EXC [%s] (@%p)...",
-				  min_cycle_time_us, exc_name.c_str(), (void *) exc_handler);
+	              min_cycle_time_us, exc_name.c_str(), (void *) exc_handler);
 	return rtlib->CPS.SetMinCycleTime_us(exc_handler, min_cycle_time_us);
 }
 
@@ -369,8 +369,8 @@ float BbqueEXC::GetJPS()
  ******************************************************************************/
 
 RTLIB_ExitCode_t BbqueEXC::SetAWMConstraints(
-	RTLIB_Constraint_t * constraints,
-	uint8_t count)
+        RTLIB_Constraint_t * constraints,
+        uint8_t count)
 {
 	std::unique_lock<std::mutex> control_u_lock(control_mutex);
 	RTLIB_ExitCode_t result = RTLIB_OK;
@@ -378,7 +378,7 @@ RTLIB_ExitCode_t BbqueEXC::SetAWMConstraints(
 	assert(rtlib->SetAWMConstraints);
 	//--- Assert constraints on this EXC
 	logger->Info("Set [%d] constraints for EXC [%s] (@%p)...",
-				 count, exc_name.c_str(), (void *) exc_handler);
+	             count, exc_name.c_str(), (void *) exc_handler);
 	result = rtlib->SetAWMConstraints(exc_handler, constraints, count);
 	return result;
 }
@@ -391,7 +391,7 @@ RTLIB_ExitCode_t BbqueEXC::ClearAWMConstraints()
 	assert(rtlib->ClearAWMConstraints);
 	//--- Clear constraints on this EXC
 	logger->Info("Clear ALL constraints for EXC [%s] (@%p)...",
-				 exc_name.c_str(), (void *) exc_handler);
+	             exc_name.c_str(), (void *) exc_handler);
 	result = rtlib->ClearAWMConstraints(exc_handler);
 	return result;
 }
@@ -404,7 +404,7 @@ RTLIB_ExitCode_t BbqueEXC::SetGoalGap(int percent)
 	assert(rtlib->SetAWMConstraints);
 	//--- Assert a Goal-Gap on this EXC
 	logger->Info("Set [%d] Goal-Gap for EXC [%s] (@%p)...",
-				 percent, exc_name.c_str(), (void *) exc_handler);
+	             percent, exc_name.c_str(), (void *) exc_handler);
 	result = rtlib->SetGoalGap(exc_handler, percent);
 	return result;
 }
@@ -427,13 +427,13 @@ RTLIB_ExitCode_t BbqueEXC::CheckConfigure()
 {
 	assert(rtlib->GetWorkingMode);
 	RTLIB_ExitCode_t result = rtlib->GetWorkingMode(exc_handler, &wmp,
-							  RTLIB_SYNC_STATELESS);
+	                          RTLIB_SYNC_STATELESS);
 	logger->Debug("CL 2. Reconfigure check for EXC [%s]...", exc_name.c_str());
 
 	switch (result) {
 	case RTLIB_OK:
 		logger->Debug("CL 2-1. Continue to run on the assigned AWM [%d] for EXC [%s]",
-					  wmp.awm_id, exc_name.c_str());
+		              wmp.awm_id, exc_name.c_str());
 		return result;
 
 	case RTLIB_EXC_GWM_START:
@@ -441,7 +441,7 @@ RTLIB_ExitCode_t BbqueEXC::CheckConfigure()
 	case RTLIB_EXC_GWM_MIGREC:
 	case RTLIB_EXC_GWM_MIGRATE:
 		logger->Debug("CL 2-2. Switching EXC [%s] to AWM [%02d]...",
-					  exc_name.c_str(), wmp.awm_id);
+		              exc_name.c_str(), wmp.awm_id);
 		Configure(wmp.awm_id, result);
 		return result;
 
@@ -452,7 +452,7 @@ RTLIB_ExitCode_t BbqueEXC::CheckConfigure()
 
 	default:
 		logger->Error("GetWorkingMode for EXC [%s] FAILED (Error: Invalid event [%d])",
-					  exc_name.c_str(), result);
+		              exc_name.c_str(), result);
 		assert(result >= RTLIB_EXC_GWM_START);
 		assert(result <= RTLIB_EXC_GWM_BLOCKED);
 	}
@@ -498,7 +498,7 @@ RTLIB_ExitCode_t BbqueEXC::Configure(int8_t awm_id, RTLIB_ExitCode_t event)
 RTLIB_ExitCode_t BbqueEXC::Run()
 {
 	logger->Debug("CL 3. Run EXC [%s], cycle [%010d], AWM[%02d]...",
-				  exc_name.c_str(), cycles_count + 1, wmp.awm_id);
+	              exc_name.c_str(), cycles_count + 1, wmp.awm_id);
 	// Call the RPC pre-execution procedure
 	rtlib->Notify.PreRun(exc_handler);
 	// Call the user-defined execution procedure
@@ -508,8 +508,7 @@ RTLIB_ExitCode_t BbqueEXC::Run()
 	if (result == RTLIB_EXC_WORKLOAD_NONE) {
 		// Tell the control thread the EXC has terminated
 		exc_status.has_finished_processing = true;
-	}
-	else {
+	} else {
 		// Call the RPC post-execution procedure
 		rtlib->Notify.PostRun(exc_handler);
 	}
@@ -545,8 +544,7 @@ RTLIB_ExitCode_t BbqueEXC::Monitor()
 	if (config.duration.time_limit) {
 		if (config.duration.max_ms_before_termination != 0)
 			return result;
-	}
-	else {
+	} else {
 		if (config.duration.max_cycles_before_termination > cycles_count)
 			return result;
 	}

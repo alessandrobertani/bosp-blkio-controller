@@ -58,8 +58,8 @@ typedef struct rpc_fifo_header {
 	uint8_t rpc_msg_offset;
 	/** The type of the RPC message */
 	uint8_t rpc_msg_type;
-    /** The payload size */
-    int32_t pyl_size;
+	/** The payload size */
+	int32_t pyl_size;
 } rpc_fifo_header_t;
 
 #define RPC_PB_FIFO_PAYLOAD_SIZE 1024
@@ -72,10 +72,10 @@ typedef struct rpc_fifo_GENERIC {
 } rpc_fifo_GENERIC_t;
 
 #define RPC_FIFO_DEFINE_MESSAGE(RPC_TYPE)\
-typedef struct rpc_fifo_ ## RPC_TYPE {\
-	rpc_fifo_header_t hdr;\
-	unsigned char pyl[RPC_PB_FIFO_PAYLOAD_SIZE];\
-} rpc_fifo_ ## RPC_TYPE ## _t
+	typedef struct rpc_fifo_ ## RPC_TYPE {\
+		rpc_fifo_header_t hdr;\
+		unsigned char pyl[RPC_PB_FIFO_PAYLOAD_SIZE];\
+	} rpc_fifo_ ## RPC_TYPE ## _t
 
 
 /******************************************************************************
@@ -118,6 +118,8 @@ RPC_FIFO_DEFINE_MESSAGE(EXC_RTNOTIFY);
 RPC_FIFO_DEFINE_MESSAGE(EXC_START);
 RPC_FIFO_DEFINE_MESSAGE(EXC_STOP);
 RPC_FIFO_DEFINE_MESSAGE(EXC_SCHEDULE);
+RPC_FIFO_DEFINE_MESSAGE(EXC_CHECKPOINT);
+
 
 //----- PreChange
 RPC_FIFO_DEFINE_MESSAGE(BBQ_SYNCP_PRECHANGE);
@@ -148,15 +150,15 @@ RPC_FIFO_DEFINE_MESSAGE(BBQ_GET_PROFILE_RESP);
  * Utility Commands
  ******************************************************************************/
 #define RPC_FIFO_HEX_DUMP_BUFFER(PBUFF, SIZE)\
-do {\
-fprintf(stderr, "\nRPC_FIFO_HEX_DUMP_BUFFER(@%p, %d):", PBUFF, SIZE);\
-for (uint32_t i = 0; i < (SIZE); ++i) {\
-	if (!(i % 16))\
+	do {\
+		fprintf(stderr, "\nRPC_FIFO_HEX_DUMP_BUFFER(@%p, %d):", PBUFF, SIZE);\
+		for (uint32_t i = 0; i < (SIZE); ++i) {\
+			if (!(i % 16))\
+				fprintf(stderr, "\n");\
+			fprintf(stderr, "%02X ", ((uint8_t*)PBUFF)[i]);\
+		}\
 		fprintf(stderr, "\n");\
-	fprintf(stderr, "%02X ", ((uint8_t*)PBUFF)[i]);\
-}\
-fprintf(stderr, "\n");\
-} while(0);
+	} while(0);
 
 #define RPC_FIFO_HEX_DUMP_MESSAGE(RPC_TYPE)\
 	RPC_FIFO_HEX_DUMP_BUFFER((void*)&rf_ ## RPC_TYPE, (int)FIFO_PKT_SIZE(RPC_TYPE))
@@ -166,4 +168,3 @@ fprintf(stderr, "\n");\
 } // namespace bbque
 
 #endif // BBQUE_RPC_PB_FIFO_SERVER_H_
-

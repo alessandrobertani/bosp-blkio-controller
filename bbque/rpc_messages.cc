@@ -18,7 +18,10 @@
 #include "bbque/rtlib/rpc/rpc_messages.h"
 #include "bbque/utils/utility.h"
 
-namespace bbque { namespace rtlib {
+namespace bbque
+{
+namespace rtlib
+{
 
 const char *RPC_messageStr[] = {
 
@@ -37,7 +40,7 @@ const char *RPC_messageStr[] = {
 	//RPC_EXC_SCHEDULE
 	"ESched",
 	//RPC_EXC_START
-	"EStrat",
+	"EStart",
 	//RPC_EXC_SET
 	"ESet",
 	//RPC_EXC_CLEAR
@@ -79,10 +82,9 @@ const char *RPC_messageStr[] = {
 };
 
 // Checking RPC messages string array consistency
-static_assert(ARRAY_SIZE(RPC_messageStr) == bbque::rtlib::RPC_BBQ_MSGS_COUNT+1,
-		"RPC message strings not matching messages type count");
+static_assert(ARRAY_SIZE(RPC_messageStr) == bbque::rtlib::RPC_BBQ_MSGS_COUNT + 1,
+              "RPC message strings not matching messages type count");
 
 } // namespace rtlib
 
 } // namespace bbque
-

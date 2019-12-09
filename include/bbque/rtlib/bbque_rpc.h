@@ -458,6 +458,7 @@ protected:
 
 	typedef std::pair<int, pPerfEventAttr_t> PerfRegisteredEventsMapEntry_t;
 
+
 	typedef	struct PerfEventStats {
 
 		/** Per AWM perf counter value */
@@ -572,6 +573,11 @@ protected:
 	 */
 	typedef std::map<uint16_t, pSystemResources_t> SysResMap_t;
 
+	/**
+	 * @class RegisteredExecutionContext
+	 *
+	 * @brief Run-time information of the Execution context
+	 */
 	typedef struct RegisteredExecutionContext {
 
 		/** The Execution Context data */
@@ -653,6 +659,7 @@ protected:
 		pAwmStats_t current_awm_stats;
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+
 		struct CGroupBudgetInfo {
 			float cpu_budget_isolation = 0.0;
 			float cpu_budget_shared = 0.0;
@@ -663,6 +670,7 @@ protected:
 			std::vector<int32_t> cpu_global_ids;
 			std::vector<int32_t> cpu_isolation_ids;
 		} cg_budget;
+
 		struct CGroupAllocationInfo {
 			float cpu_budget = 0.0;
 			std::string memory_limit_bytes;
@@ -681,16 +689,22 @@ protected:
 		/** CPS performance monitoring/control */
 		// [ms] at the last cycle start time
 		double 	 cycle_start_time_ms         = 0.0;
+
 		// [Hz] the minimum cycle time in milliseconds
 		float  	 cycle_time_enforced_ms      = 0.0;
+
 		// [Hz] the minimum required CPS
 		float  	 cps_goal_min                = 0.0;
+
 		// [Hz] the maximum required CPS
 		float  	 cps_goal_max                = 0.0;
+
 		// [Hz] the required maximum CPS
 		float  	 cps_max_allowed             = 0.0;
+
 		// [us] time spent sleeping to enforce maximum CPS
 		uint16_t cps_enforcing_sleep_time_ms = 0;
+
 		// Current number of processed Jobs per Cycle
 		int      jpc                         = 1;
 
@@ -811,12 +825,14 @@ protected:
 	{
 		return (exc->flags & EXC_FLAGS_EXC_SYNC_DONE);
 	}
+
 	void setSyncDone(pRegisteredEXC_t exc) const
 	{
 		logger->Debug("SYNC <= Done [%d:%s:%d]",
 		              exc->id, exc->name.c_str(), exc->current_awm_id);
 		exc->flags |= EXC_FLAGS_EXC_SYNC_DONE;
 	}
+
 	void clearSyncDone(pRegisteredEXC_t exc) const
 	{
 		logger->Debug("SYNC <= Pending [%d:%s]",
@@ -829,12 +845,14 @@ protected:
 	{
 		return (exc->flags & EXC_FLAGS_EXC_REGISTERED);
 	}
+
 	void setRegistered(pRegisteredEXC_t exc) const
 	{
 		logger->Debug("EXC  <= Registered [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_REGISTERED;
 	}
+
 	void clearRegistered(pRegisteredEXC_t exc) const
 	{
 		logger->Debug("EXC  <= Unregistered [%d:%s]",
@@ -847,12 +865,14 @@ protected:
 	{
 		return (exc->flags & EXC_FLAGS_EXC_ENABLED);
 	}
+
 	void setEnabled(pRegisteredEXC_t exc) const
 	{
 		logger->Debug("EXC  <= Enabled [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_ENABLED;
 	}
+
 	void clearEnabled(pRegisteredEXC_t exc) const
 	{
 		logger->Debug("EXC  <= Disabled [%d:%s]",
@@ -871,6 +891,7 @@ protected:
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_BLOCKED;
 	}
+
 	void clearBlocked(pRegisteredEXC_t exc) const
 	{
 		logger->Debug("EXC  <= UnBlocked [%d:%s]",
@@ -926,8 +947,7 @@ protected:
 	 * Channel Dependant interface
 	 **********************************************************************/
 
-	virtual RTLIB_ExitCode_t _Init(
-	        const char * name) = 0;
+	virtual RTLIB_ExitCode_t _Init(const char * name) = 0;
 
 	virtual RTLIB_ExitCode_t _Register(pRegisteredEXC_t exc) = 0;
 
@@ -1056,6 +1076,12 @@ protected:
 	 */
 	char channel_thread_unique_id[20] = "00000:undef";
 
+	/**
+	 * @brief Set the channel thread id
+	 *
+	 * @param id Thread id
+	 * @param name Thread name
+	 */
 	void SetChannelThreadID(pid_t id, const char * name)
 	{
 		channel_thread_pid = id;

@@ -3519,15 +3519,15 @@ void BbqueRPC::NotifyPostRun(
 {
 	logger->Debug("Post-Run: retrieving execution context info");
 	assert(exc_handler);
-	auto exc = getRegistered(exc_handler);
 
+	auto exc = getRegistered(exc_handler);
 	if (! exc) {
 		logger->Error("NotifyPostRun EXC [%p] FAILED "
 		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
-
 	assert(isRegistered(exc) == true);
+
 	logger->Debug("Post-Run: Checking if perf counters are activated");
 	bool pcounters_collected_systemwide =
 	        rtlib_configuration.profile.perf_counters.global;
@@ -3566,17 +3566,17 @@ void BbqueRPC::NotifyPreMonitor(
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
-	exc = getRegistered(exc_handler);
 
+	exc = getRegistered(exc_handler);
 	if (! exc) {
 		logger->Error("NotifyPreMonitor EXC [%p] FAILED "
 		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
-
 	assert(isRegistered(exc) == true);
 	logger->Debug("===> NotifyMonitor");
-	// Keep track of monitoring start time
+
+	// Sample monitoring start time
 	exc->mon_tstart = exc->execution_timer.getElapsedTimeMs();
 }
 
@@ -3584,16 +3584,16 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
-	exc = getRegistered(exc_handler);
 
+	exc = getRegistered(exc_handler);
 	if (! exc) {
 		logger->Error("NotifyPostMonitor EXC [%p] FAILED "
 		              "(EXC not registered)", (void *) exc_handler);
 		return;
 	}
-
 	assert(isRegistered(exc) == true);
 	logger->Debug("<=== NotifyMonitor");
+
 	// Update monitoring statistics
 	UpdateMonitorStatistics(exc);
 
@@ -3601,6 +3601,7 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 	if (exc->cycle_time_enforced_ms != 0.0f)
 		ForceCPS(exc);
 
+	// Stop here and return if UNMANAGED mode is on
 	if (rtlib_configuration.unmanaged.enabled)
 		return;
 
@@ -3608,13 +3609,13 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 	// given its history
 	UpdateAllocation(exc_handler);
 
-	// Check is there is a goal gap
+	// Is there a performance goal gap?
 	if (abs(exc->runtime_profiling.cpu_goal_gap) > 1.0f) {
-		logger->Debug("Goal gap forwarding (ggap %f)",
+		logger->Debug("NotifyPostMonitor: goal gap forwarding (=%f)",
 		              exc->runtime_profiling.cpu_goal_gap);
 		ForwardRuntimeProfile(exc_handler);
 	} else
-		logger->Debug("No goal gap forwarding (ggap 0)");
+		logger->Debug("NotifyPostMonitor: no goal gap forwarding");
 }
 
 

@@ -37,36 +37,35 @@ namespace rtlib
 typedef enum rpc_msg_type {
 
 //--- Application Originated Messages
-        RPC_APP_PAIR = 0,
-        RPC_APP_EXIT,
+	RPC_APP_PAIR = 0,
+	RPC_APP_EXIT,
 
-        RPC_APP_RESP,       ///< Response to an APP request
-        RPC_APP_MSGS_COUNT, ///< The number of APP originated messages
+	RPC_APP_RESP,       ///< Response to an APP request
+	RPC_APP_MSGS_COUNT, ///< The number of APP originated messages
 
 //--- Execution Context Originated Messages
-        RPC_EXC_SCHEDULE,
-        RPC_EXC_START,     // 5
-        RPC_EXC_SET,
-        RPC_EXC_CLEAR,
-        RPC_EXC_STOP,
-        RPC_EXC_REGISTER,
-        RPC_EXC_RTNOTIFY,  // 10
-        RPC_EXC_UNREGISTER,
-
-        RPC_EXC_RESP,       ///< Response to an EXC request
-        RPC_EXC_MSGS_COUNT, ///< The number of EXC originated messages
+	RPC_EXC_SCHEDULE,
+	RPC_EXC_START,     // 5
+	RPC_EXC_SET,
+	RPC_EXC_CLEAR,
+	RPC_EXC_STOP,
+	RPC_EXC_REGISTER,
+	RPC_EXC_RTNOTIFY,  // 10
+	RPC_EXC_UNREGISTER,
+	RPC_EXC_RESP,       ///< Response to an EXC request
+	RPC_EXC_MSGS_COUNT, ///< The number of EXC originated messages
 
 //--- BarbequeRTRM Originated Messages
-        RPC_BBQ_SYNCP_POSTCHANGE,
-        RPC_BBQ_SYNCP_DOCHANGE,    // 15
-        RPC_BBQ_SYNCP_SYNCCHANGE,
-        RPC_BBQ_SYNCP_PRECHANGE,
+	RPC_BBQ_SYNCP_POSTCHANGE,
+	RPC_BBQ_SYNCP_DOCHANGE,    // 15
+	RPC_BBQ_SYNCP_SYNCCHANGE,
+	RPC_BBQ_SYNCP_PRECHANGE,
 
-        RPC_BBQ_STOP_EXECUTION,
-        RPC_BBQ_GET_PROFILE,
+	RPC_BBQ_STOP_EXECUTION,
+	RPC_BBQ_GET_PROFILE,
 
-        RPC_BBQ_RESP,      ///< Response to a BBQ command
-        RPC_BBQ_MSGS_COUNT ///< The number of EXC originated messages
+	RPC_BBQ_RESP,      ///< Response to a BBQ command
+	RPC_BBQ_MSGS_COUNT ///< The number of EXC originated messages
 
 } rpc_msg_type_t;
 
@@ -210,7 +209,7 @@ typedef struct rpc_msg_EXC_STOP {
 /**
  * @brief Command to ask for being scheduled.
  *
- * This message is send by the RTLIB once an EXC ask the RTRM to be scheduled
+ * This message is sent by the RTLIB once an EXC ask the RTRM to be scheduled
  * (as soon as possible). The RTRM should identify the best AWM to be assigned
  * for the requesting execution context.
  */

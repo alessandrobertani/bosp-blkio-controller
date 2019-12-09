@@ -162,19 +162,19 @@ void BbqueRPC_PB_FIFO_Client::ChannelFetch()
 		done = true;
 		break;
 
-		//--- Application Originated Messages
+	//--- Application Originated Messages
 	case RPC_APP_RESP:
 		logger->Debug("APP_RESP");
 		RpcBbqResp(hdr.pyl_size);
 		break;
 
-		//--- Execution Context Originated Messages
+	//--- Execution Context Originated Messages
 	case RPC_EXC_RESP:
 		logger->Debug("EXC_RESP");
 		RpcBbqResp(hdr.pyl_size);
 		break;
 
-		//--- Barbeque Originated Messages
+	//--- Barbeque Originated Messages
 	case RPC_BBQ_STOP_EXECUTION:
 		logger->Debug("BBQ_STOP_EXECUTION");
 		break;

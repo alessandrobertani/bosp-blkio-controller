@@ -1179,21 +1179,13 @@ struct RTLIB_Services {
 
 	/* Performance estimation and notification interface */
 	struct {
-		/** Finalization notifier */
 		RTLIB_Notify_Exit Exit;
-		/** Pre-Configuration notifier */
 		RTLIB_Notify_PreConfigure PreConfigure;
-		/** Post-Configuration notifier */
 		RTLIB_Notify_PostConfigure PostConfigure;
-		/** Pre-Run notifier */
 		RTLIB_Notify_PreRun PreRun;
-		/** Post-Run notifier */
 		RTLIB_Notify_PostRun PostRun;
-		/** Pre-Monitor notifier */
 		RTLIB_Notify_PreMonitor PreMonitor;
-		/** Post-Monitor notifier */
 		RTLIB_Notify_PostMonitor PostMonitor;
-		/** Pre-Suspend notifier */
 	} Notify;
 };
 

@@ -275,6 +275,7 @@ static void rtlib_notify_post_monitor(RTLIB_EXCHandler_t exc_handler)
 	rpc->NotifyPostMonitor(exc_handler);
 }
 
+
 const char * rtlib_app_name;
 static uint8_t rtlib_initialized = 0;
 static std::unique_ptr<bu::Logger> logger;
@@ -294,6 +295,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	// Welcome screen
 	logger->Info("Barbeque RTLIB (ver. %s)\n", g_git_version);
 	logger->Info("Built: " __DATE__  " " __TIME__ "\n");
+
 	// Data structure initialization
 	rtlib_services.version.major = RTLIB_VERSION_MAJOR;
 	rtlib_services.version.minor = RTLIB_VERSION_MINOR;
@@ -306,6 +308,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	rtlib_services.SetGoalGap = rtlib_ggap;
 	rtlib_services.Disable = rtlib_disable;
 	rtlib_services.Unregister = rtlib_unregister;
+
 	// Utility functions interface
 	rtlib_services.Utils.GetUniqueID_String = rtlib_utils_getchuid;
 	rtlib_services.Utils.GetUniqueID = rtlib_utils_getuid;
@@ -314,6 +317,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	rtlib_services.Utils.GetResourcesArray = rtlib_utils_get_resources_array;
 	rtlib_services.Utils.MonitorPerfCounters =
 	        rtlib_utils_start_pcounters_monitoring;
+
 	// Cycles Time Control interface
 	rtlib_services.CPS.ExecTime_ms = rtlib_utils_get_ctime_ms;
 	rtlib_services.CPS.Set = rtlib_cps_set;
@@ -323,6 +327,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	rtlib_services.JPS.Get = rtlib_jps_get;
 	rtlib_services.JPS.SetGoal = rtlib_jps_goal_set;
 	rtlib_services.JPS.UpdateJPC = rtlib_jps_goal_update;
+
 	// Performance monitoring notifiers
 	rtlib_services.Notify.Exit = rtlib_notify_exit;
 	rtlib_services.Notify.PreConfigure = rtlib_notify_pre_configure;
