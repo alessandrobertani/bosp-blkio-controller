@@ -549,11 +549,6 @@ LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept
 
 void LinuxPlatformProxy::Exit()
 {
-	logger->Debug("Exit: LinuxPP termination...");
-
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	proc_listener.Terminate();
-#endif
 
 #ifdef CONFIG_BBQUE_RELIABILITY
 
