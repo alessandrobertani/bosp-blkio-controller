@@ -21,7 +21,6 @@
 #undef MODULE_NAMESPACE
 #define MODULE_NAMESPACE "bq.lm"
 
-
 namespace bbque
 {
 
@@ -74,18 +73,84 @@ ReliabilityManager::ReliabilityManager():
 	                   static_cast<CommandHandler*>(this),
 	                   "Restore a managed application or process");
 
+	// HW monitoring thread
+	Worker::Setup(BBQUE_MODULE_NAME("lm.hwmon"), MODULE_NAMESPACE);
+	Worker::Start();
 }
 
 
 ReliabilityManager::~ReliabilityManager()
 {
-
+	logger->Info("Reliability manager: terminating...");
 }
 
 void ReliabilityManager::Task()
 {
+#ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
+	// Periodic checkpointing
+	chk_timer.start();
+	chk_thread = std::thread(
+	                     &ReliabilityManager::PeriodicCheckpointTask,
+	                     this);
+#endif
+	while (!done) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		// HW reliability monitoring...
+	}
+
+#ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
+	logger->Debug("Task: waiting for periodic checkpointing thread");
+	chk_thread.join();
+#endif
+}
+
+#ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
+
+void ReliabilityManager::PeriodicCheckpointTask()
+{
+	logger->Debug("PeriodicCheckpointTask: thread launched [tid=%d]",
+	              gettid());
+
+	while (!done) {
+		// Now
+		auto start_sec = chk_timer.getTimestampMs();
+
+		// Applications
+		AppsUidMapIt app_it;
+		ba::AppCPtr_t papp = am.GetFirst(ba::Schedulable::RUNNING, app_it);
+		for (; papp; papp = am.GetNext(ba::Schedulable::RUNNING, app_it)) {
+			Dump(papp);
+		}
+
+		// Processes
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		ProcessMapIterator proc_it;
+		ProcPtr_t proc = prm.GetFirst(ba::Schedulable::RUNNING, proc_it);
+		for (; proc; proc = prm.GetNext(ba::Schedulable::RUNNING, proc_it)) {
+			Dump(proc);
+		}
+#endif
+		// End time
+		auto end_sec = chk_timer.getTimestampMs();
+		auto elapsed_sec = end_sec - start_sec;
+		logger->Debug("PeriodicCheckpoint: task perfomed in %.f ms",
+		              elapsed_sec);
+
+		unsigned int next_chk_in = std::max<unsigned int>(
+		                                   chk_period_len - elapsed_sec,
+		                                   BBQUE_MIN_CHECKPOINT_PERIOD_MS);
+		// Wake me up later
+		logger->Debug("PeriodicCheckpoint: see you in %d ms", next_chk_in);
+		std::this_thread::sleep_for(std::chrono::milliseconds(next_chk_in));
+	}
+
+	logger->Notice("PeriodicCheckpoint: terminating...");
+	chk_timer.stop();
 
 }
+
+#endif
+
 
 void ReliabilityManager::NotifyFaultDetection(res::ResourcePtr_t rsrc)
 {
@@ -334,12 +399,20 @@ void ReliabilityManager::Dump(app::AppPid_t pid)
 
 
 void ReliabilityManager::Dump(app::SchedPtr_t psched)
+{
+	double _start = chk_timer.getTimestampMs();
 	auto ret = plm.Dump(psched);
 	if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
 		logger->Error("Dump: <%s> checkpoint failed", psched->StrId());
 		return;
 	}
-	logger->Debug("Dump: <%s> checkpointed", psched->StrId());
+	double _end = chk_timer.getTimestampMs();
+
+	psched->UpdateCheckpointLatency(_end - _start);
+	logger->Debug("Dump: <%s> checkpointed in %.f ms [mean = %.f ms]",
+	              psched->StrId(),
+	              _end - _start,
+	              psched->GetCheckpointLatencyMean());
 }
 
 

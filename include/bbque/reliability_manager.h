@@ -25,7 +25,13 @@
 #include "bbque/platform_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
+#include "bbque/utils/timer.h"
 #include "bbque/utils/worker.h"
+
+/** Do not accept shorter checkpoint period length */
+#define BBQUE_MIN_CHECKPOINT_PERIOD_MS   10000
+
+using namespace bbque::utils;
 
 namespace bbque
 {
@@ -51,7 +57,6 @@ public:
 	 */
 	void NotifyCheckpointRequest();
 
-
 protected:
 
 	/**
@@ -75,6 +80,23 @@ private:
 	PlatformManager & plm;
 
 	std::unique_ptr<utils::Logger> logger;
+
+
+#ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
+
+	Timer chk_timer;
+
+	std::thread chk_thread;
+
+	unsigned int chk_period_len = BBQUE_CHECKPOINT_PERIOD_LENGTH; // ms
+
+	/**
+	 * @brief Perform periodical checkpoints of the managed applications
+	 * and processes
+	 */
+	void PeriodicCheckpointTask();
+
+#endif
 
 	/**
 	 * @brief Constructor

@@ -216,4 +216,20 @@ menu "Reliability Management"
     The path under which to store the images of the processes dump
     after a checkpoint.
 
+  config BBQUE_PERIODIC_CHECKPOINT
+    depends on BBQUE_RELIABILITY
+    default n
+    bool "Periodic checkpoint"
+    ---help---
+    If enabled it leads the BarbequeRTRM to perform periodic checkpoint of the
+    managed applications and processes.
+
+  config BBQUE_CHECKPOINT_PERIOD_LENGTH
+    depends on BBQUE_PERIODIC_CHECKPOINT
+    default 30000
+    int "Length of the checkpoint period (ms)"
+    ---help---
+    The path under which to store the images of the processes dump
+    after a checkpoint.
+
 endmenu #Reliability
