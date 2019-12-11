@@ -133,6 +133,8 @@ private:
 	 */
 	void Dump(app::AppPid_t pid);
 
+	void Dump(app::SchedPtr_t psched);
+
 	/**
 	 * @brief Restore a checkpointed application or process
 	 * @param pid Process id

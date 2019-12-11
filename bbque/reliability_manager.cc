@@ -329,6 +329,11 @@ void ReliabilityManager::Dump(app::AppPid_t pid)
 		return;
 	}
 
+	Dump(psched);
+}
+
+
+void ReliabilityManager::Dump(app::SchedPtr_t psched)
 	auto ret = plm.Dump(psched);
 	if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
 		logger->Error("Dump: <%s> checkpoint failed", psched->StrId());
