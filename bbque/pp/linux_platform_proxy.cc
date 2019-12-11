@@ -159,7 +159,7 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 
 LinuxPlatformProxy::~LinuxPlatformProxy()
 {
-	logger->Info("LinuxPlatformProxy: terminating...");
+	logger->Info("LinuxPlatformProxy: destroyed");
 }
 
 
@@ -581,6 +581,7 @@ void LinuxPlatformProxy::Exit()
 	}
 #endif
 
+	logger->Info("Exit: LinuxPP terminated");
 }
 
 

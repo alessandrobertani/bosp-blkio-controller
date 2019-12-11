@@ -83,23 +83,23 @@ public:
 	 * @brief Exit codes returned by methods of this class
 	 */
 	typedef enum ExitCode {
-	        OK = 0,
-	        SETUP_FAILED
+		OK = 0,
+		SETUP_FAILED
 	} ExitCode_t;
 
 	typedef enum controlEvent {
-	        EXC_START = 0,
-	        EXC_STOP,
+		EXC_START = 0,
+		EXC_STOP,
 
-	        BBQ_PLAT,
-	        BBQ_OPTS,
-	        BBQ_USR1,
-	        BBQ_USR2,
+		BBQ_PLAT,
+		BBQ_OPTS,
+		BBQ_USR1,
+		BBQ_USR2,
 
-	        BBQ_EXIT,
-	        BBQ_ABORT,
+		BBQ_EXIT,
+		BBQ_ABORT,
 
-	        EVENTS_COUNT
+		EVENTS_COUNT
 	} controlEvent_t;
 
 	/**
@@ -264,44 +264,44 @@ private:
 	 */
 	typedef enum ResMgrMetrics {
 
-	        //----- Counting metrics
-	        RM_EVT_TOTAL = 0,
-	        RM_EVT_START,
-	        RM_EVT_STOP,
-	        RM_EVT_PLAT,
-	        RM_EVT_OPTS,
-	        RM_EVT_USR1,
-	        RM_EVT_USR2,
+		//----- Counting metrics
+		RM_EVT_TOTAL = 0,
+		RM_EVT_START,
+		RM_EVT_STOP,
+		RM_EVT_PLAT,
+		RM_EVT_OPTS,
+		RM_EVT_USR1,
+		RM_EVT_USR2,
 
-	        RM_SCHED_TOTAL,
-	        RM_SCHED_FAILED,
-	        RM_SCHED_DELAYED,
-	        RM_SCHED_EMPTY,
+		RM_SCHED_TOTAL,
+		RM_SCHED_FAILED,
+		RM_SCHED_DELAYED,
+		RM_SCHED_EMPTY,
 
-	        RM_SYNCH_TOTAL,
-	        RM_SYNCH_FAILED,
+		RM_SYNCH_TOTAL,
+		RM_SYNCH_FAILED,
 
-	        //----- Sample statistics
-	        RM_EVT_TIME,
-	        RM_EVT_TIME_START,
-	        RM_EVT_TIME_STOP,
-	        RM_EVT_TIME_PLAT,
-	        RM_EVT_TIME_OPTS,
-	        RM_EVT_TIME_USR1,
-	        RM_EVT_TIME_USR2,
+		//----- Sample statistics
+		RM_EVT_TIME,
+		RM_EVT_TIME_START,
+		RM_EVT_TIME_STOP,
+		RM_EVT_TIME_PLAT,
+		RM_EVT_TIME_OPTS,
+		RM_EVT_TIME_USR1,
+		RM_EVT_TIME_USR2,
 
-	        RM_EVT_PERIOD,
-	        RM_EVT_PERIOD_START,
-	        RM_EVT_PERIOD_STOP,
-	        RM_EVT_PERIOD_PLAT,
-	        RM_EVT_PERIOD_OPTS,
-	        RM_EVT_PERIOD_USR1,
-	        RM_EVT_PERIOD_USR2,
+		RM_EVT_PERIOD,
+		RM_EVT_PERIOD_START,
+		RM_EVT_PERIOD_STOP,
+		RM_EVT_PERIOD_PLAT,
+		RM_EVT_PERIOD_OPTS,
+		RM_EVT_PERIOD_USR1,
+		RM_EVT_PERIOD_USR2,
 
-	        RM_SCHED_PERIOD,
-	        RM_SYNCH_PERIOD,
+		RM_SCHED_PERIOD,
+		RM_SYNCH_PERIOD,
 
-	        RM_METRICS_COUNT
+		RM_METRICS_COUNT
 	} ResMgrMetrics_t;
 
 	/** The High-Resolution timer used for profiling */

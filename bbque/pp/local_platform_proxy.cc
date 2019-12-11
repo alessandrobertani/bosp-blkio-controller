@@ -283,9 +283,14 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement(
 
 void LocalPlatformProxy::Exit()
 {
+	logger->Info("Exit: closing host platform proxy [%s]...",
+	             host->GetPlatformID());
 	this->host->Exit();
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++)
-		(*it)->Exit();
+	for (auto & aux_pp : aux) {
+		logger->Info("Exit: closing auxiliary platform proxy [%s]...",
+		             aux_pp->GetPlatformID());
+		aux_pp->Exit();
+	}
 }
 
 

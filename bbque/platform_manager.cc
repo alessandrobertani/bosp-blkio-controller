@@ -84,7 +84,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformConfig()
 
 void PlatformManager::Task()
 {
-	logger->Info("Platform Manager monitoring thread STARTED");
+	logger->Debug("Platform Manager monitoring thread STARTED");
 
 	while (!done) {
 		if (platformEvents.none()) {
@@ -127,7 +127,7 @@ void PlatformManager::Task()
 		}
 	}
 
-	logger->Info("Platform Manager monitoring thread END");
+	logger->Debug("Platform Manager monitoring thread END");
 
 }
 
@@ -544,7 +544,7 @@ void PlatformManager::Exit()
 #ifdef CONFIG_BBQUE_DIST_MODE
 	rpp->Exit();
 #endif
-	logger->Info("Exit: Platform supports terminated");
+	logger->Notice("Exit: platform supports terminated");
 }
 
 

@@ -27,7 +27,10 @@
 
 namespace bu = bbque::utils;
 
-namespace bbque { namespace utils {
+namespace bbque
+{
+namespace utils
+{
 
 /**
  * @class Worker
@@ -39,7 +42,8 @@ namespace bbque { namespace utils {
  * the necessary support to name worker threads and properly termiante them
  * when BBQ is terminated.
  */
-class Worker {
+class Worker
+{
 
 public:
 

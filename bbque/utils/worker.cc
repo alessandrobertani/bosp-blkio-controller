@@ -33,18 +33,24 @@ namespace bu = bbque::utils;
 #define WORKER_NAMESPACE "bq.wk"
 #define MODULE_NAMESPACE WORKER_NAMESPACE
 
-namespace bbque { namespace utils {
+namespace bbque
+{
+namespace utils
+{
 
 Worker::Worker() :
 	name("undef"),
 	done(false),
-	worker_tid(0) {
+	worker_tid(0)
+{
 }
 
-Worker::~Worker() {
+Worker::~Worker()
+{
 }
 
-int Worker::Setup(std::string const & name, std::string const & logname) {
+int Worker::Setup(std::string const & name, std::string const & logname)
+{
 
 	//---------- Setup the Worker name
 	this->name = name;
@@ -58,14 +64,15 @@ int Worker::Setup(std::string const & name, std::string const & logname) {
 
 }
 
-void Worker::_Task() {
+void Worker::_Task()
+{
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 
 	// Set the module name
 	logger->Debug("Worker[%s]: Initialization...", name.c_str());
 	if (prctl(PR_SET_NAME, (long unsigned int) name.c_str(), 0, 0, 0) != 0) {
 		logger->Error("Worker[%s]: Set name FAILED! (Error: %s)\n",
-				name.c_str(), strerror(errno));
+		              name.c_str(), strerror(errno));
 	}
 
 	// get the thread ID for further management
@@ -86,7 +93,8 @@ void Worker::_Task() {
 
 }
 
-void Worker::Start() {
+void Worker::Start()
+{
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 
 	// Use default setup if not defined by derived class
@@ -106,14 +114,13 @@ void Worker::Start() {
 	// conditional variables.
 	worker_thd.detach();
 	worker_status_cv.wait(worker_status_ul);
-
 }
 
 
-void Worker::Notify() {
+void Worker::Notify()
+{
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	logger->Debug("Worker[%s]: Notifying...", name.c_str());
-	// Notifying for an event
 	worker_status_cv.notify_all();
 }
 
@@ -127,10 +134,10 @@ void Worker::Terminate() {
 	DB(fprintf(stderr, FD("Worker[%s]: Terminating...\n"), name.c_str()));
 	done = true;
 
-	// Notify worker status
+	// Notify to wake up the worker thread
 	worker_status_cv.notify_all();
 
-	// Seng signal to worker
+	// Send signal to worker
 	assert(worker_tid != 0);
 	::kill(worker_tid, SIGUSR1);
 
@@ -140,17 +147,18 @@ void Worker::Terminate() {
 bool Worker::Wait() {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	logger->Debug("Worker[%s]: Waiting...", name.c_str());
-	// Waiting for an event
 	worker_status_cv.wait(worker_status_ul);
 	return !done;
 }
 
-void Worker::_PreTerminate() {
-	DB(fprintf(stderr, FD("Worker[%s]: Pre-termination...\n"), name.c_str()));
+void Worker::_PreTerminate()
+{
+	logger->Debug("Worker[%s]: Pre-termination", name.c_str());
 }
 
-void Worker::_PostTerminate() {
-	DB(fprintf(stderr, FI("Worker[%s]: Terminated\n"), name.c_str()));
+void Worker::_PostTerminate()
+{
+	logger->Debug("Worker[%s]: Post-termination", name.c_str());
 }
 
 } /*utils */

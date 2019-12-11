@@ -42,7 +42,8 @@
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-namespace bbque {
+namespace bbque
+{
 
 /******************************************************************************
  * Supported Commands
@@ -74,7 +75,8 @@ CommandsMap_t mCommands;
 std::mutex mCommands_mtx;
 
 
-int CommandManager::CommandsCb(int argc, char *argv[]) {
+int CommandManager::CommandsCb(int argc, char *argv[])
+{
 	uint8_t num = 0;
 	// Fix compiler warnings
 	(void) argc;
@@ -82,10 +84,10 @@ int CommandManager::CommandsCb(int argc, char *argv[]) {
 
 	logger->Notice("List of supported commands:");
 	for_each(mCommands.begin(), mCommands.end(),
-		[=, &num](std::pair<std::string, bbqCommand_t> entry){
-			logger->Notice("%-25s : %s",
-				entry.second.name, entry.second.desc);
-		});
+	[ =, &num](std::pair<std::string, bbqCommand_t> entry) {
+		logger->Notice("%-25s : %s",
+		               entry.second.name, entry.second.desc);
+	});
 
 	return 0;
 }
@@ -98,8 +100,8 @@ int CommandManager::CommandsCb(int argc, char *argv[]) {
 CommandManager::CommandManager() : Worker(),
 	initialized(false),
 	cmd_fifo_fd(0),
-	cmd_fifo(NULL) {
-
+	cmd_fifo(NULL)
+{
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("cm"), COMMAND_MANAGER_NAMESPACE);
 
@@ -107,16 +109,17 @@ CommandManager::CommandManager() : Worker(),
 	ConfigurationManager & cm = ConfigurationManager::GetInstance();
 	po::options_description opts_desc("Command Manager Options");
 	opts_desc.add_options()
-		(MODULE_CONFIG".dir",
-		 po::value<std::string>
-		 (&cmd_fifo_dir)->default_value(BBQUE_PATH_VAR),
-		 "Path of the Command FIFO directory")
-		;
+	(MODULE_CONFIG".dir",
+	 po::value<std::string>
+	 (&cmd_fifo_dir)->default_value(BBQUE_PATH_VAR),
+	 "Path of the Command FIFO directory")
+	;
 	po::variables_map opts_vm;
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	// Load all the supported commands
-	RegisterCommand("bq.cm.help", static_cast<CommandHandler*>(this), "List all the supported commands");
+	RegisterCommand("bq.cm.help", static_cast<CommandHandler*>(this),
+	                "List all the supported commands");
 
 	// Setup FIFO channel
 	if (InitFifo() == 0)
@@ -130,7 +133,8 @@ CommandManager::CommandManager() : Worker(),
 	Worker::Start();
 }
 
-void CommandManager::_PreTerminate() {
+void CommandManager::_PreTerminate()
+{
 	fs::path fifo_path(cmd_fifo_dir);
 	fifo_path /= "/" BBQUE_CMDS_FIFO;
 
@@ -144,25 +148,28 @@ void CommandManager::_PreTerminate() {
 	unlink(fifo_path.string().c_str());
 }
 
-CommandManager::~CommandManager() {
+CommandManager::~CommandManager()
+{
 
 }
 
-CommandManager & CommandManager::GetInstance() {
+CommandManager & CommandManager::GetInstance()
+{
 	static CommandManager instance;
 	return instance;
 }
 
 int CommandManager::RegisterCommand(const char *cmdName, CommandHandler *pch,
-		const char *cmdDesc) {
+                                    const char *cmdDesc)
+{
 	std::unique_lock<std::mutex> mCommands_ul(mCommands_mtx);
 
 	logger->Info("Registering command [%s]: %s", cmdName, cmdDesc);
 
 	if (mCommands.find(cmdName) != mCommands.end()) {
 		logger->Error("Register command FAILED"
-				" (Error: Command [%s] already defined)",
-				cmdName);
+		              " (Error: Command [%s] already defined)",
+		              cmdName);
 		return -1;
 	}
 
@@ -171,7 +178,8 @@ int CommandManager::RegisterCommand(const char *cmdName, CommandHandler *pch,
 }
 
 
-int CommandManager::UnregisterCommand(const char *cmdName) {
+int CommandManager::UnregisterCommand(const char *cmdName)
+{
 	std::unique_lock<std::mutex> mCommands_ul(mCommands_mtx);
 
 	logger->Info("Unregistering command [%s]...", cmdName);
@@ -180,7 +188,8 @@ int CommandManager::UnregisterCommand(const char *cmdName) {
 	return 0;
 }
 
-int CommandManager::InitFifo() {
+int CommandManager::InitFifo()
+{
 	int error;
 	fs::path fifo_path(cmd_fifo_dir);
 	boost::system::error_code ec;
@@ -189,25 +198,25 @@ int CommandManager::InitFifo() {
 
 	if (daemonized)
 		syslog(LOG_INFO, "Using Command FIFOs dir [%s]",
-				cmd_fifo_dir.c_str());
+		       cmd_fifo_dir.c_str());
 	else
 		fprintf(stderr, FI("CMD MNGR: using dir [%s]\n"),
-				cmd_fifo_dir.c_str());
+		        cmd_fifo_dir.c_str());
 
 	fifo_path /= "/" BBQUE_CMDS_FIFO;
 	logger->Debug("CMD MNGR: checking FIFO [%s]...",
-			fifo_path.string().c_str());
+	              fifo_path.string().c_str());
 
 	// If the FIFO already exists: destroy it and rebuild a new one
 	if (fs::exists(fifo_path, ec)) {
 		logger->Debug("CMD MNGR: destroying old FIFO [%s]...",
-			fifo_path.string().c_str());
+		              fifo_path.string().c_str());
 		error = ::unlink(fifo_path.string().c_str());
 		if (error) {
 			logger->Crit("CMD MNGR: cleanup old FIFO [%s] FAILED "
-					"(Error: %s)",
-					fifo_path.string().c_str(),
-					strerror(error));
+			             "(Error: %s)",
+			             fifo_path.string().c_str(),
+			             strerror(error));
 			assert(error == 0);
 			return -1;
 		}
@@ -215,25 +224,25 @@ int CommandManager::InitFifo() {
 
 	// Make dir (if not already present)
 	logger->Debug("CMD MNGR: create dir [%s]...",
-			fifo_path.parent_path().c_str());
+	              fifo_path.parent_path().c_str());
 	fs::create_directories(fifo_path.parent_path(), ec);
 
 	// Create the server side pipe (if not already existing)
 	logger->Debug("CMD MNGR: create FIFO [%s]...",
-			fifo_path.string().c_str());
+	              fifo_path.string().c_str());
 	error = ::mkfifo(fifo_path.string().c_str(), 0666);
 	if (error) {
 		logger->Error("CMD MNGR: FIFO [%s] cration FAILED"
-				" (Error: unable to create file entry)",
-				fifo_path.string().c_str());
+		              " (Error: unable to create file entry)",
+		              fifo_path.string().c_str());
 		return -2;
 	}
 
 	// Ensuring we have a pipe
 	if (fs::status(fifo_path, ec).type() != fs::fifo_file) {
 		logger->Error("CMD MNGR: FIFO [%s] creation FAILED"
-				" (Error: already in use)",
-				fifo_path.string().c_str());
+		              " (Error: already in use)",
+		              fifo_path.string().c_str());
 		return -3;
 	}
 
@@ -242,19 +251,19 @@ int CommandManager::InitFifo() {
 	cmd_fifo_fd = ::open(fifo_path.string().c_str(), O_RDWR);
 	if (cmd_fifo_fd == 0) {
 		logger->Error("CMD MNGR: opening FIFO [%s] FAILED"
-				"(Error %c: %s)",
-					fifo_path.string().c_str(),
-					strerror(errno), errno);
+		              "(Error %c: %s)",
+		              fifo_path.string().c_str(),
+		              strerror(errno), errno);
 		::unlink(fifo_path.string().c_str());
 		return -4;
 	}
 
 	// Ensuring the FIFO is R/W to everyone
-	if (::fchmod(cmd_fifo_fd, S_IRUSR|S_IWUSR|S_IWGRP|S_IWOTH)) {
+	if (::fchmod(cmd_fifo_fd, S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH)) {
 		logger->Error("CMD MNGR: set permissions on FIFO [%s] FAILED"
-				"(Error %d: %s)",
-				fifo_path.string().c_str(),
-				errno, strerror(errno));
+		              "(Error %d: %s)",
+		              fifo_path.string().c_str(),
+		              errno, strerror(errno));
 		::close(cmd_fifo_fd);
 		::unlink(fifo_path.string().c_str());
 		return -5;
@@ -272,7 +281,8 @@ int CommandManager::InitFifo() {
 	return 0;
 }
 
-void CommandManager::Task() {
+void CommandManager::Task()
+{
 	int ret;
 	logger->Info("Task: Commands dispatcher STARTED");
 
@@ -289,13 +299,14 @@ void CommandManager::Task() {
 	logger->Info("Task: Commands dispatcher terminated");
 }
 
-int CommandManager::DispatchCommand(int argc, char *argv[]) {
+int CommandManager::DispatchCommand(int argc, char *argv[])
+{
 	std::unique_lock<std::mutex> mCommands_ul(mCommands_mtx);
 	CommandsMap_t::iterator it;
 
 	if (argc < 1) {
 		logger->Error("CMD MNGR: Dispatching command FAILED"
-				" (Error: missing command)");
+		              " (Error: missing command)");
 		return -1;
 	}
 
@@ -307,8 +318,8 @@ int CommandManager::DispatchCommand(int argc, char *argv[]) {
 	it = mCommands.find(argv[0]);
 	if (it == mCommands.end()) {
 		logger->Error("CMD MNGR: Dispatching command FAILED"
-				" (Error: command [%s] not suppported)",
-				argv[0]);
+		              " (Error: command [%s] not suppported)",
+		              argv[0]);
 		return -2;
 	}
 
@@ -321,7 +332,8 @@ int CommandManager::DispatchCommand(int argc, char *argv[]) {
 // The maximum number of args we support (on the Android platform)
 # define MAX_ARGC 16
 
-void CommandManager::ParseCommand(char *cmd_buff) {
+void CommandManager::ParseCommand(char *cmd_buff)
+{
 	char *myargv[MAX_ARGC];
 	int myargc;
 
@@ -337,33 +349,34 @@ void CommandManager::ParseCommand(char *cmd_buff) {
 
 #else
 
-void CommandManager::ParseCommand(char *cmd_buff) {
+void CommandManager::ParseCommand(char *cmd_buff)
+{
 	ssize_t result = 0;
 	wordexp_t we;
 
-	result = wordexp(cmd_buff, &we, WRDE_SHOWERR|WRDE_UNDEF);
+	result = wordexp(cmd_buff, &we, WRDE_SHOWERR | WRDE_UNDEF);
 	switch(result) {
 	case 0:
 		break;
 	case WRDE_BADCHAR:
 		logger->Error("Command parsing FAILED"
-				" (Error: Illegal occurrence of newline or one of |, &, ;, <, >, (, ), {, })");
+		              " (Error: Illegal occurrence of newline or one of |, &, ;, <, >, (, ), {, })");
 		return;
 	case WRDE_BADVAL:
 		logger->Error("Command parsing FAILED"
-				" (Error: An undefined shell variable was referenced)");
+		              " (Error: An undefined shell variable was referenced)");
 		return;
 	case WRDE_CMDSUB:
 		logger->Error("Command parsing FAILED"
-				" (Error: Command substitution occurred)");
+		              " (Error: Command substitution occurred)");
 		return;
 	case WRDE_NOSPACE:
 		logger->Error("Command parsing FAILED"
-				" (Error: Out of memory)");
+		              " (Error: Out of memory)");
 		return;
 	case WRDE_SYNTAX:
 		logger->Error("Command parsing FAILED"
-				" (Error: Shell syntax error)");
+		              " (Error: Shell syntax error)");
 		return;
 	}
 
@@ -373,7 +386,8 @@ void CommandManager::ParseCommand(char *cmd_buff) {
 
 #endif
 
-int CommandManager::DoNextCommand() {
+int CommandManager::DoNextCommand()
+{
 	char *cmd_buff = NULL;
 	ssize_t result = 0;
 	size_t len;
@@ -385,8 +399,8 @@ int CommandManager::DoNextCommand() {
 			logger->Error("CMD MNGR: fifo read error");
 	} else if (!done) {
 		// Removing trailing "\n"
-		if (cmd_buff[result-1] == '\n')
-			cmd_buff[result-1] = 0;
+		if (cmd_buff[result - 1] == '\n')
+			cmd_buff[result - 1] = 0;
 
 		// Parsing command
 		logger->Debug("CMD MNGR: parsing command [%s]", cmd_buff);
@@ -413,7 +427,8 @@ static const char *statusStr[] = {
 	"SINGLE_QUOTE"
 };
 
-int CommandManager::ParseCommandLine(char *cmdline, int maxargs, char *argv[]) {
+int CommandManager::ParseCommandLine(char *cmdline, int maxargs, char *argv[])
+{
 	uint8_t len = strlen(cmdline);
 	uint8_t statusId = DEFAULT;
 	char *pstart, *pend;
@@ -461,7 +476,7 @@ int CommandManager::ParseCommandLine(char *cmdline, int maxargs, char *argv[]) {
 			++pstart;
 
 		logger->Debug("   Following: %s, delim: [%c]\n   => [%s]\n",
-				statusStr[statusId], delim[0], pstart);
+		              statusStr[statusId], delim[0], pstart);
 
 		// Isolate pos token
 		pend = pstart;
@@ -475,7 +490,7 @@ int CommandManager::ParseCommandLine(char *cmdline, int maxargs, char *argv[]) {
 		argv[argc++] = pstart;
 		logger->Debug("Arg%02d: [%s]\n", argc, pstart);
 
-	} while (abs(pend-cmdline) < len);
+	} while (abs(pend - cmdline) < len);
 
 	return argc;
 

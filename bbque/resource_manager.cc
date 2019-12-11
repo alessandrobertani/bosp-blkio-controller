@@ -626,7 +626,7 @@ void ResourceManager::EvtBbqExit()
 	AppsUidMapIt apps_it;
 	AppPtr_t papp;
 
-	logger->Notice("Terminating BarbequeRTRM...");
+	logger->Notice("EvtBbqExit: terminating BarbequeRTRM...");
 	done = true;
 	pendingEvts_cv.notify_one();
 
@@ -637,7 +637,8 @@ void ResourceManager::EvtBbqExit()
 	// Stop applications
 	papp = am.GetFirst(apps_it);
 	for ( ; papp; papp = am.GetNext(apps_it)) {
-		logger->Notice("Terminating application: %s", papp->StrId());
+		logger->Notice("EvtBbqExit: terminating application: %s",
+		               papp->StrId());
 		ap.StopExecution(papp);
 		am.DisableEXC(papp, true);
 		am.DestroyEXC(papp);
@@ -758,7 +759,7 @@ void ResourceManager::ControlLoop()
 	// Checking for pending events, starting from higer priority ones.
 	for(uint8_t evt = EVENTS_COUNT; evt; --evt) {
 
-		logger->Debug("Checking events [%d:%s]",
+		logger->Debug("Control Loop:: checking events [%d:%s]",
 		              evt - 1, pendingEvts[evt - 1] ? "Pending" : "None");
 
 		// Jump not pending events
@@ -786,14 +787,14 @@ void ResourceManager::ControlLoop()
 			RM_COUNT_EVENT(metrics, RM_EVT_STOP);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_STOP, period);
 			break;
-			// Platform reconfiguration or warning conditions requiring a policy execution
+		// Platform reconfiguration or warning conditions requiring a policy execution
 		case BBQ_PLAT:
 			logger->Debug("Event [BBQ_PLAT]");
 			EvtBbqPlat();
 			RM_COUNT_EVENT(metrics, RM_EVT_PLAT);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_PLAT, period);
 			break;
-			// Application-driven policy execution request
+		// Application-driven policy execution request
 		case BBQ_OPTS:
 			logger->Debug("Event [BBQ_OPTS]");
 			EvtBbqOpts();
