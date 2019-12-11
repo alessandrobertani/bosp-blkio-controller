@@ -103,6 +103,12 @@ public:
 	 */
 	void Terminate();
 
+	/**
+	 * @brief Check if running status of the worker
+	 * @return true if still running, false otherwise
+	 */
+	bool IsRunning();
+
 protected:
 
 	/**
