@@ -421,7 +421,7 @@ private:
 	/**
 	 * @brief Terminate all the registered Worker
 	 */
-	static void TerminateWorkers();
+	void TerminateWorkers();
 
 };
 

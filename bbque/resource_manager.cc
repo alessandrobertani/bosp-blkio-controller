@@ -283,7 +283,6 @@ void ResourceManager::Unregister(std::string const & name)
 {
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
 	fprintf(stderr, FI("Unregistering Worker[%s]...\n"), name.c_str());
-	workers_map.erase(name);
 	workers_cv.notify_one();
 }
 
@@ -310,29 +309,35 @@ void ResourceManager::SetReady(bool value)
 void ResourceManager::TerminateWorkers()
 {
 	std::unique_lock<std::mutex> workers_ul(workers_mtx);
-	std::chrono::milliseconds timeout = std::chrono::milliseconds(300);
+	std::chrono::milliseconds timeout = std::chrono::milliseconds(30);
 
-	// Waiting for all workers to be terminated
-	for (uint8_t i = 3; i; --i) {
+	auto nr_active_workers = workers_map.size();
 
-		// Signal all registered Workers to terminate
+	// Signal all registered Workers to terminate
+	for_each(workers_map.begin(), workers_map.end(),
+	[&, this](std::pair<std::string, Worker*> entry) {
+		logger->Debug("TerminateWorkers: Worker[%s]...",
+		              entry.first.c_str());
+		workers_ul.unlock();
+		entry.second->Terminate();
+		workers_ul.lock();
+	});
+
+	// Wait up to 30[ms] for workers to terminate
+	while (nr_active_workers > 0) {
 		for_each(workers_map.begin(), workers_map.end(),
-		[ = ](std::pair<std::string, Worker*> entry) {
-			fprintf(stderr, FI("Terminating Worker[%s]...\n"),
-			        entry.first.c_str());
-			entry.second->Terminate();
+		[&, this](std::pair<std::string, Worker*> entry) {
+			workers_cv.wait_for(workers_ul, timeout);
+			if (!entry.second->IsRunning())
+				nr_active_workers--;
 		});
-
-		// Wait up to 300[ms] for workers to terminate
-		workers_cv.wait_for(workers_ul, timeout);
-		if (workers_map.empty())
-			break;
-
-		DB(fprintf(stderr, FD("Waiting for [%lu] workers to terminate...\n"),
-		           workers_map.size()));
+		logger->Debug("TerminateWorkers: active workers left = %d",
+		              nr_active_workers);
 	}
 
-	DB(fprintf(stderr, FD("All workers terminated\n")));
+	workers_map.clear();
+	logger->Debug("TerminateWorkers: workers map is empty? %s",
+	              workers_map.empty() ? "Yes" : "No");
 }
 
 void ResourceManager::Optimize()
@@ -644,13 +649,13 @@ void ResourceManager::EvtBbqExit()
 		am.DestroyEXC(papp);
 	}
 
-	// Terminate platforms
-	logger->Notice("Terminating the platform supports...");
-	plm.Exit();
-
 	// Notify all workers
-	logger->Notice("Stopping all workers...");
+	logger->Notice("EvtBbqExit: stopping all the workers...");
 	ResourceManager::TerminateWorkers();
+
+	// Terminate platforms
+	logger->Notice("EvtBbqExit: terminating the platform supports...");
+	plm.Exit();
 }
 
 int ResourceManager::CommandsCb(int argc, char *argv[])
