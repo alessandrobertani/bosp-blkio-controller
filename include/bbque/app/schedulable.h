@@ -25,6 +25,17 @@
 #include "bbque/cpp11/mutex.h"
 #include "bbque/utils/extra_data_container.h"
 
+#ifdef CONFIG_BBQUE_RELIABILITY
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/sum.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+using namespace boost::accumulators;
+#endif
+
 #define SCHEDULABLE_ID_MAX_LEN  16
 
 
@@ -400,11 +411,45 @@ public:
 	}
 
 
-// Scheduling
+#ifdef CONFIG_BBQUE_RELIABILITY
 
+	/**
+	 * @brief Update the checkpoint latency with the last sampled timing
+	 * @param chk_time time in milliseconds
+	 */
+	virtual void UpdateCheckpointLatency(double chk_time)
+	{
+		checkpoint_latencies(chk_time);
+	}
 
-// Synchronization
+	/**
+	 * @brief The mean of observed checkpoint latencies
+	 * @return time in milliseconds
+	 */
+	virtual double GetCheckpointLatencyMean() const
+	{
+		return mean(checkpoint_latencies);
+	}
 
+	/**
+	 * @brief The min value of observed checkpoint latencies
+	 * @return time in milliseconds
+	 */
+	virtual double GetCheckpointLatencyMin() const
+	{
+		return min(checkpoint_latencies);
+	}
+
+	/**
+	 * @brief The max value of observed checkpoint latencies
+	 * @return time in milliseconds
+	 */
+	virtual double GetCheckpointLatencyMax() const
+	{
+		return max(checkpoint_latencies);
+	}
+
+#endif
 
 protected:
 
@@ -426,6 +471,11 @@ protected:
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	CGroupSetupData_t cgroup_data;
+#endif
+
+#ifdef CONFIG_BBQUE_RELIABILITY
+	accumulator_set<double, stats<tag::sum, tag::min, tag::max,
+	                tag::mean, tag::variance>> checkpoint_latencies;
 #endif
 
 	/** A string id with information for logging */
