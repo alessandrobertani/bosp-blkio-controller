@@ -35,12 +35,16 @@ namespace br = bbque::res;
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 RandomSchedPol::RandomSchedPol() :
 	cm(ConfigurationManager::GetInstance()),
 	bdm(BindingManager::GetInstance()),
-	dist(0, 100) {
+	dist(0, 100)
+{
 
 	// Get a logger
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -48,16 +52,19 @@ RandomSchedPol::RandomSchedPol() :
 	logger->Debug("Built RANDOM SchedPol object @%p", (void*)this);
 }
 
-RandomSchedPol::~RandomSchedPol() {
+RandomSchedPol::~RandomSchedPol()
+{
 }
 
 //----- Scheduler policy module interface
 
-char const * RandomSchedPol::Name() {
+char const * RandomSchedPol::Name()
+{
 	return SCHEDULER_POLICY_NAME;
 }
 
-void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
+void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp)
+{
 	ba::AwmPtr_t selected_awm;
 	int8_t selected_awm_id;
 	uint32_t selected_cpu_id;
@@ -86,7 +93,7 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 
 	ba::AwmPtrList_t const & awms(papp->WorkingModes());
 	logger->Debug("ScheduleApp: application working modes: %d", awms.size());
-	std::uniform_int_distribution<int> awm_dist(0, awms.size()-1);
+	std::uniform_int_distribution<int> awm_dist(0, awms.size() - 1);
 	std::uniform_int_distribution<int> bd_dist(0, bd_count);
 	bool binding_done = false;
 	int  nr_attempts  = 0;
@@ -95,8 +102,8 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 		// Select a random AWM for this EXC
 		selected_awm_id = awm_dist(generator);
 		logger->Debug("ScheduleApp: EXC [%s] on AWM [%d of %d]",
-				papp->StrId(), selected_awm_id, awms.size());
-		for (auto & pawm: awms) {
+		              papp->StrId(), selected_awm_id, awms.size());
+		for (auto & pawm : awms) {
 			if (pawm->Id() == selected_awm_id)
 				selected_awm = pawm;
 		}
@@ -105,32 +112,31 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 		// Bind to a random virtual binding domain
 		selected_cpu_id = bd_dist(generator);
 		logger->Debug("ScheduleApp: EXC [%s] on binding domain (CPU) <%d of %d>",
-			papp->StrId(), selected_cpu_id, bd_count);
+		              papp->StrId(), selected_cpu_id, bd_count);
 
 		// Binding to (CPU) id
 		b_refn = selected_awm->BindResource(
-				br::ResourceType::CPU, R_ID_ANY, selected_cpu_id);
+		                 br::ResourceType::CPU, R_ID_ANY, selected_cpu_id);
 		if (b_refn >= 0) {
 			// Schedule request
 			ApplicationManager & am(ApplicationManager::GetInstance());
-			auto ret = am.ScheduleRequest(papp, selected_awm, ra_view, b_refn);
+			auto ret = am.ScheduleRequest(papp, selected_awm, sched_status_view, b_refn);
 			if (ret == ApplicationManager::AM_SUCCESS) {
 				logger->Info("ScheduleApp: EXC [%s] on binding domain <%d> done.",
-					papp->StrId(), selected_cpu_id);
+				             papp->StrId(), selected_cpu_id);
 				return;
-			}
-			else {
+			} else {
 				logger->Error("ScheduleApp: EXC [%s] AWM=<%d> CPU=<%d> not schedulable",
-					papp->StrId(), selected_awm_id, selected_cpu_id);
+				              papp->StrId(), selected_awm_id, selected_cpu_id);
 			}
 		} else {
 			logger->Warn("ScheduleApp: EXC [%s] resource binding to CPU<%d> FAILED ",
-				papp->StrId(), selected_cpu_id);
+			             papp->StrId(), selected_cpu_id);
 		}
 
 		// Check if we still have attempts
 		logger->Info("ScheduleApp: EXC [%s] scheduling attempt %d out of %d",
-			papp->StrId(), nr_attempts, NR_ATTEMPTS_MAX);
+		             papp->StrId(), nr_attempts, NR_ATTEMPTS_MAX);
 
 		if (++nr_attempts >= NR_ATTEMPTS_MAX)
 			binding_done = true;
@@ -138,32 +144,15 @@ void RandomSchedPol::ScheduleApp(ba::AppCPtr_t papp) {
 }
 
 SchedulerPolicyIF::ExitCode_t
-RandomSchedPol::Init() {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	ResourceAccounterStatusIF::ExitCode_t result;
-	char token_path[32];
+RandomSchedPol::_Init()
+{
 
-	// Set the counter (overflow will wrap the couter and that's ok)
-	++ra_view_count;
-
-	// Build a string path for the resource state view
-	snprintf(token_path, 32, "%s%d", MODULE_NAMESPACE, ra_view_count);
-
-	// Get a resource state view
-	logger->Debug("Init: requiring state view token for %s", token_path);
-	result = ra.GetView(token_path, ra_view);
-	if (result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: Cannot get a resource state view");
-		return SCHED_ERROR;
-	}
-	logger->Debug("Init: resources state view token = %d", ra_view);
-	logger->Warn("Init: random policy allocates CPUs only!");
-
-	return SCHED_DONE;
+	return SCHED_OK;
 }
 
 SchedulerPolicyIF::ExitCode_t
-RandomSchedPol::Schedule(bbque::System & sv, br::RViewToken_t &rav) {
+RandomSchedPol::Schedule(bbque::System & sv, br::RViewToken_t &rav)
+{
 	SchedulerPolicyIF::ExitCode_t result;
 	AppsUidMapIt app_it;
 	ba::AppCPtr_t papp;
@@ -175,7 +164,7 @@ RandomSchedPol::Schedule(bbque::System & sv, br::RViewToken_t &rav) {
 
 	// Initialize a new resources state view
 	result = Init();
-	if (result != SCHED_DONE)
+	if (result != SCHED_OK)
 		return result;
 
 	logger->Info("Random scheduling RUNNING applications...");
@@ -193,24 +182,25 @@ RandomSchedPol::Schedule(bbque::System & sv, br::RViewToken_t &rav) {
 	}
 
 	// Pass back to the SchedulerManager a reference to the scheduled view
-	rav = ra_view;
+	rav = sched_status_view;
 	return SCHED_DONE;
 }
 
 //----- static plugin interface
 
-void * RandomSchedPol::Create(PF_ObjectParams *) {
+void * RandomSchedPol::Create(PF_ObjectParams *)
+{
 	return new RandomSchedPol();
 }
 
-int32_t RandomSchedPol::Destroy(void * plugin) {
-  if (!plugin)
-    return -1;
-  delete (RandomSchedPol *)plugin;
-  return 0;
+int32_t RandomSchedPol::Destroy(void * plugin)
+{
+	if (!plugin)
+		return -1;
+	delete (RandomSchedPol *)plugin;
+	return 0;
 }
 
 } // namesapce plugins
 
 } // namespace bque
-

@@ -126,7 +126,7 @@ private:
 	/**
 	 * @brief Optional initialization member function
 	 */
-	ExitCode_t Init();
+	ExitCode_t _Init();
 
 	ExitCode_t SchedulePriority(bbque::app::AppPrio_t priority);
 
@@ -137,11 +137,11 @@ private:
 	ExitCode_t CheckMappingFeasibility(bbque::app::AppCPtr_t papp);
 
 	bbque::app::AwmPtr_t SelectWorkingMode(
-	    bbque::app::AppCPtr_t papp,
-	    int & ref_num);
+	        bbque::app::AppCPtr_t papp,
+	        int & ref_num);
 
 	ExitCode_t ScheduleApplication(
-	    bbque::app::AppCPtr_t papp, bbque::app::AwmPtr_t pawm, int ref_num);
+	        bbque::app::AppCPtr_t papp, bbque::app::AwmPtr_t pawm, int ref_num);
 
 };
 

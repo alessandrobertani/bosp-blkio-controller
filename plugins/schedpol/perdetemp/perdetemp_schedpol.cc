@@ -34,18 +34,23 @@
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 bool CompareBindingDomainScore(BindingDomain i, BindingDomain j);
 bool CompareProcElementScore(ProcElement i, ProcElement j);
 
 // :::::::::::::::::::::: Static plugin interface ::::::::::::::::::::::::::::
 
-void * PerdetempSchedPol::Create(PF_ObjectParams *) {
+void * PerdetempSchedPol::Create(PF_ObjectParams *)
+{
 	return new PerdetempSchedPol();
 }
 
-int32_t PerdetempSchedPol::Destroy(void * plugin) {
+int32_t PerdetempSchedPol::Destroy(void * plugin)
+{
 	if (!plugin)
 		return -1;
 	delete (PerdetempSchedPol *)plugin;
@@ -54,21 +59,24 @@ int32_t PerdetempSchedPol::Destroy(void * plugin) {
 
 // ::::::::::::::::::::: Scheduler policy module interface :::::::::::::::::::
 
-char const * PerdetempSchedPol::Name() {
+char const * PerdetempSchedPol::Name()
+{
 	return SCHEDULER_POLICY_NAME;
 }
 
 PerdetempSchedPol::PerdetempSchedPol():
-		conf_manager(ConfigurationManager::GetInstance()),
-		res_accounter(ResourceAccounter::GetInstance()),
-		power_manager(PowerManager::GetInstance()) {
+	conf_manager(ConfigurationManager::GetInstance()),
+	res_accounter(ResourceAccounter::GetInstance()),
+	power_manager(PowerManager::GetInstance())
+{
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 	logger->Info("Built a new dynamic object[%p]", this);
 }
 
-PerdetempSchedPol::~PerdetempSchedPol() {
+PerdetempSchedPol::~PerdetempSchedPol()
+{
 }
 
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -76,7 +84,8 @@ PerdetempSchedPol::~PerdetempSchedPol() {
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 SchedulerPolicyIF::ExitCode_t
-PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
+PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view)
+{
 
 	logger->Warn(":::::::::: PERDETEMP: Schedule start ::::::::::");
 	timer.start();
@@ -88,7 +97,7 @@ PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
 	system = &_system;
 
 	// Getting a new (empty) system view
-	if (Init() != OK) {
+	if (Init() != SCHED_OK) {
 		logger->Fatal("Schedule: Policy initialization failed");
 		return SCHED_ERROR_VIEW;
 	}
@@ -102,8 +111,8 @@ PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
 	// Partition the workload in groups based on priority. Schedule each
 	// group separately
 	for (AppPrio_t priority = 0;
-				   priority <= system->ApplicationLowestPriority();
-				   priority ++) {
+	     priority <= system->ApplicationLowestPriority();
+	     priority ++) {
 		// Checking if there are applications at this priority
 		if (!system->HasApplications(priority))
 			continue;
@@ -112,9 +121,9 @@ PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
 		 * applications @ the same priority, I want to schedule ALL the
 		 * applications in the workload. */
 		if (available_cpu_bandwidth <=
-				MIN_CPU_PER_APPLICATION * system->ApplicationsCount(priority)) {
+		    MIN_CPU_PER_APPLICATION * system->ApplicationsCount(priority)) {
 			logger->Warn("Resources are not enough to schedule applications"
-					"with prio greater or equal than %d", priority);
+			             "with prio greater or equal than %d", priority);
 			break;
 		}
 
@@ -123,9 +132,9 @@ PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
 		// Total CPU quota requested by applications at this priority
 		workload_cpu_bandwidth = 0;
 
-		if (ServeApplicationsWithPriority(priority) != OK) {
+		if (ServeApplicationsWithPriority(priority) != SCHED_OK) {
 			logger->Fatal("Could not serve applications @ priority %d",
-					priority);
+			              priority);
 			return SCHED_ERROR;
 		}
 	}
@@ -137,20 +146,20 @@ PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
 	// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 	// At this point, `entities` contains the list of AWMs to be scheduled
-	for (SchedEntityPtr_t & sched_entity: entities) {
+	for (SchedEntityPtr_t & sched_entity : entities) {
 		// Check application status
 		if (SkipScheduling(sched_entity->papp)) {
 			logger->Debug("DoScheduling: [%s] skipping status",
-					sched_entity->StrId());
+			              sched_entity->StrId());
 			continue;
 		}
 		// Scheduling request
 		logger->Debug("DoScheduling: [%s] scheduling request",
-				sched_entity->StrId());
+		              sched_entity->StrId());
 		ApplicationManager & am(ApplicationManager::GetInstance());
 		auto ret = am.ScheduleRequest(
-				sched_entity->papp, sched_entity->pawm,
-				sched_status_view, sched_entity->bind_refn);
+		                   sched_entity->papp, sched_entity->pawm,
+		                   sched_status_view, sched_entity->bind_refn);
 		if (ret != ApplicationManager::AM_SUCCESS) {
 			logger->Error("DoScheduling: [%s] failed", sched_entity->StrId());
 			continue;
@@ -164,9 +173,9 @@ PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
 	elapsed_time_schr = timer.getElapsedTimeUs();
 
 	logger->Warn("Sched time: %.2f us (init %.2f, logic %.2f, "
-		"sched_requests %.2f)",
-		elapsed_time_init + elapsed_time_comp + elapsed_time_schr,
-		elapsed_time_init, elapsed_time_comp, elapsed_time_schr);
+	             "sched_requests %.2f)",
+	             elapsed_time_init + elapsed_time_comp + elapsed_time_schr,
+	             elapsed_time_init, elapsed_time_comp, elapsed_time_schr);
 
 	logger->Warn(":::::::::: PERDETEMP: Schedule stop :::::::::::");
 	timer.stop();
@@ -174,36 +183,39 @@ PerdetempSchedPol::Schedule(System & _system, RViewToken_t & status_view) {
 	return SCHED_DONE;
 }
 
-PerdetempSchedPol::ExitCode_t
-	PerdetempSchedPol::ServeApplicationsWithPriority(int priority) {
+SchedulerPolicyIF::ExitCode_t
+PerdetempSchedPol::ServeApplicationsWithPriority(int priority)
+{
 	logger->Debug("Scheduling applications @ priority %d", priority);
 	// Initialize info about both entire workload and single applications
-	if (PreProcessQueue(priority) != OK)
-		return ERROR;
+	if (PreProcessQueue(priority) != SCHED_OK)
+		return SCHED_ERROR;
 	// Schedule applications
-	if (BindQueue() != OK)
-		return ERROR;
+	if (BindQueue() != SCHED_OK)
+		return SCHED_ERROR;
 
-	return OK;
+	return SCHED_OK;
 }
 
-void PerdetempSchedPol::UpdateRuntimeProfile(ApplicationInfo &app) {
+void PerdetempSchedPol::UpdateRuntimeProfile(ApplicationInfo &app)
+{
 	int expected_ggap = 100.0f *
-		(app.allocated_resources - app.required_resources) /
-		(float)app.required_resources;
+	                    (app.allocated_resources - app.required_resources) /
+	                    (float)app.required_resources;
 
 	logger->Warn("[%s] Allocation: [%d]->-[ %d ]<-[%d]. Expected ggap: %d",
-			app.name.c_str(),
-			app.runtime.gap_history.lower_cpu,
-			app.allocated_resources,
-			app.runtime.gap_history.upper_cpu,
-			expected_ggap);
+	             app.name.c_str(),
+	             app.runtime.gap_history.lower_cpu,
+	             app.allocated_resources,
+	             app.runtime.gap_history.upper_cpu,
+	             expected_ggap);
 
 	// Update application info according to allocation
 	app.handler->SetAllocationInfo(app.allocated_resources, expected_ggap);
 }
 
-PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BindQueue() {
+SchedulerPolicyIF::ExitCode_t PerdetempSchedPol::BindQueue()
+{
 	for (ApplicationInfo &app : applications) {
 		/* Computing the fair quota of CPU to allocate to the application. If there
 		 * is enough bandwidth for the entire workload, required resources can be
@@ -213,9 +225,9 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BindQueue() {
 			app.allocated_resources = app.required_resources;
 		else
 			app.allocated_resources = (int)(
-					(float)app.required_resources *
-					(float)available_cpu_bandwidth /
-					(float)workload_cpu_bandwidth);
+			                                  (float)app.required_resources *
+			                                  (float)available_cpu_bandwidth /
+			                                  (float)workload_cpu_bandwidth);
 
 		DumpRuntimeProfileStats(app);
 
@@ -224,38 +236,39 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BindQueue() {
 		available_cpu_bandwidth -= app.allocated_resources;
 
 		// Bind resources to AWM
-		if (BindAWM(app) != OK) {
+		if (BindAWM(app) != SCHED_OK) {
 			logger->Error("Binding failed! [%s]", app.name.c_str());
-			return ERROR;
+			return SCHED_ERROR;
 		}
 
 		UpdateRuntimeProfile(app);
 	}
 
-	return OK;
+	return SCHED_OK;
 }
 
-bool PerdetempSchedPol::SkipScheduling(ba::AppCPtr_t const &app) {
+bool PerdetempSchedPol::SkipScheduling(ba::AppCPtr_t const &app)
+{
 	if (!app->Active() && !app->Blocking()) {
 		logger->Debug("Skipping [%s] State = [%s, %s]",
-				app->StrId(),
-				ApplicationStatusIF::StateStr(app->State()),
-				ApplicationStatusIF::SyncStateStr(app->SyncState()));
+		              app->StrId(),
+		              ApplicationStatusIF::StateStr(app->State()),
+		              ApplicationStatusIF::SyncStateStr(app->SyncState()));
 		return true;
 	}
 
 	// Avoid double AWM selection for already RUNNING applications
 	if ((app->State() == Application::RUNNING)
-			&& app->NextAWM()) {
+	    && app->NextAWM()) {
 		logger->Debug("Skipping [%s] AWM %d => No reconfiguration",
-				app->StrId(), app->CurrentAWM()->Id());
+		              app->StrId(), app->CurrentAWM()->Id());
 		return true;
 	}
 
 	// Avoid double AWM selection for already SYNC applications
 	if ((app->State() == Application::SYNC) && app->NextAWM()) {
 		logger->Debug("Skipping [%s] AWM already assigned [%d]",
-				app->StrId(), app->NextAWM()->Id());
+		              app->StrId(), app->NextAWM()->Id());
 		return true;
 	}
 
@@ -266,25 +279,8 @@ bool PerdetempSchedPol::SkipScheduling(ba::AppCPtr_t const &app) {
 // ::::::::::::::::::::: Initialization of schedule process :::::::::::::::::::
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-PerdetempSchedPol::ExitCode_t PerdetempSchedPol::Init() {
-	ResourceAccounterStatusIF::ExitCode_t ra_result;
-	++status_view_count;
-
-	// Build a string path for the resource state view
-	std::string token_path(MODULE_NAMESPACE +
-		std::to_string(status_view_count));
-
-	// Get a fresh resource status view
-	logger->Debug("Init: Require a new resource state view [%s]",
-		token_path.c_str());
-	ra_result = res_accounter.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: Cannot get a resource state view");
-		return ERROR_VIEW;
-	}
-
-	logger->Debug("Init: Resources state view token: %d", sched_status_view);
-
+SchedulerPolicyIF::ExitCode_t PerdetempSchedPol::_Init()
+{
 	max_cpu_bandwidth = res_accounter.Total("sys.*.pe");
 	available_cpu_bandwidth = max_cpu_bandwidth;
 	workload_cpu_bandwidth = 0;
@@ -296,10 +292,11 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::Init() {
 
 	entities.clear();
 
-	return OK;
+	return SCHED_OK;
 }
 
-void PerdetempSchedPol::PopulateBindingDomainInfo() {
+void PerdetempSchedPol::PopulateBindingDomainInfo()
+{
 	/* Extracting binding domains information from Resource Accounter
 	 * A Binding Domain is a group of PEs that have been grouped together
 	 * for a reason: usually, they share a cache, meaning that it would be
@@ -309,7 +306,7 @@ void PerdetempSchedPol::PopulateBindingDomainInfo() {
 	 * is composed by processing elements ("PEs")
 	 */
 	br::ResourcePtrList_t cpus_list =
-			res_accounter.GetResources(BD_RESOURCE_PATH_GENERIC);
+	        res_accounter.GetResources(BD_RESOURCE_PATH_GENERIC);
 
 	for (br::ResourcePtr_t &cpu : cpus_list) {
 		// The internal CPU representation is called Binding Domain.
@@ -325,7 +322,7 @@ void PerdetempSchedPol::PopulateBindingDomainInfo() {
 		// Sanity check: The current CPU must contain at least a PE
 		if (pes_list.empty())
 			logger->Error("Empty local pes list for node %d",
-					cpu->ID());
+			              cpu->ID());
 
 		// For each processing element contained in the cpu
 		for (br::ResourcePtr_t &proc_element : pes_list) {
@@ -346,7 +343,8 @@ void PerdetempSchedPol::PopulateBindingDomainInfo() {
 // ::::::::::::::::::::::: Initialization of apps metadata ::::::::::::::::::::
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-PerdetempSchedPol::ExitCode_t PerdetempSchedPol::PreProcessQueue(int priority) {
+SchedulerPolicyIF::ExitCode_t PerdetempSchedPol::PreProcessQueue(int priority)
+{
 	ba::AppCPtr_t  papp;
 	AppsUidMapIt app_iterator;
 
@@ -363,29 +361,31 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::PreProcessQueue(int priority) {
 	}
 
 	logger->Debug("Applications @prio=%d require %d CPU bandwidth in total",
-		priority, workload_cpu_bandwidth);
+	              priority, workload_cpu_bandwidth);
 
-	return OK;
+	return SCHED_OK;
 }
 
-void PerdetempSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app){
+void PerdetempSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app)
+{
 	logger->Debug("[APP %s] Runtime Profile", app.name.c_str());
 	logger->Debug("Runtime valid: %s", app.runtime.is_valid ? "yes" : "no");
 	logger->Debug("  Goal Gap: %d", app.runtime.ggap_percent);
 	logger->Debug("  Lower allocation boundary: [CPU: %d, exp GGAP: %d], ETA %d",
-				app.runtime.gap_history.lower_cpu,
-				app.runtime.gap_history.lower_gap,
-				app.runtime.gap_history.lower_age);
+	              app.runtime.gap_history.lower_cpu,
+	              app.runtime.gap_history.lower_gap,
+	              app.runtime.gap_history.lower_age);
 	logger->Debug("  Upper allocation boundary: [CPU: %d, exp GGAP: %d], ETA %d",
-				app.runtime.gap_history.upper_cpu,
-				app.runtime.gap_history.upper_gap,
-				app.runtime.gap_history.upper_age);
+	              app.runtime.gap_history.upper_cpu,
+	              app.runtime.gap_history.upper_gap,
+	              app.runtime.gap_history.upper_age);
 	logger->Debug("  Last measured CPU Usage: %d", app.runtime.cpu_usage);
 	logger->Debug("  Last allocated CPU Usage: %d", app.runtime.cpu_usage_prediction);
 }
 
 
-void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app) {
+void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app)
+{
 	// Worst case: have not valid runtime info
 	if (app.runtime.is_valid == false) {
 		// If application had been already scheduled, for now the allocation
@@ -396,16 +396,16 @@ void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app) {
 		// assign the application a fair amount of bandwidth
 		else
 			app.required_resources =
-					available_cpu_bandwidth /
-					system->ApplicationsCount(app.handler->Priority());
+			        available_cpu_bandwidth /
+			        system->ApplicationsCount(app.handler->Priority());
 		return;
 	}
 
 	// Best case: (partially) known application
 	// Compute quota according to runtime performance measurements
 	logger->Debug("[%s] Valid runtime measurements {GGAP %d, CUSAGE %d}",
-				app.name.c_str(), app.runtime.ggap_percent,
-				app.runtime.cpu_usage);
+	              app.name.c_str(), app.runtime.ggap_percent,
+	              app.runtime.cpu_usage);
 
 	float min_gap = (float) app.runtime.gap_history.lower_gap;
 	float max_gap = (float) app.runtime.gap_history.upper_gap;
@@ -429,8 +429,9 @@ void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app) {
 // ::::::::::::::::::::::::::: Allocation and Binding :::::::::::::::::::::::::
 // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-PerdetempSchedPol::ExitCode_t PerdetempSchedPol::GetBinding(
-		ApplicationInfo &app, std::vector<int> &result) {
+SchedulerPolicyIF::ExitCode_t PerdetempSchedPol::GetBinding(
+        ApplicationInfo &app, std::vector<int> &result)
+{
 	// Sort binding domains score-wise
 	if (cpus.size() > 1)
 		sort(cpus.begin(), cpus.end(), CompareBindingDomainScore);
@@ -438,32 +439,36 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::GetBinding(
 	int required_resources = app.allocated_resources;
 
 	for (BindingDomain &binding_domain : cpus) {
-		if (GetFreeResources(binding_domain)){
-			if (BookResources(binding_domain, required_resources,
-					app, result) != INCOMPLETE_ASSIGNMENT)
-				return OK;
+		if (GetFreeResources(binding_domain)) {
+			if (BookResources(
+			            binding_domain,
+			            required_resources,
+			            app,
+			            result) != SCHED_ERROR_INCOMPLETE_ASSIGNMENT)
+				return SCHED_OK;
 		}
 	}
 
 	logger->Error("[%s] Cannot retrieve enough resources [%d percent CPU quota]",
-			app.name.c_str(), required_resources);
+	              app.name.c_str(), required_resources);
 
-	return INCOMPLETE_ASSIGNMENT;
+	return SCHED_ERROR_INCOMPLETE_ASSIGNMENT;
 }
 
-PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BindAWM(ApplicationInfo &app){
+SchedulerPolicyIF::ExitCode_t PerdetempSchedPol::BindAWM(ApplicationInfo &app)
+{
 	logger->Debug("[%s] required=%d, allocated=%d",
-			app.name.c_str(),
-			app.required_resources,
-			app.allocated_resources);
+	              app.name.c_str(),
+	              app.required_resources,
+	              app.allocated_resources);
 
 	// The bitset which will indicate the chosen PEs in the binding domain.
 	// PE to assign are computed by GetBinding()
 	br::ResourceBitset proc_element_filter;
 	std::vector<int> selected_proc_elements;
-	if (GetBinding(app, selected_proc_elements) != OK) {
+	if (GetBinding(app, selected_proc_elements) != SCHED_OK) {
 		logger->Error("Error: not enough resources to bind");
-		return ERROR;
+		return SCHED_ERROR;
 	}
 
 	for (const auto &proc_element : selected_proc_elements)
@@ -473,16 +478,17 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BindAWM(ApplicationInfo &app){
 	// on multiple binding domains at the same time
 	auto resource_path = res_accounter.GetPath("sys.cpu.pe");
 	app.bind_reference_number =
-			app.awm->BindResource(
-				br::ResourceType::CPU, R_ID_ANY, R_ID_ANY,
-				app.bind_reference_number,
-				br::ResourceType::PROC_ELEMENT, &proc_element_filter);
+	        app.awm->BindResource(
+	                br::ResourceType::CPU, R_ID_ANY, R_ID_ANY,
+	                app.bind_reference_number,
+	                br::ResourceType::PROC_ELEMENT, &proc_element_filter);
 
 	if (app.bind_reference_number < 0) {
 		logger->Error("Binding [%s] failed", app.name.c_str());
-		return ERROR;
-	} else logger->Info("Binding [%s] succeeded. Ref number is %d",
-		app.name.c_str(), app.bind_reference_number);
+		return SCHED_ERROR;
+	} else
+		logger->Info("Binding [%s] succeeded. Ref number is %d",
+		             app.name.c_str(), app.bind_reference_number);
 
 	// Enqueue scheduling entity. Apps will be scheduled in bulk later on
 	// (see BindQueue)
@@ -490,11 +496,12 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BindAWM(ApplicationInfo &app){
 	sched_entity->bind_refn = app.bind_reference_number;
 	entities.push_back(sched_entity);
 
-	return OK;
+	return SCHED_OK;
 }
 
 // :::::::::::::::::::::: Utility functions to order lists ::::::::::::::::::::
-bool CompareBindingDomainScore(BindingDomain i, BindingDomain j) {
+bool CompareBindingDomainScore(BindingDomain i, BindingDomain j)
+{
 	float total_score_i = 0.0f;
 	float total_score_j = 0.0f;
 
@@ -507,12 +514,14 @@ bool CompareBindingDomainScore(BindingDomain i, BindingDomain j) {
 	return (total_score_i > total_score_j);
 }
 
-bool CompareProcElementScore (ProcElement i, ProcElement j) {
+bool CompareProcElementScore (ProcElement i, ProcElement j)
+{
 	// i will be placed before j if i has higher score than j
 	return (i.status_score > j.status_score);
 }
 
-void PerdetempSchedPol::InitializeBindingDomainInfo() {
+void PerdetempSchedPol::InitializeBindingDomainInfo()
+{
 
 	/* Here each processing element record will be enriched with additional
 	 * information: amount of available resources (i.e. percent CPU quota,
@@ -538,15 +547,15 @@ void PerdetempSchedPol::InitializeBindingDomainInfo() {
 			 * ("sys.cpuN.peM")
 			 */
 			br::ResourcePathPtr_t resource_path =
-				res_accounter.GetPath(proc_element.resource_path);
+			        res_accounter.GetPath(proc_element.resource_path);
 
 			power_manager.GetTemperature(resource_path, cur_temperature);
 
-		// Track min and max temperature
-		if (cur_temperature < min_temperature || min_temperature == 0)
-			min_temperature = cur_temperature;
-		if (cur_temperature > max_temperature)
-			max_temperature = cur_temperature;
+			// Track min and max temperature
+			if (cur_temperature < min_temperature || min_temperature == 0)
+				min_temperature = cur_temperature;
+			if (cur_temperature > max_temperature)
+				max_temperature = cur_temperature;
 
 		}
 	}
@@ -562,13 +571,13 @@ void PerdetempSchedPol::InitializeBindingDomainInfo() {
 	for (BindingDomain &binding_domain : cpus) {
 		for (ProcElement &proc_element : binding_domain.resources) {
 			br::ResourcePathPtr_t resource_path =
-				res_accounter.GetPath(proc_element.resource_path);
+			        res_accounter.GetPath(proc_element.resource_path);
 
 			br::ResourcePtr_t pe_handler =
-				res_accounter.GetResource(resource_path);
+			        res_accounter.GetResource(resource_path);
 
 			proc_element.available_quota =
-				pe_handler->Total() - pe_handler->Reserved();
+			        pe_handler->Total() - pe_handler->Reserved();
 
 			power_manager.GetTemperature(resource_path, cur_temperature);
 			// Although it's unlikely, in the last few nanoseconds
@@ -581,23 +590,23 @@ void PerdetempSchedPol::InitializeBindingDomainInfo() {
 			// Percent temperature. It is calculated as 100 - the
 			// percent temperature, cause the cooler is the better
 			float temperature_score = 100.0f -
-				(100.0f * (cur_temperature - min_temperature)
-				/ (max_temperature - min_temperature));
+			                          (100.0f * (cur_temperature - min_temperature)
+			                           / (max_temperature - min_temperature));
 
 			// Degradation. It is calculated as 100 - the percent
 			// degradation, cause the less degradated is the better
 			float degradation_score = 100.0f -
-				res_accounter.GetResource(
-				resource_path)->CurrentDegradationPerc();
+			                          res_accounter.GetResource(
+			                                  resource_path)->CurrentDegradationPerc();
 
 			// Availability. The higher the better
 			float availability_score = proc_element.available_quota;
 
 			// Status score: f(avail, temp, degradation)
 			proc_element.status_score =
-				temperature_score  * TEMP_SCORE_WEIGHT +
-				degradation_score  * DEGR_SCORE_WEIGHT +
-				availability_score * AVAI_SCORE_WEIGHT;
+			        temperature_score  * TEMP_SCORE_WEIGHT +
+			        degradation_score  * DEGR_SCORE_WEIGHT +
+			        availability_score * AVAI_SCORE_WEIGHT;
 		}
 
 		binding_domain.guest_apps = 0;
@@ -605,16 +614,18 @@ void PerdetempSchedPol::InitializeBindingDomainInfo() {
 	}
 }
 
-int PerdetempSchedPol::GetFreeResources(BindingDomain &bd) {
+int PerdetempSchedPol::GetFreeResources(BindingDomain &bd)
+{
 	int amount = 0;
 	for (ProcElement &pe : bd.resources)
 		amount += pe.available_quota;
 	return amount;
 }
 
-PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BookResources(
-		BindingDomain &bd, int &amount,
-		ApplicationInfo &app, std::vector<int> &result) {
+SchedulerPolicyIF::ExitCode_t PerdetempSchedPol::BookResources(
+        BindingDomain &bd, int &amount,
+        ApplicationInfo &app, std::vector<int> &result)
+{
 	int availability = 0;
 
 	// Sort proc elements in the binding domain from emptiest to fullest
@@ -635,10 +646,10 @@ PerdetempSchedPol::ExitCode_t PerdetempSchedPol::BookResources(
 		app.awm->AddResourceRequest(proc_element.resource_path, availability);
 
 		if (amount == 0)
-			return OK;
+			return SCHED_OK;
 	}
 
-	return INCOMPLETE_ASSIGNMENT;
+	return SCHED_ERROR_INCOMPLETE_ASSIGNMENT;
 }
 
 } // namespace plugins

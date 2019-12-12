@@ -106,7 +106,7 @@ private:
 
 	// ----- Initialization stuff ---- //
 
-	ExitCode_t Init();
+	ExitCode_t _Init();
 
 #ifdef CONFIG_BBQUE_PM_CPU
 

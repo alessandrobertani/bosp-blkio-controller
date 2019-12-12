@@ -39,14 +39,18 @@ namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 /**
  * @class RandomSchedPol
  * @brief A dynamic C++ plugin which implements the Random resource
  * scheduler heuristic.
  */
-class RandomSchedPol : public SchedulerPolicyIF {
+class RandomSchedPol : public SchedulerPolicyIF
+{
 
 public:
 
@@ -68,8 +72,7 @@ public:
 
 	char const * Name();
 
-	SchedulerPolicyIF::ExitCode_t
-		Schedule(bbque::System & sv, br::RViewToken_t & rav);
+	ExitCode_t Schedule(bbque::System & sv, br::RViewToken_t & rav);
 
 private:
 
@@ -83,11 +86,6 @@ private:
 
 	BindingManager & bdm;
 
-	/** Token for accessing a resources view */
-	br::RViewToken_t ra_view = 0;
-
-	/** A counter used for getting always a new clean resources view */
-	uint32_t ra_view_count = 0;
 
 	/** The base resource path for the binding step */
 	std::string binding_domain;
@@ -112,12 +110,9 @@ private:
 	/**
 	 * @brief Scheduler run intialization
 	 *
-	 * This method is used each time a new random scheduling is tirggered
-	 * in order to properly setup the system view to be used.
-	 *
 	 * @return SCHED_DONE on success, SCHED_ERROR on falilure
 	 */
-	SchedulerPolicyIF::ExitCode_t Init();
+	SchedulerPolicyIF::ExitCode_t _Init();
 
 	/**
 	 * @brief Randonly select an AWM for the application

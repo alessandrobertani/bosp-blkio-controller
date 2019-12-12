@@ -87,24 +87,8 @@ TestSchedPol::~TestSchedPol()
 }
 
 
-SchedulerPolicyIF::ExitCode_t TestSchedPol::Init()
+SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 {
-	// Build a string path for the resource state view
-	std::string token_path(MODULE_NAMESPACE);
-	++status_view_count;
-	token_path.append(std::to_string(status_view_count));
-	logger->Debug("Init: Require a new resource state view [%s]",
-	              token_path.c_str());
-
-	// Get a fresh resource status view
-	ResourceAccounterStatusIF::ExitCode_t ra_result =
-	        ra.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: cannot get a resource state view");
-		return SCHED_ERROR_VIEW;
-	}
-	logger->Debug("Init: resources state view token: %ld", sched_status_view);
-
 	// Processing elements IDs
 	auto & resource_types = sys->ResourceTypes();
 	auto const & r_ids_entry = resource_types.find(br::ResourceType::PROC_ELEMENT);
@@ -146,21 +130,25 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 	                              static_cast<ExitCode_t (TestSchedPol::*)(ba::AppCPtr_t)>
 	                              (&TestSchedPol::AssignWorkingMode),
 	                              this, _1);
+
+	// Iterate over all the applications to schedule
 	ForEachApplicationToScheduleDo(assign_awm_app);
 	if (result != SCHED_OK)
 		return result;
 	logger->Debug("Schedule: done with applications");
-
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	auto assign_awm_proc = std::bind(
 	                               static_cast<ExitCode_t (TestSchedPol::*)(ProcPtr_t)>
 	                               (&TestSchedPol::AssignWorkingMode),
 	                               this, _1);
+
+	// Iterate over all the processes to schedule
 	ForEachProcessToScheduleDo(assign_awm_proc);
 	if (result != SCHED_OK)
 		return result;
 	logger->Debug("Schedule: done with processes");
+
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
 	// Return the new resource status view according to the new resource

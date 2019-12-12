@@ -84,24 +84,8 @@ ManGAv2SchedPol::~ManGAv2SchedPol()
 }
 
 
-SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
+SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::_Init()
 {
-	// Build a string path for the resource state view
-	std::string token_path(MODULE_NAMESPACE);
-	++status_view_count;
-	token_path.append(std::to_string(status_view_count));
-	logger->Debug("Init: getting new resource state view token from <%s>",
-	              token_path.c_str());
-
-	// Get a fresh resource status view
-	ResourceAccounterStatusIF::ExitCode_t ra_result =
-	    ra.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: cannot get a resource state view");
-		return SCHED_ERROR_VIEW;
-	}
-	logger->Debug("Init: resources state view token: %ld", sched_status_view);
-
 	// Load the application task graphs
 	logger->Debug("Init: loading the applications task graphs");
 	fut_tg = std::async(std::launch::async, &System::LoadTaskGraphs, sys);
@@ -111,12 +95,12 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 		// Get the number of HN clusters (groups)
 		auto clusters = sys->GetResources("sys.grp");
 		logger->Debug("Init: # clusters: %d", clusters.size());
-		for (auto & hn_cluster: clusters) {
+		for (auto & hn_cluster : clusters) {
 
 			// Cluster info
 			auto cluster_id = hn_cluster->ID();
 			std::string cluster_path(
-			    std::string("sys.grp") + std::to_string(cluster_id));
+			        std::string("sys.grp") + std::to_string(cluster_id));
 
 			// Nr. of accelerators
 			std::string acc_path(cluster_path + std::string(".acc"));
@@ -128,9 +112,9 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 			              cluster_id, accs.size());
 
 			// Nr. of cores per accelerator
-			for (br::ResourcePtr_t const & acc: accs) {
+			for (br::ResourcePtr_t const & acc : accs) {
 				std::string pe_binding_path(
-				    acc_path + std::to_string(acc->ID()) + std::string(".pe"));
+				        acc_path + std::to_string(acc->ID()) + std::string(".pe"));
 				logger->Debug("Init: binding resource path: <%s>",
 				              pe_binding_path.c_str());
 
@@ -141,10 +125,10 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 				logger->Debug("Init: <%s> #proc_element=%d arch=%s",
 				              pe_binding_path.c_str(),
 				              pe_per_acc[cluster_id][acc->ID()],
-					      first_pe->Model().c_str());
+				              first_pe->Model().c_str());
 
 				arch_per_acc[cluster_id][acc->ID()] =
-					GetArchTypeFromString(first_pe->Model());
+				        GetArchTypeFromString(first_pe->Model());
 			}
 		}
 	}
@@ -157,8 +141,8 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 			int m_id = atoi(buff);
 			forced_mapping_ids.push_back(m_id);
 			logger->Notice("Init: [%d] forced to select mapping id=%d",
-				forced_mapping_ids.size()-1,
-				m_id);
+			               forced_mapping_ids.size() - 1,
+			               m_id);
 		}
 	}
 
@@ -169,12 +153,16 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Init()
 
 
 SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
-    System & system,
-    RViewToken_t & status_view)
+        System & system,
+        RViewToken_t & status_view)
 {
 	// Class providing query functions for applications and resources
 	sys = &system;
-	Init();
+	result = Init();
+	if (result != SCHED_OK) {
+		logger->Fatal("Schedule: policy initialization failed");
+		return result;
+	}
 	fut_tg.get();
 
 	// Re-assing resources to running applications: no reconfiguration
@@ -189,7 +177,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
 		result = ReassignWorkingMode(papp);
 		if (result == SCHED_ERROR) {
 			logger->Crit("Schedule: [%s] unexpected error [err=%d]",
-				     papp->StrId(), result);
+			             papp->StrId(), result);
 			forced_mapping_ids.clear();
 			return SCHED_ERROR;
 		}
@@ -221,7 +209,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
 
 
 SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::SchedulePriority(
-    AppPrio_t priority)
+        AppPrio_t priority)
 {
 	// Get all the applications @ this priority
 	AppsUidMapIt app_iterator;
@@ -263,7 +251,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::SchedulePriority(
 
 
 SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::ReassignWorkingMode(
-    bbque::app::AppCPtr_t papp)
+        bbque::app::AppCPtr_t papp)
 {
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	auto ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
@@ -278,7 +266,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::ReassignWorkingMode(
 
 
 SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
-    bbque::app::AppCPtr_t papp)
+        bbque::app::AppCPtr_t papp)
 {
 	auto recipe = papp->GetRecipe();
 	auto task_graph = papp->GetTaskGraph();
@@ -286,26 +274,25 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 
 	// Optionally add an ordering criteria here...
 	logger->Debug("EvalMappingAlternatives: [%s] nr. mapping options = %d",
-		papp->StrId(), recipe->GetTaskGraphMappingAll().size());
+	              papp->StrId(), recipe->GetTaskGraphMappingAll().size());
 
 	bbque::app::Recipe::TaskGraphMapping curr_mapping;
 
-	for (auto & m: recipe->GetTaskGraphMappingAll()) {
+	for (auto & m : recipe->GetTaskGraphMappingAll()) {
 		int curr_mapping_id;
 		bool forced = false;
 
 		// Check if a mapping id has been forced (testing purpose)
 		logger->Debug("EvalMappingAlternatives: [%s] nr.apps=%d nr.forced=%d",
-			papp->StrId(), apps_count, forced_mapping_ids.size());
+		              papp->StrId(), apps_count, forced_mapping_ids.size());
 		if (apps_count < forced_mapping_ids.size() && (!forced) && (ret == SCHED_OK)) {
 			int m_id = forced_mapping_ids[apps_count];
 			curr_mapping = recipe->GetTaskGraphMapping(m_id);
 			curr_mapping_id = m_id;
 			logger->Warn("EvalMappingAlternatives: [%s] forced mapping id=%d ",
-				papp->StrId(), curr_mapping_id);
+			             papp->StrId(), curr_mapping_id);
 			forced = true;
-		}
-		else {
+		} else {
 			curr_mapping_id = m.first;
 			curr_mapping    = m.second;
 		}
@@ -328,7 +315,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 		bool task_mapping_succeeded = false;
 
 		// Task mapping
-		for (auto const & task_mapping: curr_mapping.tasks) {
+		for (auto const & task_mapping : curr_mapping.tasks) {
 			auto & task_id = task_mapping.first;
 			auto & mapping_info = task_mapping.second;
 
@@ -345,19 +332,19 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 				auto curr_arch = arch_per_acc[0][mapping_info.id];
 				logger->Debug("EvalMappingAlternatives: [%s] "
 				              "task=%d => [acc=%d arch: %s]",
-					papp->StrId(), task_id,
-					mapping_info.id,
-					GetStringFromArchType(curr_arch));
+				              papp->StrId(), task_id,
+				              mapping_info.id,
+				              GetStringFromArchType(curr_arch));
 
 				// check the supported architectures
 				auto & target_archs = task->Targets();
 				if (target_archs.find(curr_arch) == target_archs.end()) {
 					logger->Debug("EvalMappingAlternatives: [%s] "
-						      "task=%d => [acc=%d arch: %s] missing kernel binary...",
-						papp->StrId(),
-						task->Id(),
-						mapping_info.id,
-						GetStringFromArchType(curr_arch));
+					              "task=%d => [acc=%d arch: %s] missing kernel binary...",
+					              papp->StrId(),
+					              task->Id(),
+					              mapping_info.id,
+					              GetStringFromArchType(curr_arch));
 					task_mapping_succeeded = false;
 					break;
 				}
@@ -372,13 +359,13 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 
 		if (!task_mapping_succeeded) {
 			logger->Debug("EvalMappingAlternatives: [%s] id=%d skipping..",
-				papp->StrId(),
-				curr_mapping);
+			              papp->StrId(),
+			              curr_mapping);
 			continue;
 		}
 
 		// Buffer mapping
-		for (auto const & buff_mapping: curr_mapping.buffers) {
+		for (auto const & buff_mapping : curr_mapping.buffers) {
 			auto & buff_id = buff_mapping.first;
 			auto & mapping_info = buff_mapping.second;
 
@@ -410,10 +397,9 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 			              papp->StrId(),
 			              curr_mapping_id);
 			return ret;
-		}
-		else {
+		} else {
 			logger->Debug("EvalMappingAlternatives: [%s] mapping [id=%d] not applicable."
-				     " Trying next option...",
+			              " Trying next option...",
 			              papp->StrId(),
 			              curr_mapping_id);
 		}
@@ -426,7 +412,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::EvalMappingAlternatives(
 
 
 SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
-    bbque::app::AppCPtr_t papp)
+        bbque::app::AppCPtr_t papp)
 {
 	ExitCode_t ret = SCHED_ERROR;
 
@@ -434,7 +420,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 	uint32_t nr_clusters = pe_per_acc.size();
 	logger->Debug("CheckMappingFeasibility: [%s] nr. of clusters on the platform: %d",
 	              papp->StrId(),
-		      nr_clusters);
+	              nr_clusters);
 
 	for (uint32_t curr_cluster_id = 0; curr_cluster_id < nr_clusters; curr_cluster_id++) {
 		logger->Debug("CheckMappingFeasibility: [%s] checking availability "
@@ -459,8 +445,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::CheckMappingFeasibility(
 			logger->Debug("CheckMappingFeasibility: [%s] terminated [ret=%d]",
 			              papp->StrId(), ret);
 			return ret;
-		}
-		else {
+		} else {
 			logger->Debug("CheckMappingFeasibility: [%s] mapping not feasible",
 			              papp->StrId());
 		}
@@ -476,7 +461,7 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(
-		           papp->WorkingModes().size(),"Run-time", 1, papp);
+		               papp->WorkingModes().size(), "Run-time", 1, papp);
 	}
 	pawm->ClearResourceBinding();
 	ref_num = -1;
@@ -486,7 +471,7 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 	uint32_t cluster_id = tg->GetCluster();
 
 	logger->Info("SelectWorkingMode: [%s] looking on cluster %d",
-		papp->StrId(), cluster_id);
+	             papp->StrId(), cluster_id);
 
 	for (auto task : tg->Tasks()) {
 		// if thread count not specified, assign all the available cores
@@ -512,9 +497,9 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 		acc_path += std::to_string(cluster_id);
 		acc_path += ".acc" + std::to_string(tile_id) + ".pe";
 		pawm->AddResourceRequest(
-				acc_path,
-				100 * nr_cores,
-				br::ResourceAssignment::Policy::BALANCED);
+		        acc_path,
+		        100 * nr_cores,
+		        br::ResourceAssignment::Policy::BALANCED);
 		logger->Debug("SelectWorkingMode: [%s] task=%d add accelerator requested...",
 		              papp->StrId(), task.first);
 
@@ -523,10 +508,10 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 		              "tile=%d",
 		              papp->StrId(), task.first, tile_id);
 		ref_num = pawm->BindResource(
-		              br::ResourceType::ACCELERATOR,
-			      tile_id,
-		              tile_id,
-		              ref_num);
+		                  br::ResourceType::ACCELERATOR,
+		                  tile_id,
+		                  tile_id,
+		                  ref_num);
 
 		logger->Debug("SelectWorkingMode: [%s] task=%d -> cluster=<%d> tile=<%d>",
 		              papp->StrId(), task.first,
@@ -550,10 +535,10 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 		logger->Debug("SelectWorkingMode: [%s] buffer=%d -> memory bank =<%d>",
 		              papp->StrId(),
 		              buff.first,
-			      mem_bank_id);
+		              mem_bank_id);
 	}
 
-	for (auto &mem_entry: mem_req_amount) {
+	for (auto &mem_entry : mem_req_amount) {
 		auto & mem_bank_id = mem_entry.first;
 		auto & mem_amount  = mem_entry.second;
 
@@ -567,10 +552,10 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 
 		// Resource binding: memory node
 		ref_num = pawm->BindResource(
-		              br::ResourceType::MEMORY,
-		              mem_bank_id,
-		              mem_bank_id,
-		              ref_num);
+		                  br::ResourceType::MEMORY,
+		                  mem_bank_id,
+		                  mem_bank_id,
+		                  ref_num);
 	}
 
 	return pawm;
@@ -578,9 +563,9 @@ ba::AwmPtr_t ManGAv2SchedPol::SelectWorkingMode(ba::AppCPtr_t papp, int & ref_nu
 
 
 SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::ScheduleApplication(
-    ba::AppCPtr_t papp,
-    ba::AwmPtr_t pawm,
-    int32_t ref_num)
+        ba::AppCPtr_t papp,
+        ba::AwmPtr_t pawm,
+        int32_t ref_num)
 {
 	// Update the accounting of resources with a schedule request
 	ApplicationManager & am(ApplicationManager::GetInstance());

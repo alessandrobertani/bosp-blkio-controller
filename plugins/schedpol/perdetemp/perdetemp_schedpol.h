@@ -47,7 +47,10 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
@@ -71,14 +74,15 @@ struct ApplicationInfo {
 	/* ID of the chosen binding */
 	int32_t bind_reference_number = -1;
 
-	ApplicationInfo(ba::AppCPtr_t papp) {
+	ApplicationInfo(ba::AppCPtr_t papp)
+	{
 
 		std::string app_name = "S-runtime::" + std::to_string(papp->Pid());
 		// Steaks does not need recipes; instead, it builds AWMs on the fly
 		// The ID is progressive; hance, the new ID will be equal to the size
 		// of AMWs list. The value (1) will not be used.
 		ba::AwmPtr_t _awm( // WorkingMode(ID, Name, Value));
-				new ba::WorkingMode(papp->WorkingModes().size(), app_name, 1));
+		        new ba::WorkingMode(papp->WorkingModes().size(), app_name, 1));
 
 		// Handler to the application object in bbque app manager
 		handler = papp;
@@ -89,29 +93,28 @@ struct ApplicationInfo {
 
 		if (runtime.is_valid == true) {
 			runtime.ggap_percent =
-				std::max(PERDETEMP_GGAP_MIN,
-					std::min(runtime.ggap_percent, PERDETEMP_GGAP_MAX));
+			        std::max(PERDETEMP_GGAP_MIN,
+			                 std::min(runtime.ggap_percent, PERDETEMP_GGAP_MAX));
 
 			bool lower_outdated = (runtime.gap_history.lower_age == -1 ||
-						runtime.gap_history.lower_age > PERDETEMP_MAX_SAMPLE_AGE);
+			                       runtime.gap_history.lower_age > PERDETEMP_MAX_SAMPLE_AGE);
 			bool upper_outdated = (runtime.gap_history.upper_age == -1 ||
-						runtime.gap_history.upper_age > PERDETEMP_MAX_SAMPLE_AGE);
+			                       runtime.gap_history.upper_age > PERDETEMP_MAX_SAMPLE_AGE);
 			// Check if allocation boundaries are invalidated.
 			if (lower_outdated) {
 				// In this case, the lower boundary was invalidated. Let's
 				// compute a brand new bound starting from the current ggap
 				runtime.gap_history.lower_gap = -1;
 				runtime.gap_history.lower_cpu =
-					(float)runtime.gap_history.upper_cpu
-					/ (1.0 + (float)runtime.gap_history.upper_gap / 100.0);
-			}
-			else if (upper_outdated) {
-					// In this case, the upper boundary was invalidated. Let's
-					// compute a brand new bound starting from the current ggap
+				        (float)runtime.gap_history.upper_cpu
+				        / (1.0 + (float)runtime.gap_history.upper_gap / 100.0);
+			} else if (upper_outdated) {
+				// In this case, the upper boundary was invalidated. Let's
+				// compute a brand new bound starting from the current ggap
 				runtime.gap_history.upper_gap = -1;
 				runtime.gap_history.upper_cpu =
-					(float)runtime.gap_history.lower_cpu
-					/ (1.0 + (float)runtime.gap_history.lower_gap / 100.0);
+				        (float)runtime.gap_history.lower_cpu
+				        / (1.0 + (float)runtime.gap_history.lower_gap / 100.0);
 			}
 		}
 	}
@@ -125,7 +128,7 @@ struct ApplicationInfo {
  */
 struct ProcElement {
 	// Proc element id
-        int id;
+	int id;
 	// CPU bandwidth availability
 	int available_quota;
 	// Score : f(availability, temperature, degradation)
@@ -151,7 +154,8 @@ struct BindingDomain {
  *
  * Steaks scheduler policy registered as a dynamic C++ plugin.
  */
-class PerdetempSchedPol: public SchedulerPolicyIF {
+class PerdetempSchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -187,26 +191,19 @@ public:
 
 private:
 
-	/**
-	 * @brief Specific internal exit code of the class
-	 */
-	enum ExitCode_t {
-		OK,
-		ERROR,
-		ERROR_VIEW,
-		INCOMPLETE_ASSIGNMENT
-	};
-
 	/* Total PEs in the managed device, each providing 100% CPU bandwidth */
 	int max_cpu_bandwidth = 0;
+
 	/* Total cores required by the current workload in the ideal case. It could
 	 * be even greater than `max_cpu_bandwidth` */
 	int workload_cpu_bandwidth = 0;
+
 	/* Unallocated bandwidth at a given time */
 	int available_cpu_bandwidth = 0;
 
 	/* Representation of the Managed Device. It is a list of binding domains */
 	std::vector<BindingDomain> cpus;
+
 	/* List of application to be scheduled */
 	std::vector<ApplicationInfo> applications;
 
@@ -232,29 +229,40 @@ private:
 	/**
 	 * @brief Optional initialization member function
 	 */
-	ExitCode_t Init();
+	SchedulerPolicyIF::ExitCode_t _Init();
 
 	ExitCode_t ServeApplicationsWithPriority(int priority);
+
 	ExitCode_t PreProcessQueue(int priority);
+
 	ExitCode_t BindQueue();
-	ExitCode_t GetBinding(ApplicationInfo &app,
-				std::vector<int> &result);
+
+	ExitCode_t GetBinding(
+	        ApplicationInfo &app, std::vector<int> &result);
+
 	ExitCode_t BindAWM(ApplicationInfo &app);
 
 	void ComputeRequiredCPU(ApplicationInfo &app);
+
 	void PopulateBindingDomainInfo();
+
 	void UpdateRuntimeProfile(ApplicationInfo &app);
 
 	void SetAllocation(ApplicationInfo &app);
 
 	void InitializeBindingDomainInfo();
+
 	bool SkipScheduling(ba::AppCPtr_t const &app);
 
 	void DumpRuntimeProfileStats(ApplicationInfo &app);
 
 	int GetFreeResources(BindingDomain &bd);
-	ExitCode_t BookResources(BindingDomain &bd, int &amount,
-			ApplicationInfo &app, std::vector<int> &result);
+
+	ExitCode_t BookResources(
+	        BindingDomain &bd,
+	        int &amount,
+	        ApplicationInfo &app,
+	        std::vector<int> &result);
 };
 
 } // namespace plugins

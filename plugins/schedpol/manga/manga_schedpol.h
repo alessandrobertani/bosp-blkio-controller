@@ -41,7 +41,10 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
@@ -50,7 +53,8 @@ class LoggerIF;
  *
  * Manga scheduler policy registered as a dynamic C++ plugin.
  */
-class MangASchedPol: public SchedulerPolicyIF {
+class MangASchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -62,7 +66,7 @@ public:
 	static void * Create(PF_ObjectParams *);
 
 	/**
-	 * @brief Destroy the manga plugin 
+	 * @brief Destroy the manga plugin
 	 */
 	static int32_t Destroy(void *);
 
@@ -116,7 +120,7 @@ private:
 	/**
 	 * @brief Optional initialization member function
 	 */
-	ExitCode_t Init();
+	ExitCode_t _Init();
 
 	ExitCode_t ServeApplicationsWithPriority(int priority) noexcept;
 
@@ -125,18 +129,18 @@ private:
 	ExitCode_t InitTaskGraphMappingOptions(ba::AppCPtr_t papp) noexcept;
 
 	ExitCode_t NextTaskGraphMappingOption(
-			ba::AppCPtr_t papp,
-			std::vector<int> & arch_index,
-			uint32_t task_id=0);
+	        ba::AppCPtr_t papp,
+	        std::vector<int> & arch_index,
+	        uint32_t task_id = 0);
 
-	ExitCode_t DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept; 
+	ExitCode_t DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept;
 
 	ExitCode_t ScheduleApplication(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept;
 
 	ExitCode_t SortPartitions(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept;
 
 	ExitCode_t SelectWorkingMode(
-			ba::AppCPtr_t papp, const Partition & selected_partition) noexcept;
+	        ba::AppCPtr_t papp, const Partition & selected_partition) noexcept;
 
 	ExitCode_t ReassignWorkingMode(ba::AppCPtr_t papp) noexcept;
 
@@ -148,4 +152,3 @@ private:
 } // namespace bbque
 
 #endif // BBQUE_MANGA_SCHEDPOL_H_
-

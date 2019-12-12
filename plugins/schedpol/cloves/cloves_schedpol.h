@@ -44,7 +44,10 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
@@ -55,7 +58,8 @@ class LoggerIF;
  * heterogeneous workloads, i.e. applications (like OpenCL ones) that can be
  * executed on different computing devices
  */
-class ClovesSchedPol: public SchedulerPolicyIF {
+class ClovesSchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -93,22 +97,6 @@ public:
 
 private:
 
-	/**
-	 * @brief Specific internal exit code of the class
-	 */
-	enum ExitCode_t {
-		OK,
-		ERROR,
-		ERROR_INIT,
-		ERROR_VIEW,
-		ERROR_QUEUE,
-		ERROR_RSRC
-	};
-
-	/** Shared pointer to a scheduling entity */
-	typedef std::shared_ptr<SchedEntity_t> SchedEntityPtr_t;
-
-
 	/** Queue of entity to schedule on the device */
 	typedef std::priority_queue<SchedEntityPtr_t> DeviceQueue_t;
 	typedef std::shared_ptr<DeviceQueue_t> DeviceQueuePtr_t;
@@ -131,30 +119,11 @@ private:
 
 	std::unique_ptr<bu::Logger> logger;
 
-	/** System view:
-	 *  This points to the class providing the functions to query information
-	 *  about applications and resources
-	 */
-	System * sys;
-
-
-	/** Reference to the current scheduling status view of the resources */
-	RViewToken_t sched_status_view;
-
-	/** String for requiring new resource status views */
-	char token_path[30];
-
-	uint32_t sched_count = 0;
-
 
 	/** Map of queues, one for device type */
 	DeviceTypeQueueMap_t queues;
 
 	bool queues_ready = false;
-
-
-	/** An High-Resolution timer */
-	Timer timer;
 
 	/**
 	 * @brief Constructor
@@ -167,12 +136,7 @@ private:
 	/**
 	 * @brief Optional initialization member function
 	 */
-	ExitCode_t Init();
-
-	/**
-	 * @brief Get a clean resource status view
-	 */
-	ExitCode_t InitResourceStateView();
+	ExitCode_t _Init();
 
 	/**
 	 * @brief Initialize the device queuesw
@@ -186,8 +150,8 @@ private:
 	 * @param bd_info Support information for the resource binding
 	 */
 	void CreateDeviceQueues(
-			DeviceQueueMapPtr_t & pdev_queue_map,
-			BindingInfo_t const & bd_info);
+	        DeviceQueueMapPtr_t & pdev_queue_map,
+	        BindingInfo_t const & bd_info);
 
 	/**
 	 * @brief Scheduling of the applications/EXCs with a given priority
@@ -216,8 +180,8 @@ private:
 	 * @return
 	 */
 	ExitCode_t Enqueue(
-		SchedEntityPtr_t psched,
-		br::ResourceType dev_type);
+	        SchedEntityPtr_t psched,
+	        br::ResourceType dev_type);
 
 	/**
 	 * @brief Compute the metrics used for the ordering of the scheduling
@@ -237,8 +201,8 @@ private:
 	 * @return A pointer to the device queue
 	 */
 	DeviceQueuePtr_t SelectDeviceQueue(
-		SchedEntityPtr_t psched,
-		br::ResourceType dev_type);
+	        SchedEntityPtr_t psched,
+	        br::ResourceType dev_type);
 
 	/**
 	 * @brief Bind the resource path of the AWM, coming from the recipe

@@ -86,37 +86,19 @@ MangASchedPol::~MangASchedPol()
 
 }
 
-
-SchedulerPolicyIF::ExitCode_t MangASchedPol::Init()
+SchedulerPolicyIF::ExitCode_t MangASchedPol::_Init()
 {
-	// Build a string path for the resource state view
-	std::string token_path(MODULE_NAMESPACE);
-	++status_view_count;
-	token_path.append(std::to_string(status_view_count));
-	logger->Debug("Init: Require a new resource state view [%s]",
-	              token_path.c_str());
-
-	// Get a fresh resource status view
-	ResourceAccounterStatusIF::ExitCode_t ra_result =
-	    ra.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: cannot get a resource state view");
-		return SCHED_ERROR_VIEW;
-	}
-	logger->Debug("Init: resources state view token: %ld", sched_status_view);
-
-
 	// Get the amount of processing elements from each accelerator
 	if (pe_per_acc.empty()) {
 
 		// Get the number of HN clusters (groups)
 		auto groups = sys->GetResources("sys.grp");
 		logger->Debug("Init: # clusters: %d", groups.size());
-		for (auto & hn_cluster: groups) {
+		for (auto & hn_cluster : groups) {
 			// Cluster info
 			auto cluster_id = hn_cluster->ID();
 			std::string cluster_path(
-			    std::string("sys.grp") + std::to_string(cluster_id));
+			        std::string("sys.grp") + std::to_string(cluster_id));
 
 			// Nr. of accelerators
 			std::string acc_path(cluster_path + std::string(".acc"));
@@ -127,15 +109,17 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::Init()
 			              cluster_id, accs.size());
 
 			// Nr. of cores per accelerator
-			for (br::ResourcePtr_t const & acc: accs) {
+			for (br::ResourcePtr_t const & acc : accs) {
 				std::string pe_binding_path(
-				    acc_path + std::to_string(acc->ID()) + std::string(".pe"));
+				        acc_path + std::to_string(acc->ID()) + std::string(".pe"));
 				logger->Debug("Init: binding resource path: <%s>",
 				              pe_binding_path.c_str());
 
-				pe_per_acc[cluster_id][acc->ID()] = sys->ResourceTotal(pe_binding_path) / 100 ;
+				pe_per_acc[cluster_id][acc->ID()] =
+				        sys->ResourceTotal(pe_binding_path) / 100 ;
 				logger->Debug("Init: <%s> #proc_element=%d",
-				              pe_binding_path.c_str(), pe_per_acc[cluster_id][acc->ID()]);
+				              pe_binding_path.c_str(),
+				              pe_per_acc[cluster_id][acc->ID()]);
 			}
 		}
 	}
@@ -150,14 +134,18 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::Init()
 
 SchedulerPolicyIF::ExitCode_t
 MangASchedPol::Schedule(
-    System & system,
-    RViewToken_t & status_view)
+        System & system,
+        RViewToken_t & status_view)
 {
 	SchedulerPolicyIF::ExitCode_t err, result = SCHED_DONE;
 
 	// Class providing query functions for applications and resources
 	sys = &system;
-	Init();
+	result = Init();
+	if (result != SCHED_OK) {
+		logger->Fatal("Schedule: policy initialization failed");
+		return result;
+	}
 	fut_tg.get();
 
 	uint32_t nr_clusters = pe_per_acc.size();
@@ -209,7 +197,8 @@ MangASchedPol::Schedule(
 }
 
 SchedulerPolicyIF::ExitCode_t
-MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
+MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept
+{
 	ExitCode_t err = SCHED_OK;
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	ba::AppCPtr_t  papp;
@@ -219,12 +208,12 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 	papp = sys->GetFirstWithPrio(priority, app_iterator);
 	for (; papp; papp = sys->GetNextWithPrio(priority, app_iterator)) {
 		logger->Debug("ServeApplicationsWithPriority: [%s] looking for resources...",
-		papp->StrId());
+		              papp->StrId());
 
 		// Skip disabled
 		if (papp->Disabled()) {
 			logger->Debug("ServeApplicationsWithPriority: [%s] DISABLED: skip...",
-			papp->StrId());
+			              papp->StrId());
 			continue;
 		}
 
@@ -267,13 +256,14 @@ MangASchedPol::ServeApplicationsWithPriority(int priority) noexcept {
 }
 
 
-SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept {
+SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexcept
+{
 	ExitCode_t err = SCHED_OK;
 
 	// Running applications must be rescheduled as is
 	if (papp->Running()) {
 		logger->Debug("ServeApp: [%s] is RUNNING -> re-assign working mode",
-		papp->StrId());
+		              papp->StrId());
 		return ReassignWorkingMode(papp);
 	}
 
@@ -282,7 +272,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 
 	for (; curr_cluster_id < nr_clusters; curr_cluster_id++) {
 		logger->Debug("ServeApp: [%s] looking for a partition in HN cluster %d",
-		papp->StrId(), curr_cluster_id);
+		              papp->StrId(), curr_cluster_id);
 
 		// First of all we have to decide which processor type to assign to each task
 		err = InitTaskGraphMappingOptions(papp);
@@ -293,7 +283,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 
 		// Initialize vector for task mapping exploration
 		uint32_t first_task_id = papp->GetTaskGraph()->Tasks().begin()->first;
-		std::vector<int> arch_index(papp->GetTaskGraph()->TaskCount()+1, 0);
+		std::vector<int> arch_index(papp->GetTaskGraph()->TaskCount() + 1, 0);
 
 		// HN clusters
 		std::list<Partition> partitions;
@@ -313,10 +303,9 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 					logger->Debug("ServeApp: [%s] trying another mapping [HN cluster=%d]",
 					              papp->StrId(), curr_cluster_id);
 					continue;
-				}
-				else {
+				} else {
 					logger->Debug("ServeApp: [%s] scheduled [HN cluster=%d]",
-						papp->StrId(), curr_cluster_id);
+					              papp->StrId(), curr_cluster_id);
 				}
 				return err;
 			}
@@ -344,18 +333,19 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::ServeApp(ba::AppCPtr_t papp) noexce
 	return err;
 }
 
-SchedulerPolicyIF::ExitCode_t MangASchedPol::DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept {
+SchedulerPolicyIF::ExitCode_t MangASchedPol::DealWithNoPartitionFound(ba::AppCPtr_t papp) noexcept
+{
 	UNUSED(papp);
 	switch(rmv.GetLastFailed()) {
 	case PartitionSkimmer::SKT_MANGO_HN:
-		// In this case we can try to reduce the allocated
-		// bandwidth
+	// In this case we can try to reduce the allocated
+	// bandwidth
 	case PartitionSkimmer::SKT_MANGO_MEMORY_MANAGER:
 		// We have no sufficient memory to run the application
 		return SCHED_R_UNAVAILABLE;
 	case PartitionSkimmer::SKT_MANGO_POWER_MANAGER:
-		// Strict thermal constraints must not violated - do
-		// not schedule the application
+	// Strict thermal constraints must not violated - do
+	// not schedule the application
 	default:
 		return SCHED_SKIP_APP;
 	}
@@ -365,7 +355,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::DealWithNoPartitionFound(ba::AppCPt
 std::string ArchMappingString(TaskMap_t & task_map)
 {
 	std::string mapping_opt_str;
-	for (auto & t_entry: task_map) {
+	for (auto & t_entry : task_map) {
 		auto & t_id = t_entry.first;
 		mapping_opt_str += "arch mapping = { " + std::to_string(t_id) + ":"
 		                   + GetStringFromArchType(t_entry.second->GetAssignedArch())
@@ -376,25 +366,26 @@ std::string ArchMappingString(TaskMap_t & task_map)
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::InitTaskGraphMappingOptions(
-    ba::AppCPtr_t papp) noexcept {
+        ba::AppCPtr_t papp) noexcept
+{
 
 	if (nullptr == papp->GetTaskGraph()) {
 		logger->Error("InitTaskGraphMappingOptions: [%s] task-graph not available",
-		papp->StrId());
+		              papp->StrId());
 		return SCHED_SKIP_APP;
 	}
 
 	auto & task_map = papp->GetTaskGraph()->Tasks();
 	logger->Debug("InitTaskGraphMappingOptions: nr_tasks=%d", task_map.size());
 
-	for (auto & task_pair: task_map) {
+	for (auto & task_pair : task_map) {
 		auto & task = task_pair.second;
 		const auto & task_reqs = papp->GetTaskRequirements(task->Id());
 
 		if (task_reqs.NumArchPreferences() == 0) {
 			logger->Error("InitTaskGraphMappingOptions: [%s] task %d"
-			" has no target architecture - check the recipe",
-			papp->StrId(), task->Id());
+			              " has no target architecture - check the recipe",
+			              papp->StrId(), task->Id());
 			return SCHED_SKIP_APP;
 		}
 		logger->Debug("InitTaskGraphMappingOptions: [%s] task %d"
@@ -426,9 +417,9 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::InitTaskGraphMappingOptions(
 }
 
 SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
-    ba::AppCPtr_t papp,
-    std::vector<int> & arch_index,
-    uint32_t task_id)
+        ba::AppCPtr_t papp,
+        std::vector<int> & arch_index,
+        uint32_t task_id)
 {
 
 	if (papp->GetTaskGraph() == nullptr) {
@@ -464,7 +455,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 	              GetStringFromArchType(task_reqs.ArchPreference(arch_id)));
 
 	// Next architecture option
-	if (size_t(arch_id) <= (task_reqs.NumArchPreferences()-2)) {
+	if (size_t(arch_id) <= (task_reqs.NumArchPreferences() - 2)) {
 		arch_id++;
 		curr_task->SetAssignedArch(task_reqs.ArchPreference(arch_id));
 		logger->Debug("NextTaskGraphMappingOption: task_id=%d: next arch=%d [%s]",
@@ -474,7 +465,7 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 	// Last option of current task => 'carry' effect
 	else {
 		logger->Debug("NextTaskGraphMappingOption: task_id=%d: arch %d >= %d",
-		              task_id, arch_id, (task_reqs.NumArchPreferences()-2));
+		              task_id, arch_id, (task_reqs.NumArchPreferences() - 2));
 
 		arch_index[task_id] = 0;
 		task_id++;
@@ -490,26 +481,27 @@ SchedulerPolicyIF::ExitCode_t MangASchedPol::NextTaskGraphMappingOption(
 
 SchedulerPolicyIF::ExitCode_t
 MangASchedPol::ScheduleApplication(
-    ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept {
+        ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept
+{
 	// Order the HW resources partition
 	auto ret = SortPartitions(papp, partitions);
 	if (ret != SCHED_OK) {
 		logger->Error("ScheduleApplication: [%s] partition ordering failed",
-		papp->StrId());
+		              papp->StrId());
 		return ret;
 	}
 
 	// Select/build a working mode
 	auto tg = papp->GetTaskGraph();
-	for (auto & selected_partition: partitions) {
+	for (auto & selected_partition : partitions) {
 		logger->Debug("ScheduleApplication: [%s] selecting AWM for partition %d",
-		papp->StrId(), selected_partition.GetId());
+		              papp->StrId(), selected_partition.GetId());
 
 		// Set a working mode an perform a schedule request
 		ret = SelectWorkingMode(papp, selected_partition);
 		if (ret == SCHED_OK) {
 			logger->Debug("ScheduleApplication: [%s] selected partition %d",
-			papp->StrId(), selected_partition.GetId());
+			              papp->StrId(), selected_partition.GetId());
 
 			// Assign a resource partition of the MANGO platform
 			papp->SetPartition(std::make_shared<Partition>(selected_partition));
@@ -518,7 +510,7 @@ MangASchedPol::ScheduleApplication(
 			auto pret = rmv.PropagatePartition(*tg, selected_partition);
 			if (pret != ResourcePartitionValidator::ExitCode_t::PMV_OK) {
 				logger->Error("ScheduleApplication: partition propagation"
-				" failed [error=%d]", pret);
+				              " failed [error=%d]", pret);
 				// Abort the the schedule request
 				ApplicationManager & am(ApplicationManager::GetInstance());
 				am.ScheduleRequestAbort(papp, sched_status_view);
@@ -530,12 +522,10 @@ MangASchedPol::ScheduleApplication(
 				papp->SetTaskGraph(tg);
 				return SCHED_OK;
 			}
-		}
-		else if (ret == SCHED_R_UNAVAILABLE) {
+		} else if (ret == SCHED_R_UNAVAILABLE) {
 			logger->Warn("ScheduleApplication: [%s] not enough resources"
-				" for partition %d", papp->StrId(), selected_partition.GetId());
-		}
-		else {
+			             " for partition %d", papp->StrId(), selected_partition.GetId());
+		} else {
 			logger->Warn("ScheduleApplication: [%s] not schedulable", papp->StrId());
 			break;
 		}
@@ -547,7 +537,8 @@ MangASchedPol::ScheduleApplication(
 
 
 SchedulerPolicyIF::ExitCode_t
-MangASchedPol::SortPartitions(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept {
+MangASchedPol::SortPartitions(ba::AppCPtr_t papp, const std::list<Partition> &partitions) noexcept
+{
 	UNUSED(papp);
 	bbque_assert(partitions.size() > 0);
 	logger->Warn("SortPartitions: sorting the list of partitions... (TODO)");
@@ -559,13 +550,14 @@ MangASchedPol::SortPartitions(ba::AppCPtr_t papp, const std::list<Partition> &pa
 
 SchedulerPolicyIF::ExitCode_t
 MangASchedPol::SelectWorkingMode(
-    ba::AppCPtr_t papp,
-    const Partition & selected_partition) noexcept {
+        ba::AppCPtr_t papp,
+        const Partition & selected_partition) noexcept
+{
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(
-		    papp->WorkingModes().size(),"Run-time", 1, papp);
+		               papp->WorkingModes().size(), "Run-time", 1, papp);
 	}
 	pawm->ClearResourceBinding();
 	pawm->ClearResourceRequests();
@@ -581,7 +573,7 @@ MangASchedPol::SelectWorkingMode(
 	uint32_t cluster_id = selected_partition.GetClusterId();
 	auto & plat_mgr = bbque::PlatformManager::GetInstance();
 
-	for (auto & task_entry: tg->Tasks()) {
+	for (auto & task_entry : tg->Tasks()) {
 		auto & task(task_entry.second);
 
 		// System node id
@@ -590,9 +582,9 @@ MangASchedPol::SelectWorkingMode(
 		task->SetAssignedSystem(sysid);
 		task->SetAssignedSystemIp(plat_mgr.GetIpAddress(sysid));
 		logger->Info("SelectWorkingMode: task=%d system=%d ipaddr=%s",
-			task->Id(),
-			task->GetAssignedSystem(),
-			task->GetAssignedSystemIp().c_str());
+		             task->Id(),
+		             task->GetAssignedSystem(),
+		             task->GetAssignedSystemIp().c_str());
 
 		// Tile id
 		uint32_t tile_id = selected_partition.GetUnit(task);
@@ -600,12 +592,12 @@ MangASchedPol::SelectWorkingMode(
 		// Nr. cores: if thread count not specified, assign all the
 		// available cores
 		logger->Debug("SelectWorkingMode: task=%d thread_count=%d",
-			task->Id(),
-			task->GetThreadCount());
+		              task->Id(),
+		              task->GetThreadCount());
 		if (task->GetThreadCount() <= 0) {
 			nr_cores = pe_per_acc[cluster_id][tile_id];
 			logger->Debug("SelectWorkingMode: task=%d nr_cores=%d",
-				task->Id(), nr_cores);
+			              task->Id(), nr_cores);
 		}
 		task->SetAssignedCoresCount(nr_cores);
 
@@ -615,9 +607,9 @@ MangASchedPol::SelectWorkingMode(
 		acc_path += std::to_string(cluster_id);
 		acc_path += ".acc" + std::to_string(tile_id) + ".pe";
 		pawm->AddResourceRequest(
-				acc_path,
-				100 * nr_cores,
-				br::ResourceAssignment::Policy::BALANCED);
+		        acc_path,
+		        100 * nr_cores,
+		        br::ResourceAssignment::Policy::BALANCED);
 		logger->Debug("SelectWorkingMode: [%s] task=%d add accelerator requested...",
 		              papp->StrId(), task->Id());
 
@@ -626,10 +618,10 @@ MangASchedPol::SelectWorkingMode(
 		              "tile=%d",
 		              papp->StrId(), task->Id(), tile_id);
 		ref_num = pawm->BindResource(
-		              br::ResourceType::ACCELERATOR,
-			      tile_id,
-		              tile_id,
-		              ref_num);
+		                  br::ResourceType::ACCELERATOR,
+		                  tile_id,
+		                  tile_id,
+		                  ref_num);
 
 		logger->Debug("SelectWorkingMode: [%s] task=%d -> cluster=<%d> tile=<%d>",
 		              papp->StrId(), task->Id(),
@@ -650,7 +642,7 @@ MangASchedPol::SelectWorkingMode(
 		              mem_bank_id);
 	}
 
-	for (auto &mem_entry: mem_req_amount) {
+	for (auto &mem_entry : mem_req_amount) {
 		auto & mem_bank_id = mem_entry.first;
 		auto & mem_amount  = mem_entry.second;
 
@@ -664,10 +656,10 @@ MangASchedPol::SelectWorkingMode(
 
 		// Resource binding: memory node
 		ref_num = pawm->BindResource(
-		              br::ResourceType::MEMORY,
-		              mem_bank_id,
-		              mem_bank_id,
-		              ref_num);
+		                  br::ResourceType::MEMORY,
+		                  mem_bank_id,
+		                  mem_bank_id,
+		                  ref_num);
 	}
 
 	// Update the accounting of resources with a schedule request
@@ -693,7 +685,8 @@ MangASchedPol::SelectWorkingMode(
 
 
 SchedulerPolicyIF::ExitCode_t
-MangASchedPol::ReassignWorkingMode(ba::AppCPtr_t papp) noexcept {
+MangASchedPol::ReassignWorkingMode(ba::AppCPtr_t papp) noexcept
+{
 	ApplicationManager & am(ApplicationManager::GetInstance());
 	auto ret = am.ScheduleRequestAsPrev(papp, sched_status_view);
 	if (ret != ApplicationManager::AM_SUCCESS) {

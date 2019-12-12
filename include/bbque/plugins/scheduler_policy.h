@@ -58,15 +58,17 @@ public:
 	 * @brief Scheduling result
 	 */
 	typedef enum ExitCode {
-	        SCHED_DONE = 0,        /** Scheduling regular termination */
-	        SCHED_OK,              /** Successful return */
-	        SCHED_R_NOT_FOUND,     /** Looking for not existing resource */
-	        SCHED_R_UNAVAILABLE,   /** Not enough available resources */
-	        SCHED_SKIP_APP,        /** Skip the applicaton (disabled or already running) */
-	        SCHED_OPT_OVER,        /** No more static options to explore */
-	        SCHED_ERROR_INIT,      /** Error during initialization */
-	        SCHED_ERROR_VIEW,      /** Error in using the resource state view */
-	        SCHED_ERROR            /** Unexpected error */
+		SCHED_DONE = 0,        /** Scheduling regular termination */
+		SCHED_OK,              /** Successful return */
+		SCHED_R_NOT_FOUND,     /** Looking for not existing resource */
+		SCHED_R_UNAVAILABLE,   /** Not enough available resources */
+		SCHED_SKIP_APP,        /** Skip the applicaton (disabled or already running) */
+		SCHED_OPT_OVER,        /** No more static options to explore */
+		SCHED_ERROR_QUEUE,     /** Error while using queue data structures to order objects */
+		SCHED_ERROR_INIT,      /** Error during initialization */
+		SCHED_ERROR_VIEW,      /** Error in using the resource state view */
+		SCHED_ERROR_INCOMPLETE_ASSIGNMENT,
+		SCHED_ERROR            /** Unexpected error */
 	} ExitCode_t;
 
 	/**
@@ -87,32 +89,39 @@ public:
 		EvalEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, BBQUE_RID_TYPE _bid):
 			papp(_papp),
 			pawm(_pawm),
-			bind_id(_bid) {
+			bind_id(_bid)
+		{
 			_BuildStr();
 		};
 
 		/** Application/EXC to schedule */
 		ba::AppCPtr_t papp;
+
 		/** Candidate AWM */
 		ba::AwmPtr_t pawm;
+
 		/** Candidate cluster for resource binding */
 		BBQUE_RID_TYPE bind_id;
+
 		/** Type of resource for the candidate binding */
 		br::ResourceType bind_type;
 		/**
 		 * A number through which reference the current scheduling binding
 		 * in the set stored in the AWM descriptor */
 		size_t bind_refn = 0;
+
 		/** Identifier string */
 		char str_id[40];
 
 		/** Return the identifier string */
-		const char * StrId() const {
+		const char * StrId() const
+		{
 			return str_id;
 		}
 
 		/** Build the identifier string */
-		void _BuildStr() {
+		void _BuildStr()
+		{
 			int32_t awm_id = -1;
 			if (pawm != nullptr)
 				awm_id = pawm->Id();
@@ -128,13 +137,15 @@ public:
 		}
 
 		/** Set the working mode */
-		void SetAWM(ba::AwmPtr_t _pawm) {
+		void SetAWM(ba::AwmPtr_t _pawm)
+		{
 			pawm = _pawm;
 			_BuildStr();
 		}
 
 		/** Set the binding ID to track */
-		void SetBindingID(BBQUE_RID_TYPE bid, br::ResourceType btype) {
+		void SetBindingID(BBQUE_RID_TYPE bid, br::ResourceType btype)
+		{
 			bind_id = bid;
 			bind_type = btype;
 			_BuildStr();
@@ -145,7 +156,8 @@ public:
 		 * previous one (given the type of resource referenced by the such
 		 * domain)
 		 */
-		bool IsMigrating(br::ResourceType r_type) const {
+		bool IsMigrating(br::ResourceType r_type) const
+		{
 			return (papp->CurrentAWM() &&
 			        !(papp->CurrentAWM()->BindingSet(r_type).Test(bind_id)));
 		}
@@ -155,7 +167,8 @@ public:
 		 * Application) or if the AWM assigned is different from the
 		 * previous one
 		 */
-		bool IsReconfiguring() const {
+		bool IsReconfiguring() const
+		{
 			return (!papp->CurrentAWM() ||
 			        papp->CurrentAWM()->Id() != pawm->Id());
 		}
@@ -179,16 +192,20 @@ public:
 		 * @param _metr The related scheduling metrics (also "application
 		 * value")
 		 */
-		SchedEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, BBQUE_RID_TYPE _bid,
+		SchedEntity_t(ba::AppCPtr_t _papp,
+		              ba::AwmPtr_t _pawm,
+		              BBQUE_RID_TYPE _bid,
 		              float _metr):
 			EvalEntity_t(_papp, _pawm, _bid),
-			metrics(_metr) {
+			metrics(_metr)
+		{
 		};
 
 		/** Metrics computed */
 		float metrics;
 
-		bool operator()(SchedEntity_t & se) {
+		bool operator()(SchedEntity_t & se)
+		{
 			// Metrics (primary sorting key)
 			if (metrics < se.metrics)
 				return false;
@@ -255,6 +272,35 @@ protected:
 	/** An High-Resolution timer */
 	Timer timer;
 
+
+	/**
+	 * @brief General scheduling policy initialization code
+	 */
+	virtual ExitCode_t Init()
+	{
+		// Get a fresh resource status view
+		++status_view_count;
+		std::string token_path(SCHEDULER_POLICY_NAMESPACE);
+		token_path += std::to_string(status_view_count);
+
+		ResourceAccounter &ra = ResourceAccounter::GetInstance();
+		auto ra_result = ra.GetView(token_path, sched_status_view);
+		assert(ra_result == ResourceAccounterStatusIF::RA_SUCCESS);
+		if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS)
+			return SCHED_ERROR_VIEW;
+
+		// Policy-specific initialization
+		return _Init();
+	}
+
+	/**
+	 * @brief Politic-specific (optional) initialization function
+	 */
+	virtual ExitCode_t _Init()
+	{
+		return SCHED_OK;
+	}
+
 	/**
 	 * @brief The number of slots, where a slot is defined as "resource
 	 * amount divider". The idea is to provide a mechanism to assign
@@ -268,7 +314,8 @@ protected:
 	 * information related to both resources and applications
 	 * @return The number of slots
 	 */
-	uint32_t GetSlots() {
+	uint32_t GetSlots()
+	{
 		uint32_t slots = 0;
 		for (AppPrio_t prio = 0; prio <= sys->ApplicationLowestPriority(); prio++)
 			slots += (sys->ApplicationLowestPriority() + 1 - prio) *
@@ -281,7 +328,8 @@ protected:
 	 * (READY, THAWED, RUNNING)
 	 */
 	ExitCode_t ForEachApplicationToScheduleDo(
-	        std::function <ExitCode_t(bbque::app::AppCPtr_t) > do_func) {
+	        std::function <ExitCode_t(bbque::app::AppCPtr_t) > do_func)
+	{
 
 		AppsUidMapIt app_it;
 		ba::AppCPtr_t app_ptr;
@@ -310,7 +358,8 @@ protected:
 	 * (READY, THAWED, RUNNING)
 	 */
 	ExitCode_t ForEachProcessToScheduleDo(
-	        std::function <ExitCode_t(ProcPtr_t) > do_func)	{
+	        std::function <ExitCode_t(ProcPtr_t) > do_func)
+	{
 
 		ProcessManager & prm(ProcessManager::GetInstance());
 		ProcessMapIterator proc_it;

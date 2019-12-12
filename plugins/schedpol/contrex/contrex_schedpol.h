@@ -42,7 +42,10 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
@@ -51,7 +54,8 @@ class LoggerIF;
  *
  * Contrex scheduler policy registered as a dynamic C++ plugin.
  */
-class ContrexSchedPol: public SchedulerPolicyIF {
+class ContrexSchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -68,7 +72,6 @@ public:
 
 	char const * Name();
 
-
 	/**
 	 * @brief The member function called by the SchedulerManager to perform a
 	 * new scheduling / resource allocation
@@ -76,22 +79,6 @@ public:
 	ExitCode_t Schedule(System & system, RViewToken_t & status_view);
 
 private:
-
-	/**
-	 * @brief Specific internal exit code of the class
-	 */
-	enum ExitCode_t {
-		OK,
-		ERROR,
-		ERROR_VIEW
-	};
-
-	/** Shared pointer to a scheduling entity */
-	typedef std::shared_ptr<SchedEntity_t> SchedEntityPtr_t;
-
-	/** List of scheduling entities */
-	typedef std::list<SchedEntityPtr_t> SchedEntityList_t;
-
 
 	/** Configuration manager instance */
 	ConfigurationManager & cm;
@@ -101,26 +88,6 @@ private:
 
 	/** System logger instance */
 	std::unique_ptr<bu::Logger> logger;
-
-	/** System view:
-	 *  This points to the class providing the functions to query information
-	 *  about applications and resources
-	 */
-	System * sys;
-
-
-	/** Reference to the current scheduling status view of the resources */
-	RViewToken_t sched_status_view;
-
-	/** A counter used for getting always a new clean resources view */
-	uint32_t status_view_count = 0;
-
-	/** List of scheduling entities  */
-	SchedEntityList_t entities;
-
-
-	/** An High-Resolution timer */
-	Timer timer;
 
 
 	uint32_t proc_total;
@@ -146,7 +113,7 @@ private:
 	/**
 	 * @brief Optional initialization member function
 	 */
-	ExitCode_t Init();
+	ExitCode_t _Init();
 
 	void InitProcessorsPath();
 
@@ -160,10 +127,10 @@ private:
 	uint32_t ScheduleNonCritical(uint32_t proc_available, uint32_t proc_quota);
 
 	uint32_t SchedulePriority(
-		bbque::app::AppPrio_t prio, uint32_t proc_available, uint32_t proc_quota);
+	        bbque::app::AppPrio_t prio, uint32_t proc_available, uint32_t proc_quota);
 
 	SchedulerPolicyIF::ExitCode_t ScheduleApplication(
-		bbque::app::AppCPtr_t papp, uint32_t proc_quota);
+	        bbque::app::AppCPtr_t papp, uint32_t proc_quota);
 
 };
 

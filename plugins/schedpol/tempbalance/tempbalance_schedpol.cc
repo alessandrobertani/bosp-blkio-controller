@@ -89,23 +89,8 @@ TempBalanceSchedPol::~TempBalanceSchedPol()
 }
 
 
-SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::Init()
+SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::_Init()
 {
-	// Build a string path for the resource state view
-	std::string token_path(MODULE_NAMESPACE);
-	++status_view_count;
-	token_path.append(std::to_string(status_view_count));
-	logger->Debug("Init: requiring a new resource state view [%s]",
-	              token_path.c_str());
-
-	// A new resource status view
-	auto ra_result = ra.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: cannot get a new resource state view");
-		return SCHED_ERROR_VIEW;
-	}
-	logger->Debug("Init: resources state view token = %ld", sched_status_view);
-
 	// Keep track of all the available CPU processing elements (cores)
 	if (proc_elements.empty())
 		proc_elements = sys->GetResources("sys.cpu.pe");
@@ -243,17 +228,16 @@ SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::BindWorkingModesAndSched()
 }
 
 
-
 SchedulerPolicyIF::ExitCode_t
 TempBalanceSchedPol::Schedule(
         System & system,
         RViewToken_t & status_view)
 {
-	SchedulerPolicyIF::ExitCode_t result = SCHED_DONE;
-
 	// Class providing query functions for applications and resources
 	sys = &system;
-	Init();
+	SchedulerPolicyIF::ExitCode_t result = Init();
+	if (result != SCHED_OK)
+		return result;
 
 	// Resource (AWM) assignment
 	auto assign_awm = std::bind(&TempBalanceSchedPol::AssignWorkingMode, this, _1);
@@ -266,7 +250,7 @@ TempBalanceSchedPol::Schedule(
 	// Return the new resource status view according to the new resource
 	// allocation performed
 	status_view = sched_status_view;
-	return result;
+	return SCHED_DONE;
 }
 
 } // namespace plugins

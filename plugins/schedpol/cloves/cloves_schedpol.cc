@@ -34,15 +34,20 @@
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 // :::::::::::::::::::::: Static plugin interface ::::::::::::::::::::::::::::
 
-void * ClovesSchedPol::Create(PF_ObjectParams *) {
+void * ClovesSchedPol::Create(PF_ObjectParams *)
+{
 	return new ClovesSchedPol();
 }
 
-int32_t ClovesSchedPol::Destroy(void * plugin) {
+int32_t ClovesSchedPol::Destroy(void * plugin)
+{
 	if (!plugin)
 		return -1;
 	delete (ClovesSchedPol *)plugin;
@@ -51,15 +56,17 @@ int32_t ClovesSchedPol::Destroy(void * plugin) {
 
 // ::::::::::::::::::::: Scheduler policy module interface :::::::::::::::::::
 
-char const * ClovesSchedPol::Name() {
+char const * ClovesSchedPol::Name()
+{
 	return SCHEDULER_POLICY_NAME;
 }
 
 ClovesSchedPol::ClovesSchedPol():
-		cm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()),
-		bdm(BindingManager::GetInstance()),
-		wm(PowerMonitor::GetInstance()) {
+	cm(ConfigurationManager::GetInstance()),
+	ra(ResourceAccounter::GetInstance()),
+	bdm(BindingManager::GetInstance()),
+	wm(PowerMonitor::GetInstance())
+{
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
@@ -68,30 +75,24 @@ ClovesSchedPol::ClovesSchedPol():
 		logger->Info("cloves: Built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
-				FI("cloves: Built new dynamic object [%p]\n"), (void *)this);
+		        FI("cloves: Built new dynamic object [%p]\n"), (void *)this);
 }
 
 
-ClovesSchedPol::~ClovesSchedPol() {
+ClovesSchedPol::~ClovesSchedPol()
+{
 	queues.clear();
 }
 
 
-ClovesSchedPol::ExitCode_t ClovesSchedPol::Init() {
+SchedulerPolicyIF::ExitCode_t ClovesSchedPol::_Init()
+{
 	ExitCode_t result = OK;
-	ApplicationManager & am(ApplicationManager::GetInstance());
-
-	// Resource state view
-	result = InitResourceStateView();
-	if (result != OK) {
-		logger->Fatal("Init: Cannot get a resource state view");
-		return result;
-	}
 
 	// Device queues
 	if (!queues_ready) {
 		result = InitDeviceQueues();
-		if (result != OK) {
+		if (result != SCHED_OK) {
 			logger->Fatal("Init: Scheduling queues not available");
 			return result;
 		}
@@ -100,47 +101,32 @@ ClovesSchedPol::ExitCode_t ClovesSchedPol::Init() {
 	}
 
 	// Update applications runtime profiling data
+	ApplicationManager & am(ApplicationManager::GetInstance());
 	am.UpdateRuntimeProfiles();
 
 	return OK;
 }
 
 
-ClovesSchedPol::ExitCode_t ClovesSchedPol::InitResourceStateView() {
-	ResourceAccounterStatusIF::ExitCode_t ra_result;
-	ExitCode_t result = OK;
-
-	// Build a string path for the resource state view
-	snprintf(token_path, 30, "%s%d", MODULE_NAMESPACE, ++sched_count);;
-
-	// Get a fresh resource status view
-	logger->Debug("Init: Require a new resource state view [%s]", token_path);
-	ra_result = ra.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS)
-		return ERROR_VIEW;
-	logger->Info("Init: Resources state view token: %d", sched_status_view);
-
-	return result;
-}
-
-ClovesSchedPol::ExitCode_t ClovesSchedPol::InitDeviceQueues() {
+SchedulerPolicyIF::ExitCode_t ClovesSchedPol::InitDeviceQueues()
+{
 	ExitCode_t result = OK;
 	logger->Debug("Init: device queues initialization...");
 
 	// A device queue must be created for each binding domain
 	// (i.e., OpenCL device type (CPU, GPU,...))
 	BindingMap_t & bindings(bdm.GetBindingDomains());
-	for (auto & bd_entry: bindings) {
+	for (auto & bd_entry : bindings) {
 		br::ResourceType  bd_type = bd_entry.first;
 		BindingInfo_t const & bd_info(*(bd_entry.second));
 
 		// Device map
 		DeviceQueueMapPtr_t pdev_queue_map = DeviceQueueMapPtr_t(new DeviceQueueMap_t());
 		queues.insert(
-			std::pair<br::ResourceType, DeviceQueueMapPtr_t>(
-				bd_type, pdev_queue_map));
+		        std::pair<br::ResourceType, DeviceQueueMapPtr_t>(
+		                bd_type, pdev_queue_map));
 		logger->Debug("Init: adding queues for device type '%s'",
-			br::GetResourceTypeString(bd_type));
+		              br::GetResourceTypeString(bd_type));
 
 		// Fill the map with device queues
 		CreateDeviceQueues(pdev_queue_map, bd_info);
@@ -148,39 +134,41 @@ ClovesSchedPol::ExitCode_t ClovesSchedPol::InitDeviceQueues() {
 
 	logger->Info("Init: found %d device types", queues.size());
 	if (queues.empty())
-		result = ERROR_INIT;
+		result = SCHED_ERROR_INIT;
 
 	queues_ready = true;
 	return result;
 }
 
 void ClovesSchedPol::CreateDeviceQueues(
-		DeviceQueueMapPtr_t & pdev_queue_map,
-		BindingInfo_t const & bd_info) {
+        DeviceQueueMapPtr_t & pdev_queue_map,
+        BindingInfo_t const & bd_info)
+{
 
 	// [CPU|GPU|..]0..n
-	for (br::ResourcePtr_t const & rsrc: bd_info.resources) {
+	for (br::ResourcePtr_t const & rsrc : bd_info.resources) {
 		DeviceQueuePtr_t pdev_queue = DeviceQueuePtr_t(new DeviceQueue_t());
 
 		br::ResourcePathPtr_t r_path(new br::ResourcePath(rsrc->Path()));
 		r_path->AppendString("pe");
 
 		pdev_queue_map->insert(
-			std::pair<br::ResourcePathPtr_t, DeviceQueuePtr_t>(
-				r_path, pdev_queue));
+		        std::pair<br::ResourcePathPtr_t, DeviceQueuePtr_t>(
+		                r_path, pdev_queue));
 		logger->Debug("Init: added queue for '%s'",
-			r_path->ToString().c_str());
+		              r_path->ToString().c_str());
 	}
 
 	logger->Info("Init: added %d device queues for device type %s",
-		pdev_queue_map->size(), bd_info.base_path->ToString().c_str());
+	             pdev_queue_map->size(), bd_info.base_path->ToString().c_str());
 }
 
 
 SchedulerPolicyIF::ExitCode_t
 ClovesSchedPol::Schedule(
-		System & system,
-		RViewToken_t & status_view) {
+        System & system,
+        RViewToken_t & status_view)
+{
 	ExitCode_t result;
 
 	// Class providing query functions for applications and resources
@@ -188,14 +176,14 @@ ClovesSchedPol::Schedule(
 
 	// Initialize a new resources state view
 	result = Init();
-	if (result != OK) {
+	if (result != SCHED_OK) {
 		logger->Fatal("Schedule: Initialization failed");
 		goto error;
 	}
 
 	// Iteration per priority
 	for (ba::AppPrio_t prio = 0;
-		prio <= sys->ApplicationLowestPriority(); ++prio) {
+	     prio <= sys->ApplicationLowestPriority(); ++prio) {
 		if (!sys->HasApplications(prio))
 			continue;
 		result = SchedulePriority(prio);
@@ -203,7 +191,7 @@ ClovesSchedPol::Schedule(
 
 	// Flush device quees sending the schedule requests
 	result = Flush();
-	if (result != OK) {
+	if (result != SCHED_OK) {
 		logger->Fatal("Schedule: Failures in schedule requests");
 		goto error;
 	}
@@ -218,8 +206,9 @@ error:
 	return SCHED_ERROR;
 }
 
-ClovesSchedPol::ExitCode_t
-ClovesSchedPol::SchedulePriority(ba::AppPrio_t prio) {
+SchedulerPolicyIF::ExitCode_t
+ClovesSchedPol::SchedulePriority(ba::AppPrio_t prio)
+{
 	ExitCode_t result = OK;
 	AppsUidMapIt app_it;
 	ba::AppCPtr_t papp;
@@ -232,8 +221,9 @@ ClovesSchedPol::SchedulePriority(ba::AppPrio_t prio) {
 	return result;
 }
 
-ClovesSchedPol::ExitCode_t
-ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp) {
+SchedulerPolicyIF::ExitCode_t
+ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp)
+{
 	br::ResourceType dev_type = br::ResourceType::UNDEFINED;
 	float highest_xm_time_ratio = -1.0;
 	float xm_time_ratio;
@@ -243,47 +233,46 @@ ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp) {
 	SchedEntityPtr_t psched(new SchedEntity_t(papp, nullptr, R_ID_NONE, 0.0));
 	ba::AwmPtrList_t const & awms(papp->WorkingModes());
 	logger->Debug("EnqueueIntoDevice: [%s], #AWMs: %d",
-		papp->StrId(), awms.size());
-	for (ba::AwmPtr_t const & pawm: awms) {
+	              papp->StrId(), awms.size());
+	for (ba::AwmPtr_t const & pawm : awms) {
 		ba::WorkingMode::RuntimeProfiling_t awm_prof =
-			pawm->GetProfilingData();
+		        pawm->GetProfilingData();
 
 		// Execution time / Memory transfers time ratio
 		if ((awm_prof.mem_time == 0) || (awm_prof.exec_time == 0)) {
 			logger->Debug("EnqueueIntoDevice: [%s %s] profiling not available",
-				papp->StrId(), pawm->StrId());
+			              papp->StrId(), pawm->StrId());
 			xm_time_ratio = pawm->Value();
-		}
-		else {
+		} else {
 			logger->Debug("EnqueueIntoDevice: [%s %s] Xtime: %d, Mtime: %d",
-				papp->StrId(), pawm->StrId(),
-				awm_prof.exec_time, awm_prof.mem_time);
+			              papp->StrId(), pawm->StrId(),
+			              awm_prof.exec_time, awm_prof.mem_time);
 			xm_time_ratio =
-				pawm->Value() *
-				(awm_prof.exec_time / awm_prof.mem_time);
+			        pawm->Value() *
+			        (awm_prof.exec_time / awm_prof.mem_time);
 		}
 		logger->Debug("EnqueueIntoDevice: [%s %s] X/M time weighted ratio = %2.2f",
-			papp->StrId(), pawm->StrId(), xm_time_ratio);
+		              papp->StrId(), pawm->StrId(), xm_time_ratio);
 
 		if ((highest_xm_time_ratio > 0) &&
-			(xm_time_ratio <= highest_xm_time_ratio)) {
+		    (xm_time_ratio <= highest_xm_time_ratio)) {
 			logger->Fatal("No update: h=%2.2f r=%2.2f",
-				highest_xm_time_ratio, xm_time_ratio);
+			              highest_xm_time_ratio, xm_time_ratio);
 			continue;
 		}
 
 		// Set device type
 		gpu_qt = ra.GetAssignedAmount(
-				pawm->ResourceRequests(), papp, sched_status_view,
-				br::ResourceType::PROC_ELEMENT, br::ResourceType::GPU);
+		                 pawm->ResourceRequests(), papp, sched_status_view,
+		                 br::ResourceType::PROC_ELEMENT, br::ResourceType::GPU);
 		cpu_qt = ra.GetAssignedAmount(
-				pawm->ResourceRequests(), papp, sched_status_view,
-				br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU);
+		                 pawm->ResourceRequests(), papp, sched_status_view,
+		                 br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU);
 
-		gpu_qt > 0 ? dev_type = br::ResourceType::GPU: dev_type = br::ResourceType::CPU;
+		gpu_qt > 0 ? dev_type = br::ResourceType::GPU : dev_type = br::ResourceType::CPU;
 		logger->Debug("EnqueueIntoDevice: [%s %s] requiring processing load: "
-				"GPU: %" PRIu64 ", CPU: %" PRIu64 "",
-				papp->StrId(), pawm->StrId(), gpu_qt, cpu_qt);
+		              "GPU: %" PRIu64 ", CPU: %" PRIu64 "",
+		              papp->StrId(), pawm->StrId(), gpu_qt, cpu_qt);
 
 		// AWM (device) selected so far
 		psched->SetAWM(pawm);
@@ -295,10 +284,10 @@ ClovesSchedPol::EnqueueIntoDevice(ba::AppCPtr_t papp) {
 	return Enqueue(psched, dev_type);
 }
 
-ClovesSchedPol::ExitCode_t
-ClovesSchedPol::Enqueue(
-		SchedEntityPtr_t psched,
-		br::ResourceType dev_type) {
+SchedulerPolicyIF::ExitCode_t ClovesSchedPol::Enqueue(
+        SchedEntityPtr_t psched,
+        br::ResourceType dev_type)
+{
 	ExitCode_t result;
 
 	// Queue ordering metrics
@@ -308,55 +297,58 @@ ClovesSchedPol::Enqueue(
 	DeviceQueuePtr_t pdev_queue(SelectDeviceQueue(psched, dev_type));
 	if (pdev_queue == nullptr) {
 		logger->Fatal("Enqueue: device queue missing");
-		return ERROR_QUEUE;
+		return SCHED_ERROR_QUEUE;
 	}
 
 	// Resource binding
 	result = BindResources(psched);
-	if (result != OK) return result;
+	if (result != SCHED_OK)
+		return result;
 	if (psched->bind_type == br::ResourceType::GPU) {
 		logger->Debug("Enqueue: %s binding host resources on CPU",
-			psched->StrId());
+		              psched->StrId());
 		size_t b_refn = psched->pawm->BindResource(
-					br::ResourceType::CPU,
-					R_ID_ANY, R_ID_NONE,
-					psched->bind_refn);
+		                        br::ResourceType::CPU,
+		                        R_ID_ANY, R_ID_NONE,
+		                        psched->bind_refn);
 		psched->bind_refn = b_refn;
 	}
 
 	// Enqueue
 	pdev_queue->push(psched);
 	logger->Debug("Enqueue: %s queued [size: %d]",
-		psched->StrId(), pdev_queue->size());
+	              psched->StrId(), pdev_queue->size());
 
-	return OK;
+	return SCHED_OK;
 }
 
-void ClovesSchedPol::ComputeOrderingMetrics(SchedEntityPtr_t psched) {
+void ClovesSchedPol::ComputeOrderingMetrics(SchedEntityPtr_t psched)
+{
 	ba::WorkingMode::RuntimeProfiling_t const & awm_prof(
-			psched->pawm->GetProfilingData());
+	        psched->pawm->GetProfilingData());
 	// Check the availability cumulated runtime profiling data
 	if ((awm_prof.exec_time_tot) == 0 ||
-			(psched->pawm->GetSchedulingCount() ==0)) {
+	    (psched->pawm->GetSchedulingCount() == 0)) {
 		psched->metrics = psched->pawm->Value();
 		logger->Debug("Order: %s profiling history not available yet",
-			psched->StrId());
+		              psched->StrId());
 		return;
 	}
 
 	// Ordering metrics for the AWM in the device queue
 	psched->metrics =
-		awm_prof.exec_time_tot /
-		psched->pawm->GetSchedulingCount() * psched->pawm->Value();
+	        awm_prof.exec_time_tot /
+	        psched->pawm->GetSchedulingCount() * psched->pawm->Value();
 	logger->Info("Order: %s metrics = %2.2f [sched_count: %d, x_tot: %d]",
-		psched->StrId(), psched->metrics,
-		psched->pawm->GetSchedulingCount(), awm_prof.exec_time_tot);
+	             psched->StrId(), psched->metrics,
+	             psched->pawm->GetSchedulingCount(), awm_prof.exec_time_tot);
 }
 
 ClovesSchedPol::DeviceQueuePtr_t
 ClovesSchedPol::SelectDeviceQueue(
-		SchedEntityPtr_t psched,
-		br::ResourceType dev_type) {
+        SchedEntityPtr_t psched,
+        br::ResourceType dev_type)
+{
 	br::ResourcePathPtr_t curr_path;
 	size_t min_qlen = INT_MAX;
 	size_t curr_qlen;
@@ -366,13 +358,13 @@ ClovesSchedPol::SelectDeviceQueue(
 	DeviceQueueMap_t & dev_queue_map(*(pdev_queue_map.get()));
 
 	// Retrieve the queue of the device to bind
-	for (auto & dq_entry: dev_queue_map) {
+	for (auto & dq_entry : dev_queue_map) {
 		br::ResourcePtrList_t const & r_list(ra.GetResources(dq_entry.first));
 		br::ResourcePtr_t const & rsrc(r_list.front());
 
 		if (rsrc == nullptr) {
 			logger->Fatal("Missing resource %s",
-				dq_entry.first->ToString().c_str());
+			              dq_entry.first->ToString().c_str());
 			return DeviceQueuePtr_t();
 		}
 
@@ -384,55 +376,58 @@ ClovesSchedPol::SelectDeviceQueue(
 			curr_path = dq_entry.first;
 			if (dev_type == br::ResourceType::GPU)
 				psched->SetBindingID(
-					dq_entry.first->GetID(dev_type), dev_type);
+				        dq_entry.first->GetID(dev_type), dev_type);
 			else
 				psched->SetBindingID(R_ID_NONE, dev_type);
 		}
 		logger->Debug("SelectDeviceQueue: %s queue length = %d",
-			rsrc->Path().c_str(), curr_qlen);
+		              rsrc->Path().c_str(), curr_qlen);
 	}
 
 	logger->Debug("SelectDeviceQueue: selected (%s)", curr_path->ToString().c_str());
 	return dev_queue_map[curr_path];
 }
 
-ClovesSchedPol::ExitCode_t
-ClovesSchedPol::BindResources(SchedEntityPtr_t psched) {
+SchedulerPolicyIF::ExitCode_t
+ClovesSchedPol::BindResources(SchedEntityPtr_t psched)
+{
 	size_t r_refn;
 	r_refn = psched->pawm->BindResource(
-			psched->bind_type, R_ID_ANY,
-			psched->bind_id,
-			psched->bind_refn);
+	                 psched->bind_type, R_ID_ANY,
+	                 psched->bind_id,
+	                 psched->bind_refn);
 	logger->Debug("BindResources: reference number %ld", r_refn);
 	if (r_refn == 0) {
 		logger->Error("BindResources: %s failed binding", psched->StrId());
-		return ERROR_RSRC;
+		return SCHED_R_UNAVAILABLE;
 	}
 	psched->bind_refn = r_refn;
 
-	return OK;
+	return SCHED_OK;
 }
 
 
-ClovesSchedPol::ExitCode_t
-ClovesSchedPol::Flush() {
+SchedulerPolicyIF::ExitCode_t ClovesSchedPol::Flush()
+{
 	uint32_t app_count = 0;
 
 	// Device types
-	for (auto & dtqm_entry: queues) {
+	for (auto & dtqm_entry : queues) {
 		DeviceQueueMap_t & dqm(*(dtqm_entry.second.get()));
 		// Devices
-		for (auto & dqm_entry: dqm) {
+		for (auto & dqm_entry : dqm) {
 			DeviceQueue_t & dev_queue(*dqm_entry.second.get());
 			app_count += SendScheduleRequests(dev_queue);
 		}
 	}
 
-	if (app_count == 0) return ERROR;
-	return OK;
+	if (app_count == 0)
+		return SCHED_ERROR;
+	return SCHED_OK;
 }
 
-uint32_t ClovesSchedPol::SendScheduleRequests(DeviceQueue_t & dev_queue) {
+uint32_t ClovesSchedPol::SendScheduleRequests(DeviceQueue_t & dev_queue)
+{
 	ba::Application::ExitCode_t app_result = ba::Application::APP_SUCCESS;
 	uint32_t app_count = 0;
 
@@ -452,7 +447,7 @@ uint32_t ClovesSchedPol::SendScheduleRequests(DeviceQueue_t & dev_queue) {
 		// Send request
 		ApplicationManager & am(ApplicationManager::GetInstance());
 		auto ret = am.ScheduleRequest(
-			psched->papp, psched->pawm, sched_status_view, psched->bind_refn);
+		                   psched->papp, psched->pawm, sched_status_view, psched->bind_refn);
 		logger->Debug("Flush: %s schedule requested", psched->StrId());
 		if (ret != ApplicationManager::AM_SUCCESS) {
 			logger->Error("Flush: %s failed scheduling", psched->StrId());

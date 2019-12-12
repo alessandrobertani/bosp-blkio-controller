@@ -34,15 +34,20 @@
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 // :::::::::::::::::::::: Static plugin interface ::::::::::::::::::::::::::::
 
-void * ContrexSchedPol::Create(PF_ObjectParams *) {
+void * ContrexSchedPol::Create(PF_ObjectParams *)
+{
 	return new ContrexSchedPol();
 }
 
-int32_t ContrexSchedPol::Destroy(void * plugin) {
+int32_t ContrexSchedPol::Destroy(void * plugin)
+{
 	if (!plugin)
 		return -1;
 	delete (ContrexSchedPol *)plugin;
@@ -51,13 +56,15 @@ int32_t ContrexSchedPol::Destroy(void * plugin) {
 
 // ::::::::::::::::::::: Scheduler policy module interface :::::::::::::::::::
 
-char const * ContrexSchedPol::Name() {
+char const * ContrexSchedPol::Name()
+{
 	return SCHEDULER_POLICY_NAME;
 }
 
 ContrexSchedPol::ContrexSchedPol():
-		cm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()) {
+	cm(ConfigurationManager::GetInstance()),
+	ra(ResourceAccounter::GetInstance())
+{
 
 	// Logger instance
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -67,27 +74,12 @@ ContrexSchedPol::ContrexSchedPol():
 		logger->Info("contrex: Built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
-				FI("contrex: Built new dynamic object [%p]\n"), (void *)this);
+		        FI("contrex: Built new dynamic object [%p]\n"), (void *)this);
 }
 
 
-ContrexSchedPol::ExitCode_t ContrexSchedPol::Init() {
-	ResourceAccounterStatusIF::ExitCode_t ra_result;
-	ExitCode_t result = OK;
-
-	std::string token_path(MODULE_NAMESPACE);
-	++status_view_count;
-	token_path.append(std::to_string(status_view_count));
-
-	// Get a fresh resource status view
-	logger->Debug("Init: Require a new resource state view [%s]", token_path.c_str());
-	ra_result = ra.GetView(token_path, sched_status_view);
-	if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS) {
-		logger->Fatal("Init: Cannot get a resource state view");
-		return ERROR_VIEW;
-	}
-	logger->Debug("Init: Resources state view token: %d", sched_status_view);
-
+ContrexSchedPol::ExitCode_t ContrexSchedPol::_Init()
+{
 	proc_total  = sys->ResourceTotal("sys.cpu.pe");
 	logger->Info("Init: <sys.cpu.pe> total = %d", proc_total);
 
@@ -98,13 +90,13 @@ ContrexSchedPol::ExitCode_t ContrexSchedPol::Init() {
 	nr_running = sys->ApplicationsCount(bbque::app::Application::RUNNING);
 	nr_non_critical = (nr_ready + nr_running) - nr_critical;
 	logger->Info("Init: applications: READY=%d, RUNNING=%d",
-		nr_ready, nr_running);
+	             nr_ready, nr_running);
 
 	// Initialize all the CPUs governor
 	if (pe_paths.empty())
 		InitPowerConfiguration("userspace");
 
-	return result;
+	return SCHED_OK;
 }
 
 
@@ -112,10 +104,10 @@ void ContrexSchedPol::InitProcessorsPath()
 {
 	br::ResourcePathPtr_t r_path;
 	br::ResourcePtrList_t r_list(ra.GetResources("sys.cpu.pe"));
-	for (auto & resource_ptr: r_list) {
+	for (auto & resource_ptr : r_list) {
 		if (r_path != nullptr) {
 			logger->Debug("Got the resource path object for %s ",
-				resource_ptr->Path()->ToString().c_str());
+			              resource_ptr->Path()->ToString().c_str());
 			pe_paths.push_back(resource_ptr->Path());
 		}
 	}
@@ -125,7 +117,7 @@ void ContrexSchedPol::InitPowerConfiguration(std::string const & cpufreq_gov)
 {
 	InitProcessorsPath();
 	PowerManager & pm(PowerManager::GetInstance());
-	for (auto & pe_path: pe_paths) {
+	for (auto & pe_path : pe_paths) {
 		logger->Debug("SetPowerConfig: setting governor: %s", cpufreq_gov.c_str());
 		pm.SetClockFrequencyGovernor(pe_path, cpufreq_gov);
 	}
@@ -134,15 +126,20 @@ void ContrexSchedPol::InitPowerConfiguration(std::string const & cpufreq_gov)
 
 SchedulerPolicyIF::ExitCode_t
 ContrexSchedPol::Schedule(
-		System & system,
-		RViewToken_t & status_view)
+        System & system,
+        RViewToken_t & status_view)
 {
-	SchedulerPolicyIF::ExitCode_t result = SCHED_DONE;
+	SchedulerPolicyIF::ExitCode_t result;
 
 	// Class providing query functions for applications and resources
 	sys = &system;
-
-	Init();
+	result = Init();
+	if (result != SCHED_OK) {
+		logger->Fatal("Schedule: initialization failed");
+		return result;
+	} else
+		logger->Debug("Schedule: resource state view = %ld",
+		              this->sched_status_view);
 
 	SetPowerConfiguration(0);
 
@@ -153,7 +150,7 @@ ContrexSchedPol::Schedule(
 
 	if (nr_non_critical > 0) {
 		logger->Debug("Schedule <sys.cpu.pe>: %d left for %d non-criticals",
-			proc_left, nr_non_critical);
+		              proc_left, nr_non_critical);
 		proc_quota = proc_left / nr_non_critical;
 		ScheduleNonCritical(proc_left, proc_quota);
 	}
@@ -161,13 +158,14 @@ ContrexSchedPol::Schedule(
 	// Return the new resource status view according to the new resource
 	// allocation performed
 	status_view = sched_status_view;
-	return result;
+
+	return SCHED_DONE;
 }
 
 void ContrexSchedPol::SetPowerConfiguration(uint32_t perf_state)
 {
 	PowerManager & pm(PowerManager::GetInstance());
-	for (auto & pe_path: pe_paths) {
+	for (auto & pe_path : pe_paths) {
 		logger->Debug("SetPowerConfig: setting pstate: %d", perf_state);
 		pm.SetPerformanceState(pe_path, perf_state);
 	}
@@ -179,7 +177,7 @@ inline uint32_t ContrexSchedPol::ScheduleCritical()
 	uint32_t proc_quota = 0;
 
 	if ((((proc_total / 100) <= nr_critical) &&
-		((proc_total % 100) == 0)) || (nr_non_critical == 0))
+	     ((proc_total % 100) == 0)) || (nr_non_critical == 0))
 		proc_quota = proc_total / nr_critical;
 	else
 		proc_quota = 100;
@@ -190,17 +188,17 @@ inline uint32_t ContrexSchedPol::ScheduleCritical()
 
 
 inline uint32_t ContrexSchedPol::ScheduleNonCritical(
-		uint32_t proc_available,
-		uint32_t proc_quota)
+        uint32_t proc_available,
+        uint32_t proc_quota)
 {
 	uint32_t proc_left = proc_available;
 
 	for (bbque::app::AppPrio_t prio = 1;
-			prio <= sys->ApplicationLowestPriority(); ++prio) {
+	     prio <= sys->ApplicationLowestPriority(); ++prio) {
 		if (sys->HasApplications(prio)) {
 			logger->Debug("Non critical: priority %d ", prio);
 			proc_left = SchedulePriority(
-				prio, proc_available, proc_quota);
+			                    prio, proc_available, proc_quota);
 		}
 	}
 
@@ -208,44 +206,43 @@ inline uint32_t ContrexSchedPol::ScheduleNonCritical(
 }
 
 inline uint32_t ContrexSchedPol::SchedulePriority(
-		bbque::app::AppPrio_t prio,
-		uint32_t proc_available,
-		uint32_t proc_quota)
+        bbque::app::AppPrio_t prio,
+        uint32_t proc_available,
+        uint32_t proc_quota)
 {
 	uint32_t proc_left  = proc_available;
 	AppsUidMapIt app_it;
 	bbque::app::AppCPtr_t papp = sys->GetFirstWithPrio(prio, app_it);
 	for (; papp; papp = sys->GetNextWithPrio(prio, app_it)) {
 		logger->Debug("Scheduling [%s] with <sys.cpu.pe>: %d",
-			papp->StrId(), proc_quota);
+		              papp->StrId(), proc_quota);
 		if (ScheduleApplication(papp, proc_quota) != SCHED_OK)
 			continue;
 		proc_left = proc_left - proc_quota;
 	}
 	logger->Debug("SchedulePriority [%d]: <sys.cpu.pe>: %d left",
-		prio, proc_left);
+	              prio, proc_left);
 	return proc_left;
 }
 
 
 SchedulerPolicyIF::ExitCode_t ContrexSchedPol::ScheduleApplication(
-		bbque::app::AppCPtr_t papp,
-		uint32_t proc_quota)
+        bbque::app::AppCPtr_t papp,
+        uint32_t proc_quota)
 {
 	// AWM: build a new working mode
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(
-				papp->WorkingModes().size(),"Run-time", 1, papp);
-	}
-	else
+		               papp->WorkingModes().size(), "Run-time", 1, papp);
+	} else
 		pawm->ClearResourceRequests();
 
 	// AWM: adding resource request
 	logger->Debug("Schedule: [%s] adding the processing resource request...",
-		papp->StrId());
+	              papp->StrId());
 	pawm->AddResourceRequest(
-		"sys0.cpu.pe", proc_quota, br::ResourceAssignment::Policy::SEQUENTIAL);
+	        "sys0.cpu.pe", proc_quota, br::ResourceAssignment::Policy::SEQUENTIAL);
 
 	// Resource (CPU) binding
 	logger->Debug("Schedule: [%s] CPU binding...", papp->StrId());

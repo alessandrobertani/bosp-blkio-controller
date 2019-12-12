@@ -41,7 +41,10 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
@@ -50,7 +53,8 @@ class LoggerIF;
  *
  * Test scheduler policy registered as a dynamic C++ plugin.
  */
-class TestSchedPol: public SchedulerPolicyIF {
+class TestSchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -78,7 +82,6 @@ public:
 	 * @brief Return the name of the policy plugin
 	 */
 	char const * Name();
-
 
 	/**
 	 * @brief The member function called by the SchedulerManager to perform a
@@ -115,7 +118,7 @@ private:
 	 * @brief Optional initialization member function
 	 */
 
-	ExitCode_t Init();
+	ExitCode_t _Init();
 
 	ExitCode_t ScheduleApplications();
 

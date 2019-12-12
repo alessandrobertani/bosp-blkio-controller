@@ -47,7 +47,10 @@ namespace br = bbque::res;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 class LoggerIF;
 
@@ -56,7 +59,8 @@ class LoggerIF;
  *
  * Tempura scheduler policy registered as a dynamic C++ plugin.
  */
-class TempuraSchedPol: public SchedulerPolicyIF {
+class TempuraSchedPol: public SchedulerPolicyIF
+{
 
 public:
 
@@ -119,7 +123,7 @@ private:
 	};
 
 	static bbque::utils::MetricsCollector::MetricsCollection_t
-		coll_metrics[TEMPURA_METRICS_COUNT];
+	coll_metrics[TEMPURA_METRICS_COUNT];
 
 	bu::MetricsCollector & mc;
 #endif
@@ -155,13 +159,15 @@ private:
 	bw::SystemModelPtr_t pmodel_sys;
 
 
-	class BudgetInfo {
+	class BudgetInfo
+	{
 	public:
 		BudgetInfo(br::ResourcePathPtr_t _path, br::ResourcePtrList_t _resources):
-			r_path(_path), r_list(_resources) {
-				if (!r_list.empty())
-					model = r_list.front()->Model();
-			}
+			r_path(_path), r_list(_resources)
+		{
+			if (!r_list.empty())
+				model = r_list.front()->Model();
+		}
 		br::ResourcePathPtr_t r_path;
 		br::ResourcePtrList_t r_list;
 		std::string model;
@@ -191,12 +197,7 @@ private:
 	/**
 	 * @brief Policy initialization
 	 */
-	ExitCode_t Init();
-
-	/**
-	 * @brief Initialize the new resource status view
-	 */
-	ExitCode_t InitResourceStateView();
+	ExitCode_t _Init();
 
 	/**
 	 * @brief Initialize the power and resource budgets
@@ -229,8 +230,8 @@ private:
 	 * @return The power value to cap (in milliwatts)
 	 */
 	uint32_t GetPowerBudget(
-			std::shared_ptr<BudgetInfo> budget_ptr,
-			ModelPtr_t pmodel);
+	        std::shared_ptr<BudgetInfo> budget_ptr,
+	        ModelPtr_t pmodel);
 
 	/**
 	 * @brief Define the resource budget to allocate according to the power
@@ -246,7 +247,7 @@ private:
 	 * @return The total amount of allocatable resource
 	 */
 	int64_t GetResourceBudget(
-			br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
+	        br::ResourcePathPtr_t const & rp, ModelPtr_t pmodel);
 
 	/**
 	 * @brief Perform the resource partitioning among active applications
