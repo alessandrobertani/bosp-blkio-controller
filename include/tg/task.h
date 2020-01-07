@@ -299,6 +299,7 @@ private:
 		ar & thread_count;
 		ar & processor_id;
 		ar & system_node_id;
+		ar & system_node_ip;
 		ar & nr_cores;
 		ar & assigned_arch;
 		ar & in_buffers;
