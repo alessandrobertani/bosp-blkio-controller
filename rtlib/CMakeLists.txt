@@ -26,10 +26,10 @@ set (RTLIB_SRC bbque_rtlib bbque_rpc ${PROJECT_BINARY_DIR}/bbque/version.cc)
 set (RTLIB_SRC bbque_exc ${RTLIB_SRC})
 
 # OpenCL support
-if (CONFIG_BBQUE_OPENCL)
+if (CONFIG_TARGET_OPENCL)
 	include_directories(${OPENCL_INCLUDE_DIR})
 	set (RTLIB_SRC bbque_ocl ${RTLIB_SRC})
-endif (CONFIG_BBQUE_OPENCL)
+endif (CONFIG_TARGET_OPENCL)
 
 # FIFO based RPC channel
 if (CONFIG_BBQUE_RPC_FIFO)

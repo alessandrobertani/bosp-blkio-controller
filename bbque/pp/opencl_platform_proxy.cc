@@ -74,14 +74,14 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData() {
 	platforms = new cl_platform_id[num_platforms];
 	status = clGetPlatformIDs(num_platforms, platforms, NULL);
 
-	logger->Info("PLAT OCL: Looking for platform <%s>", BBQUE_OPENCL_PLATFORM);
+	logger->Info("PLAT OCL: Looking for platform <%s>", TARGET_OPENCL_PLATFORM);
 	for (uint8_t i = 0; i < num_platforms; ++i) {
 		status = clGetPlatformInfo(
 			platforms[i], CL_PLATFORM_NAME, sizeof(platform_name),
 			platform_name, NULL);
 		logger->Info("PLAT OCL: P[%d]: %s", i, platform_name);
 
-		if (!strcmp(platform_name, BBQUE_OPENCL_PLATFORM)) {
+		if (!strcmp(platform_name, TARGET_OPENCL_PLATFORM)) {
 			logger->Notice("PLAT OCL: Platform selected: %s", platform_name);
 			platform = platforms[i];
 			break;

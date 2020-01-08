@@ -245,7 +245,7 @@ jobject Java_bbque_rtlib_model_BbqueEXC_workingModeParams(JNIEnv *env, jobject o
 		RTLIB_SystemResources_t system = wmp.systems[i];
 		jobject java_system = env->NewObject(java_system_resources_class, java_system_resources_method_id, system.sys_id,
 				system.number_cpus, system.number_proc_elements, system.cpu_bandwidth, system.mem_bandwidth,
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 				system.gpu_bandwidth, system.accelerator_bandwidth, system.ocl_device_id
 #else
 				0, 0, 0

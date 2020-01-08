@@ -1411,9 +1411,9 @@ void rtlib_ocl_init()
 	// Get a Logger module
 	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
 	assert(logger);
-	logger->Info("Using OpenCL library: %s", BBQUE_OPENCL_PATH_LIB);
+	logger->Info("Using OpenCL library: %s", TARGET_OPENCL_PATH_LIB);
 	// Native OpenCL calls
-	void * handle = dlopen(BBQUE_OPENCL_PATH_LIB, RTLD_LOCAL | RTLD_LAZY);
+	void * handle = dlopen(TARGET_OPENCL_PATH_LIB, RTLD_LOCAL | RTLD_LAZY);
 	*(void **) (&rtlib_ocl.getPlatformIDs)			= dlsym(handle, "clGetPlatformIDs");
 	*(void **) (&rtlib_ocl.getPlatformInfo) 		= dlsym(handle, "clGetPlatformInfo");
 	*(void **) (&rtlib_ocl.getDeviceIDs) 			= dlsym(handle, "clGetDeviceIDs");
@@ -1602,9 +1602,9 @@ void rtlib_init_devices()
 						rtlib_ocl.platforms[i], CL_PLATFORM_NAME,
 						sizeof (platform_name), platform_name, NULL);
 
-		if (! strcmp(platform_name, BBQUE_OPENCL_PLATFORM)) {
+		if (! strcmp(platform_name, TARGET_OPENCL_PLATFORM)) {
 			logger->Notice("OCL: Found platform selected [%s] @{%d}",
-				BBQUE_OPENCL_PLATFORM, i);
+				TARGET_OPENCL_PLATFORM, i);
 			rtlib_ocl.platform_id = i;
 			platform = rtlib_ocl.platforms[i];
 		}

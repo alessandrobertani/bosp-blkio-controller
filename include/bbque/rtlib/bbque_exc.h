@@ -28,7 +28,7 @@
 #include <memory>
 #include <string>
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #include <CL/cl.h>
 #endif
 

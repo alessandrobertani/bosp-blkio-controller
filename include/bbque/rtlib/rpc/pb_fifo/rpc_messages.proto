@@ -66,7 +66,7 @@ message PB_rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM {
     sint32 r_proc = 4;
     /** Amount of memory assigned */
     sint32 r_mem = 5;
-    /** CONFIG_BBQUE_OPENCL */
+    /** CONFIG_TARGET_OPENCL */
     sint32 r_gpu = 6;
     sint32 r_acc = 7;
     /** Assigned OpenCL device */

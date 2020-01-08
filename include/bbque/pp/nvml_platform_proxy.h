@@ -57,7 +57,7 @@ public:
 	const char * GetPlatformID(int16_t system_id = -1) const override final
 	{
 		(void) system_id;
-		return BBQUE_OPENCL_PLATFORM;
+		return TARGET_OPENCL_PLATFORM;
 	}
 
 	/**

@@ -164,9 +164,9 @@ else (CONFIG_TARGET_SIMULATED_PLATFORM)
         set (BARBEQUE_SRC pp/android_platform_proxy ${BARBEQUE_SRC})
   endif (CONFIG_TARGET_ANDROID)
 endif (CONFIG_TARGET_SIMULATED_PLATFORM)
-if (CONFIG_BBQUE_OPENCL)
+if (CONFIG_TARGET_OPENCL)
 	set (BARBEQUE_SRC pp/opencl_platform_proxy ${BARBEQUE_SRC})
-endif (CONFIG_BBQUE_OPENCL)
+endif (CONFIG_TARGET_OPENCL)
 if (CONFIG_BBQUE_NVIDIA)
 	set (BARBEQUE_SRC pp/nvml_platform_proxy ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_NVIDIA)
@@ -215,11 +215,11 @@ target_link_libraries(barbeque
 endif (CONFIG_TARGET_ANDROID)
 
 # Linking dependencies for OpenCL support
-if (CONFIG_BBQUE_OPENCL)
+if (CONFIG_TARGET_OPENCL)
 target_link_libraries(barbeque
 	${OPENCL_LIBRARY}
 )
-endif (CONFIG_BBQUE_OPENCL)
+endif (CONFIG_TARGET_OPENCL)
 
 if (CONFIG_BBQUE_NVIDIA)
   find_package(NVML REQUIRED)

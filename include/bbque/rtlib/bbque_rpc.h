@@ -35,7 +35,7 @@
 # include "bbque/utils/perf.h"
 #endif
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #include "bbque/rtlib/bbque_ocl_stats.h"
 #endif
 
@@ -536,10 +536,10 @@ protected:
 
 #endif // CONFIG_BBQUE_RTLIB_PERF_SUPPORT
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 		/** Map of OpenCL profiling info */
 		OclEventsStatsMap_t ocl_events_map;
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 
 		/** The mutex protecting concurrent access to statistical data */
 		std::mutex stats_mutex;
@@ -900,7 +900,7 @@ protected:
 	}
 
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 
 	/**********************************************************************
 	 *    OpenCL support
@@ -920,7 +920,7 @@ protected:
 	        uint32_t & exec_time,
 	        uint32_t & mem_time);
 
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 
 	/***********************************************************************
 	 * RTLib Run-Time Configuration

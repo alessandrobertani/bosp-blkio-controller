@@ -438,11 +438,11 @@ ssize_t PBFifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
         pb_sys.set_nr_procs(sys->nr_procs);
         pb_sys.set_r_proc(sys->r_proc);
         pb_sys.set_r_mem(sys->r_mem);
-        #ifdef CONFIG_BBQUE_OPENCL
+        #ifdef CONFIG_TARGET_OPENCL
         pb_sys.set_r_gpu(sys->r_gpu);
         pb_sys.set_r_acc(sys->r_acc);
         pb_sys.set_dev(sys->dev);
-        #endif // CONFIG_BBQUE_OPENCL
+        #endif // CONFIG_TARGET_OPENCL
         pb_sys.SerializeToArray(fifo_msg->pyl, pb_sys.ByteSize());
         fifo_msg->hdr.pyl_size = pb_sys.ByteSize();
         nr_sys--;

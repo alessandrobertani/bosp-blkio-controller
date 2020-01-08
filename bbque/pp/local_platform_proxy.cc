@@ -32,7 +32,7 @@
 #warning LocalPlatformProxy cannot load any platform proxy
 #endif
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #include "bbque/pp/opencl_platform_proxy.h"
 #endif
 #ifdef CONFIG_BBQUE_NVIDIA
@@ -66,7 +66,7 @@ LocalPlatformProxy::LocalPlatformProxy()
 	this->aux.push_back(std::unique_ptr<MangoPlatformProxy>(MangoPlatformProxy::GetInstance()));
 #endif
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 	this->aux.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 

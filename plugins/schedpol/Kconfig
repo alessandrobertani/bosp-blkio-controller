@@ -37,7 +37,7 @@ config BBQUE_RM_OPT_REQUEST_DEFER_MS
 
 #config BBQUE_SP_COWS_BINDING
 #  bool "Co-scheduling Workloads (COWS) binding"
-#  depends on !BBQUE_OPENCL
+#  depends on !TARGET_OPENCL
 #  default n
 #  ---help---
 #  Enable this option only if the recipes feature information about some

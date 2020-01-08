@@ -27,7 +27,7 @@
 #include "bbque/utils/utility.h"
 #include "bbque/cpp11/chrono.h"
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #include "bbque/pp/opencl_platform_proxy.h"
 #endif
 
@@ -408,7 +408,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		0, 0,
 		// Resource amount (PROC_ELEMENT, MEMORY)
 		0, 0,
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 		// Resource amount (GPU, ACCELERATOR)
 		0, 0,
 		// Device ID
@@ -450,7 +450,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		              local_sys_msg.r_mem,
 		              ra.GetScheduledView());
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::ResourceType::GPU));
 		BBQUE_RID_TYPE r_id = gpu_ids.FirstSet();
 

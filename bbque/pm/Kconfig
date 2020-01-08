@@ -56,7 +56,7 @@ config  BBQUE_PM_NVIDIA
 config  BBQUE_PM_AMD
   bool "AMD GPU(s) Power Management"
   depends on BBQUE_PM
-  depends on BBQUE_OPENCL
+  depends on TARGET_OPENCL
   depends on !TARGET_LINUX_ARM
   default n
   ---help---
@@ -66,7 +66,7 @@ config  BBQUE_PM_AMD
 config  BBQUE_PM_GPU_ARM_MALI
   bool "ARM Mali GPU Power Management"
   depends on BBQUE_PM
-  depends on BBQUE_OPENCL
+  depends on TARGET_OPENCL
   depends on TARGET_LINUX_ARM
   default n
   ---help---

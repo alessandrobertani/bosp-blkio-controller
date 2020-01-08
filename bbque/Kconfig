@@ -102,29 +102,6 @@ menu "Linux Resource Management"
 
 endmenu # Linux Resource Management
 
-################################################################################
-
-menu "Heterogeneous Systems"
-depends on !TARGET_SIMULATED_PLATFORM
-
-  config BBQUE_OPENCL
-    bool "OpenCL Run-time Management Support"
-    depends on TARGET_LINUX
-    depends on !TARGET_SIMULATED_PLATFORM
-    select EXTERNAL_OPENCL
-    default n
-    ---help---
-    Enable the support for run-time resource management of OpenCL applications.
-
-  config BBQUE_NVIDIA
-    bool "NVIDIA Run-time Management Support"
-    depends on TARGET_LINUX
-    depends on !TARGET_SIMULATED_PLATFORM
-    default n
-    ---help---
-    Enable the support for run-time resource management of NVIDIA resources.
-
-endmenu # OpenCL Support
 
 
 ################################################################################

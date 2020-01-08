@@ -687,11 +687,11 @@ void BbqueRPC_PB_FIFO_Client::RpcBbqSyncpPreChange(unsigned int pyl_size)
 			(int16_t)sys.nr_procs(),
 			sys.r_proc(),
 			sys.r_mem(),
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 			sys.r_gpu(), sys
 			sys.r_acc(),
 			(int8_t)sys. > dev()
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 		};
 		messages.push_back(struct_sys);
 	}

@@ -131,6 +131,15 @@
 /** Target platform: Linux-Mango */
 #cmakedefine CONFIG_TARGET_LINUX_MANGO
 
+/** Enable OpenCL applications support */
+#cmakedefine CONFIG_TARGET_OPENCL
+
+/** Selected OpenCL platform */
+#define TARGET_OPENCL_PLATFORM "${OPENCL_PLATFORM}"
+
+/** OpenCL vendor library */
+#define TARGET_OPENCL_PATH_LIB "${OPENCL_LIBRARY}"
+
 /** Target hardware */
 #cmakedefine CONFIG_TARGET_ARM_BIG_LITTLE
 #cmakedefine CONFIG_TARGET_ARM_CORTEX_A9
@@ -174,17 +183,11 @@
 /** Memory locality: L2 cache */
 #cmakedefine CONFIG_BBQUE_MEMLOC_L2
 
-/** Enable OpenCL applications support */
-#cmakedefine CONFIG_BBQUE_OPENCL
+
 
 /** Enable NVIDIA applications support */
 #cmakedefine CONFIG_BBQUE_NVIDIA
 
-/** Selected OpenCL platform */
-#define BBQUE_OPENCL_PLATFORM "${OPENCL_PLATFORM}"
-
-/** OpenCL vendor library */
-#define BBQUE_OPENCL_PATH_LIB "${OPENCL_LIBRARY}"
 
 
 /** Enable Power Management support */

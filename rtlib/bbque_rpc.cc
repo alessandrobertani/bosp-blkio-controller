@@ -39,7 +39,7 @@
 #include <cstring>
 #include <sys/stat.h>
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #include "bbque/rtlib/bbque_ocl.h"
 #endif
 
@@ -322,7 +322,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 			rtlib_configuration.profile.perf_counters.raw = number_of_raw_counters;
 			break;
 #endif //CONFIG_BBQUE_RTLIB_PERF_SUPPORT
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 
 		case 'o':
 			// Enabling OpenCL Profiling Output on file
@@ -331,7 +331,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 			logger->Notice("Enabling OpenCL profiling [verbosity: %d]",
 			               rtlib_configuration.profile.opencl.level);
 			break;
-#endif //CONFIG_BBQUE_OPENCL
+#endif //CONFIG_TARGET_OPENCL
 
 		case 's':
 
@@ -1059,13 +1059,13 @@ void BbqueRPC::DumpStats(pRegisteredEXC_t exc, bool verbose)
 
 	DumpStatsHeader();
 	DumpStatsConsole(exc, verbose);
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 
 	// Dump OpenCL profiling info for each AWM
 	if (rtlib_configuration.profile.opencl.enabled)
 		OclDumpStats(exc);
 
-#endif //CONFIG_BBQUE_OPENCL
+#endif //CONFIG_TARGET_OPENCL
 
 	if (rtlib_configuration.profile.output.file) {
 		fclose(output_file);
@@ -1298,13 +1298,13 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 		wm->systems[i].number_proc_elements = allocation->number_proc_elements;
 		wm->systems[i].cpu_bandwidth = allocation->cpu_bandwidth;
 		wm->systems[i].mem_bandwidth  = allocation->mem_bandwidth;
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 		wm->res_allocation[i].gpu_bandwidth  = allocation->gpu_bandwidth;
 		wm->res_allocation[i].accelerator_bandwidth  =
 		        allocation->accelerator_bandwidth;
 #endif
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 		i ++;
 	}
 
@@ -1363,7 +1363,7 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 		wm->systems[i].number_proc_elements = resource_assignment->number_proc_elements;
 		wm->systems[i].cpu_bandwidth = resource_assignment->cpu_bandwidth;
 		wm->systems[i].mem_bandwidth  = resource_assignment->mem_bandwidth;
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 		wm->res_allocation[i].gpu_bandwidth  = resource_assignment->gpu_bandwidth;
 		wm->res_allocation[i].accelerator_bandwidth  =
@@ -1448,7 +1448,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	case MEMORY:
 		r_amount = wm->systems[0].mem_bandwidth;
 		break;
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	case GPU:
 		r_amount = wm->res_allocation[0].gpu_bandwidth;
@@ -1458,7 +1458,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 		r_amount = wm->res_allocation[0].accelerator_bandwidth;
 		break;
 #endif
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 
 	default:
 		r_amount = - 1;
@@ -1551,7 +1551,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 			sys_array[i] = wm->systems[i].mem_bandwidth;
 
 		break;
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	case GPU:
 		for (int i = 0; i < n_to_copy; i ++)
@@ -1565,7 +1565,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 
 		break;
 #endif
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 
 	default:
 		for (int i = 0; i < n_to_copy; i ++)
@@ -1795,13 +1795,13 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 			tmp->number_proc_elements = systems[i].nr_procs;
 			tmp->cpu_bandwidth = systems[i].r_proc;
 			tmp->mem_bandwidth = systems[i].r_mem;
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 			tmp->gpu_bandwidth  = res_allocation[i].gpu_bandwidth;
 			tmp->accelerator_bandwidth  = res_allocation[i].accelerator_bandwidth;
 			tmp->ocl_device_id = res_allocation[i].dev;
 #endif
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 			exc->resource_assignment[i] = tmp;
 		}
 
@@ -2436,7 +2436,7 @@ RTLIB_ExitCode_t BbqueRPC::GetRuntimeProfile(
 	if (! msg.is_ocl)
 		return RTLIB_OK;
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 	uint32_t exec_time, mem_time;
 	OclGetRuntimeProfile(exc, exec_time, mem_time);
 	// Send the profile to the resource manager
@@ -2938,7 +2938,7 @@ void BbqueRPC::PrintNoisePct(double total, double avg)
  *    OpenCL support
  ******************************************************************************/
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 
 #define SUM(v) \
 	sum(it_ct->second[CL_CMD_ ## v ## _TIME])*1e-06
@@ -3129,7 +3129,7 @@ void BbqueRPC::OclGetRuntimeProfile(
 	last_cycles_count  = exc->cycles_count;
 }
 
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 
 /*******************************************************************************
  *    Utility Functions
@@ -3434,7 +3434,7 @@ void BbqueRPC::NotifyPreConfigure(
 	}
 
 	assert(isRegistered(exc) == true);
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 	pSystemResources_t local_sys(exc->resource_assignment[0]);
 	assert(local_sys != nullptr);
 	logger->Debug("NotifyPreConfigure - OCL Device: %d", local_sys->ocl_device_id);
@@ -3464,7 +3464,7 @@ void BbqueRPC::NotifyPostConfigure(
 
 	// Resetting Runtime Statistics counters
 	(void) exc_handler;
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 	// Clear pre-run OpenCL command events
 	OclClearStats();
 #endif
@@ -3553,12 +3553,12 @@ void BbqueRPC::NotifyPostRun(
 	if (UpdateCPUBandwidthStats(exc) != RTLIB_OK)
 		logger->Debug("PostRun: could not compute current CPU bandwidth");
 
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 
 	if (rtlib_configuration.profile.opencl.enabled)
 		OclCollectStats(exc->current_awm_id, exc->current_awm_stats->ocl_events_map);
 
-#endif // CONFIG_BBQUE_OPENCL
+#endif // CONFIG_TARGET_OPENCL
 }
 
 void BbqueRPC::NotifyPreMonitor(

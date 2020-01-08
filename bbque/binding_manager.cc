@@ -79,7 +79,7 @@ void BindingManager::InitBindingDomains() {
 				br::GetResourceTypeString(type));
 		}
 
-#ifndef CONFIG_BBQUE_OPENCL
+#ifndef CONFIG_TARGET_OPENCL
 		if (type == br::ResourceType::GPU) {
 			logger->Info("Bindings: OpenCL support disabled."
 					" Discarding <GPU> binding type");

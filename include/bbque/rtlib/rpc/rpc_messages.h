@@ -261,7 +261,7 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM {
 	int32_t r_proc;
 	/** Amount of memory assigned */
 	int32_t r_mem;
-#ifdef CONFIG_BBQUE_OPENCL
+#ifdef CONFIG_TARGET_OPENCL
 	int32_t r_gpu;
 	int32_t r_acc;
 	/** Assigned OpenCL device */
