@@ -1,7 +1,7 @@
 config BBQUE_SCHEDPOL_CLOVES
   bool "Cloves"
   depends on BBQUE_OPENCL
-  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on !TARGET_SIMULATED_PLATFORM
   select BBQUE_PM_AMD
   select BBQUE_PM_CPU
   default n

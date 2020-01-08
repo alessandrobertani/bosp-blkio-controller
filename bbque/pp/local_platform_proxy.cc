@@ -49,7 +49,7 @@ LocalPlatformProxy::LocalPlatformProxy()
 	logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE ".local");
 	assert(logger);
 
-#ifdef CONFIG_BBQUE_TEST_PLATFORM_DATA
+#ifdef CONFIG_TARGET_SIMULATED_PLATFORM
 	this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy::GetInstance());
 #elif defined CONFIG_TARGET_LINUX_MANGO
 	this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy::GetInstance());

@@ -1,7 +1,7 @@
 config BBQUE_SCHEDPOL_TEMPURA
   bool "Tempura"
   default n
-  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on !TARGET_SIMULATED_PLATFORM
   select BBQUE_PM
   select BBQUE_PM_CPU
   ---help---

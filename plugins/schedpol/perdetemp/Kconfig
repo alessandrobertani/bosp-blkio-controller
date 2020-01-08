@@ -1,6 +1,6 @@
 config BBQUE_SCHEDPOL_PERDETEMP
   bool "Perdetemp"
-  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on !TARGET_SIMULATED_PLATFORM
   select BBQUE_RTLIB_CGROUPS_SUPPORT
   select BBQUE_PM
   select BBQUE_PM_CPU

@@ -125,6 +125,9 @@
 /** Target platform: ARM Architecture */
 #cmakedefine CONFIG_TARGET_ARM
 
+/** Simulated Test Platform */
+#cmakedefine CONFIG_TARGET_SIMULATED_PLATFORM
+
 /** Target platform: Linux-Mango */
 #cmakedefine CONFIG_TARGET_LINUX_MANGO
 
@@ -152,8 +155,6 @@
 #cmakedefine CONFIG_BBQUE_RPC_FIFO
 #cmakedefine CONFIG_BBQUE_RPC_PB_FIFO
 
-/** Use Test Platform Data */
-#cmakedefine CONFIG_BBQUE_TEST_PLATFORM_DATA
 
 /** Enable Linux Process Listener module */
 #cmakedefine CONFIG_BBQUE_LINUX_PROC_MANAGER

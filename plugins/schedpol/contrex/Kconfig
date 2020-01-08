@@ -1,5 +1,5 @@
 config BBQUE_SCHEDPOL_CONTREX
-  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on !TARGET_SIMULATED_PLATFORM
   bool "Contrex"
   default n
   ---help---

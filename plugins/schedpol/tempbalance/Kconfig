@@ -1,6 +1,6 @@
 config BBQUE_SCHEDPOL_TEMPBALANCE
   bool "TempBalance"
-  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on !TARGET_SIMULATED_PLATFORM
   default y
   ---help---
   This simple policy assigns an amount of CPU quota / number of CPU cores to

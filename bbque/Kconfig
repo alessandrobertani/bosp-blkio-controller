@@ -21,22 +21,6 @@ menu "Platform Loader"
   source "barbeque/plugins/ploader/Kconfig"
 endmenu
 
-menu "Simulated Mode"
-
-  config BBQUE_TEST_PLATFORM_DATA
-    bool "Use Test Platform Data (TPD)"
-    default y if TARGET_ANDROID
-    default n
-    ---help---
-    Build the BarbequeRTRM with support for Test Platform Data.
-    When compiled with this option turned on, all the target specific
-    platform control facilities are disabled.
-  
-    This could be a convenient way to use the BarbequeRTRM for initial
-    application development and integration, without worry about daemon
-    setup or requiring to run the daemon as root.
-
-endmenu # Simulated mode
 
 ################################################################################
 # Linux Resource Management
@@ -45,13 +29,13 @@ endmenu # Simulated mode
 menu "Linux Resource Management"
 
   menu "Linux Control Groups"
-  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on !TARGET_SIMULATED_PLATFORM
   
     config BBQUE_LINUX_CG_SYSTEMD
       bool "Mount CGroups in systemd directory"
       default y
       depends on TARGET_LINUX
-      depends on !BBQUE_TEST_PLATFORM_DATA
+      depends on !TARGET_SIMULATED_PLATFORM
       ---help---
       Mount Control Groups into the /sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls
       directory.
@@ -60,7 +44,7 @@ menu "Linux Resource Management"
       bool "Memory controller"
       default n
       depends on TARGET_LINUX
-      depends on !BBQUE_TEST_PLATFORM_DATA
+      depends on !TARGET_SIMULATED_PLATFORM
       ---help---
       Enable the Control Groups memory controller for enforcing the memory
       assignment control.
@@ -69,7 +53,7 @@ menu "Linux Resource Management"
       bool "Network bandwidth controller"
       default n
       depends on TARGET_LINUX
-      depends on !BBQUE_TEST_PLATFORM_DATA
+      depends on !TARGET_SIMULATED_PLATFORM
       ---help---
       Enable the Control Groups net_cls controller for enforcing the network
       bandwidth assignment control.
@@ -78,7 +62,7 @@ menu "Linux Resource Management"
       bool "CGroups handled at RTLIb level"
       default n
       depends on TARGET_LINUX
-      depends on !BBQUE_TEST_PLATFORM_DATA
+      depends on !TARGET_SIMULATED_PLATFORM
       ---help---
       Control Groups are written by the RTLib rather than the Platform Proxy.
       Indeed, what is written into the CGroups is nonetheless decided by Barbeque.
@@ -94,7 +78,7 @@ menu "Linux Resource Management"
     on the machine, and take actions (if the suitable policy has been selected)
   
   choice
-  depends on !BBQUE_TEST_PLATFORM_DATA
+  depends on !TARGET_SIMULATED_PLATFORM
   depends on BBQUE_PIL_LEGACY
     prompt "Memory locality"
     default BBQUE_MEMLOC_L3
@@ -105,7 +89,7 @@ menu "Linux Resource Management"
     config BBQUE_MEMLOC_L2
       bool "L2 cache"
   
-    depends on !BBQUE_TEST_PLATFORM_DATA
+    depends on !TARGET_SIMULATED_PLATFORM
     ---help---
     Select the memory locality that the BarbequeRTRM optimization policy should
     take into account to properly perform scheduling and resource allocation
@@ -121,12 +105,12 @@ endmenu # Linux Resource Management
 ################################################################################
 
 menu "Heterogeneous Systems"
-depends on !BBQUE_TEST_PLATFORM_DATA
+depends on !TARGET_SIMULATED_PLATFORM
 
   config BBQUE_OPENCL
     bool "OpenCL Run-time Management Support"
     depends on TARGET_LINUX
-    depends on !BBQUE_TEST_PLATFORM_DATA
+    depends on !TARGET_SIMULATED_PLATFORM
     select EXTERNAL_OPENCL
     default n
     ---help---
@@ -135,7 +119,7 @@ depends on !BBQUE_TEST_PLATFORM_DATA
   config BBQUE_NVIDIA
     bool "NVIDIA Run-time Management Support"
     depends on TARGET_LINUX
-    depends on !BBQUE_TEST_PLATFORM_DATA
+    depends on !TARGET_SIMULATED_PLATFORM
     default n
     ---help---
     Enable the support for run-time resource management of NVIDIA resources.
@@ -146,7 +130,7 @@ endmenu # OpenCL Support
 ################################################################################
 
 menu "Power Management"
-depends on !BBQUE_TEST_PLATFORM_DATA
+depends on !TARGET_SIMULATED_PLATFORM
 	source "barbeque/bbque/pm/Kconfig"
 
 endmenu # Power Management

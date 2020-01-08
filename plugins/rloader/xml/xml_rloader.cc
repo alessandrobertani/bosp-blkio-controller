@@ -213,7 +213,7 @@ RecipeLoaderIF::ExitCode_t XMLRecipeLoader::LoadRecipe(
 
 ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 	ticpp::Element * pp_elem     = nullptr;
-#ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
+#ifndef CONFIG_TARGET_SIMULATED_PLATFORM
 	ticpp::Element * pp_gen_elem = nullptr;
 	const char * sys_platform_id;
 	std::string sys_platform_hw;
@@ -226,7 +226,7 @@ ticpp::Element * XMLRecipeLoader::LoadPlatform(ticpp::Element * _xml_elem) {
 	try {
 		// <platform>
 		pp_elem = _xml_elem->FirstChildElement("platform", true);
-#ifndef CONFIG_BBQUE_TEST_PLATFORM_DATA
+#ifndef CONFIG_TARGET_SIMULATED_PLATFORM
 		// System platform
         sys_platform_id = plm.GetPlatformID();
 		if (!sys_platform_id) {
