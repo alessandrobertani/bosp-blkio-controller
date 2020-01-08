@@ -24,6 +24,10 @@
 #define MODULE_CONFIG    "PowerManager"
 #define MODULE_NAMESPACE "bq.pm"
 
+#ifdef CONFIG_BBQUE_PM_NVIDIA
+#include "bbque/pm/power_manager_nvidia.h"
+#endif
+
 #ifdef CONFIG_BBQUE_PM_AMD
 # include "bbque/pm/power_manager_amd.h"
 #endif
@@ -106,6 +110,11 @@ PowerManager::PowerManager() {
 	logger->Notice("Using AMD provider for GPUs power management");
 	device_managers[br::ResourceType::GPU] =
 		std::shared_ptr<PowerManager>(new AMDPowerManager());
+#endif
+#ifdef CONFIG_BBQUE_PM_NVIDIA
+    logger->Notice("Using NVIDIA provider for GPUs power management");
+	device_managers[br::ResourceType::GPU] =
+		std::shared_ptr<PowerManager>(new NVIDIAPowerManager());
 #endif
 #ifdef CONFIG_BBQUE_PM_GPU_ARM_MALI
 	logger->Notice("Using ARM Mali provider for GPUs power management");

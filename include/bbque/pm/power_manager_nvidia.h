@@ -49,8 +49,10 @@ public:
 
 	~NVIDIAPowerManager();
 
+    static NVIDIAPowerManager & GetInstance();
 
-	PMResult GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc);
+
+    PMResult GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc);
 
 
 	PMResult GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t & celsius);
@@ -110,7 +112,7 @@ private:
 	/***  Pointer to the NVIDIA Display Library  */
 	void * nvmlib;
 
-	/*** Number of availlable GPU in the system */
+	/*** Number of available GPU in the system */
 	unsigned int device_count;
 
 	/*** Mapping BBQ resource id -> NVML device id */

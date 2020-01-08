@@ -62,7 +62,7 @@ PlatformManager::~PlatformManager()
 
 PlatformManager & PlatformManager::GetInstance()
 {
-	static PlatformManager plm; // Guranteed to be destroyed
+	static PlatformManager plm; // Guaranteed to be destroyed
 	return plm;
 }
 
@@ -267,7 +267,7 @@ void PlatformManager::UpdateLocalSystemId()
 PlatformManager::ExitCode_t PlatformManager::Refresh()
 {
 	std::lock_guard<std::mutex> worker_status_ul(worker_status_mtx);
-	// Notify the platform monitoring thread about a new event ot be
+	// Notify the platform monitoring thread about a new event to be
 	// processed
 	platformEvents.set(PLATFORM_MANAGER_EV_REFRESH);
 	worker_status_cv.notify_one();

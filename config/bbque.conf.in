@@ -200,6 +200,8 @@ category.bq.rbind =	NOTICE
 #category.bq.sp.scm = 	ERROR
 #category.bq.ym = 	INFO
 category.bq.wm =	INFO
+#category.bq.pp.nvidia = INFO
+
 
 ###
 # Root Appender

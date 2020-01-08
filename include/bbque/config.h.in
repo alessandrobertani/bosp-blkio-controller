@@ -176,6 +176,9 @@
 /** Enable OpenCL applications support */
 #cmakedefine CONFIG_BBQUE_OPENCL
 
+/** Enable NVIDIA applications support */
+#cmakedefine CONFIG_BBQUE_NVIDIA
+
 /** Selected OpenCL platform */
 #define BBQUE_OPENCL_PLATFORM "${OPENCL_PLATFORM}"
 
@@ -200,6 +203,9 @@
 
 /** Enable AMD Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_AMD
+
+/** Enable NVIDIA Power Management support */
+#cmakedefine CONFIG_BBQUE_PM_NVIDIA
 
 /** Enable CPU Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_CPU

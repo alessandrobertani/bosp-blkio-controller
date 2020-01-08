@@ -35,7 +35,9 @@
 #ifdef CONFIG_BBQUE_OPENCL
 #include "bbque/pp/opencl_platform_proxy.h"
 #endif
-
+#ifdef CONFIG_BBQUE_NVIDIA
+#include "bbque/pp/nvml_platform_proxy.h"
+#endif
 
 namespace bbque
 {
@@ -66,6 +68,10 @@ LocalPlatformProxy::LocalPlatformProxy()
 
 #ifdef CONFIG_BBQUE_OPENCL
 	this->aux.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
+#endif
+
+#ifdef CONFIG_BBQUE_NVIDIA
+	this->aux.push_back(std::unique_ptr<NVMLPlatformProxy>(NVMLPlatformProxy::GetInstance()));
 #endif
 
 	bbque_assert(this->host);
