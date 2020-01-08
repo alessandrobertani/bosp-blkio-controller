@@ -35,7 +35,7 @@
 #ifdef CONFIG_TARGET_OPENCL
 #include "bbque/pp/opencl_platform_proxy.h"
 #endif
-#ifdef CONFIG_BBQUE_NVIDIA
+#ifdef CONFIG_TARGET_NVIDIA
 #include "bbque/pp/nvml_platform_proxy.h"
 #endif
 
@@ -70,7 +70,7 @@ LocalPlatformProxy::LocalPlatformProxy()
 	this->aux.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 
-#ifdef CONFIG_BBQUE_NVIDIA
+#ifdef CONFIG_TARGET_NVIDIA
 	this->aux.push_back(std::unique_ptr<NVMLPlatformProxy>(NVMLPlatformProxy::GetInstance()));
 #endif
 

@@ -167,9 +167,9 @@ endif (CONFIG_TARGET_SIMULATED_PLATFORM)
 if (CONFIG_TARGET_OPENCL)
 	set (BARBEQUE_SRC pp/opencl_platform_proxy ${BARBEQUE_SRC})
 endif (CONFIG_TARGET_OPENCL)
-if (CONFIG_BBQUE_NVIDIA)
+if (CONFIG_TARGET_NVIDIA)
 	set (BARBEQUE_SRC pp/nvml_platform_proxy ${BARBEQUE_SRC})
-endif (CONFIG_BBQUE_NVIDIA)
+endif (CONFIG_TARGET_NVIDIA)
 
 # Power monitoring
 if (CONFIG_BBQUE_PM)
@@ -221,7 +221,7 @@ target_link_libraries(barbeque
 )
 endif (CONFIG_TARGET_OPENCL)
 
-if (CONFIG_BBQUE_NVIDIA)
+if (CONFIG_TARGET_NVIDIA)
   find_package(NVML REQUIRED)
 
   target_link_libraries(barbeque
@@ -229,7 +229,7 @@ if (CONFIG_BBQUE_NVIDIA)
 )
   include_directories(
 	${NVML_INCLUDE_DIR})
-endif (CONFIG_BBQUE_NVIDIA)
+endif (CONFIG_TARGET_NVIDIA)
 
 
 # Linking PowerManagement support
