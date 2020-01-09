@@ -70,7 +70,7 @@ public:
 	 */
 	const char * GetPlatformID(int16_t system_id = -1) const override final {
 		(void) system_id;
-		return TARGET_OPENCL_PLATFORM;
+		return "OpenCL";
 	}
 
 	/**

@@ -57,7 +57,7 @@ public:
 	const char * GetPlatformID(int16_t system_id = -1) const override final
 	{
 		(void) system_id;
-		return TARGET_OPENCL_PLATFORM;
+		return "CUDA";
 	}
 
 	/**
@@ -66,7 +66,7 @@ public:
 	const char * GetHardwareID(int16_t system_id = -1) const override final
 	{
 		(void) system_id;
-		return "opencl";
+		return "nvidia";
 	}
 
 	/**
