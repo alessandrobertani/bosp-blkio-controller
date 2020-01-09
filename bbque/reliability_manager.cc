@@ -400,19 +400,23 @@ void ReliabilityManager::Dump(app::AppPid_t pid)
 
 void ReliabilityManager::Dump(app::SchedPtr_t psched)
 {
+#ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
 	double _start = chk_timer.getTimestampMs();
+#endif
 	auto ret = plm.Dump(psched);
 	if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
 		logger->Error("Dump: <%s> checkpoint failed", psched->StrId());
 		return;
 	}
-	double _end = chk_timer.getTimestampMs();
 
+#ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
+	double _end = chk_timer.getTimestampMs();
 	psched->UpdateCheckpointLatency(_end - _start);
 	logger->Debug("Dump: <%s> checkpointed in %.f ms [mean = %.f ms]",
 	              psched->StrId(),
 	              _end - _start,
 	              psched->GetCheckpointLatencyMean());
+#endif
 }
 
 
