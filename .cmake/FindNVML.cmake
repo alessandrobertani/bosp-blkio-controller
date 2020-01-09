@@ -20,6 +20,8 @@
 
 INCLUDE (FindPackageHandleStandardArgs)
 
+set (NVML_ROOT_DIR ${CONFIG_TARGET_NVIDIA_RUNTIME_PATH})
+
 FIND_PATH (NVML_INCLUDE_DIR
   NAMES nvml.h
         NVML/nvml.h

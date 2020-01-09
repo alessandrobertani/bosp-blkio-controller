@@ -222,13 +222,9 @@ target_link_libraries(barbeque
 endif (CONFIG_TARGET_OPENCL)
 
 if (CONFIG_TARGET_NVIDIA)
-  find_package(NVML REQUIRED)
-
-  target_link_libraries(barbeque
+target_link_libraries(barbeque
 	${NVML_LIBRARY}
 )
-  include_directories(
-	${NVML_INCLUDE_DIR})
 endif (CONFIG_TARGET_NVIDIA)
 
 
@@ -249,7 +245,6 @@ endif (CONFIG_BBQUE_EM)
 
 # Linking network project
 if (CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH)
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L${PROJECT_BINARY_DIR}/lib")
 target_link_libraries(barbeque
 	netlink
 )
