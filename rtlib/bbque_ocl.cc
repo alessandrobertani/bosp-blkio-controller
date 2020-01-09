@@ -1602,7 +1602,7 @@ void rtlib_init_devices()
 						rtlib_ocl.platforms[i], CL_PLATFORM_NAME,
 						sizeof (platform_name), platform_name, NULL);
 
-		if (! strcmp(platform_name, TARGET_OPENCL_PLATFORM)) {
+		if (!strlen(TARGET_OPENCL_PLATFORM) || (!strcmp(platform_name, TARGET_OPENCL_PLATFORM))) {
 			logger->Notice("OCL: Found platform selected [%s] @{%d}",
 				TARGET_OPENCL_PLATFORM, i);
 			rtlib_ocl.platform_id = i;

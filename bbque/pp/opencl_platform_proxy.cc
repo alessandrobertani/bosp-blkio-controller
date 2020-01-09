@@ -81,7 +81,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData() {
 			platform_name, NULL);
 		logger->Info("PLAT OCL: P[%d]: %s", i, platform_name);
 
-		if (!strcmp(platform_name, TARGET_OPENCL_PLATFORM)) {
+		if (!strlen(TARGET_OPENCL_PLATFORM) || !strcmp(platform_name, TARGET_OPENCL_PLATFORM)) {
 			logger->Notice("PLAT OCL: Platform selected: %s", platform_name);
 			platform = platforms[i];
 			break;
