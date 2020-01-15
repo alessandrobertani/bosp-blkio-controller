@@ -82,17 +82,6 @@ config BBQUE_RESOURCE_MAX_NUM
   For example, the maximum number of processing elements (computing cores)
   available per processor.
 
-config BBQUE_RESOURCE_PATH_PREFIX
-   string "Resource Path Prefix"
-   default "sys"
-   ---help---
-  The prefix (in string format) of the resource paths under which perform the
-  matching w.r.t. the resource requests in the application recipes.
-  For instance, value="sys" means that we will look for requests of CPUs or
-  ACCELERATORs starting from resource registered under "sys." (e.g. "sys.cpu"
-  or "sys.acc").
-
-
 config BBQUE_SCHED_PROFILING
   bool "Scheduling Profiling"
   default n
