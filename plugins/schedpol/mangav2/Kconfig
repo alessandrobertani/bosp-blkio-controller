@@ -1,6 +1,8 @@
 config BBQUE_SCHEDPOL_MANGAV2
   bool "ManGAv2"
   depends on TARGET_LINUX_MANGO
-  default n
+  default y
   ---help---
-  Description...
+  MANGO platforms: apply the resource mapping option, following the
+  insertion order of the application's recipe file.
+

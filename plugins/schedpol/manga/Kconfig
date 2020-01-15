@@ -1,6 +1,7 @@
 config BBQUE_SCHEDPOL_MANGA
   depends on TARGET_LINUX_MANGO
   bool "ManGA"
-  default n
+  default y
   ---help---
-  Description...
+  MANGO platforms: for each application task, select the first available
+  computing unit.
