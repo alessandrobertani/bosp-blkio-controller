@@ -99,6 +99,7 @@ setup() {
 		mkdir -p $BRTRW/lock
 		mkdir -p $BRTRW/run
 		chown $SUDO_USER:$SUDO_USER $BRTRW -R
+		chmoda a+rw $BRTRW -R
 	fi
 
 	bbqued_info "Application task-graph location: $BRATG"
