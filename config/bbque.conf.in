@@ -82,37 +82,6 @@ temp.socket0 = /sys/devices/platform/coretemp.0/hwmon/hwmon0
 #policy = tempura
 
 ################################################################################
-# Scheduling Policy
-################################################################################
-# Scheduling policy parameters
-
-# Global contribution parameters [0,100]
-[SchedPol.Contrib]
-awmvalue.weight      = 20
-reconfig.weight      = 5
-fairness.weight      = 18
-congestio.weight    = 5
-migration.weight     = 5
-
-[SchedPol.Contrib]
-msl.pe        = 75
-msl.mem       = 90
-
-# Contribution specific parameters
-[SchedPol.Contrib.awmvalue]
-nap.weight    = 60
-
-[SchedPol.Contrib.congestion]
-expbase       = 2
-penalty.pe    = 25
-penalty.mem   = 25
-
-[SchedPol.Contrib.fairness]
-expbase       = 5
-penalty.pe    = 10
-penalty.mem   = 10
-
-################################################################################
 # Synchronization Manager Options
 ################################################################################
 [SynchronizationManager]
