@@ -158,7 +158,7 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
 {
 	// Class providing query functions for applications and resources
 	sys = &system;
-	result = Init();
+	ExitCode_t result = Init();
 	if (result != SCHED_OK) {
 		logger->Fatal("Schedule: policy initialization failed");
 		return result;
@@ -167,7 +167,6 @@ SchedulerPolicyIF::ExitCode_t ManGAv2SchedPol::Schedule(
 
 	// Re-assing resources to running applications: no reconfiguration
 	// supported by MANGO platform
-	ExitCode_t result;
 	bbque::app::AppCPtr_t papp;
 	AppsUidMapIt app_it;
 
