@@ -102,7 +102,7 @@ static void FindUnitsSets(
 	// Fill the computing resources requested
 	int i=0;
 	for (auto t : tg.Tasks()) {
-#ifndef CONFIG_LIBMANGO_GN
+#ifndef CONFIG_MANGO_GN_EMULATION
 		if (t.second->GetAssignedArch() == ArchType::GN) {
 			logger->Error("Tile id=%i is of type GN but BarbequeRTRM is not "
 			              "compiled in GN emulation mode. "
