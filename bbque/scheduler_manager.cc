@@ -192,7 +192,7 @@ SchedulerManager::Schedule() {
 	logger->Notice("Scheduling [%d] START, policy [%s]", sched_count, policy->Name());
 	SchedulerPolicyIF::ExitCode result = policy->Schedule(sv, sched_view_id);
 	if (result != SchedulerPolicyIF::SCHED_DONE) {
-		logger->Error("Scheduling [%d] FAILED", sched_count);
+		logger->Error("Scheduling [%d] FAILED: error=%d", sched_count, result);
 		SetState(State_t::READY);     // --> Applications in a consistent state again
 		return FAILED;
 	}
