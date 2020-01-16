@@ -284,6 +284,8 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement(
 	logger->Debug("ActuatePowerManagement: <%s> pending actions left: %d",
 	              resource->Path()->ToString().c_str(),
 	              resource->GetPowerSettings().PendingActions());
+#else
+	UNUSED(resource);
 
 #endif // CONFIG_BBQUE_PM
 
