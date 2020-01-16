@@ -1,5 +1,6 @@
 config BBQUE_SCHEDPOL_TEST
   bool "Test"
+  depends on !TARGET_LINUX_MANGO
   default y
   ---help---
   This is a policy for testing purpose. This means that the framework

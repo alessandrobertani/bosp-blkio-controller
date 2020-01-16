@@ -1,5 +1,6 @@
 config BBQUE_SCHEDPOL_CONTREX
   depends on !TARGET_SIMULATED_PLATFORM
+  depends on !TARGET_LINUX_MANGO
   bool "Contrex"
   default n
   ---help---

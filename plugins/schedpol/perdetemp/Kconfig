@@ -1,9 +1,9 @@
 config BBQUE_SCHEDPOL_PERDETEMP
   bool "Perdetemp"
   depends on !TARGET_SIMULATED_PLATFORM
+  depends on !TARGET_LINUX_MANGO
+  depends on BBQUE_PM_CPU
   select BBQUE_RTLIB_CGROUPS_SUPPORT
-  select BBQUE_PM
-  select BBQUE_PM_CPU
   default n
   ---help---
   Multi-binding domain resource allocation policy, featuring recipe-less AWM

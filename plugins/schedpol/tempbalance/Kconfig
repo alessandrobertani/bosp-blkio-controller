@@ -1,6 +1,7 @@
 config BBQUE_SCHEDPOL_TEMPBALANCE
   bool "TempBalance"
   depends on !TARGET_SIMULATED_PLATFORM
+  depends on !TARGET_LINUX_MANGO
   default y
   ---help---
   This simple policy assigns an amount of CPU quota / number of CPU cores to
