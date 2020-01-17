@@ -20,7 +20,11 @@
 #include "bbque/pp/opencl_platform_proxy.h"
 
 #include "bbque/config.h"
+
+#ifdef CONFIG_BBQUE_PM
 #include "bbque/power_monitor.h"
+#endif
+
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_path.h"
