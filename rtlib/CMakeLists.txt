@@ -57,33 +57,32 @@ if (CONFIG_BBQUE_RTLIB_MONITORS)
 	add_subdirectory(monitors)
 endif (CONFIG_BBQUE_RTLIB_MONITORS)
 
+
 #----- Add "bbque_rtlib" target dinamic binary
 add_library(bbque_rtlib SHARED ${RTLIB_SRC})
 
-# Linking dependencies
+# Boost
+find_package(Boost 1.55.0 REQUIRED system program_options filesystem serialization)
+target_link_libraries(bbque_rtlib
+	${Boost_LIBRARIES}
+	bbque_utils
+)
+
+# Protocol buffer dependency (for PB_FIFO channel)
 if (CONFIG_BBQUE_RPC_PB_FIFO)
     target_link_libraries(bbque_rtlib
-	    bbque_utils
-	    ${Boost_LIBRARIES}
-        ${PROTOBUF_LIBRARY}
-    )
-else()
-    target_link_libraries(bbque_rtlib
-	    bbque_utils
-	    ${Boost_LIBRARIES}
+            ${PROTOBUF_LIBRARY}
     )
 endif (CONFIG_BBQUE_RPC_PB_FIFO)
 
-# Add "Generic-Linux" specific flags
-if (CONFIG_TARGET_LINUX)
-target_link_libraries(bbque_rtlib
-	-ldl -lrt
-)
-endif (CONFIG_TARGET_LINUX)
 
 # Linking dependencies for not Android-Linux targets
 if (NOT CONFIG_TARGET_ANDROID)
-  target_link_libraries(bbque_rtlib pthread)
+  target_link_libraries(bbque_rtlib
+	pthread
+	dl
+	rt
+  )
 endif (NOT CONFIG_TARGET_ANDROID)
 
 
@@ -91,14 +90,13 @@ endif (NOT CONFIG_TARGET_ANDROID)
 set_property (TARGET bbque_rtlib PROPERTY
 		INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-set_property (TARGET bbque_rtlib PROPERTY
-		FRAMEWORK ON)
+set_property (TARGET bbque_rtlib PROPERTY FRAMEWORK ON)
 
 set_property (TARGET bbque_rtlib PROPERTY PUBLIC_HEADER
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h
 		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h
-        ${PROTO_HDRS}
-        ${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_pb_message_factory.h)
+                ${PROTO_HDRS}
+                ${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_pb_message_factory.h)
 
 # Install the RTLib
 install (TARGETS bbque_rtlib LIBRARY
@@ -114,4 +112,6 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/bbque/cpp11"
 		DESTINATION "${BBQUE_PATH_HEADERS}"
 		FILES_MATCHING PATTERN "*.h")
 
+# RTLib language wrappers
 add_subdirectory (bindings)
+
