@@ -320,6 +320,55 @@ public:
 
 	typedef std::shared_ptr<InterConnect> InterConnect_t;
 
+	class IO : public Resource {
+	
+	public:
+		IO(uint16_t id = 0)
+			: Resource(id, res::ResourceType::IO)
+		{}
+
+		inline void SetBandwidth(uint64_t bandwidth) {
+			this->bandwidth = bandwidth;
+		}
+
+		inline uint64_t GetBandwidth() const {
+			return this->bandwidth;
+		}
+
+		void SetType(res::ResourceType type) = delete;
+
+	private:
+
+		uint64_t bandwidth;
+
+	};
+
+	class Storage : public IO {
+
+	public:
+
+		Storage(uint16_t id = 0)
+			: IO(id)
+		{}
+
+		inline uint64_t GetQuantity() const {
+			return this->quantity;
+		}
+
+		inline void SetQuantity(uint64_t quantity) {
+			this->quantity = quantity;
+		}
+
+		void SetType(res::ResourceType type) = delete;
+
+		private:
+
+		uint64_t quantity;
+
+	};
+
+	typedef std::shared_ptr<Storage> Storage_t;
+
 	class System :  public Resource {
 	public:
 
@@ -432,6 +481,18 @@ public:
 			this->icns.push_back(icn);
 		}
 
+		inline const std::vector<Storage_t> & GetStoragesAll() const {
+			return this->storages;
+		}
+
+		inline std::vector<Storage_t> & GetStoragesAll() {
+			return this->storages;
+		}
+
+		inline void AddStorage(Storage_t storage) {
+			this->storages.push_back(storage);
+		}
+
 		void SetType(res::ResourceType type) = delete;
 
 	private:
@@ -446,6 +507,7 @@ public:
 		std::vector <MemoryPtr_t> memories;
 		std::vector <NetworkIF_t> networkIFs;
 		std::vector <InterConnect_t> icns;
+		std::vector <Storage_t> storages;
 	};
 
 	inline const System & GetLocalSystem() const {
