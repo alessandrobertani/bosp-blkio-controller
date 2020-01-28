@@ -190,15 +190,19 @@ set (CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
 ################################################################################
 
 # set default install prefix to project root directory
-if (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
+#set (CMAKE_INSTALL_PREFIX ${CONFIG_BOSP_RUNTIME_PATH})
+if (CMAKE_INSTALL_PREFIX STREQUAL "")
 	set (CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out" )
-endif (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
+endif (CMAKE_INSTALL_PREFIX STREQUAL "")
 
-
+if (BOSP_SYSROOT STREQUAL "")
+	set (BOSP_SYSROOT ${CMAKE_INSTALL_PREFIX})
+endif (BOSP_SYSROOT STREQUAL "")
 
 ################################################################################
 # Lookup for library dependencies
 ################################################################################
+
 
 # Force usage of BOSP provided BOOST installation
 set (Boost_NO_SYSTEM_PATHS ON)
