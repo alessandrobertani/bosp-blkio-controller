@@ -85,18 +85,18 @@ if (NOT CONFIG_TARGET_ANDROID)
   )
 endif (NOT CONFIG_TARGET_ANDROID)
 
-
 # Use link path ad RPATH
-set_property (TARGET bbque_rtlib PROPERTY
-		INSTALL_RPATH_USE_LINK_PATH TRUE)
+set_target_properties(bbque_rtlib PROPERTIES
+	INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib"
+	INSTALL_RPATH_USE_LINK_PATH TRUE
+	FRAMEWORK ON)
 
-set_property (TARGET bbque_rtlib PROPERTY FRAMEWORK ON)
-
-set_property (TARGET bbque_rtlib PROPERTY PUBLIC_HEADER
-		${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h
-		${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h
-                ${PROTO_HDRS}
-                ${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_pb_message_factory.h)
+set_property(TARGET bbque_rtlib PROPERTY
+	PUBLIC_HEADER
+		"${PROJECT_SOURCE_DIR}/include/bbque/rtlib.h"
+		"${PROJECT_SOURCE_DIR}/include/bbque/rtlib/bbque_exc.h"
+                "${PROTO_HDRS}"
+		"${PROJECT_SOURCE_DIR}/include/bbque/rtlib/rpc/pb_fifo/rpc_pb_message_factory.h")
 
 # Install the RTLib
 install (TARGETS bbque_rtlib LIBRARY
