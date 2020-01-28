@@ -13,9 +13,11 @@ if (CONFIG_BBQUE_PIL_LOADER)
 	add_executable(bbque-plp ${BBQUE_PLPXML_SRC})
 
 	target_link_libraries(bbque-plp
-        	${Boost_LIBRARIES}
-)
+		${Boost_LIBRARIES})
 
+	set_target_properties(${TARGET_NAME} PROPERTIES
+		INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib:${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque"
+		INSTALL_RPATH_USE_LINK TRUE)
 
         install(TARGETS bbque-plp
                 DESTINATION ${BBQUE_PATH_BBQ}
