@@ -63,7 +63,6 @@ add_library(bbque_rtlib SHARED ${RTLIB_SRC})
 # Boost
 find_package(Boost 1.55.0 REQUIRED system program_options filesystem serialization)
 target_link_libraries(bbque_rtlib
-	${Boost_LIBRARIES}
 	bbque_utils
 )
 
