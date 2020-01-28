@@ -39,7 +39,6 @@ endif (CONFIG_BBQUE_RPC_FIFO)
 # FIFO based with Protocols Buffers
 if (CONFIG_BBQUE_RPC_PB_FIFO)
     #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
-    set (CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX} ${CMAKE_PREFIX_PATH})
     find_package(Protobuf REQUIRED)
     message(STATUS "Protobuf compiler: " ${PROTOBUF_PROTOC_EXECUTABLE})
     include_directories(SYSTEM ${Protobuf_INCLUDE_DIR})
