@@ -284,8 +284,8 @@ if (CONFIG_TARGET_LINUX_MANGO)
 
   target_link_libraries (barbeque
 	${HN}
-	-ldl
-	-lrt)
+	dl
+	rt)
   include_directories (barbeque ${CONFIG_MANGO_ROOT_PATH}/include/)
 endif (CONFIG_TARGET_LINUX_MANGO)
 
@@ -325,6 +325,7 @@ install(FILES "${PROJECT_BINARY_DIR}/include/bbque/config.h"
 install (TARGETS barbeque RUNTIME
 		DESTINATION ${BBQUE_PATH_BBQ}
 		COMPONENT BarbequeRTRM)
+
 # Install the Barbeque configuration files
 install (FILES "${PROJECT_BINARY_DIR}/config/bbque.conf"
 		DESTINATION ${BBQUE_PATH_CONF}

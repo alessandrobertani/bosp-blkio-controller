@@ -77,9 +77,6 @@ if ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
 	set (CONFIG_BOSP_RUNTIME_RWPATH "${PROJECT_SOURCE_DIR}/../out/var/bbque")
 endif ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
 
-SET(CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib")
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 # Barbeque CGroups path
 if(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
 	set (BBQUE_CGMOUNT_DIR "/sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls")
@@ -256,6 +253,10 @@ link_directories(
 	${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RTLIB}
 )
 
+set (CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib:${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque")
+set (CMAKE_INSTALL_RPATH_USE_LINK TRUE)
+
+
 ################################################################################
 # Subdirectories analysis
 ################################################################################
@@ -283,28 +284,35 @@ endif (CONFIG_BBQUE_DM)
 ################################################################################
 # Doxygen Documentation
 ################################################################################
+
 # check if doxygen is even installed
 find_package(Doxygen)
 if (DOXYGEN_FOUND STREQUAL "NO")
 	message(FATAL_ERROR "Doxygen not found. "
 		"Please get a copy http://www.doxygen.org")
 endif (DOXYGEN_FOUND STREQUAL "NO")
+
 # prepare doxygen configuration file
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
 	${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
 # add doxygen as target
 add_custom_target (doxygen ${DOXYGEN_EXECUTABLE}
 	${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 # cleanup $build/api-doc on "make clean"
 set_property(DIRECTORY APPEND PROPERTY
 		ADDITIONAL_MAKE_CLEAN_FILES api-doc)
+
 # add doxygen as dependency to doc-target
 add_custom_target (doc)
 add_dependencies (doc doxygen)
+
 # install HTML API documentation and manual pages
 set (DOC_PATH "${BBQUE_PATH_DOCS}")
+
 install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/html
 	DESTINATION ${DOC_PATH} OPTIONAL)
+
 # install man pages into packages, scope is now project root..
 install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/man/man3
 	DESTINATION ${DOC_PATH} OPTIONAL)
@@ -326,14 +334,14 @@ message ( STATUS "   Target............. ${CONFIG_TARGET_NAME} ${CONFIG_TARGET_D
 message ( STATUS "   CFLAGS............. ${CMAKE_C_FLAGS}")
 message ( STATUS " CXXFLAGS............. ${CMAKE_CXX_FLAGS}")
 message ( STATUS "Installation prefix... ${CMAKE_INSTALL_PREFIX}" )
-message ( STATUS "   BarbequeRTRM....... <prefix>/${BBQUE_PATH_BBQ}" )
-message ( STATUS "   Configuration...... <prefix>/${BBQUE_PATH_CONF}/${BBQUE_CONF_FILE}" )
-message ( STATUS "   Recipes............ <prefix>/${BBQUE_PATH_RECIPES}" )
-message ( STATUS "   Plugins............ <prefix>/${BBQUE_PATH_PLUGINS}" )
+message ( STATUS "   BarbequeRTRM....... ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_BBQ}" )
+message ( STATUS "   Configuration...... ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_CONF}/${BBQUE_CONF_FILE}" )
+message ( STATUS "   Recipes............ ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RECIPES}" )
+message ( STATUS "   Plugins............ ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_PLUGINS}" )
 message ( STATUS "   Var(RPC-Channel)... ${CONFIG_BOSP_RUNTIME_RWPATH}" )
-message ( STATUS "   Headers............ <prefix>/${BBQUE_PATH_HEADERS}" )
-message ( STATUS "   RTLib library...... <prefix>/${BBQUE_PATH_RTLIB}" )
-message ( STATUS "   Documentation...... <prefix>/${BBQUE_PATH_DOCS}" )
+message ( STATUS "   Headers............ ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_HEADERS}" )
+message ( STATUS "   RTLib library...... ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RTLIB}" )
+message ( STATUS "   Documentation...... ${CMAKE_BINARY_DIR}/${BBQUE_PATH_DOCS}" )
 message ( STATUS "Dependencies:")
 message ( STATUS "   Boost library...... ${Boost_LIBRARY_DIRS}" )
 message ( STATUS "BOSP Configuration:")
