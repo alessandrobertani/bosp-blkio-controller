@@ -199,7 +199,7 @@ setup_cgroups() {
 	fi
 
 	bbqued_notice "CGroups configuration: $CGSETUP"
-	LD_PRELOAD=$SYSROOT/lib/libcgroup.so $BBQUE_CGPARSER -l $CGSETUP || exit 1
+	$BBQUE_CGPARSER -l $CGSETUP || exit 1
 
 	# Setup CGroups shield
 	bbqued_info "Moving all (user-space) tasks into HOST node"
