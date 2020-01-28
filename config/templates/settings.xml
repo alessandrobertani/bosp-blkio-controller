@@ -1,10 +1,11 @@
-<BarbequeRTRM version="0.8">
-    <recipe version="0.8"/>
+<BarbequeRTRM version="1.2">
+    <recipe version="1.0"/>
     <application>
         <priority max-value="10"/>
         <languages>
             <language name="cpp"/>
-            <language name="ocl"/>
+            <language name="opencl"/>
+            <language name="opencv"/>
         </languages>
     </application>
 

@@ -2,7 +2,7 @@
 
 BOSP_BASE=${1:-'/opt/BOSP'}
 APP_NAME=${2:-'BbqApp'}
-APP_PATH=${BOSP_BASE}/contrib/user/${APP_NAME}
+APP_PATH=${3:-${BOSP_BASE}/contrib/user/${APP_NAME}}
 
 echo
 echo '.:: BarbequeRTRM Template Application Extraction'

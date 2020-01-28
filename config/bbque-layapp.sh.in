@@ -3,8 +3,9 @@ BOSPSH_SOURCES="@PROJECT_SOURCE_DIR@/.."
 
 APP_NAME=${1:-'MyApp'}
 APP_TYPE=${2:-'cpp'}
+APP_PREFIX=${3:-'samples'}
 
-LANG=(cpp ocl)
+LANG=(cpp opencl opencv)
 
 clear
 
@@ -20,15 +21,24 @@ read APP_NAME
 APP_NAME="$(sed -e 's/\b[A-Za-z]/\u\0/g; s/\ //g' <<< $APP_NAME)"
 [ x$APP_NAME == x ] && APP_NAME='MyApp'
 
-echo -n "> Select application type (0: CPP) [$APP_TYPE]: "
-read APP_TYPE
-[ x$APP_TYPE == x ] && APP_TYPE=0
+echo -n "> Select application type (0: CPP, 1: OpenCL, 2: OpenCV) [default=0]: "
+read APP_TYPE_ID
+[ x$APP_TYPE_ID == x ] && APP_TYPE_ID=0
+APP_TYPE=${LANG[$APP_TYPE_ID]}
 
-APP_PATH="$BOSPSH_SOURCES/contrib/user/$APP_NAME"
-#echo -n "> Set application path [${APP_PATH}]: "
-#read APP_PATH
-[ x$APP_PATH == x ] && APP_PATH=$BOSPSH_SOURCES/contrib/user/$APP_NAME
-echo
+echo -n "> Select application source sub-folder ["$BOSPSH_SOURCES"/] : "
+read APP_PREFIX
+[ x$APP_PREFIX == x ] && APP_PREFIX='samples'
+
+
+APP_PATH=$BOSPSH_SOURCES"/"$APP_PREFIX"/"$APP_TYPE"/"$APP_NAME
+if [ -d $APP_PATH ]; then
+	echo -n "Creating application directory..."
+	mdkir -p $APP_PATH
+else
+	echo -n "Error: application directory already existing..."
+fi
+
 
 TEMPLATE_DIR="$BOSPSH_SOURCES/barbeque/config/templates"
 TEMPLATE_BUILDER="$TEMPLATE_DIR/bbque_template_${LANG[$APP_TYPE]}.bsx"
