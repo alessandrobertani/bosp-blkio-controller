@@ -92,14 +92,14 @@ setup() {
 	eval `env | grep SUDO_USER`
 	bbqued_notice "Sudo user: $SUDO_USER"
 
-	# Check for runt-time R/W directories
-	bbqued_info "Checking for runt-time R/W directories"
+	# Check for run-time R/W directories
+	bbqued_info "Checking for run-time R/W directories [$BRTRW/...]"
 	if [ ! -d "$BRTRW" ]; then
 		mkdir -p $BRTRW/bbque
 		mkdir -p $BRTRW/lock
 		mkdir -p $BRTRW/run
 		chown $SUDO_USER:$SUDO_USER $BRTRW -R
-		chmoda a+rw $BRTRW -R
+		chmod a+rw $BRTRW -R
 	fi
 
 	bbqued_info "Application task-graph location: $BRATG"
