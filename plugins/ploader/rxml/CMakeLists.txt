@@ -17,3 +17,7 @@ target_link_libraries(bbque_ploader_rxml
     ${Boost_LIBRARIES}
 )
 
+include_directories(
+	${CONFIG_BOSP_RUNTIME_PATH}/include
+)
+
