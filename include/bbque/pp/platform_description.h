@@ -343,6 +343,14 @@ public:
 
 	};
 
+	typedef enum StorageType {
+	        HDD,
+	        SSD,
+	        SD,
+	        FLASH,
+	        CUSTOM
+	} StorageType_t;
+
 	class Storage : public IO {
 
 	public:
@@ -359,11 +367,20 @@ public:
 			this->quantity = quantity;
 		}
 
+		inline StorageType_t GetStorageType() const {
+			return this->storage_type;
+		}
+
+		inline void SetStorageType(StorageType_t type){
+			this->storage_type = type;
+		}
+
 		void SetType(res::ResourceType type) = delete;
 
 		private:
 
 		uint64_t quantity;
+		StorageType_t storage_type;
 
 	};
 
