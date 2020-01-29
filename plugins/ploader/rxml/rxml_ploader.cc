@@ -701,14 +701,15 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
 		pp::PlatformDescription::System & sys) {
 	// Now get all the memories and save them. This should be perfomed before <cpu> and
 	// other tags, due to reference to memories inside them.
-	node_ptr storage_tag = this->GetFirstChild(root,"storage",true) ;
+	node_ptr storage_tag = this->GetFirstChild(root,"storage",false) ;
 	while( storage_tag != NULL ) {
 		pp::PlatformDescription::Storage storage;
 		attr_ptr id_attr       = this->GetFirstAttribute(storage_tag, "id",       true);
 		attr_ptr quantity_attr = this->GetFirstAttribute(storage_tag, "quantity", true);
 		attr_ptr unit_attr     = this->GetFirstAttribute(storage_tag, "unit",     true);
 		attr_ptr bw_attr	   = this->GetFirstAttribute(storage_tag, "bandwidth",true);
-		attr_ptr bw_unit_attr  = this->GetFirstAttribute(storage_tag, "bw_unit",true);
+		attr_ptr bw_unit_attr  = this->GetFirstAttribute(storage_tag, "bw_unit",  true);
+		attr_ptr type_attr	   = this->GetFirstAttribute(storage_tag, "type",  	  false);
 
 		short        id;
 		int          quantity;
@@ -796,6 +797,32 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
 				return PL_LOGIC_ERROR;
 			break;
 		}
+
+		// type=""
+		if(type_attr != nullptr) {
+			switch(ConstHashString(type_attr->value())) {
+			case ConstHashString("hdd"):
+				storage.SetStorageType(pp::PlatformDescription::HDD);
+				break;
+			case ConstHashString("ssd"):
+				storage.SetStorageType(pp::PlatformDescription::SSD);
+				break;
+			case ConstHashString("sd"):
+				storage.SetStorageType(pp::PlatformDescription::SD);;
+				break;
+			case ConstHashString("flash"):
+				storage.SetStorageType(pp::PlatformDescription::FLASH);;
+				break;
+			default:
+				logger->Error("'%s' is not a valid value for `type` attribute.",
+					type_attr->value());
+				return PL_LOGIC_ERROR;
+				break;
+		}
+	} else {
+		// If not specified the default is custom.
+		storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+	}
 
 
 		storage.SetPrefix(sys.GetPath());
