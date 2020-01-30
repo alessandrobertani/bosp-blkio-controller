@@ -76,7 +76,7 @@ temp.sockets = ${CONFIG_BBQUE_PM_TSENSOR_PATHS}
 # Scheduler Manager Options
 ################################################################################
 [SchedulerManager]
-#policy = tempura
+#policy = test
 
 ################################################################################
 # Synchronization Manager Options
@@ -132,41 +132,38 @@ rootCategory = NOTICE, raFile
 # to redefine the category priority to a value diffent from that of
 # the rootCategory
 ###
-#category.bq =  	INFO
-#category.bq.ap = 	INFO
-#category.bq.app = 	INFO
-#category.bq.am =	NOTICE
-category.bq.awm =	INFO
-category.bq.cm =	INFO
-category.bq.df = 	NOTICE
-category.bq.dm =	NOTICE
-category.bq.em =	INFO
-category.bq.mc =	ERROR
-category.bq.om =	NOTICE
-category.bq.pm =	INFO
-#category.bq.pp = 	INFO
-#category.bq.pp.linux =    INFO
+#category.bq =  	  INFO
+#category.bq.ap = 	  INFO
+#category.bq.app = 	  INFO
+category.bq.am =	  NOTICE
+category.bq.awm =	  NOTICE
+category.bq.cm =	  INFO
+category.bq.df = 	  NOTICE
+category.bq.dm =	  NOTICE
+category.bq.em =	  INFO
+category.bq.lm =	  INFO
+category.bq.mc =	  ERROR
+category.bq.om =	  NOTICE
+category.bq.pm =	  INFO
+#category.bq.pp = 	  INFO
 category.bq.pp.linux_ps = INFO
-#category.bq.prm = 	INFO
-category.bq.pub =	DEBUG
-#category.bq.ra =	NOTICE
-category.bq.ri = 	NOTICE
-category.bq.rb = 	NOTICE
-category.bq.re = 	NOTICE
-category.bq.rl = 	NOTICE
-#category.bq.rm = 	INFO
-category.bq.rp = 	NOTICE
-category.bq.rt = 	NOTICE
-category.bq.rbind =	NOTICE
-#category.bq.rpc.fif = 	INFO
-#category.bq.rpc.prx = 	INFO
-#category.bq.sm = 	INFO
-#category.bq.sp = 	NOTICE
-#category.bq.sp.sc = 	ERROR
-#category.bq.sp.scm = 	ERROR
-#category.bq.ym = 	INFO
-category.bq.wm =	INFO
-#category.bq.pp.nvidia = INFO
+#category.bq.prm = 	  INFO
+category.bq.pub =	  NOTICE
+#category.bq.ra =	  NOTICE
+category.bq.ri = 	  NOTICE
+category.bq.rb = 	  NOTICE
+category.bq.re = 	  NOTICE
+category.bq.rl = 	  NOTICE
+#category.bq.rm = 	  INFO
+category.bq.rp = 	  NOTICE
+category.bq.rt = 	  NOTICE
+category.bq.rbind =	  NOTICE
+#category.bq.rpc.fif = 	  INFO
+#category.bq.rpc.prx = 	  INFO
+#category.bq.sm = 	  INFO
+#category.bq.sp = 	  NOTICE
+#category.bq.ym = 	  INFO
+category.bq.wm =	  INFO
 
 
 ###
