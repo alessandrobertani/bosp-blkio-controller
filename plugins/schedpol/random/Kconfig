@@ -1,7 +1,7 @@
 config BBQUE_SCHEDPOL_RANDOM
   bool "Random"
   depends on !TARGET_LINUX_MANGO
-  default y
+  default n
   ---help---
   Single binding domain (e.g. single multi-core CPU) resource allocation
   policy, featuring a random choice of AWM and resource binding.
