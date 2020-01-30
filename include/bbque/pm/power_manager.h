@@ -25,6 +25,7 @@
 #include <memory>
 #include <vector>
 
+#include "bbque/config.h"
 #include "bbque/command_manager.h"
 #include "bbque/pm/model_manager.h"
 #include "bbque/res/resource_path.h"
@@ -33,16 +34,19 @@
 namespace bu = bbque::utils;
 namespace bw = bbque::pm;
 
-namespace bbque {
+namespace bbque
+{
 
-namespace res {
-	class ResourcePath;
-	using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
+namespace res
+{
+class ResourcePath;
+using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
 }
 namespace br = bbque::res;
 
 
-class PowerManager: public CommandHandler {
+class PowerManager: public CommandHandler
+{
 
 public:
 	enum class PMResult {
@@ -64,7 +68,7 @@ public:
 	/**
 	 * @enum Information classes that the module provides
 	 */
-	enum class InfoType: uint8_t {
+	enum class InfoType : uint8_t {
 		LOAD        = 0,
 		TEMPERATURE = 1,
 		FREQUENCY   = 2,
@@ -105,61 +109,61 @@ public:
 	/** Runtime activity load */
 
 	virtual PMResult GetLoad(
-		br::ResourcePathPtr_t const & rp, uint32_t &perc);
+	        br::ResourcePathPtr_t const & rp, uint32_t &perc);
 
 
 	/** Temperature */
 
 	virtual PMResult GetTemperature(
-		br::ResourcePathPtr_t const & rp, uint32_t &celsius);
+	        br::ResourcePathPtr_t const & rp, uint32_t &celsius);
 
 
 	/** Clock frequency */
 
 	virtual PMResult GetClockFrequency(
-		br::ResourcePathPtr_t const & rp, uint32_t &khz);
+	        br::ResourcePathPtr_t const & rp, uint32_t &khz);
 
 	virtual PMResult GetClockFrequencyInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &khz_min,
-		uint32_t &khz_max,
-		uint32_t &khz_step);
+	        br::ResourcePathPtr_t const & rp,
+	        uint32_t &khz_min,
+	        uint32_t &khz_max,
+	        uint32_t &khz_step);
 
 	virtual PMResult GetAvailableFrequencies(
-		br::ResourcePathPtr_t const & rp,
-		std::vector<uint32_t> & freqs);
+	        br::ResourcePathPtr_t const & rp,
+	        std::vector<uint32_t> & freqs);
 
 	virtual PMResult SetClockFrequency(
-		br::ResourcePathPtr_t const & rp, uint32_t khz);
+	        br::ResourcePathPtr_t const & rp, uint32_t khz);
 
 	virtual PMResult SetClockFrequency(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t khz_min,
-		uint32_t khz_max);
+	        br::ResourcePathPtr_t const & rp,
+	        uint32_t khz_min,
+	        uint32_t khz_max);
 
 
 	virtual std::vector<std::string> const & GetAvailableFrequencyGovernors(
-			br::ResourcePathPtr_t const & rp);
+	        br::ResourcePathPtr_t const & rp);
 
 	virtual PMResult GetClockFrequencyGovernor(
-			br::ResourcePathPtr_t const & rp,
-			std::string & governor);
+	        br::ResourcePathPtr_t const & rp,
+	        std::string & governor);
 
 	virtual PMResult SetClockFrequencyGovernor(
-			br::ResourcePathPtr_t const & rp,
-			std::string const & governor);
+	        br::ResourcePathPtr_t const & rp,
+	        std::string const & governor);
 
 
 	/** Voltage information */
 
 	virtual PMResult GetVoltage(
-		br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
+	        br::ResourcePathPtr_t const & rp, uint32_t &mvolt);
 
 	virtual PMResult GetVoltageInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &mvolt_min,
-		uint32_t &mvolt_max,
-		uint32_t &mvolt_step);
+	        br::ResourcePathPtr_t const & rp,
+	        uint32_t &mvolt_min,
+	        uint32_t &mvolt_max,
+	        uint32_t &mvolt_step);
 
 	/**  On/off status */
 
@@ -173,20 +177,20 @@ public:
 	/**  Fan speed information */
 
 	virtual PMResult GetFanSpeed(
-		br::ResourcePathPtr_t const & rp,
-		FanSpeedType fs_type,
-		uint32_t &value);
+	        br::ResourcePathPtr_t const & rp,
+	        FanSpeedType fs_type,
+	        uint32_t &value);
 
 	virtual PMResult GetFanSpeedInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &rpm_min,
-		uint32_t &rpm_max,
-		uint32_t &rpm_step);
+	        br::ResourcePathPtr_t const & rp,
+	        uint32_t &rpm_min,
+	        uint32_t &rpm_max,
+	        uint32_t &rpm_step);
 
 	virtual PMResult SetFanSpeed(
-		br::ResourcePathPtr_t const & rp,
-		FanSpeedType fs_type,
-		uint32_t value);
+	        br::ResourcePathPtr_t const & rp,
+	        FanSpeedType fs_type,
+	        uint32_t value);
 
 	virtual PMResult ResetFanSpeed(br::ResourcePathPtr_t const & rp);
 
@@ -194,12 +198,12 @@ public:
 	/** Power consumption information */
 
 	virtual PMResult GetPowerUsage(
-		br::ResourcePathPtr_t const & rp, uint32_t &mwatt);
+	        br::ResourcePathPtr_t const & rp, uint32_t &mwatt);
 
 	virtual PMResult GetPowerInfo(
-		br::ResourcePathPtr_t const & rp,
-		uint32_t &mwatt_min,
-		uint32_t &mwatt_max) ;
+	        br::ResourcePathPtr_t const & rp,
+	        uint32_t &mwatt_min,
+	        uint32_t &mwatt_max) ;
 
 
 	/** Performance/power states */
@@ -207,19 +211,19 @@ public:
 	virtual PMResult GetPowerState(br::ResourcePathPtr_t const & rp, uint32_t & state);
 
 	virtual PMResult GetPowerStatesInfo(
-		br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
+	        br::ResourcePathPtr_t const & rp, uint32_t & min, uint32_t & max, int & step);
 
 	virtual PMResult SetPowerState(br::ResourcePathPtr_t const & rp, uint32_t state);
 
 
 	virtual PMResult GetPerformanceState(
-		br::ResourcePathPtr_t const & rp, uint32_t &value);
+	        br::ResourcePathPtr_t const & rp, uint32_t &value);
 
 	virtual PMResult GetPerformanceStatesCount(
-		br::ResourcePathPtr_t const & rp, uint32_t &count);
+	        br::ResourcePathPtr_t const & rp, uint32_t &count);
 
 	virtual PMResult SetPerformanceState(
-		br::ResourcePathPtr_t const & rp, uint32_t value);
+	        br::ResourcePathPtr_t const & rp, uint32_t value);
 
 	int CommandsCb(int argc, char *argv[]);
 
@@ -266,16 +270,16 @@ private:
 
 
 	inline std::shared_ptr<PowerManager> GetDeviceManager(
-				br::ResourcePathPtr_t const & rp,
-				std::string const & api_name) const {
+	        br::ResourcePathPtr_t const & rp,
+	        std::string const & api_name) const
+	{
 		auto pm_iter = device_managers.find(rp->Type(-1));
 		if (pm_iter == device_managers.end()) {
 			logger->Warn("(PM) %s not supported for [%s]",
-					api_name.c_str(),
-					br::GetResourceTypeString(rp->ParentType(rp->Type())));
+			             api_name.c_str(),
+			             br::GetResourceTypeString(rp->ParentType(rp->Type())));
 			return nullptr;
-		}
-		else
+		} else
 			return pm_iter->second;
 	}
 };
@@ -283,4 +287,3 @@ private:
 }
 
 #endif // BBQUE_POWER_MANAGER_H_
-

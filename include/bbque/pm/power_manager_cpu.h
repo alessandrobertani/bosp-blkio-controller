@@ -24,7 +24,7 @@
 #include "bbque/pm/power_manager.h"
 #include "bbque/res/resources.h"
 
-#define BBQUE_LINUX_SYS_CORE_PREFIX   "/sys/devices/system/cpu"
+#define BBQUE_LINUX_SYS_CORE_PREFIX  "/sys/devices/system/cpu"
 #define BBQUE_LINUX_SYS_CPU_PREFIX   "/sys/devices/system/cpu/cpu"
 
 #ifndef CONFIG_BBQUE_PM_NOACPI
@@ -49,12 +49,9 @@ class CPUPowerManager: public PowerManager
 
 public:
 
-	enum class ExitStatus
-	{
-	        /** Successful call */
-	        OK = 0,
-	        /** A not specified error code */
-	        ERR_GENERIC
+	enum class ExitStatus {
+		OK = 0,      /** Successful call */
+		ERR_GENERIC  /** A not specified error code */
 	};
 
 	/**
@@ -123,7 +120,8 @@ public:
 	 * @see class PowerManager
 	 */
 	std::vector<std::string> const & GetAvailableFrequencyGovernors(
-	        br::ResourcePathPtr_t const & rp) {
+	        br::ResourcePathPtr_t const & rp)
+	{
 		(void) rp;
 		return cpufreq_governors;
 	}
@@ -158,7 +156,8 @@ public:
 	/* ===========   Power consumption  =========== */
 
 	PMResult GetPowerUsage(
-	        br::ResourcePathPtr_t const & rp, uint32_t & mwatt) {
+	        br::ResourcePathPtr_t const & rp, uint32_t & mwatt)
+	{
 		(void) rp;
 		mwatt = 0;
 		return PMResult::ERR_API_NOT_SUPPORTED;
