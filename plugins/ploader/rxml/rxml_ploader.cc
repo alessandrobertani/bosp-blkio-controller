@@ -309,9 +309,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	sys.SetHostname(hostname->value());
 	if (address) {
 		sys.SetNetAddress(address->value());
-		if(is_local) {
-			logger->Warn("Address specified in a local system (I will ignore it)");
-		}
+		logger->Info("System %d: IP=%s",
+		             sys.GetId(), sys.GetNetAddress().c_str());
+	} else {
+		logger->Warn("System %d: no IPD address provided", sys.GetId());
 	}
 	sys_count++;
 
