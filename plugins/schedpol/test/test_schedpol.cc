@@ -24,6 +24,7 @@
 #include "bbque/config.h"
 #include "bbque/modules_factory.h"
 #include "bbque/binding_manager.h"
+#include "bbque/platform_manager.h"
 #include "bbque/utils/logging/logger.h"
 
 #include "bbque/app/working_mode.h"
@@ -98,6 +99,15 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 		logger->Crit("Init: not available CPU cores!");
 		return SCHED_R_UNAVAILABLE;
 	}
+
+	// Get all the system nodes
+	auto sys_rsrcs = sys->GetResources("sys");
+	logger->Crit("Init: %d systems node(s) available", sys_rsrcs.size());
+	for (auto & sys_rsrc : sys_rsrcs) {
+		sys_ids.push_back(sys_rsrc->ID());
+	}
+
+
 
 	// Load all the applications task graphs
 	logger->Debug("Init: loading the applications task graphs");
@@ -238,8 +248,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	}
 
 	// Resource request addition
-	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-	                         br::ResourceAssignment::Policy::BALANCED);
+	pawm->AddResourceRequest(
+	        "sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+	        br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
 	BindingManager & bdm(BindingManager::GetInstance());
@@ -283,10 +294,11 @@ int32_t TestSchedPol::DoCPUBinding(
 	// CPU-level binding: the processing elements are in the scope of the CPU 'cpu_id'
 	int32_t ref_num = -1;
 	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, cpu_id, ref_num);
-	auto resource_path = ra.GetPath("sys0.cpu" + std::to_string(cpu_id) + ".pe");
 
 	// The ResourceBitset object is used for the processing elements binding
 	// (CPU core mapping)
+	/*
+	auto resource_path = ra.GetPath("sys.cpu" + std::to_string(cpu_id) + ".pe");
 	br::ResourceBitset pes;
 	uint16_t pe_count = 0;
 	for (auto & pe_id : pe_ids) {
@@ -297,7 +309,7 @@ int32_t TestSchedPol::DoCPUBinding(
 		++pe_count;
 		if (pe_count == CPU_QUOTA_TO_ALLOCATE / 100) break;
 	}
-
+	*/
 	return ref_num;
 }
 
@@ -314,21 +326,40 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
 
 	uint16_t throughput;
 	uint32_t c_time;
-	int unit_id = 3; // An arbitrary device id number
-	int sys_id  = 0; // An arbitrary system id number
+
+	int unit_id = 3;          // An arbitrary processing unit number
+	unsigned short int i = 0; // task index
+	unsigned short int j = 0; // system index
+
+	PlatformManager & plm(PlatformManager::GetInstance());
+	const auto systems = plm.GetPlatformDescription().GetSystemsAll();
 
 	for (auto t_entry : task_graph->Tasks()) {
 		unit_id++;
 		auto & task(t_entry.second);
 		auto const & tr(papp->GetTaskRequirements(task->Id()));
 
-		task->SetAssignedSystem(sys_id);
 		task->SetAssignedProcessor(unit_id);
+		task->SetAssignedSystem(sys_ids[j]);
+		auto const & ip_addr = systems.at(sys_ids[j]).GetNetAddress();
+		task->SetAssignedSystemIp(ip_addr);
+
 		task->GetProfiling(throughput, c_time);
 		logger->Info("[ % s] < T % d > throughput : % .2f / % .2f  ctime : % d / % d [ms]",
 		             papp->StrId(), t_entry.first,
 		             static_cast<float>(throughput) / 100.0, tr.Throughput(),
 		             c_time, tr.CompletionTime());
+		++i;
+
+		// Increment the system id index to dispatch the next task on a
+		// different system node
+		if (i > ceil( i / sys_ids.size() ))
+			++j;
+	}
+
+	for (auto & b_entry : task_graph->Buffers()) {
+		auto & buffer(b_entry.second);
+		buffer->SetMemoryBank(0);
 	}
 
 	task_graph->GetProfiling(throughput, c_time);

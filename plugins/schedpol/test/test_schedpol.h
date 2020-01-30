@@ -104,6 +104,8 @@ private:
 
 	std::set<BBQUE_RID_TYPE> pe_ids;
 
+	std::vector<uint32_t> sys_ids;
+
 	uint32_t nr_apps;
 
 	/**
