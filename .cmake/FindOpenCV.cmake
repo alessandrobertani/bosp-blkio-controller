@@ -52,7 +52,7 @@ find_path(OpenCV_DIR "OpenCVConfig.cmake" DOC "Root directory of OpenCV"
            HINTS /usr/local/share /usr/share ${CMAKE_MODULE_PATH} $ENV{OpenCV_DIR}
            PATH_SUFFIXES OpenCV)
 
-message(STATUS "OpenCV_DIR=", ${OpenCV_DIR})
+message(STATUS "OpenCV_DIR=" ${OpenCV_DIR})
 
 ##====================================================
 ## Find OpenCV libraries
