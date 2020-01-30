@@ -10,6 +10,7 @@ project (BarbequeRTRM)
 
 
 INCLUDE (${CONFIGPATH})
+include (${PROJECT_SOURCE_DIR}/../build/platforms/BbquePMConfig.cmake)
 
 ################################################################################
 # Installation items

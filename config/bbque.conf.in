@@ -63,10 +63,7 @@ power.trigger   = over_threshold
 batt.trigger   = under_threshold
 
 [PowerManager]
-nr_sockets   = 1
-temp.socket0 = /sys/devices/platform/coretemp.0/hwmon/hwmon0
-#temp.socket1 = /sys/devices/platform/coretemp.1/hwmon/hwmon1
-
+temp.sockets = ${CONFIG_BBQUE_PM_TSENSOR_PATHS}
 
 # CGroups CFS bandwidht enforcement parameters
 [LinuxPlatformProxy]

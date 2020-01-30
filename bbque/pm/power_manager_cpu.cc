@@ -20,6 +20,7 @@
 #include "bbque/pm/power_manager_cpu.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/utils/iofs.h"
+#include "bbque/utils/string_utils.h"
 
 #include <algorithm>
 #include <fstream>
@@ -61,34 +62,28 @@ CPUPowerManager::CPUPowerManager():
 	// Core ID <--> Processing Element ID mapping
 	InitCoreIdMapping();
 
-	// --- Thermal monitoring intialization ---
-	po::variables_map opts_vm;
-	po::options_description opts_desc("PowerManager options");
-	std::string option_line("PowerManager.nr_sockets");
-
-	// Get the number of sockets
-	int sock_id, nr_sockets;
-	opts_desc.add_options()
-	(option_line.c_str(), po::value<int>(&nr_sockets)->default_value(1));
-	cfm.ParseConfigurationFile(opts_desc, opts_vm);
-
+	// Thermal monitoring intialization:
 	// Get the per-socket thermal monitor directory
 	std::string prefix_coretemp;
-	for(sock_id = 0; sock_id < nr_sockets; ++sock_id) {
-		po::options_description opts_desc("PowerManager socket options");
-		std::string option_line("PowerManager.temp.socket");
-		option_line += std::to_string(sock_id);
-		opts_desc.add_options()
-		(option_line.c_str(),
-		 po::value<std::string>(&prefix_coretemp)->default_value(
-		         BBQUE_LINUX_SYS_CPU_THERMAL),
-		 "The directory exporting thermal status information");
-		cfm.ParseConfigurationFile(opts_desc, opts_vm);
-#ifndef CONFIG_TARGET_ODROID_XU
-		InitTemperatureSensors(prefix_coretemp + "/temp");
-#endif
-	}
+	po::variables_map opts_vm;
+	po::options_description opts_desc("PowerManager socket options");
+	opts_desc.add_options()(
+	        "PowerManager.temp.sockets",
+	        po::value<std::string>(&prefix_coretemp)->default_value(
+	                BBQUE_LINUX_SYS_CPU_THERMAL),
+	        "The directory exporting thermal status information");
+	cfm.ParseConfigurationFile(opts_desc, opts_vm);
 
+	std::list<std::string> tsensor_dirs;
+	bu::SplitString(prefix_coretemp, tsensor_dirs, ":");
+	logger->Info("CPUPowerManager: CPU sockets found = %d",
+	             tsensor_dirs.size());
+
+#ifndef CONFIG_TARGET_ODROID_XU
+	for (auto & ts_dir : tsensor_dirs) {
+		InitTemperatureSensors(ts_dir + "/temp");
+	}
+#endif
 	// Thermal sensors
 	if (core_therms.empty()) {
 		logger->Warn("CPUPowerManager: no thermal monitoring available. ");
@@ -170,8 +165,8 @@ void CPUPowerManager::InitCoreIdMapping()
 	// Taking the min and max pe_id available
 	std::string core_id_range;
 	result = bu::IoFs::ReadValueFrom(core_av_filepath, core_id_range);
-	logger->Debug("InitCoreIdMapping: core id range: %s",
-	              core_id_range.c_str());
+	logger->Info("InitCoreIdMapping: core id range: %s",
+	             core_id_range.c_str());
 	if (result != bu::IoFs::OK) {
 		logger->Error("InitCoreIdMapping: failed while reading %s",
 		              core_av_filepath.c_str());
@@ -181,13 +176,12 @@ void CPUPowerManager::InitCoreIdMapping()
 	int i = 0;
 	while (core_id_range.size() > 1) {
 		std::string curr_id(br::ResourcePathUtils::SplitAndPop(core_id_range, "-"));
-		logger->Debug("InitCoreIdMapping: %d) core id = %s", i, curr_id.c_str());
+		logger->Info("InitCoreIdMapping: %d) core id = %s", i, curr_id.c_str());
 		core_id_bound[i] = std::stoi(curr_id);
 		i++;
 	}
 
 	pe_id = core_id_bound[0];
-
 	while (pe_id <= core_id_bound[1]) {
 
 		// Online status per core
@@ -202,11 +196,13 @@ void CPUPowerManager::InitCoreIdMapping()
 			std::string core_sibl_filepath(
 			        BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
 			        "/topology/core_siblings_list");
-			logger->Debug("InitCoreIdMapping: reading... %s", core_sibl_filepath.c_str());
+			logger->Debug("InitCoreIdMapping: reading... %s",
+			              core_sibl_filepath.c_str());
 
 			// Taking the min and max pe_id available
 			std::string core_siblings_range;
-			result = bu::IoFs::ReadValueFrom(core_sibl_filepath, core_siblings_range);
+			result = bu::IoFs::ReadValueFrom(
+			                 core_sibl_filepath, core_siblings_range);
 			logger->Debug("InitCoreIdMapping: core %d siblings: %s ",
 			              pe_id, core_siblings_range.c_str());
 			if (result != bu::IoFs::OK) {
@@ -218,7 +214,8 @@ void CPUPowerManager::InitCoreIdMapping()
 			i = 0;
 			while (core_siblings_range.size() > 1) {
 				std::string curr_core_id(
-				        br::ResourcePathUtils::SplitAndPop(core_siblings_range, "-"));
+				        br::ResourcePathUtils::SplitAndPop(
+				                core_siblings_range, "-"));
 				siblings[i] = std::stoi(curr_core_id);
 				logger->Debug("InitCoreIdMapping: pe_id=<%d>"
 				              " sibling bound[%d]=%d",
@@ -229,10 +226,12 @@ void CPUPowerManager::InitCoreIdMapping()
 			std::string core_id_filepath(
 			        BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
 			        "/topology/core_id");
-			logger->Debug("InitCoreIdMapping: reading... %s", core_id_filepath.c_str());
+			logger->Debug("InitCoreIdMapping: reading... %s",
+			              core_id_filepath.c_str());
 
 			// Processing element id <-> (physical) CPU id
-			result = bu::IoFs::ReadIntValueFrom<int>(core_id_filepath, cpu_id);
+			result = bu::IoFs::ReadIntValueFrom<int>(
+			                 core_id_filepath, cpu_id);
 			logger->Debug("InitCoreIdMapping: cpu id=%d", cpu_id);
 			if (result != bu::IoFs::OK) {
 				logger->Error("InitCoreIdMapping: failed while reading %s",
@@ -249,14 +248,11 @@ void CPUPowerManager::InitCoreIdMapping()
 		// Available frequencies per core
 		core_freqs[pe_id] = std::make_shared<std::vector<uint32_t>>();
 		_GetAvailableFrequencies(pe_id, core_freqs[pe_id]);
-		if (core_freqs[pe_id]->empty())
-			logger->Error("InitCoreIdMapping: <sys.cpu%d.pe%d>: "
-			              "no frequency list [%d]",
-			              cpu_id, pe_id, core_freqs[pe_id]->size());
-		else
+		if (!core_freqs[pe_id]->empty()) {
 			logger->Info("InitCoreIdMapping: <sys.cpu%d.pe%d>: "
 			             "%d available frequencies",
 			             cpu_id, pe_id, core_freqs[pe_id]->size());
+		}
 
 		std::string scaling_curr_governor;
 		GetClockFrequencyGovernor(pe_id, scaling_curr_governor);
@@ -742,7 +738,7 @@ void CPUPowerManager::_GetAvailableFrequencies(
 	result = bu::IoFs::ReadValueFrom(sysfs_path, cpu_available_freqs);
 	logger->Debug("%s: { %s }", sysfs_path.c_str(), cpu_available_freqs.c_str());
 	if (result != bu::IoFs::OK) {
-		logger->Warn("GetAvailableFrequencies: <pe=%d> cannot get frequencies",
+		logger->Warn("GetAvailableFrequencies: <pe=%d> frequency list not available",
 		             pe_id);
 		return;
 	}

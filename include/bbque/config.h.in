@@ -212,6 +212,11 @@
 /** Enable CPU Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_CPU
 
+#define BBQUE_PM_NR_CPU_SOCKETS ${CONFIG_BBQUE_PM_NR_CPU_SOCKETS}
+
+#define BBQUE_PM_TSENSOR_PATHS "${CONFIG_BBQUE_PM_TSENSOR_PATHS}"
+
+
 /** Enable GPU Power Management support for ARM Mali */
 #cmakedefine CONFIG_BBQUE_PM_GPU_ARM_MALI
 
