@@ -45,31 +45,31 @@ public:
 			id(id), type(type)
 		{}
 
-		inline uint16_t GetId() const {
+		uint16_t GetId() const {
 			return this->id;
 		}
 
-		inline void SetId(uint16_t id) {
+		void SetId(uint16_t id) {
 			this->id = id;
 		}
 
-		inline res::ResourceType GetType() const {
+		res::ResourceType GetType() const {
 			return this->type;
 		}
 
-		inline void SetType(res::ResourceType type) {
+		void SetType(res::ResourceType type) {
 			this->type = type;
 		}
 
-		inline void SetPrefix(std::string prefix) {
+		void SetPrefix(std::string prefix) {
 			this->prefix.assign(prefix + ".");
 		}
 
-		inline std::string const & GetPrefix() const {
+		std::string const & GetPrefix() const {
 			return this->prefix;
 		}
 
-		inline std::string GetPath() const {
+		std::string GetPath() const {
 			return prefix + res::GetResourceTypeString(type) +
 				std::to_string(id);
 		}
@@ -100,36 +100,36 @@ public:
 			core_id(core_id), share(share), ptype(ptype)
 		{}
 
-		inline uint16_t GetCoreId() const {
+		uint16_t GetCoreId() const {
 			return this->core_id;
 		}
 
-		inline void SetCoreId(uint16_t core_id) {
+		void SetCoreId(uint16_t core_id) {
 			this->core_id = core_id;
 		}
 
-		inline uint32_t GetQuantity() const {
+		uint32_t GetQuantity() const {
 			return this->quantity;
 		}
 
-		inline void SetQuantity(uint32_t quantity) {
+		void SetQuantity(uint32_t quantity) {
 			this->quantity = quantity;
 		}
 
 
-		inline uint8_t GetShare() const {
+		uint8_t GetShare() const {
 			return this->share;
 		}
 
-		inline void SetShare(uint8_t share) {
+		void SetShare(uint8_t share) {
 			this->share = share;
 		}
 
-		inline PartitionType_t GetPartitionType() const {
+		PartitionType_t GetPartitionType() const {
 			return this->ptype;
 		}
 
-		inline void SetPartitionType(PartitionType_t ptype) {
+		void SetPartitionType(PartitionType_t ptype) {
 			this->ptype = ptype;
 		}
 
@@ -153,11 +153,11 @@ public:
 			: Resource(id, res::ResourceType::MEMORY), quantity(quantity)
 		{}
 
-		inline uint64_t GetQuantity() const {
+		uint64_t GetQuantity() const {
 			return this->quantity;
 		}
 
-		inline void SetQuantity(uint64_t quantity) {
+		void SetQuantity(uint64_t quantity) {
 			this->quantity = quantity;
 		}
 
@@ -181,32 +181,32 @@ public:
 			Resource(id, type)
 		{}
 
-		inline const std::string & GetArchitecture() const {
+		const std::string & GetArchitecture() const {
 			return this->architecture;
 		}
 
-		inline void SetArchitecture(const std::string & arch) {
+		void SetArchitecture(const std::string & arch) {
 			this->architecture = arch;
 		}
 
-		inline const std::vector<ProcessingElement> & GetProcessingElementsAll() const {
+		const std::vector<ProcessingElement> & GetProcessingElementsAll() const {
 			return this->pes;
 		}
 
-		inline std::vector<ProcessingElement> & GetProcessingElementsAll() {
+		std::vector<ProcessingElement> & GetProcessingElementsAll() {
 			return this->pes;
 		}
 
 
-		inline void AddProcessingElement(ProcessingElement & pe) {
+		void AddProcessingElement(ProcessingElement & pe) {
 			this->pes.push_back(pe);
 		}
 
-		inline std::shared_ptr<Memory> GetMemory() const {
+		std::shared_ptr<Memory> GetMemory() const {
 			return this->memory;
 		}
 
-		inline void SetMemory(std::shared_ptr<Memory> memory) {
+		void SetMemory(std::shared_ptr<Memory> memory) {
 			this->memory = memory;
 		}
 
@@ -222,11 +222,11 @@ public:
 	public:
 		CPU(uint16_t id = 0): MulticoreProcessor(id, res::ResourceType::CPU) {}
 
-		inline uint16_t GetSocketId() const {
+		uint16_t GetSocketId() const {
 			return this->socket_id;
 		}
 
-		inline void SetSocketId(uint16_t socket_id) {
+		void SetSocketId(uint16_t socket_id) {
 			this->socket_id = socket_id;
 		}
 
@@ -245,35 +245,35 @@ public:
 			: Resource(id, res::ResourceType::NETWORK_IF), name(name)
 		{}
 
-		inline std::string GetName() const {
+		std::string GetName() const {
 			return this->name;
 		}
 
-		inline void SetName(std::string name) {
+		void SetName(std::string name) {
 			this->name = name;
 		}
 
-		inline unsigned int GetFlags() const {
+		unsigned int GetFlags() const {
 			return this->flags;
 		}
 
-		inline void SetFlags(unsigned int flags) {
+		void SetFlags(unsigned int flags) {
 			this->flags = flags;
 		}
 
-		inline void SetOnline(bool online) {
+		void SetOnline(bool online) {
 			this->online = online;
 		}
 
-		inline bool GetOnline() const {
+		bool GetOnline() const {
 			return this->online;
 		}
 
-		inline void SetAddress(std::shared_ptr<struct sockaddr> address) {
+		void SetAddress(std::shared_ptr<struct sockaddr> address) {
 			this->address = address;
 		}
 
-		inline std::shared_ptr<struct sockaddr> GetAddress() const {
+		std::shared_ptr<struct sockaddr> GetAddress() const {
 			return this->address;
 		}
 
@@ -300,11 +300,11 @@ public:
 			: Resource(id, res::ResourceType::INTERCONNECT)
 		{}
 
-		inline void SetBandwidth(uint64_t bandwidth) {
+		void SetBandwidth(uint64_t bandwidth) {
 			this->bandwidth = bandwidth;
 		}
 
-		inline uint64_t GetBandwidth() const {
+		uint64_t GetBandwidth() const {
 			return this->bandwidth;
 		}
 
@@ -327,11 +327,11 @@ public:
 			: Resource(id, res::ResourceType::IO)
 		{}
 
-		inline void SetBandwidth(uint64_t bandwidth) {
+		void SetBandwidth(uint64_t bandwidth) {
 			this->bandwidth = bandwidth;
 		}
 
-		inline uint64_t GetBandwidth() const {
+		uint64_t GetBandwidth() const {
 			return this->bandwidth;
 		}
 
@@ -359,19 +359,19 @@ public:
 			: IO(id)
 		{}
 
-		inline uint64_t GetQuantity() const {
+		uint64_t GetQuantity() const {
 			return this->quantity;
 		}
 
-		inline void SetQuantity(uint64_t quantity) {
+		void SetQuantity(uint64_t quantity) {
 			this->quantity = quantity;
 		}
 
-		inline StorageType_t GetStorageType() const {
+		StorageType_t GetStorageType() const {
 			return this->storage_type;
 		}
 
-		inline void SetStorageType(StorageType_t type){
+		void SetStorageType(StorageType_t type){
 			this->storage_type = type;
 		}
 
@@ -391,73 +391,73 @@ public:
 
 		System(uint16_t id = 0): Resource(id, res::ResourceType::SYSTEM) {}
 
-		inline bool IsLocal() const {
+		bool IsLocal() const {
 			return this->local;
 		}
 
-		inline const std::string & GetHostname() const {
+		const std::string & GetHostname() const {
 			return this->hostname;
 		}
 
-		inline const std::string & GetNetAddress() const {
+		const std::string & GetNetAddress() const {
 			return this->net_address;
 		}
 
-		inline void SetLocal(bool local) {
+		void SetLocal(bool local) {
 			this->local = local;
 		}
 
-		inline void SetHostname(const std::string & hostname) {
+		void SetHostname(const std::string & hostname) {
 			this->hostname = hostname;
 		}
 
-		inline void SetNetAddress(const std::string & net_address) {
+		void SetNetAddress(const std::string & net_address) {
 			this->net_address = net_address;
 		}
 
-		inline const std::vector<CPU> & GetCPUsAll() const {
+		const std::vector<CPU> & GetCPUsAll() const {
 			return this->cpus;
 		}
 
-		inline std::vector<CPU> & GetCPUsAll() {
+		std::vector<CPU> & GetCPUsAll() {
 			return this->cpus;
 		}
 
-		inline void AddCPU(CPU & cpu) {
+		void AddCPU(CPU & cpu) {
 			this->cpus.push_back(cpu);
 		}
 
-		inline const std::vector<MulticoreProcessor> & GetGPUsAll() const {
+		const std::vector<MulticoreProcessor> & GetGPUsAll() const {
 			return this->gpus;
 		}
 
-		inline std::vector<MulticoreProcessor> & GetGPUsAll() {
+		std::vector<MulticoreProcessor> & GetGPUsAll() {
 			return this->gpus;
 		}
 
-		inline void AddGPU(MulticoreProcessor & gpu) {
+		void AddGPU(MulticoreProcessor & gpu) {
 			gpu.SetType(res::ResourceType::GPU);
 			this->gpus.push_back(gpu);
 		}
 
-		inline const std::vector<MulticoreProcessor> & GetAcceleratorsAll() const {
+		const std::vector<MulticoreProcessor> & GetAcceleratorsAll() const {
 			return this->accelerators;
 		}
 
-		inline std::vector<MulticoreProcessor> & GetAcceleratorsAll() {
+		std::vector<MulticoreProcessor> & GetAcceleratorsAll() {
 			return this->accelerators;
 		}
 
-		inline void AddAccelerator(MulticoreProcessor & accelerator) {
+		void AddAccelerator(MulticoreProcessor & accelerator) {
 			accelerator.SetType(res::ResourceType::ACCELERATOR);
 			this->accelerators.push_back(accelerator);
 		}
 
-		inline const std::vector<MemoryPtr_t> & GetMemoriesAll() const {
+		const std::vector<MemoryPtr_t> & GetMemoriesAll() const {
 			return this->memories;
 		}
 
-		inline std::vector<MemoryPtr_t> & GetMemoriesAll() {
+		std::vector<MemoryPtr_t> & GetMemoriesAll() {
 			return this->memories;
 		}
 
@@ -470,43 +470,43 @@ public:
 			return nullptr;
 		}
 
-		inline void AddMemory(MemoryPtr_t memory) {
+		void AddMemory(MemoryPtr_t memory) {
 			this->memories.push_back(memory);
 		}
 
-		inline const std::vector<NetworkIF_t> & GetNetworkIFsAll() const {
+		const std::vector<NetworkIF_t> & GetNetworkIFsAll() const {
 			return this->networkIFs;
 		}
 
-		inline std::vector<NetworkIF_t> & GetNetworkIFsAll() {
+		std::vector<NetworkIF_t> & GetNetworkIFsAll() {
 			return this->networkIFs;
 		}
 
-		inline void AddNetworkIF(NetworkIF_t networkIF) {
+		void AddNetworkIF(NetworkIF_t networkIF) {
 			this->networkIFs.push_back(networkIF);
 		}
 
-		inline const std::vector<InterConnect_t> & GetInterConnectsAll() const {
+		const std::vector<InterConnect_t> & GetInterConnectsAll() const {
 			return this->icns;
 		}
 
-		inline std::vector<InterConnect_t> & GetInterConnectsAll() {
+		std::vector<InterConnect_t> & GetInterConnectsAll() {
 			return this->icns;
 		}
 
-		inline void AddInterConnect(InterConnect_t icn) {
+		void AddInterConnect(InterConnect_t icn) {
 			this->icns.push_back(icn);
 		}
 
-		inline const std::vector<Storage_t> & GetStoragesAll() const {
+		const std::vector<Storage_t> & GetStoragesAll() const {
 			return this->storages;
 		}
 
-		inline std::vector<Storage_t> & GetStoragesAll() {
+		std::vector<Storage_t> & GetStoragesAll() {
 			return this->storages;
 		}
 
-		inline void AddStorage(Storage_t storage) {
+		void AddStorage(Storage_t storage) {
 			this->storages.push_back(storage);
 		}
 
@@ -527,7 +527,7 @@ public:
 		std::vector <Storage_t> storages;
 	};
 
-	inline const System & GetLocalSystem() const {
+	const System & GetLocalSystem() const {
 		static std::shared_ptr<System> sys(nullptr);
 		if (!sys) {
 			for (auto & s_entry : this->GetSystemsAll()) {
@@ -540,28 +540,28 @@ public:
 		}
 		return *sys;
 	}
-	inline System & GetLocalSystem() {
+	System & GetLocalSystem() {
 	        return const_cast<System&>(static_cast<const PlatformDescription*>(this)
 							->GetLocalSystem());
 	}
 
-	inline const std::map<uint16_t, System> & GetSystemsAll() const {
+	const std::map<uint16_t, System> & GetSystemsAll() const {
 		return this->systems;
 	}
 
-	inline std::map<uint16_t, System> & GetSystemsAll() {
+	std::map<uint16_t, System> & GetSystemsAll() {
 		return this->systems;
 	}
 
-	inline void AddSystem(const System & sys) {
+	void AddSystem(const System & sys) {
 		this->systems.emplace(sys.GetId(), sys);
 	}
 
-	inline const System & GetSystem(uint16_t id) const {
+	const System & GetSystem(uint16_t id) const {
 		return systems.at(id);
 	}
 
-	inline bool ExistSystem(uint16_t id) const {
+	bool ExistSystem(uint16_t id) const {
 		return (systems.find(id) != systems.end());
 	}
 
