@@ -14,5 +14,5 @@
     </cpu>
     <mem id="0" quantity="1019892" unit="KB"/>
     <mem id="1" quantity="1019892" unit="KB"/>
-    <storage id="0" quantity="1019892" unit="MB" bandwidth="139" unit="MB/s"/>
+    <storage id="0" quantity="953674" unit="MB" bandwidth="150" bw_unit="MB/s" type="hdd"/>
 </system>
