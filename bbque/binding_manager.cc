@@ -24,30 +24,33 @@
 #define MODULE_CONFIG      "BindingManager"
 
 
-namespace bbque {
+namespace bbque
+{
 
 
-BindingManager & BindingManager::GetInstance() {
+BindingManager & BindingManager::GetInstance()
+{
 	static BindingManager instance;
 	return instance;
 }
 
 BindingManager::BindingManager():
-		logger(bbque::utils::Logger::GetLogger(MODULE_NAMESPACE)),
-		ra(ResourceAccounter::GetInstance()) {}
+	logger(bbque::utils::Logger::GetLogger(MODULE_NAMESPACE)),
+	ra(ResourceAccounter::GetInstance()) {}
 
 
-void BindingManager::InitBindingDomains() {
+void BindingManager::InitBindingDomains()
+{
 
 	// Binding domain resource path
 	ConfigurationManager & config_manager(ConfigurationManager::GetInstance());
 	std::string domains_str;
 	boost::program_options::options_description opts_desc(
-		"BindingManager options (domains)");
+	        "BindingManager options (domains)");
 	opts_desc.add_options()
-		(MODULE_CONFIG ".domains",
-		 boost::program_options::value<std::string>(&domains_str)->default_value("cpu"),
-		"Resource binding domain");
+	(MODULE_CONFIG ".domains",
+	 boost::program_options::value<std::string>(&domains_str)->default_value("cpu"),
+	 "Resource binding domain");
 	boost::program_options::variables_map opts_vm;
 	config_manager.ParseConfigurationFile(opts_desc, opts_vm);
 	logger->Info("Bindings: domains string = %s", domains_str.c_str());
@@ -63,26 +66,25 @@ void BindingManager::InitBindingDomains() {
 
 		// Binding domain resource path
 		br::ResourcePathPtr_t base_path =
-			std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
+		        std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
 		base_path->Concat(binding_str);
 
 		// Binding domain resource type check
 		br::ResourceType type = base_path->Type();
 		if (type == br::ResourceType::UNDEFINED) {
 			logger->Error("Bindings: invalid domain type <%s>",
-					binding_str.c_str());
+			              binding_str.c_str());
 			continue;
-		}
-		else {
+		} else {
 			logger->Debug("Bindings: base_path=<%s> [type=%s]",
-				base_path->ToString().c_str(),
-				br::GetResourceTypeString(type));
+			              base_path->ToString().c_str(),
+			              br::GetResourceTypeString(type));
 		}
 
 #ifndef CONFIG_TARGET_OPENCL
 		if (type == br::ResourceType::GPU) {
 			logger->Info("Bindings: OpenCL support disabled."
-					" Discarding <GPU> binding type");
+			             " Discarding <GPU> binding type");
 			continue;
 		}
 #endif
@@ -90,13 +92,14 @@ void BindingManager::InitBindingDomains() {
 		domains.emplace(type, std::make_shared<BindingInfo_t>());
 		domains[type]->base_path = base_path;
 		logger->Info("Bindings: domain='%s' -> type=<%s>",
-			domains[type]->base_path->ToString().c_str(),
-			br::GetResourceTypeString(type));
+		             domains[type]->base_path->ToString().c_str(),
+		             br::GetResourceTypeString(type));
 	}
 }
 
 
-BindingManager::ExitCode_t BindingManager::LoadBindingDomains() {
+BindingManager::ExitCode_t BindingManager::LoadBindingDomains()
+{
 
 	InitBindingDomains();
 	if (domains.empty()) {
@@ -105,30 +108,29 @@ BindingManager::ExitCode_t BindingManager::LoadBindingDomains() {
 	}
 
 	// Set information for each binding domain
-	for (auto & bd_entry: domains) {
+	for (auto & bd_entry : domains) {
 		BindingInfo & binding(*(bd_entry.second));
 		binding.resources = ra.GetResources(binding.base_path);
 		binding.r_ids.clear();
 
 		// Skip missing resource bindings
 		if (binding.resources.empty()) {
-			logger->Warn("Init: No bindings R<%s> available",
-					binding.base_path->ToString().c_str());
+			logger->Warn("Init: <%s> bindings not available",
+			             binding.base_path->ToString().c_str());
 		}
 
 		// Get all the possible resource binding IDs
-		for (br::ResourcePtr_t & rsrc: binding.resources) {
+		for (br::ResourcePtr_t & rsrc : binding.resources) {
 			binding.r_ids.emplace(rsrc->ID());
 			logger->Info("Init: R<%s> ID: %d",
-					binding.base_path->ToString().c_str(), rsrc->ID());
+			             binding.base_path->ToString().c_str(), rsrc->ID());
 		}
 		logger->Info("Init: R<%s>: %d possible bindings",
-				binding.base_path->ToString().c_str(),
-				binding.resources.size());
+		             binding.base_path->ToString().c_str(),
+		             binding.resources.size());
 	}
 
 	return OK;
 }
 
 } // namespace bbque
-
