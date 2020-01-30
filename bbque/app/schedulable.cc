@@ -42,10 +42,8 @@ char const *Schedulable::syncStateStr[] = {
 	"R-MIGRATED",
 	"MIGRATED",
 	"BLOCKED",
-	"DISABLED",
-	"NONE"
+	"DISABLED"
 };
-
 
 /*******************************************************************************
  *  EXC State and SyncState Management
