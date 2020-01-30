@@ -144,6 +144,7 @@ category.bq.em =	  INFO
 category.bq.lm =	  INFO
 category.bq.mc =	  ERROR
 category.bq.om =	  NOTICE
+category.bq.pl =	  INFO
 category.bq.pm =	  INFO
 #category.bq.pp = 	  INFO
 category.bq.pp.linux_ps = INFO
