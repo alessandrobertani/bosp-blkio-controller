@@ -795,6 +795,10 @@ MangoPlatformProxy::ReclaimResources(SchedPtr_t sched) noexcept {
 
 	logger->Warn("ReclaimResources: [%s] no partition to release", papp->StrId());
 	auto tg = papp->GetTaskGraph();
+	if (tg == nullptr) {
+		logger->Error("ReclaimResources: [%s] missing task-graph", papp->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
 
 	// Release resources by navigating the task graph...
 	int err = ReleaseProcessingUnits(*tg);
