@@ -286,15 +286,18 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 {
 	RTLIB_ExitCode_t result;
 	(*rtlib) = NULL;
+
 	// Checking error string array consistency
 	static_assert(ARRAY_SIZE(RTLIB_errorStr) == RTLIB_EXIT_CODE_COUNT,
 	              "RTLIB error strings not matching errors count");
 	assert(rtlib_initialized == 0);
+
 	// Get a Logger module
 	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
+
 	// Welcome screen
-	logger->Info("Barbeque RTLIB (ver. %s)\n", g_git_version);
-	logger->Info("Built: " __DATE__  " " __TIME__ "\n");
+	logger->Debug("Barbeque RTLIB (ver. %s)\n", g_git_version);
+	logger->Debug("Built: " __DATE__  " " __TIME__ "\n");
 
 	// Data structure initialization
 	rtlib_services.version.major = RTLIB_VERSION_MAJOR;
@@ -336,6 +339,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	rtlib_services.Notify.PostRun = rtlib_notify_post_run;
 	rtlib_services.Notify.PreMonitor = rtlib_notify_pre_monitor;
 	rtlib_services.Notify.PostMonitor = rtlib_notify_post_monitor;
+
 #ifdef CONFIG_TARGET_OPENCL
 	// OpenCL support initialization
 	rtlib_ocl_init();
@@ -343,14 +347,14 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	// Building a communication channel
 	rpc = bl::BbqueRPC::GetInstance();
 	if (! rpc) {
-		logger->Error("RPC communication channel build FAILED");
+		logger->Error("RTLIB_Init: RPC channel not available");
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
 
 	// Initializing the RPC communication channel
 	result = rpc->InitializeApplication(name);
 	if (result != RTLIB_OK) {
-		logger->Error("RPC communication channel initialization FAILED");
+		logger->Error("RTLIB_Init: RPC channel initialization FAILED");
 		return RTLIB_BBQUE_UNREACHABLE;
 	}
 
@@ -360,20 +364,25 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	rtlib_app_name = name;
 	(*rtlib) = & rtlib_services;
 	atexit(RTLIB_Exit);
+
+	logger->Debug("RTLIB_Init: initialized [tid=%d]", gettid());
 	return RTLIB_OK;
 }
 
 static void RTLIB_Exit(void)
 {
 	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
-	logger->Debug("Barbeque RTLIB, Cleanup and release");
+	logger->Debug("RTLIB_Exit: thread tid=%d terminating...", gettid());
 
-	if (! rtlib_initialized)
+	if (! rtlib_initialized) {
+		logger->Warn("RTLIB_Exit: library not initialized");
 		return;
+	}
 
 	// Close the RPC FIFO channel thus releasing all BBQUE resource used by
 	// this application
 	assert(rpc);
+	logger->Debug("RTLIB_Exit: unregistering all the contexts...");
 	rpc->UnregisterAll(); // Ensure all the EXCs are unregistered
 	delete rpc;
 

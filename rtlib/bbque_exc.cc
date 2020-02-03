@@ -417,7 +417,6 @@ RTLIB_ExitCode_t BbqueEXC::SetGoalGap(int percent)
 void BbqueEXC::WaitEnabling()
 {
 	std::unique_lock<std::mutex> control_u_lock(control_mutex);
-
 	while (! exc_status.is_enabled)
 		control_cond_variable.wait(control_u_lock);
 }
@@ -578,15 +577,15 @@ void BbqueEXC::ControlLoop()
 {
 	// Set the thread name
 	if (unlikely(prctl(PR_SET_NAME, (long unsigned int) "bq.cloop", 0, 0, 0)))
-		logger->Error("Set name FAILED! (Error: %s)", strerror(errno));
+		logger->Error("ControlLoop: set name FAILED! (Error: %s)",
+			      strerror(errno));
 
 	// Wait for EXC to be registered and enabled
 	WaitEXCInitCompletion();
+	logger->Debug("ControlLoop: initialization completed");
 
-	// Setup the EXC
 	if (Setup() == RTLIB_OK) {
 
-		// Start monitoring performance counters
 		rtlib->Utils.MonitorPerfCounters(exc_handler);
 
 		// Endless loop
@@ -595,37 +594,31 @@ void BbqueEXC::ControlLoop()
 			WaitEnabling();
 
 			if (! exc_status.has_finished_processing) {
-				// Check for changes in resource allocation
 				if (CheckConfigure() != RTLIB_OK)
 					continue;
 
-				// Run the workload
 				if (Run() != RTLIB_OK)
 					continue;
 
-				// Monitor Quality-of-Services
 				if (Monitor() != RTLIB_OK)
 					continue;
 			}
 		}
 	} else {
-		logger->Error("Setup EXC [%s] FAILED!", exc_name.c_str());
+		logger->Error("ControlLoop: EXC [%s] setup FAILED!", exc_name.c_str());
 	}
 
-	// Disable the EXC (thus notifying waiters)
 	Disable();
+	logger->Debug("ControlLoop: EXC [%s] disabled", exc_name.c_str());
 
-	// Releasing all EXC resources
 	Release();
+	logger->Debug("ControlLoop: EXC [%s] release", exc_name.c_str());
 
-	// Exit notification
 	rtlib->Notify.Exit(exc_handler);
+	logger->Debug("ControlLoop: EXC [%s] notified exit", exc_name.c_str());
 
-	logger->Info("Control-loop for EXC [%s] TERMINATED", exc_name.c_str());
-
-	//--- Notify the control-thread is TERMINATED
 	exc_status.is_terminated = true;
-
+	logger->Debug("ControlLoop: EXC [%s] TERMINATED", exc_name.c_str());
 	control_cond_variable.notify_all();
 }
 

@@ -517,8 +517,8 @@ void BbqueRPC::Unregister(
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
-	exc = getRegistered(exc_handler);
 
+	exc = getRegistered(exc_handler);
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
 		              "(EXC not registered)", (void *) exc_handler);
@@ -526,47 +526,48 @@ void BbqueRPC::Unregister(
 	}
 
 	assert(isRegistered(exc) == true);
+
 	// Dump (verbose) execution statistics
 	DumpStats(exc, true);
-	// Calling the low-level unregistration
-	result = _Unregister(exc);
 
+	logger->Debug("Unregister: unregistering [%s]...", exc->name.c_str());
+	result = _Unregister(exc);
 	if (result != RTLIB_OK) {
-		logger->Error("Unregister EXC [%p:%s] FAILED (Error %d: %s)",
+		logger->Error("Unregister: EXC [%p:%s] FAILED (Error %d: %s)",
 		              (void *) exc_handler, exc->name.c_str(), result, RTLIB_ErrorStr(result));
 		return;
 	}
 
-	// Mark the EXC as Unregistered
 	clearRegistered(exc);
-	// Release the controlling CGroup
 	CGroupDelete(exc);
 }
 
 void BbqueRPC::UnregisterAll()
 {
 	RTLIB_ExitCode_t result;
+	logger->Debug("UnregisterAll: unregistering execution contexts...");
 
 	// Checking for library initialization
 	if (! rtlib_is_initialized) {
-		logger->Error("EXCs cleanup FAILED (Error: RTLIB not initialized)");
+		logger->Error("UnregisterAll: cleanup FAILED (Error: RTLIB not initialized)");
 		assert(rtlib_is_initialized);
 		return;
 	}
 
-	// Unregisterig all the registered EXCs
+	// Unregistering all the registered EXCs
 	for (auto & registered_exc : exc_map) {
 		auto exc = registered_exc.second;
 
 		// Jumping already un-registered EXC
-		if (! isRegistered(exc))
+		if (! isRegistered(exc)) {
+			logger->Warn("UnregisterAll: EXC already unregistered");
 			continue;
+		}
 
 		// Calling the low-level unregistration
 		result = _Unregister(exc);
-
 		if (result != RTLIB_OK) {
-			logger->Error("Unregister EXC [%s] FAILED (Error %d: %s)",
+			logger->Error("UnregisterAll: [%s] failed (Error %d: %s)",
 			              exc->name.c_str(), result, RTLIB_ErrorStr(result));
 			return;
 		}
@@ -627,6 +628,7 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 	assert(isEnabled(exc) == true);
 	// Calling the low-level disable function
 	result = _Disable(exc);
+	logger->Debug("Disable: [%s] disable message sent", exc->name.c_str());
 
 	if (result != RTLIB_OK) {
 		logger->Error("Disabling EXC [%p:%s] FAILED (Error %d: %s)",
@@ -641,6 +643,7 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 	clearEnabled(exc);
 	clearAwmValid(exc);
 	clearAwmAssigned(exc);
+
 	// Unlocking eventually waiting GetWorkingMode
 	exc->exc_condition_variable.notify_one();
 	return RTLIB_OK;
