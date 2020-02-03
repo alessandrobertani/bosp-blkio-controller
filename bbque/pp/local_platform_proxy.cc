@@ -184,17 +184,23 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp)
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t papp)
 {
 	ExitCode_t ec;
+	uint8_t err_count = 0;
 
 	ec = this->host->ReclaimResources(papp);
 	if (ec != PLATFORM_OK) {
-		return ec;
+		err_count++;
 	}
 
 	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->ReclaimResources(papp);
 		if (ec != PLATFORM_OK) {
-			return ec;
+			err_count++;
 		}
+	}
+
+	if (err_count == this->aux.size() + 1) {
+		logger->Error("ReclaimResources: failed");
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	return PLATFORM_OK;
@@ -207,17 +213,23 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
         bool excl)
 {
 	ExitCode_t ec;
+	uint8_t err_count = 0;
 
 	ec = this->host->MapResources(papp, pres, excl);
 	if (ec != PLATFORM_OK) {
-		return ec;
+		err_count++;
 	}
 
 	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
 		ec = (*it)->MapResources(papp, pres, excl);
 		if (ec != PLATFORM_OK) {
-			return ec;
+			err_count++;
 		}
+	}
+
+	if (err_count == this->aux.size() + 1) {
+		logger->Error("MapResources: failed");
+		return PLATFORM_MAPPING_FAILED;
 	}
 
 	return PLATFORM_OK;
