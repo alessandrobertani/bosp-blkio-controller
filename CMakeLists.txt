@@ -185,6 +185,12 @@ set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 # Options for build version: EMBEDDED RELEASE
 set (CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
 
+if (BBQUE_DEBUG)
+	set (BBQUE_LOG_LEVEL DEBUG)
+else (BBQUE_DEBUG)
+	set (BBQUE_LOG_LEVEL NOTICE)
+endif (BBQUE_DEBUG)
+
 
 ################################################################################
 # Installation locations

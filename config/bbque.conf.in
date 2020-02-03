@@ -123,7 +123,7 @@ client_attempts = 3
 # Set root category priority and its appender
 # By default all logs are only from level greater than or equal to INFO
 ###
-rootCategory = NOTICE, raFile
+rootCategory = ${BBQUE_LOG_LEVEL}, raFile
 #rootCategory = DEBUG, raConsole
 #rootCategory = ERROR, raSyslog
 #rootCategory = ERROR, raRSyslog
@@ -133,8 +133,8 @@ rootCategory = NOTICE, raFile
 # the rootCategory
 ###
 #category.bq =  	  INFO
-#category.bq.ap = 	  INFO
-#category.bq.app = 	  INFO
+category.bq.ap = 	  INFO
+category.bq.app = 	  NOTICE
 category.bq.am =	  NOTICE
 category.bq.awm =	  NOTICE
 category.bq.cm =	  INFO
@@ -150,7 +150,7 @@ category.bq.pm =	  INFO
 category.bq.pp.linux_ps = INFO
 #category.bq.prm = 	  INFO
 category.bq.pub =	  NOTICE
-#category.bq.ra =	  NOTICE
+category.bq.ra =	  NOTICE
 category.bq.ri = 	  NOTICE
 category.bq.rb = 	  NOTICE
 category.bq.re = 	  NOTICE
@@ -159,8 +159,8 @@ category.bq.rl = 	  NOTICE
 category.bq.rp = 	  NOTICE
 category.bq.rt = 	  NOTICE
 category.bq.rbind =	  NOTICE
-#category.bq.rpc.fif = 	  INFO
-#category.bq.rpc.prx = 	  INFO
+category.bq.rpc.fif = 	  NOTICE
+category.bq.rpc.prx = 	  NOTICE
 #category.bq.sm = 	  INFO
 #category.bq.sp = 	  NOTICE
 #category.bq.ym = 	  INFO
