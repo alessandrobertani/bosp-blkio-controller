@@ -522,19 +522,17 @@ RTLIB_ExitCode_t BbqueEXC::Monitor()
 	cycles_count ++;
 	logger->Debug("CL 4. Monitor EXC [%s]...", exc_name.c_str());
 
-	// Check if it was the last execution burst
+	// Call the RPC pre-monitor procedure
+	rtlib->Notify.PreMonitor(exc_handler);
+
+	// Call the user-defined monitor procedure
+	result = onMonitor();
 	if (result == RTLIB_EXC_WORKLOAD_NONE) {
 		logger->Debug("CL 4. Skipping monitor EXC [%s]...",
 			exc_name.c_str());
 		exc_status.has_finished_processing = true;
 		return result;
 	}
-
-	// Call the RPC pre-monitor procedure
-	rtlib->Notify.PreMonitor(exc_handler);
-
-	// Call the user-defined monitor procedure
-	result = onMonitor();
 
 	// Call the RPC post-monitor procedure
 	rtlib->Notify.PostMonitor(exc_handler);
