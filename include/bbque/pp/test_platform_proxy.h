@@ -79,6 +79,8 @@ private:
 
 	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem);
 
+	ExitCode_t RegisterIODev(const PlatformDescription::IO &io_dev);
+
 	/**
 	 * @brief The logger used by the worker thread
 	 */

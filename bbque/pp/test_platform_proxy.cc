@@ -74,6 +74,19 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
 						sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 			}
 		}
+
+		logger->Debug("ScanPlatformDescription: [%s@%s] IO storages...",
+		              sys.GetHostname().c_str(),
+		              sys.GetNetAddress().c_str());
+		for (const auto storage : sys.GetStoragesAll()) {
+			ExitCode_t result = this->RegisterIODev(*storage);
+			if (unlikely(PLATFORM_OK != result)) {
+				logger->Fatal("ScanPlatformDescription: STORAGE %d "
+				              "registration failed",
+				              storage->GetId());
+				return result;
+			}
+		}
 	}
 
 	platformLoaded = true;
@@ -109,6 +122,23 @@ TestPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) {
 
 	std::string resource_path(mem.GetPath());
 	const auto q_bytes = mem.GetQuantity();
+
+	if (ra.RegisterResource(resource_path, "", q_bytes)  == nullptr)
+				return PLATFORM_DATA_PARSING_ERROR;
+
+	logger->Debug("Registration of <%s> %d bytes done",
+			resource_path.c_str(), q_bytes);
+
+	return PLATFORM_OK;
+}
+
+
+TestPlatformProxy::ExitCode_t
+TestPlatformProxy::RegisterIODev(const PlatformDescription::IO &io_dev) {
+	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
+	std::string resource_path(io_dev.GetPath());
+	const auto q_bytes = io_dev.GetBandwidth();
 
 	if (ra.RegisterResource(resource_path, "", q_bytes)  == nullptr)
 				return PLATFORM_DATA_PARSING_ERROR;

@@ -933,6 +933,21 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 				return result;
 			}
 		}
+
+		logger->Debug("ScanPlatformDescription: [%s@%s] IO storages...",
+		              sys.GetHostname().c_str(),
+		              sys.GetNetAddress().c_str());
+		for (const auto storage : sys.GetStoragesAll()) {
+			ExitCode_t result = this->RegisterIODev(*storage, sys.IsLocal());
+			if (unlikely(PLATFORM_OK != result)) {
+				logger->Fatal("ScanPlatformDescription: STORAGE %d "
+				              "registration failed",
+				              storage->GetId());
+				return result;
+			}
+
+		}
+
 	}
 
 	// Build the default string for the CGroups
@@ -1069,6 +1084,29 @@ uint64_t LinuxPlatformProxy::GetNetIFBandwidth(const std::string &ifname) const
 	}
 
 	return ((uint64_t)edata.speed) * 1000000ULL;
+}
+
+LinuxPlatformProxy::ExitCode_t
+LinuxPlatformProxy::RegisterIODev(
+        const PlatformDescription::IO &io_dev,
+        bool is_local) noexcept
+{
+
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	UNUSED(is_local);
+
+	std::string resource_path = io_dev.GetPath();
+	const auto q_bytes = io_dev.GetBandwidth();
+	logger->Debug("RegisterIODev: Registration of <%s>: %lu Kb", resource_path.c_str(), q_bytes);
+
+	if (refreshMode) {
+		ra.UpdateResource(resource_path, "", q_bytes);
+	} else {
+		ra.RegisterResource(resource_path, "", q_bytes);
+	}
+	logger->Debug("RegisterIODev: Registration of <%s> successfully performed", resource_path.c_str());
+
+	return PLATFORM_OK;
 }
 
 

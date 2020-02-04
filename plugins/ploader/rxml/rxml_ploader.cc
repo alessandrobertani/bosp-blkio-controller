@@ -342,6 +342,11 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	if (ec != PL_SUCCESS)
 		return ec;
 
+	/// <storage>
+	ec = ParseStorages(root, sys);
+	if (ec != PL_SUCCESS)
+		return ec;
+
 	pd.AddSystem(sys);
 	return is_local ? PL_SUCCESS : PL_SUCCESS_NO_LOCAL;
 }
@@ -687,6 +692,147 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 		else if (strncmp(tag_str, "acc", 3) == 0)
 			sys.AddAccelerator(manycore);
 		tag = tag->next_sibling(tag_str);
+	}
+
+	return PL_SUCCESS;
+}
+
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
+		node_ptr root,
+		pp::PlatformDescription::System & sys) {
+	// Now get all the memories and save them. This should be perfomed before <cpu> and
+	// other tags, due to reference to memories inside them.
+	node_ptr storage_tag = this->GetFirstChild(root,"storage",false) ;
+	while( storage_tag != NULL ) {
+		pp::PlatformDescription::Storage storage;
+		attr_ptr id_attr       = this->GetFirstAttribute(storage_tag, "id",       true);
+		attr_ptr quantity_attr = this->GetFirstAttribute(storage_tag, "quantity", true);
+		attr_ptr unit_attr     = this->GetFirstAttribute(storage_tag, "unit",     true);
+		attr_ptr bw_attr       = this->GetFirstAttribute(storage_tag, "bandwidth",true);
+		attr_ptr bw_unit_attr  = this->GetFirstAttribute(storage_tag, "bw_unit",  true);
+		attr_ptr type_attr     = this->GetFirstAttribute(storage_tag, "type",     false);
+
+		short        id;
+		int          quantity;
+		int_fast16_t exp;
+		uint64_t 	 bandwidth;
+		int_fast16_t bw_exp;
+
+		// id=""
+		try {
+			// Yes, this conversion is unsafe. However, there will not probably
+			// be over 32767 memories in one machine...
+			id = (short)std::stoi(id_attr->value());
+		} catch(const std::invalid_argument& e) {
+			logger->Error("ID for <storage> is not a valid integer.");
+			return PL_LOGIC_ERROR;
+		} catch(const std::out_of_range& e) {
+			logger->Error("ID for <storage> is out-of-range, please change your unit.");
+			return PL_LOGIC_ERROR;
+		}
+
+		// quantity=""
+		try {
+			quantity = std::stoi(quantity_attr->value());
+		} catch(const std::invalid_argument &e) {
+			logger->Error("Quantity for <storage> is not a valid integer.");
+			return PL_LOGIC_ERROR;
+		} catch(const std::out_of_range &e) {
+			logger->Error("Quantity for <storage> is out-of-range, please increase your unit.");
+			return PL_LOGIC_ERROR;
+		}
+
+		// unit=""
+		switch(ConstHashString(unit_attr->value())) {
+			case ConstHashString("B"):
+				exp=0;
+			break;
+			case ConstHashString("KB"):
+				exp=10;
+			break;
+			case ConstHashString("MB"):
+				exp=20;
+			break;
+			case ConstHashString("GB"):
+				exp=20;
+			break;
+			case ConstHashString("TB"):
+				exp=40;
+			break;
+			default:
+				logger->Error("Invalid `unit` for <storage>.");
+				return PL_LOGIC_ERROR;
+			break;
+		}
+
+		// bandwidth=""
+		try {
+			bandwidth = std::stoi(bw_attr->value());
+		} catch(const std::invalid_argument &e) {
+			logger->Error("Bandwidth for <storage> is not a valid integer.");
+			return PL_LOGIC_ERROR;
+		} catch(const std::out_of_range &e) {
+			logger->Error("Bandwidth for <storage> is out-of-range, please increase your unit.");
+			return PL_LOGIC_ERROR;
+		}
+
+		// bw_unit=""
+		switch(ConstHashString(bw_unit_attr->value())) {
+			case ConstHashString("B/s"):
+				bw_exp=0;
+			break;
+			case ConstHashString("KB/s"):
+				bw_exp=10;
+			break;
+			case ConstHashString("MB/s"):
+				bw_exp=20;
+			break;
+			case ConstHashString("GB/s"):
+				bw_exp=20;
+			break;
+			case ConstHashString("TB/s"):
+				bw_exp=40;
+			break;
+			default:
+				logger->Error("Invalid `bw_unit` for <storage>.");
+				return PL_LOGIC_ERROR;
+			break;
+		}
+
+		// type=""
+		if(type_attr != nullptr) {
+			switch(ConstHashString(type_attr->value())) {
+			case ConstHashString("hdd"):
+				storage.SetStorageType(pp::PlatformDescription::HDD);
+				break;
+			case ConstHashString("ssd"):
+				storage.SetStorageType(pp::PlatformDescription::SSD);
+				break;
+			case ConstHashString("sd"):
+				storage.SetStorageType(pp::PlatformDescription::SD);;
+				break;
+			case ConstHashString("flash"):
+				storage.SetStorageType(pp::PlatformDescription::FLASH);;
+				break;
+			default:
+				logger->Error("'%s' is not a valid value for `type` attribute.",
+					type_attr->value());
+				return PL_LOGIC_ERROR;
+				break;
+		}
+	} else {
+		// If not specified the default is custom.
+		storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+	}
+
+
+		storage.SetPrefix(sys.GetPath());
+		storage.SetId(id);
+		storage.SetQuantity(((int64_t)quantity) << exp);
+		storage.SetBandwidth((uint64_t)bandwidth << bw_exp);
+		sys.AddStorage(std::make_shared<pp::PlatformDescription::Storage>(storage));
+
+		storage_tag = storage_tag->next_sibling("storage");
 	}
 
 	return PL_SUCCESS;

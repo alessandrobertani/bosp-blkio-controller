@@ -149,6 +149,10 @@ private:
 		pp::PlatformDescription::System & sys,
 		const char * tag_str);
 
+	ExitCode_t ParseStorages(
+		node_ptr root,
+		pp::PlatformDescription::System & sys);
+
 };
 
 

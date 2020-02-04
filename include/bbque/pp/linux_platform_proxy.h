@@ -219,6 +219,7 @@ private:
 	ExitCode_t RegisterCPU(const PlatformDescription::CPU &cpu, bool is_local = true) noexcept;
 	ExitCode_t RegisterMEM(const PlatformDescription::Memory &mem, bool is_local = true) noexcept;
 	ExitCode_t RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local = true) noexcept;
+	ExitCode_t RegisterIODev(const PlatformDescription::IO &io_dev, bool is_local = true) noexcept;
 
 	// --- CGroup-releated methods
 
