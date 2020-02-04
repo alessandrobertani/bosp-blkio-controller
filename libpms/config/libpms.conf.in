@@ -10,14 +10,14 @@
 ################################################################################
 # By default, all applications logs everything on a console
 #rootCategory = INFO, raFile
-rootCategory = INFO, raConsole
+rootCategory = ${BBQUE_LOG_LEVEL}, raConsole
 
 ################################################################################
 # RTLib defined loglevels
-category.actrl	=	INFO
-category.exc	=	INFO
-category.rpc	=	NOTICE
-category.rtlib	=	NOTICE
+#category.actrl	=	INFO
+#category.exc	=	INFO
+#category.rpc	=	NOTICE
+#category.rtlib	=	NOTICE
 
 ################################################################################
 # Console Appender
