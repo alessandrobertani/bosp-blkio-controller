@@ -826,18 +826,23 @@ MangoPlatformProxy::MapResources(
 	UNUSED(pres);
 	UNUSED(excl);
 
+	if (psched->GetType() != ba::Schedulable::Type::ADAPTIVE) {
+		logger->Warn("MapResources: [%s] not managed by this proxy", psched->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
+
 	auto papp = static_cast<ba::Application *>(psched.get());
+
+	auto tg = papp->GetTaskGraph();
+	if (tg == nullptr) {
+		logger->Error("MapResources: [%s] task-graph missing", papp->StrId());
+		return PLATFORM_MAPPING_FAILED;
+	}
 
 	// If we have a partition assigned, nothing must be done (ManGA policy version1)
 	if (papp->GetPartition() != nullptr) {
 		logger->Debug("MapResources: [%s] already performed via partition skimmer", papp->StrId());
 		return PLATFORM_OK;
-	}
-
-	auto tg = papp->GetTaskGraph();
-	if (tg == nullptr) {
-		logger->Error("MapResources: [%s] task-graph corrupted?", papp->StrId());
-		return PLATFORM_MAPPING_FAILED;
 	}
 
 	// Set the architecture type for each assigned processor

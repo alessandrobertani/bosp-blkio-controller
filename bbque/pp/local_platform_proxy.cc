@@ -18,26 +18,30 @@
 #include "bbque/config.h"
 #include "bbque/pm/power_manager.h"
 #include "bbque/pp/local_platform_proxy.h"
-#include "bbque/pp/test_platform_proxy.h"
 #include "bbque/res/resources.h"
 #include "bbque/utils/assert.h"
 
 #ifdef CONFIG_TARGET_LINUX
-#include "bbque/pp/linux_platform_proxy.h"
+  #include "bbque/pp/linux_platform_proxy.h"
 #elif defined CONFIG_TARGET_ANDROID
-#include "bbque/pp/android_platform_proxy.h"
-#elif defined CONFIG_TARGET_LINUX_MANGO
-#include "bbque/pp/linux_platform_proxy.h"
-#include "bbque/pp/mango_platform_proxy.h"
+  #include "bbque/pp/android_platform_proxy.h"
+#elif defined CONFIG_TARGET_SIMULATED_PLATFORM
+  #include "bbque/pp/test_platform_proxy.h"
 #else
-#warning LocalPlatformProxy cannot load any platform proxy
+  #error No host platform proxy: check target platform dependencies
+#endif
+
+#if defined CONFIG_TARGET_LINUX_MANGO
+  #include "bbque/pp/linux_platform_proxy.h"
+  #include "bbque/pp/mango_platform_proxy.h"
 #endif
 
 #ifdef CONFIG_TARGET_OPENCL
-#include "bbque/pp/opencl_platform_proxy.h"
+  #include "bbque/pp/opencl_platform_proxy.h"
 #endif
+
 #ifdef CONFIG_TARGET_NVIDIA
-#include "bbque/pp/nvml_platform_proxy.h"
+  #include "bbque/pp/nvml_platform_proxy.h"
 #endif
 
 namespace bbque
