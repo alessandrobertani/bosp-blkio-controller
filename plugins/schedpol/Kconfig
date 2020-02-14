@@ -12,17 +12,6 @@ config BBQUE_SP_PARALLEL
   Select this option if you plan to run the BarbequeRTRM daemon on a multi-core
   host machine.
 
-config BBQUE_RESOURCE_PATH_PREFIX
-   string "Resource binding prefix path"
-   default "sys" if !TARGET_LINUX_MANGO
-   default "sys.grp" if TARGET_LINUX_MANGO
-   ---help---
-  The prefix (in string format) of the resource paths under which perform the
-  matching w.r.t. the resource requests in the application recipes.
-  For instance, value="sys" means that we will look for requests of CPUs or
-  ACCELERATORs starting from resource registered under "sys." (e.g. "sys.cpu"
-  or "sys.acc").
-
 config BBQUE_RM_OPT_EXC_START_DEFER_MS
   int "Wait time (ms) before policy activation, on application start"
   default 50
