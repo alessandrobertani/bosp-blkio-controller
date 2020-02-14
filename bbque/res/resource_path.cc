@@ -29,11 +29,11 @@ ResourcePath::ResourcePath(std::string const & str_path):
 		global_type(ResourceType::UNDEFINED),
 		level_count(0) {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-	logger->Debug("RP{%s} object construction", str_path.c_str());
+	logger->Debug("ResourcePath: <%s> object construction", str_path.c_str());
 
 	if (AppendString(str_path) != OK) {
 		Clear();
-		logger->Error("RP{%s} Construction failed", str_path.c_str());
+		logger->Error("ResourcePath: <%s> construction failed", str_path.c_str());
 		return;
 	}
 }
@@ -42,7 +42,8 @@ ResourcePath::ResourcePath(ResourcePath const & r_path):
 		global_type(ResourceType::UNDEFINED),
 		level_count(0) {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
-	logger->Debug("RP{%s} object construction", r_path.ToString().c_str());
+	logger->Debug("ResourcePath: <%s> object construction",
+		      r_path.ToString().c_str());
 	// Copy
 	identifiers = r_path.identifiers;
 	types_idx   = r_path.types_idx;

@@ -214,6 +214,7 @@ public:
 	 */
 	ExitCode_t Concat(std::string const & str_path);
 
+
 	/**
 	 * @brief Completely reset the object
 	 */
@@ -231,7 +232,7 @@ public:
 	 *
 	 * @return The related @ref ResourceType value
 	 **/
-	inline ResourceType Type() const {
+	ResourceType Type() const {
 		return global_type;
 	}
 
@@ -245,7 +246,7 @@ public:
 	 *
 	 * @return The related @ref ResourceType value
 	 **/
-	inline ResourceType Type(ssize_t rel_pos) {
+	ResourceType Type(ssize_t rel_pos) {
 		ssize_t pos = rel_pos;
 		if (pos < 0)
 			pos += identifiers.size() - 1;
@@ -266,19 +267,19 @@ public:
 
 	/** Iterators **/
 
-	inline ResourcePath::Iterator Begin() {
+	ResourcePath::Iterator Begin() {
 		return identifiers.begin();
 	}
 
-	inline ResourcePath::ConstIterator Begin() const {
+	ResourcePath::ConstIterator Begin() const {
 		return identifiers.begin();
 	}
 
-	inline ResourcePath::Iterator End() {
+	ResourcePath::Iterator End() {
 		return identifiers.end();
 	}
 
-	inline ResourcePath::ConstIterator End() const {
+	ResourcePath::ConstIterator End() const {
 		return identifiers.end();
 	}
 
@@ -328,7 +329,7 @@ public:
 	 *
 	 * @return A reference to the resource identifier objects
 	 */
-	inline std::vector<ResourceIdentifierPtr_t> const & GetIdentifiers() const {
+	std::vector<ResourceIdentifierPtr_t> const & GetIdentifiers() const {
 		return identifiers;
 	}
 
@@ -346,7 +347,7 @@ public:
 	/**
 	 * @brief Return the number of levels of the path
 	 */
-	inline size_t NumLevels() const {
+	size_t NumLevels() const {
 		return identifiers.size();
 	}
 
@@ -359,8 +360,6 @@ public:
 	 * @return true if the path is a template, false otherwise
 	 */
 	bool IsTemplate() const;
-
-	/**  Utility member functions  **/
 
 	/**
 	 * @brief Return the resource path in text string format
