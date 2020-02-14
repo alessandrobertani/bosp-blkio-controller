@@ -48,13 +48,13 @@ void BindingManager::InitBindingDomains()
 	boost::program_options::options_description opts_desc(
 	        "BindingManager options (domains)");
 	opts_desc.add_options()
-	(MODULE_CONFIG ".domains",
-	 boost::program_options::value<std::string>(&domains_str)->default_value("cpu"),
-	 "Resource binding domain");
+		(MODULE_CONFIG ".domains",
+		 boost::program_options::value<std::string>(&domains_str)->default_value("cpu"),
+		 "Resource binding domain");
 	boost::program_options::variables_map opts_vm;
 	config_manager.ParseConfigurationFile(opts_desc, opts_vm);
-	logger->Info("Bindings: domains string = %s", domains_str.c_str());
-	logger->Info("Bindings: prefix path = <%s>", ra.GetPrefixPath().ToString().c_str());
+	logger->Info("InitBindingDomains: configuration value = %s", domains_str.c_str());
+	logger->Info("InitBindingDomains: prefix path = <%s>", ra.GetPrefixPath().ToString().c_str());
 
 	// Parse each binding domain string
 	size_t end_pos = 0;
@@ -72,29 +72,30 @@ void BindingManager::InitBindingDomains()
 		// Binding domain resource type check
 		br::ResourceType type = base_path->Type();
 		if (type == br::ResourceType::UNDEFINED) {
-			logger->Error("Bindings: invalid domain type <%s>",
-			              binding_str.c_str());
+			logger->Error("InitBindingDomains: <%s> is not a valid domain path",
+				      base_path->ToString().c_str());
 			continue;
-		} else {
-			logger->Debug("Bindings: base_path=<%s> [type=%s]",
-			              base_path->ToString().c_str(),
-			              br::GetResourceTypeString(type));
 		}
 
 #ifndef CONFIG_TARGET_OPENCL
+#ifndef CONFIG_TARGET_NVIDIA
 		if (type == br::ResourceType::GPU) {
-			logger->Info("Bindings: OpenCL support disabled."
-			             " Discarding <GPU> binding type");
+			logger->Info("InitBindingDomains: OpenCL or NVIDIA support disabled."
+			             " Discarding <GPU> bindings");
 			continue;
 		}
+#endif
 #endif
 		// New binding info structure
 		domains.emplace(type, std::make_shared<BindingInfo_t>());
 		domains[type]->base_path = base_path;
-		logger->Info("Bindings: domain='%s' -> type=<%s>",
+		logger->Info("InitBindingDomains: base_path=<%s> -> type=<%s>",
 		             domains[type]->base_path->ToString().c_str(),
 		             br::GetResourceTypeString(type));
 	}
+
+	logger->Info("InitBindingDomains: nr. loaded domains = %d",
+		     domains.size());
 }
 
 
