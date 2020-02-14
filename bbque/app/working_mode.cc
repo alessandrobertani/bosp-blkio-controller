@@ -15,14 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "bbque/app/working_mode.h"
-
 #include <string>
 
+#include "bbque/app/working_mode.h"
+#include "bbque/app/application.h"
+#include "bbque/binding_manager.h"
 #include "bbque/plugin_manager.h"
 #include "bbque/resource_accounter.h"
-
-#include "bbque/app/application.h"
 #include "bbque/res/resource_utils.h"
 #include "bbque/res/resource_path.h"
 #include "bbque/res/identifier.h"
@@ -76,34 +75,49 @@ WorkingMode::~WorkingMode() {
 }
 
 br::ResourceAssignmentPtr_t WorkingMode::AddResourceRequest(
-		std::string const & str_path,
+		std::string const & request_path,
 		uint64_t amount,
 		br::ResourceAssignment::Policy split_policy) {
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	std::string abs_str_path;
 
-	// Check if the path already includes the prefix
-	if (str_path.find(ra.GetPrefixPath().ToString()) == std::string::npos)
-		abs_str_path = ra.GetPrefixPath().ToString() + std::string(".") + str_path;
-	else
-		abs_str_path = str_path;
+	// Requested resource path could require an implicit prefix.
+	// Look for it in the binding domains map.
+	BindingManager & bdm(BindingManager::GetInstance());
+	for (auto & binding: bdm.GetBindingDomains()) {
+		// e.g. "sys.cpu"
+		logger->Debug("AddResourceRequest: domain base_path=<%s>",
+			       binding.second->base_path->ToString().c_str());
 
-	logger->Debug("AddResourceRequest: %s adding <%s> ", str_id, abs_str_path.c_str());
-	auto resource_path = ra.GetPath(abs_str_path);
-	if (resource_path == nullptr) {
-		logger->Error("AddResourceRequest: %s '%s' invalid path string",
-				str_id, abs_str_path.c_str());
-		return nullptr;
+		// e.g. "sys.cpu.pe" + "cpu.pe"
+		auto resource_path = std::make_shared<br::ResourcePath>
+				(*binding.second->base_path + request_path);
+		if (resource_path == nullptr) {
+			logger->Warn("AddResourceRequest: invalid path");
+			continue;
+		}
+		logger->Debug("AddResourceRequest: request_path=<%s> ...",
+			      resource_path->ToString().c_str());
+
+		// Check the existance of requested (?) resources
+		if (!ra.ExistResource(resource_path)) {
+			logger->Debug("AddResourceRequest: <%s> does not exist",
+				resource_path->ToString().c_str());
+			continue;
+		}
+
+		// Insert a new resource usage object in the map
+		auto r_assign = std::make_shared<br::ResourceAssignment>(amount, split_policy);
+		resources.requested.emplace(resource_path, r_assign);
+		logger->Debug("AddResourceRequest: %s: added <%s> [usage: %" PRIu64 "] count=%d",
+			      str_id,
+			      resource_path->ToString().c_str(),
+			      amount,
+			      resources.requested.size());
+
+		return r_assign;
 	}
 
-	// Insert a new resource usage object in the map
-	auto r_assign = std::make_shared<br::ResourceAssignment>(amount, split_policy);
-	resources.requested.emplace(resource_path, r_assign);
-	logger->Debug("AddResourceRequest: %s added {%s} \t[usage: %" PRIu64 "] [c=%2d]",
-			str_id, resource_path->ToString().c_str(),amount,
-			resources.requested.size());
-
-	return r_assign;
+	return nullptr;
 }
 
 br::ResourceAssignmentPtr_t WorkingMode::GetResourceRequest(
