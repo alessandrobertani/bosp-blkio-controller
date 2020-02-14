@@ -34,22 +34,6 @@ config BBQUE_RM_OPT_REQUEST_DEFER_MS
   barbeque waits some milliseconds in order to aggregate requests from
   other apps as well (if any).
 
-
-#config BBQUE_SP_COWS_BINDING
-#  bool "Co-scheduling Workloads (COWS) binding"
-#  depends on !TARGET_OPENCL
-#  default n
-#  ---help---
-#  Enable this option only if the recipes feature information about some
-#  performance counters based statistics. and the scheduling policy implements
-#  the support to exploit such information. This potentially leads to a more
-#  effective binding (i.e. selection of the resource domain of the AWM) in order
-#  to establish whether it is better to co-schedule applications on the same
-#  resource binding domain (e.g., CPU node) or spread them among different
-#  domains.
-#
-#  If unsure, say N
-#
 endmenu #Advanced Options
 
 
