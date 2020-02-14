@@ -119,17 +119,6 @@ public:
 	 */
 	~ResourcePath();
 
-	/**
-	 * @brief Comparison for ordering
-	 *
-	 * @param r_path The ResourcePath to compare
-	 *
-	 * @return true if this resource path is "lower" than the one to compare
-	 */
-	bool operator< (ResourcePath const & r_path);
-
-
-	bool operator== (ResourcePath const & r_path);
 
 	/**
 	 * @brief Compare two resource identifiers
@@ -365,6 +354,37 @@ public:
 	 * @brief Return the resource path in text string format
 	 */
 	std::string ToString() const;
+
+
+	/***********************************************************
+	 * Operators                                               *
+	 ***********************************************************/
+
+	bool operator< (ResourcePath const & r_path) const;
+
+	bool operator== (ResourcePath const & r_path) const;
+
+	ResourcePath operator+ (std::string const & str_path) const {
+		ResourcePath new_rp(*this);
+		new_rp.Concat(str_path);
+		return new_rp;
+	}
+
+	ResourcePath operator+ (ResourcePath const & r_path) const {
+		ResourcePath new_rp(*this);
+		new_rp.Concat(r_path);
+		return new_rp;
+	}
+
+	ResourcePath & operator+= (ResourcePath const & r_path) {
+		this->Concat(r_path);
+		return *this;
+	}
+
+	ResourcePath & operator+= (std::string const & str_path) {
+		this->Concat(str_path);
+		return *this;
+	}
 
 private:
 

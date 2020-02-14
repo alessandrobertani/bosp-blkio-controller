@@ -61,7 +61,7 @@ ResourcePath::~ResourcePath() {
  * Check / Comparison                                             *
  ******************************************************************/
 
-bool ResourcePath::operator< (ResourcePath const & comp_path) {
+bool ResourcePath::operator< (ResourcePath const & comp_path) const {
 	// Manage the case of different length
 	if (identifiers.size() < comp_path.NumLevels())
 		return true;
@@ -82,7 +82,7 @@ bool ResourcePath::operator< (ResourcePath const & comp_path) {
 }
 
 
-bool ResourcePath::operator== (ResourcePath const & comp_path) {
+bool ResourcePath::operator== (ResourcePath const & comp_path) const {
 	// Manage the case of different length
 	if (identifiers.size() != comp_path.NumLevels())
 		return false;
