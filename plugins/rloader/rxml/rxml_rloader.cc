@@ -390,7 +390,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node
 				             wm_id, wm_name.c_str(), wm_config_time);
 				awm->SetRecipeConfigTime(wm_config_time);
 			} else
-				logger->Warn("AWM {%d:%s} no configuration time provided",
+				logger->Info("AWM {%d:%s} no configuration time provided",
 				             wm_id, wm_name.c_str());
 
 			// Load resource assignments of the working mode
@@ -433,7 +433,7 @@ void RXMLRecipeLoader::LoadTaskGraphInfo(rapidxml::xml_node<> *_xml_elem)
 		// <tg>
 		tg_elem = _xml_elem->first_node("tg", 0, true);
 		if (tg_elem == nullptr) {
-			logger->Warn("LoadTaskGraphInfo: Missing <tg> section");
+			logger->Warn("LoadTaskGraphInfo: <tg> section missing");
 			return;
 		}
 		// <reqs>
