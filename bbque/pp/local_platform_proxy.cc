@@ -34,6 +34,7 @@
 #if defined CONFIG_TARGET_LINUX_MANGO
   #include "bbque/pp/linux_platform_proxy.h"
   #include "bbque/pp/mango_platform_proxy.h"
+  #include "bbque/pp/test_platform_proxy.h"
 #endif
 
 #ifdef CONFIG_TARGET_OPENCL
