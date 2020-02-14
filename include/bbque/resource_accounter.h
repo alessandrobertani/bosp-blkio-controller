@@ -33,11 +33,9 @@
 #include "bbque/cpp11/thread.h"
 #include "bbque/cpp11/condition_variable.h"
 
-#define RESOURCE_ACCOUNTER_NAMESPACE "bq.ra"
-
-#define SYNC_RVIEW_PATH       "ra.sync."
-#define PREFIX_PATH           "sys"
-#define TOKEN_PATH_MAX_LEN    30
+#define RESOURCE_ACCOUNTER_NAMESPACE  "bq.ra"
+#define SYNC_RVIEW_PATH               "ra.sync."
+#define TOKEN_PATH_MAX_LEN            30
 
 namespace ba = bbque::app;
 namespace br = bbque::res;

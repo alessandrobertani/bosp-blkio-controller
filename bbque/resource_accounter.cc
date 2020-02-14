@@ -340,6 +340,8 @@ bool ResourceAccounter::ExistResource(std::string const & strpath)
 
 bool ResourceAccounter::ExistResource(ResourcePathPtr_t resource_path_ptr) const
 {
+	if (!resource_path_ptr)
+		return false;
 	br::ResourcePtrList_t matchings(
 	        resources.find_list(*resource_path_ptr, RT_MATCH_TYPE | RT_MATCH_FIRST));
 	return !matchings.empty();
