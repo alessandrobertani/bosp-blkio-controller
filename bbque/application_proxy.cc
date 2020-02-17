@@ -138,11 +138,13 @@ RTLIB_ExitCode_t ApplicationProxy::StopExecutionSync(AppPtr_t papp)
 	conCtxMap_t::iterator it;
 	pconCtx_t pcon;
 
-	auto tid = gettid();
+	bl::rpc_msg_token_t token_id = gettid();  // use thread id
 	bl::rpc_msg_BBQ_STOP_t stop_msg = {
 		{
-			bl::RPC_BBQ_STOP_EXECUTION, tid,
-			static_cast<int>(papp->Pid()), papp->ExcId()
+			bl::RPC_BBQ_STOP_EXECUTION,
+			token_id,
+			static_cast<int>(papp->Pid()),
+			papp->ExcId()
 		},
 		{0, 100} // FIXME get a timeout parameter
 	};
