@@ -231,7 +231,7 @@ ssize_t PBFifoRPC::RecvMessage(rpc_msg_ptr_t & msg)
 		result = ::read(rpc_fifo_fd,
 		                &(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->rpc_fifo),
 		                hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
-		if (unlikely(result == -1)) {
+		if (BBQUE_UNLIKELY(result == -1)) {
 			error = true;
 		} else {
 			// Save the payload in the msg reference parameter
@@ -249,7 +249,7 @@ ssize_t PBFifoRPC::RecvMessage(rpc_msg_ptr_t & msg)
 		result = ::read(rpc_fifo_fd,
 		                &(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl),
 		                hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
-		if (unlikely(result == -1)) {
+		if (BBQUE_UNLIKELY(result == -1)) {
 			error = true;
 		} else {
 			// Save the payload in the msg reference parameter

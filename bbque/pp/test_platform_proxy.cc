@@ -55,7 +55,7 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
 				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu);
-			if (unlikely(PLATFORM_OK != result)) {
+			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
 				logger->Fatal("Register CPU %d failed", cpu.GetId());
 				return result;
 			}
@@ -64,7 +64,7 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
 				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto mem : sys.GetMemoriesAll()) {
 			ExitCode_t result = this->RegisterMEM(*mem);
-			if (unlikely(PLATFORM_OK != result)) {
+			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
 				logger->Fatal("Register MEM %d failed", mem->GetId());
 				return result;
 			}
@@ -80,7 +80,7 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData() {
 		              sys.GetNetAddress().c_str());
 		for (const auto storage : sys.GetStoragesAll()) {
 			ExitCode_t result = this->RegisterIODev(*storage);
-			if (unlikely(PLATFORM_OK != result)) {
+			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
 				logger->Fatal("ScanPlatformDescription: STORAGE %d "
 				              "registration failed",
 				              storage->GetId());
