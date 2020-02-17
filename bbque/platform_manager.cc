@@ -101,7 +101,7 @@ void PlatformManager::Task()
 			logger->Info("Platform Manager refresh event propagating to proxies");
 			ExitCode_t ec;
 			ec = this->lpp->Refresh();
-			if (unlikely(ec != PLATFORM_OK)) {
+			if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 				logger->Error("Error %i trying to refresh LOCAL platform data", ec);
 				ra.SetPlatformReady();
 				return;
@@ -109,7 +109,7 @@ void PlatformManager::Task()
 
 #ifdef CONFIG_BBQUE_DIST_MODE
 			ec = this->rpp->Refresh();
-			if (unlikely(ec != PLATFORM_OK)) {
+			if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 				logger->Error("Error %i trying to refresh REMOTE platform data", ec);
 				ra.SetPlatformReady();
 				return;
@@ -219,7 +219,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 	logger->Debug("Loading LOCAL platform data...");
 	ec = this->lpp->LoadPlatformData();
 
-	if (unlikely(ec != PLATFORM_OK)) {
+	if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 		logger->Error("Error %i trying to load LOCAL platform data", ec);
 
 		return ec;
@@ -229,7 +229,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 	logger->Debug("Loading REMOTE platform data...");
 	ec = this->rpp->LoadPlatformData();
 
-	if (unlikely(ec != PLATFORM_OK)) {
+	if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 		logger->Error("Error %i trying to load REMOTE platform data", ec);
 
 		return ec;
@@ -286,7 +286,7 @@ PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 
 	if (papp->IsLocal()) {
 		ec = lpp->Release(papp);
-		if (unlikely(ec != PLATFORM_OK)) {
+		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to release LOCAL data of application [%s:%d]"
 			              "(error code: %i)",
 			              papp->Name().c_str(), papp->Pid(), ec);
@@ -300,7 +300,7 @@ PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (papp->IsRemote()) {
 		ec = rpp->Release(papp);
-		if (unlikely(ec != PLATFORM_OK)) {
+		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to release REMOTE data of application [%s:%d]"
 			              "(error code: %i)",
 			              papp->Name().c_str(), papp->Pid(), ec);
@@ -326,7 +326,7 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 
 	if (papp->IsLocal()) {
 		ec = lpp->ReclaimResources(papp);
-		if (unlikely(ec != PLATFORM_OK)) {
+		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to ReclaimResources LOCAL of application [%s:%d]"
 			              "(error code: %i)",
 			              papp->Name().c_str(), papp->Pid(), ec);
@@ -337,7 +337,7 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (papp->IsRemote()) {
 		ec = rpp->ReclaimResources(papp);
-		if (unlikely(ec != PLATFORM_OK)) {
+		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to ReclaimResources REMOTE of application [%s:%d]"
 			              "(error code: %i)",
 			              papp->Name().c_str(), papp->Pid(), ec);
@@ -439,7 +439,7 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 	// At this time we can actually map the resources
 	if (papp->IsLocal()) {
 		ec = lpp->MapResources(papp, pres, excl);;
-		if (unlikely(ec != PLATFORM_OK)) {
+		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("MapResources: [%s] failed local mapping"
 			              "(error code: %i)", papp->StrId(), ec);
 			return ec;
@@ -449,7 +449,7 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (papp->IsRemote()) {
 		ec = rpp->MapResources(papp, pres, excl);
-		if (unlikely(ec != PLATFORM_OK)) {
+		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("MapResources: [%s] failed remote mapping"
 			              "(error code: %i)", papp->StrId(), ec);
 			return ec;
@@ -584,7 +584,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 
 	if (psched->IsLocal()) {
 		ec = lpp->Dump(psched);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Dump: [%s] failed local checkpoint dump"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -594,7 +594,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (psched->IsRemote()) {
 		ec = rpp->Dump(psched);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Dump: [%s] failed remote checkpoint dump"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -614,7 +614,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(
 		logger->Debug("Restore: [pid=%d name=%s] on local system",
 		              pid, exec_name.c_str());
 		ec = lpp->Restore(pid, exec_name);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Restore: [pid=%d] failed local restore"
 			              "(error code: %i)", pid, ec);
 			return ec;
@@ -626,7 +626,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(
 		logger->Debug("Restore: [pid=%d name=%s] on system id=%d",
 		              pid, name.c_str(), remote_sys_id);
 		ec = rpp->Restore(psched, exec_name, remote_sys_id);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Restore: [%s] failed remote restore"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -643,7 +643,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 
 	if (psched->IsLocal()) {
 		ec = lpp->Freeze(psched);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Freeze: [%s] failed local freezing"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -653,7 +653,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (psched->IsRemote()) {
 		ec = rpp->Freeze(psched);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Freeze: [%s] failed remote freezing"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -693,7 +693,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 
 	if (psched->IsLocal()) {
 		ec = lpp->Thaw(psched);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Thaw: [%s] failed local thawning"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;
@@ -703,7 +703,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if (psched->IsRemote()) {
 		ec = rpp->Thaw(psched);
-		if (unlikely(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
+		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Thaw: [%s] failed remote thawing"
 			              "(error code: %i)", psched->StrId(), ec);
 			return ec;

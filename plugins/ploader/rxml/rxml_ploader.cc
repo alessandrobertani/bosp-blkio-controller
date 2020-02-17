@@ -14,8 +14,10 @@
 namespace po = boost::program_options;
 
 
-namespace bbque {
-namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 /** Set true it means the plugin has read its options in the config file*/
 bool RXMLPlatformLoader::configured = false;
@@ -26,7 +28,8 @@ std::string RXMLPlatformLoader::platforms_dir = "";
 /** Map of options (in the Barbeque config file) for the plugin */
 po::variables_map xmlploader_opts_value;
 
-RXMLPlatformLoader::~RXMLPlatformLoader() {
+RXMLPlatformLoader::~RXMLPlatformLoader()
+{
 
 }
 
@@ -43,18 +46,19 @@ RXMLPlatformLoader::RXMLPlatformLoader() : initialized(false)
 
 }
 
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept
+{
 
 	if (this->initialized) {
 		logger->Warn("RXMLPlatformLoader already initialized (I will ignore"
-						"the replicated loadPlatformInfo() call)");
+		             "the replicated loadPlatformInfo() call)");
 		return PL_SUCCESS;
 	}
 
 	std::string   path(platforms_dir + "/" BBQUE_PIL_FILE);
 	std::ifstream xml_file(path);
 
-	if (unlikely(!xml_file.good())) {
+	if (BBQUE_UNLIKELY(!xml_file.good())) {
 		logger->Error("systems.xml file not found, inaccessible or empty.");
 		return PL_NOT_FOUND;
 	}
@@ -63,7 +67,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
 	buffer << xml_file.rdbuf();
 	xml_file.close();
 
-	if (unlikely(!buffer.good())) {
+	if (BBQUE_UNLIKELY(!buffer.good())) {
 		logger->Error("Reading of systems.xml failed.");
 		return PL_NOT_FOUND;
 	}
@@ -72,8 +76,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
 
 	try {
 		doc.parse<0>(&xmlstr[0]);   // Note: c++11 guarantees that the memory is
-					    // sequentially allocated inside the string,
-					    // so no problem here.
+		// sequentially allocated inside the string,
+		// so no problem here.
 	} catch(const rapidxml::parse_error &e) {
 		logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
 		return PL_SYNTAX_ERROR;
@@ -106,7 +110,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept {
 	return PL_SUCCESS;
 }
 
-const pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() const {
+const pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() const
+{
 	if (!this->initialized) {
 		throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
 	}
@@ -114,7 +119,8 @@ const pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() const {
 	return this->pd;
 }
 
-pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() {
+pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo()
+{
 	if (!this->initialized) {
 		throw PlatformLoaderEXC("getPlatformInfo() called before initialization.");
 	}
@@ -124,21 +130,24 @@ pp::PlatformDescription &RXMLPlatformLoader::getPlatformInfo() {
 
 // =======================[ Static plugin interface ]=========================
 
-void * RXMLPlatformLoader::Create(PF_ObjectParams *params) {
+void * RXMLPlatformLoader::Create(PF_ObjectParams *params)
+{
 	if (!Configure(params))
 		return nullptr;
 
 	return new RXMLPlatformLoader();
 }
 
-int32_t RXMLPlatformLoader::Destroy(void *plugin) {
+int32_t RXMLPlatformLoader::Destroy(void *plugin)
+{
 	if (!plugin)
 		return -1;
 	delete (RXMLPlatformLoader *)plugin;
 	return 0;
 }
 
-bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
+bool RXMLPlatformLoader::Configure(PF_ObjectParams * params)
+{
 
 	if (configured)
 		return true;
@@ -146,9 +155,9 @@ bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
 	// Declare the supported options
 	po::options_description xmlploader_opts_desc("RXML Platform Loader Options");
 	xmlploader_opts_desc.add_options()
-		(MODULE_CONFIG".platform_dir", po::value<std::string>
-		 (&platforms_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_PILS),
-		 "platform folder")
+	(MODULE_CONFIG".platform_dir", po::value<std::string>
+	 (&platforms_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_PILS),
+	 "platform folder")
 	;
 
 	// Get configuration params
@@ -163,17 +172,17 @@ bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
 	sd.response = &data_out;
 
 	int32_t response =
-		params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
+	        params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
 
-	if (response!=PF_SERVICE_DONE)
+	if (response != PF_SERVICE_DONE)
 		return false;
 
 	if (daemonized)
 		syslog(LOG_INFO, "Using RXMLPlatformLoader platform folder [%s]",
-				platforms_dir.c_str());
+		       platforms_dir.c_str());
 	else
 		fprintf(stdout, FI("Using RXMLPlatformLoader platform folder [%s]\n"),
-				platforms_dir.c_str());
+		        platforms_dir.c_str());
 
 	return true;
 }
@@ -182,7 +191,8 @@ bool RXMLPlatformLoader::Configure(PF_ObjectParams * params) {
 
 
 RXMLPlatformLoader::node_ptr RXMLPlatformLoader::GetFirstChild(
-		node_ptr parent, const char * name, bool mandatory) const {
+        node_ptr parent, const char * name, bool mandatory) const
+{
 
 	node_ptr child = parent->first_node(name, 0, true);
 	if (child == nullptr) {
@@ -199,7 +209,8 @@ RXMLPlatformLoader::node_ptr RXMLPlatformLoader::GetFirstChild(
 
 
 RXMLPlatformLoader::attr_ptr RXMLPlatformLoader::GetFirstAttribute(
-		node_ptr tag, const char * name, bool mandatory) const {
+        node_ptr tag, const char * name, bool mandatory) const
+{
 
 	attr_ptr attr = tag->first_attribute(name, 0, true);
 	if (attr == nullptr) {
@@ -215,14 +226,15 @@ RXMLPlatformLoader::attr_ptr RXMLPlatformLoader::GetFirstAttribute(
 }
 
 
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
+RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument()
+{
 
-	node_ptr root    = this->GetFirstChild(&doc,"systems", true);
+	node_ptr root    = this->GetFirstChild(&doc, "systems", true);
 	attr_ptr version = this->GetFirstAttribute(root, "version", true);
 
 	if (strcmp(version->value(), CURRENT_VERSION) != 0) {
 		logger->Error("Version mismatch: my version is " CURRENT_VERSION " but systems.xml"
-					  "has version %s.", version->value());
+		              "has version %s.", version->value());
 		return PL_GENERIC_ERROR;
 	}
 
@@ -230,7 +242,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
 
 	std::string is_local_str;
 	bool local_found = false;
-	node_ptr include_sys = this->GetFirstChild(root,"include", true) ;
+	node_ptr include_sys = this->GetFirstChild(root, "include", true) ;
 
 	while(include_sys != NULL) {
 		logger->Debug("Parsing system description from '%s'...", include_sys->value());
@@ -264,14 +276,15 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument() {
 }
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
-		const char* name,
-		bool is_local) {
+        const char* name,
+        bool is_local)
+{
 	logger->Info("Loading '%s' platform file...", name);
 
 	std::string   path(platforms_dir + "/" + name);
 	std::ifstream xml_file(path);
 
-	if (unlikely(!xml_file.good())) {
+	if (BBQUE_UNLIKELY(!xml_file.good())) {
 		logger->Error("'%s' file not found, inaccessible or empty.", name);
 		return PL_NOT_FOUND;
 	}
@@ -280,7 +293,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	buffer << xml_file.rdbuf();
 	xml_file.close();
 
-	if (unlikely(!buffer.good())) {
+	if (BBQUE_UNLIKELY(!buffer.good())) {
 		logger->Error("Reading of %s failed.", name);
 		return PL_NOT_FOUND;
 	}
@@ -290,8 +303,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	rapidxml::xml_document<> inc_doc;
 	// Not try{}catch{} it, leave it throwing, managed at upper levels
 	inc_doc.parse<0>(&xmlstr[0]);    // Note: c++11 guarantees that the memory is
-					 // sequentially allocated inside the string,
-					 // so no problem here.
+	// sequentially allocated inside the string,
+	// so no problem here.
 
 	node_ptr root     = this->GetFirstChild(&inc_doc, "system", true);
 
@@ -301,7 +314,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	// The address is mandatory only if the system is remote.
 	attr_ptr address  = this->GetFirstAttribute(root, "address", !is_local);
 	logger->Debug("Parsing system id=%s hostname=[%s] address=<%s>", id->value(),
-			hostname->value(), address->value() ? address->value() : "`localhost`");
+	              hostname->value(), address->value() ? address->value() : "`localhost`");
 
 	pp::PlatformDescription::System sys;
 	sys.SetId(atoi(id->value()));
@@ -354,11 +367,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
-		node_ptr root,
-		pp::PlatformDescription::System & sys) {
+        node_ptr root,
+        pp::PlatformDescription::System & sys)
+{
 	// Now get all the memories and save them. This should be perfomed before <cpu> and
 	// other tags, due to reference to memories inside them.
-	node_ptr memory_tag = this->GetFirstChild(root,"mem",true) ;
+	node_ptr memory_tag = this->GetFirstChild(root, "mem", true) ;
 	while( memory_tag != NULL ) {
 		pp::PlatformDescription::Memory mem;
 		attr_ptr id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
@@ -395,24 +409,24 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
 
 		// unit=""
 		switch(ConstHashString(unit_attr->value())) {
-			case ConstHashString("B"):
-				exp=0;
+		case ConstHashString("B"):
+			exp = 0;
 			break;
-			case ConstHashString("KB"):
-				exp=10;
+		case ConstHashString("KB"):
+			exp = 10;
 			break;
-			case ConstHashString("MB"):
-				exp=20;
+		case ConstHashString("MB"):
+			exp = 20;
 			break;
-			case ConstHashString("GB"):
-				exp=20;
+		case ConstHashString("GB"):
+			exp = 20;
 			break;
-			case ConstHashString("TB"):
-				exp=40;
+		case ConstHashString("TB"):
+			exp = 40;
 			break;
-			default:
-				logger->Error("Invalid `unit` for <memory>.");
-				return PL_LOGIC_ERROR;
+		default:
+			logger->Error("Invalid `unit` for <memory>.");
+			return PL_LOGIC_ERROR;
 			break;
 		}
 
@@ -428,8 +442,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
 }
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseNetworkIFs(
-		node_ptr root,
-		pp::PlatformDescription::System & sys) {
+        node_ptr root,
+        pp::PlatformDescription::System & sys)
+{
 
 
 	node_ptr netif_tag = this->GetFirstChild(root, "netif", false);
@@ -467,15 +482,16 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseNetworkIFs(
 
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
-		node_ptr root,
-		pp::PlatformDescription::System & sys) {
+        node_ptr root,
+        pp::PlatformDescription::System & sys)
+{
 
-	node_ptr cpu_tag = this->GetFirstChild(root,"cpu");
+	node_ptr cpu_tag = this->GetFirstChild(root, "cpu");
 	while( cpu_tag != NULL ) {
 		pp::PlatformDescription::CPU cpu;
 		attr_ptr arch_attr     = this->GetFirstAttribute(cpu_tag, "arch",     true);
 		attr_ptr id_attr       = this->GetFirstAttribute(cpu_tag, "id",       true);
-		attr_ptr socket_id_attr= this->GetFirstAttribute(cpu_tag, "socket_id",true);
+		attr_ptr socket_id_attr = this->GetFirstAttribute(cpu_tag, "socket_id", true);
 		attr_ptr mem_id_attr   = this->GetFirstAttribute(cpu_tag, "mem_id",   true);
 
 		const char * arch = arch_attr->value();
@@ -523,7 +539,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 		}
 
 		std::shared_ptr<pp::PlatformDescription::Memory>
-			curr_memory = sys.GetMemoryById(mem_id);
+		curr_memory = sys.GetMemoryById(mem_id);
 
 		if (curr_memory == nullptr) {
 			logger->Error("<cpu> with memory id %d not found in memories list.", mem_id);
@@ -540,12 +556,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 
 		/// <cpu>
 		///      <pe>
-		node_ptr pe_tag = this->GetFirstChild(cpu_tag,"pe");
+		node_ptr pe_tag = this->GetFirstChild(cpu_tag, "pe");
 		while (pe_tag != NULL) {
 			pp::PlatformDescription::ProcessingElement pe;
 			ExitCode_t ec = ParseProcessingElement(pe_tag, pe);
 			if (ec != PL_SUCCESS)
-			return ec;
+				return ec;
 
 			pe.SetPrefix(cpu.GetPath());
 			cpu.AddProcessingElement(pe);
@@ -561,8 +577,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
-		node_ptr pe_tag,
-		pp::PlatformDescription::ProcessingElement & pe) {
+        node_ptr pe_tag,
+        pp::PlatformDescription::ProcessingElement & pe)
+{
 
 	attr_ptr id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
 	attr_ptr core_id_attr  = this->GetFirstAttribute(pe_tag, "core_id",  true);
@@ -625,7 +642,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 			break;
 		default:
 			logger->Error("'%s' is not a valid value for `partition` attribute.",
-				partition_attr->value());
+			              partition_attr->value());
 			return PL_LOGIC_ERROR;
 			break;
 		}
@@ -643,9 +660,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 
 
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
-		node_ptr root,
-		pp::PlatformDescription::System & sys,
-		const char * tag_str) {
+        node_ptr root,
+        pp::PlatformDescription::System & sys,
+        const char * tag_str)
+{
 
 	node_ptr tag = this->GetFirstChild(root, tag_str) ;
 	while (tag != NULL) {
@@ -681,7 +699,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 			pp::PlatformDescription::ProcessingElement pe;
 			ExitCode_t ec = ParseProcessingElement(pe_tag, pe);
 			if (ec != PL_SUCCESS)
-			return ec;
+				return ec;
 
 			manycore.AddProcessingElement(pe);
 			pe_tag = pe_tag->next_sibling("pe");

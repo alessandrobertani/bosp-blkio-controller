@@ -538,7 +538,7 @@ RTLIB_ExitCode_t BbqueEXC::Monitor()
 	rtlib->Notify.PostMonitor(exc_handler);
 
 	// Check if the EXC has got duration constraints
-	if (likely(! config.duration.enabled))
+	if (BBQUE_LIKELY(! config.duration.enabled))
 		return result;
 
 	// Duration control checks
@@ -578,7 +578,7 @@ void BbqueEXC::WaitEXCInitCompletion()
 void BbqueEXC::ControlLoop()
 {
 	// Set the thread name
-	if (unlikely(prctl(PR_SET_NAME, (long unsigned int) "bq.cloop", 0, 0, 0)))
+	if (BBQUE_UNLIKELY(prctl(PR_SET_NAME, (long unsigned int) "bq.cloop", 0, 0, 0)))
 		logger->Error("ControlLoop: set name FAILED! (Error: %s)",
 			      strerror(errno));
 

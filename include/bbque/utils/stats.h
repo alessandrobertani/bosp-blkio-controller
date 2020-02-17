@@ -24,7 +24,10 @@
 
 #include <bbque/utils/utility.h>
 
-namespace bbque { namespace utils {
+namespace bbque
+{
+namespace utils
+{
 
 
 /**
@@ -40,7 +43,8 @@ namespace bbque { namespace utils {
  * weights decrease by a factor of two) is approximately N/2.8854
  * (within 1% if N > 5).
  */
-class EMA {
+class EMA
+{
 
 private:
 	double alpha;
@@ -49,33 +53,39 @@ private:
 	uint8_t load;
 public:
 	EMA(int samples = 6, double firstValue = 0) :
-		alpha(2.0 / (samples +1)),
+		alpha(2.0 / (samples + 1)),
 		value(firstValue),
-		load(samples) {
+		load(samples)
+	{
 	}
-	double update(double newValue) {
+	double update(double newValue)
+	{
 		last  = newValue;
 		value = ((alpha * last) + ((1 - alpha) * value));
-		if (unlikely(load > 0))
+		if (BBQUE_UNLIKELY(load > 0))
 			--load;
 		return value;
 	}
-	void reset(int samples, double firstValue) {
-		alpha = 2.0 / (samples +1);
+	void reset(int samples, double firstValue)
+	{
+		alpha = 2.0 / (samples + 1);
 		value = firstValue;
 		load  = samples;
 	}
-	double get() const {
-		if (unlikely(load > 0))
+	double get() const
+	{
+		if (BBQUE_UNLIKELY(load > 0))
 			return 0;
 		return value;
 	}
-	double last_value() const {
+	double last_value() const
+	{
 		return last;
 	}
 };
 
-class StatsAnalysis {
+class StatsAnalysis
+{
 
 private:
 
@@ -98,55 +108,66 @@ public:
 	StatsAnalysis() {}
 
 	// Returns the average of the values, i.e. (V0 + .. + VN) / N
-	inline double GetMean() {
+	inline double GetMean()
+	{
 		return mean;
 	}
 
 	// Return the variance, which equals to E(X^2) - E^2(X)
-	inline double GetVariance() {
+	inline double GetVariance()
+	{
 		return samples_number < 2 ? 0.0f : mean2 / (samples_number - 1);
 	}
 
 	// Standard deviation: square root of the variance
-	inline double GetStandartDeviation() {
+	inline double GetStandartDeviation()
+	{
 		return std::sqrt(GetVariance());
 	}
 
 	// Standard error: square root of (variance / N)
-	inline double GetStandardError() {
+	inline double GetStandardError()
+	{
 		return samples_number == 0
-				? 0.0f : GetStandartDeviation() / std::sqrt(samples_number);
+		       ? 0.0f : GetStandartDeviation() / std::sqrt(samples_number);
 	}
 
 	// CI 90%: 1.96 * standard error
-	inline double GetConfidenceInterval90() {
+	inline double GetConfidenceInterval90()
+	{
 		return 1.645 * GetStandardError();
 	}
 
 	// CI 95%: 1.96 * standard error
-	inline double GetConfidenceInterval95() {
+	inline double GetConfidenceInterval95()
+	{
 		return 1.96 * GetStandardError();
 	}
 
 	// CI 99%: 2.58 * standard error
-	inline double GetConfidenceInterval99() {
+	inline double GetConfidenceInterval99()
+	{
 		return 2.58 * GetStandardError();
 	}
 
-	inline double GetSum() {
+	inline double GetSum()
+	{
 		return GetMean() * samples_number;
 	}
 
-	inline uint16_t GetWindowSize() {
+	inline uint16_t GetWindowSize()
+	{
 		return samples_number;
 	}
 
-	inline double GetLastValue() {
+	inline double GetLastValue()
+	{
 		return last_value;
 	}
 
 	// Clear all values
-	inline void Reset() {
+	inline void Reset()
+	{
 		samples_number = 0;
 		last_value = 0.0f;
 		mean = 0.0f;
@@ -155,7 +176,8 @@ public:
 	}
 
 	// Store a new value
-	void InsertValue(double value) {
+	void InsertValue(double value)
+	{
 
 // Confidence Intervals have no meaning if the number of samples is too low
 #define IC_MIN_SAMPLES 5
@@ -167,7 +189,7 @@ public:
 			double max_allowed_value = GetMean() + GetConfidenceInterval99();
 
 			bool phase_change_detected =
-					value < min_allowed_value || value > max_allowed_value;
+			        value < min_allowed_value || value > max_allowed_value;
 
 			if (phase_change_detected)
 				Reset();
@@ -183,11 +205,13 @@ public:
 		last_value = value;
 	}
 
-	inline void EnablePhaseDetection() {
+	inline void EnablePhaseDetection()
+	{
 		detect_phase_changes = true;
 	}
 
-	inline void DisablePhaseDetection() {
+	inline void DisablePhaseDetection()
+	{
 		detect_phase_changes = false;
 		out_of_phase = false;
 	}

@@ -34,12 +34,16 @@ namespace bl = bbque::rtlib;
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+namespace bbque
+{
+namespace plugins
+{
 
 FifoRPC::FifoRPC(std::string const & fifo_dir) :
 	initialized(false),
 	conf_fifo_dir(fifo_dir),
-	rpc_fifo_fd(0) {
+	rpc_fifo_fd(0)
+{
 
 	// Get a logger
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
@@ -54,12 +58,13 @@ FifoRPC::FifoRPC(std::string const & fifo_dir) :
 
 }
 
-FifoRPC::~FifoRPC() {
+FifoRPC::~FifoRPC()
+{
 	fs::path fifo_path(conf_fifo_dir);
 	fifo_path /= "/" BBQUE_PUBLIC_FIFO;
 
 	logger->Debug("FIFO RPC: cleaning up FIFO [%s]...",
-			fifo_path.string().c_str());
+	              fifo_path.string().c_str());
 
 	::close(rpc_fifo_fd);
 	// Remove the server side pipe
@@ -68,7 +73,8 @@ FifoRPC::~FifoRPC() {
 
 //----- RPCChannelIF module interface
 
-int FifoRPC::Init() {
+int FifoRPC::Init()
+{
 	int error;
 	fs::path fifo_path(conf_fifo_dir);
 	boost::system::error_code ec;
@@ -80,18 +86,18 @@ int FifoRPC::Init() {
 
 	fifo_path /= "/" BBQUE_PUBLIC_FIFO;
 	logger->Debug("FIFO RPC: checking FIFO [%s]...",
-			fifo_path.string().c_str());
+	              fifo_path.string().c_str());
 
 	// If the FIFO already exists: destroy it and rebuild a new one
 	if (fs::exists(fifo_path, ec)) {
 		logger->Debug("FIFO RPC: destroying old FIFO [%s]...",
-			fifo_path.string().c_str());
+		              fifo_path.string().c_str());
 		error = ::unlink(fifo_path.string().c_str());
 		if (error) {
 			logger->Crit("FIFO RPC: cleanup old FIFO [%s] FAILED "
-					"(Error: %s)",
-					fifo_path.string().c_str(),
-					strerror(error));
+			             "(Error: %s)",
+			             fifo_path.string().c_str(),
+			             strerror(error));
 			assert(error == 0);
 			return -1;
 		}
@@ -99,44 +105,44 @@ int FifoRPC::Init() {
 
 	// Make dir (if not already present)
 	logger->Debug("FIFO RPC: create dir [%s]...",
-			fifo_path.parent_path().c_str());
+	              fifo_path.parent_path().c_str());
 	fs::create_directories(fifo_path.parent_path(), ec);
 
 	// Create the server side pipe (if not already existing)
 	logger->Debug("FIFO RPC: create FIFO [%s]...",
-			fifo_path.string().c_str());
+	              fifo_path.string().c_str());
 	error = ::mkfifo(fifo_path.string().c_str(), 0666);
 	if (error) {
 		logger->Error("FIFO RPC: RPC FIFO [%s] cration FAILED",
-				fifo_path.string().c_str());
+		              fifo_path.string().c_str());
 		return -2;
 	}
 
 	// Ensuring we have a pipe
 	if (fs::status(fifo_path, ec).type() != fs::fifo_file) {
 		logger->Error("ERROR, RPC FIFO [%s] already in use",
-				fifo_path.string().c_str());
+		              fifo_path.string().c_str());
 		return -3;
 	}
 
 	// Opening the server side pipe (R/W to keep it opened)
 	logger->Debug("FIFO RPC: opening R/W...");
 	rpc_fifo_fd = ::open(fifo_path.string().c_str(),
-			O_RDWR);
+	                     O_RDWR);
 	if (rpc_fifo_fd < 0) {
 		logger->Error("FAILED opening RPC FIFO [%s]",
-					fifo_path.string().c_str());
+		              fifo_path.string().c_str());
 		rpc_fifo_fd = 0;
 		::unlink(fifo_path.string().c_str());
 		return -4;
 	}
 
 	// Ensuring the FIFO is R/W to everyone
-	if (fchmod(rpc_fifo_fd, S_IRUSR|S_IWUSR|S_IWGRP|S_IWOTH)) {
+	if (fchmod(rpc_fifo_fd, S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH)) {
 		logger->Error("FAILED setting permissions on RPC FIFO [%s] "
-				"(Error %d: %s)",
-				fifo_path.string().c_str(),
-				errno, strerror(errno));
+		              "(Error %d: %s)",
+		              fifo_path.string().c_str(),
+		              errno, strerror(errno));
 		rpc_fifo_fd = 0;
 		::unlink(fifo_path.string().c_str());
 		return -5;
@@ -149,7 +155,8 @@ int FifoRPC::Init() {
 	return 0;
 }
 
-int FifoRPC::Poll() {
+int FifoRPC::Poll()
+{
 	struct pollfd fifo_poll;
 	sigset_t sigmask;
 	int ret = 0;
@@ -172,7 +179,8 @@ int FifoRPC::Poll() {
 	return ret;
 }
 
-ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
+ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg)
+{
 	bl::rpc_fifo_header_t hdr;
 	void *fifo_buff_ptr;
 	ssize_t result;
@@ -194,9 +202,9 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 		char c;
 		logger->Error("FIFO RPC: message buffer creation FAILED");
 		// Remove the remaining message from the FIFO
-		for ( ; bytes<hdr.fifo_msg_size; bytes++) {
+		for ( ; bytes < hdr.fifo_msg_size; bytes++) {
 			result = ::read(rpc_fifo_fd, (void*)&c, sizeof(char));
-			if (likely(result != -1))
+			if (BBQUE_LIKELY(result != -1))
 				continue;
 
 			// FIXME If a read fails at that point, the FIFO queue
@@ -205,7 +213,7 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 			// should be activated, e.g. lookup for the next
 			// HEADER.
 			logger->Error("FIFO RPC: read FAILED (Error %d: %s)",
-					errno, strerror(errno));
+			              errno, strerror(errno));
 		}
 		return -errno;
 	}
@@ -220,48 +228,48 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 	case bl::RPC_APP_PAIR:
 
 		result = ::read(rpc_fifo_fd,
-			&(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->rpc_fifo),
-			hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
-		if (unlikely(result == -1)) {
+		                &(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->rpc_fifo),
+		                hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
+		if (BBQUE_UNLIKELY(result == -1)) {
 			error = true;
 			break;
 		}
 
-		msg = (rpc_msg_ptr_t)&(((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl);
+		msg = (rpc_msg_ptr_t) & (((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl);
 		logger->Debug("FIFO RPC: Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd] "
-				"RPC_HDR [typ: %d, pid: %d, eid: %hd]",
-			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
-			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
-			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
-			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.typ,
-			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.app_pid,
-			((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.exc_id
-		     );
+		              "RPC_HDR [typ: %d, pid: %d, eid: %hd]",
+		              ((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
+		              ((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
+		              ((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
+		              ((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.typ,
+		              ((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.app_pid,
+		              ((bl::rpc_fifo_APP_PAIR_t*)fifo_buff_ptr)->pyl.hdr.exc_id
+		             );
 		break;
 	default:
 		result = ::read(rpc_fifo_fd,
-			&(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl),
-			hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
-		if (unlikely(result == -1)) {
+		                &(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl),
+		                hdr.fifo_msg_size - FIFO_PKT_SIZE(header));
+		if (BBQUE_UNLIKELY(result == -1)) {
 			error = true;
 			break;
 		}
 
 		msg = &(((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl);
 		logger->Debug("FIFO RPC: Rx FIFO_HDR [sze: %hd, off: %hd, typ: %hd] "
-				"RPC_HDR [typ: %d, pid: %d, eid: %hd]",
-			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
-			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
-			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
-			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.typ,
-			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.app_pid,
-			((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.exc_id
-		     );
+		              "RPC_HDR [typ: %d, pid: %d, eid: %hd]",
+		              ((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.fifo_msg_size,
+		              ((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_offset,
+		              ((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->hdr.rpc_msg_type,
+		              ((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.typ,
+		              ((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.app_pid,
+		              ((bl::rpc_fifo_GENERIC_t*)fifo_buff_ptr)->pyl.exc_id
+		             );
 	}
 
 	if (error) {
 		logger->Error("FIFO RPC: read RPC message FAILED (Error %d: %s)",
-				errno, strerror(errno));
+		              errno, strerror(errno));
 
 		free(fifo_buff_ptr);
 		msg = NULL;
@@ -276,7 +284,8 @@ ssize_t FifoRPC::RecvMessage(rpc_msg_ptr_t & msg) {
 }
 
 RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
-		rpc_msg_ptr_t & msg) {
+        rpc_msg_ptr_t & msg)
+{
 	fifo_data_t * pd;
 	fs::path fifo_path(conf_fifo_dir);
 	boost::system::error_code ec;
@@ -302,7 +311,7 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 		// The application should build the channel, this could be used as
 		// an additional handshaking protocol and API versioning verification
 		logger->Debug("FIFO RPC: checking for application FIFO [%s]...",
-				fifo_path.string().c_str());
+		              fifo_path.string().c_str());
 		if (!fs::exists(fifo_path, ec)) {
 			throw std::runtime_error("FIFO RPC: apps FIFO NOT FOUND");
 		}
@@ -317,10 +326,10 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 		fd = ::open(fifo_path.string().c_str(), O_WRONLY);
 		if (fd < 0) {
 			logger->Error("FAILED opening application RPC FIFO [%s] (Error %d: %s)",
-						fifo_path.string().c_str(), errno, strerror(errno));
+			              fifo_path.string().c_str(), errno, strerror(errno));
 			fd = 0;
 			// Debugging: abort on too many files open
-			assert(errno!=EMFILE);
+			assert(errno != EMFILE);
 			throw std::runtime_error("FAILED opening application RPC FIFO");
 		}
 
@@ -334,7 +343,7 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 	} // try
 	catch(std::runtime_error &ex) {
 		logger->Error("Error trying to get plugin data RPC FIFO [%s]",
-                      fifo_path.string().c_str());
+		              fifo_path.string().c_str());
 		logger->Error(ex.what());
 		return plugin_data_t();
 	}
@@ -344,28 +353,30 @@ RPCChannelIF::plugin_data_t FifoRPC::GetPluginData(
 	pd->app_fifo_fd = fd;
 
 	logger->Info("FIFO RPC: [%5d:%s] channel initialization DONE",
-			pd->app_fifo_fd, hdr->rpc_fifo);
+	             pd->app_fifo_fd, hdr->rpc_fifo);
 
 	return plugin_data_t(pd);
 
 }
 
-void FifoRPC::ReleasePluginData(plugin_data_t & pd) {
+void FifoRPC::ReleasePluginData(plugin_data_t & pd)
+{
 	fifo_data_t * ppd = (fifo_data_t*)pd.get();
 
-	assert(initialized==true);
+	assert(initialized == true);
 	assert(ppd && ppd->app_fifo_fd);
 
 	// Close the FIFO and cleanup plugin data
 	::close(ppd->app_fifo_fd);
 
 	logger->Info("FIFO RPC: [%5d:%s] channel release DONE",
-			ppd->app_fifo_fd, ppd->app_fifo_filename);
+	             ppd->app_fifo_fd, ppd->app_fifo_filename);
 
 }
 
 ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
-		size_t count) {
+                             size_t count)
+{
 	fifo_data_t * ppd = (fifo_data_t*)pd.get();
 	bl::rpc_fifo_GENERIC_t *fifo_msg;
 	ssize_t error;
@@ -381,16 +392,16 @@ ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
 	// Build a new message of the required type
 	// NOTE all BBQ generated command have the sam FIFO layout
 	fifo_msg = (bl::rpc_fifo_GENERIC_t*)::malloc(
-			offsetof(bl::rpc_fifo_GENERIC_t, pyl) + count);
+	                   offsetof(bl::rpc_fifo_GENERIC_t, pyl) + count);
 
 	// Copy the RPC message into the FIFO msg
 	::memcpy(&(fifo_msg->pyl), msg, count);
 
 	logger->Debug("FIFO RPC: TX [typ: %d, sze: %d] "
-			"using app channel [%d:%s]...",
-			msg->typ, count,
-			ppd->app_fifo_fd,
-			ppd->app_fifo_filename);
+	              "using app channel [%d:%s]...",
+	              msg->typ, count,
+	              ppd->app_fifo_fd,
+	              ppd->app_fifo_filename);
 
 	// Send the RPC FIFO message
 	fifo_msg->hdr.fifo_msg_size = offsetof(bl::rpc_fifo_GENERIC_t, pyl) + count;
@@ -399,14 +410,15 @@ ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
 	error = ::write(ppd->app_fifo_fd, fifo_msg, fifo_msg->hdr.fifo_msg_size);
 	if (error == -1) {
 		logger->Error("FIFO RPC: send massage (header) FAILED (Error %d: %s)",
-				errno, strerror(errno));
+		              errno, strerror(errno));
 		return -errno;
 	}
 
 	return fifo_msg->hdr.fifo_msg_size;
 }
 
-void FifoRPC::FreeMessage(rpc_msg_ptr_t & msg) {
+void FifoRPC::FreeMessage(rpc_msg_ptr_t & msg)
+{
 	void* fifo_msg;
 
 	// Recover the beginning of the FIFO message
@@ -425,16 +437,17 @@ void FifoRPC::FreeMessage(rpc_msg_ptr_t & msg) {
 
 //----- static plugin interface
 
-void * FifoRPC::Create(PF_ObjectParams *params) {
+void * FifoRPC::Create(PF_ObjectParams *params)
+{
 	static std::string conf_fifo_dir;
 
 	// Declare the supported options
 	po::options_description fifo_rpc_opts_desc("FIFO RPC Options");
 	fifo_rpc_opts_desc.add_options()
-		(MODULE_NAMESPACE".dir", po::value<std::string>
-		 (&conf_fifo_dir)->default_value(BBQUE_PATH_VAR),
-		 "path of the FIFO dir")
-		;
+	(MODULE_NAMESPACE".dir", po::value<std::string>
+	 (&conf_fifo_dir)->default_value(BBQUE_PATH_VAR),
+	 "path of the FIFO dir")
+	;
 	static po::variables_map fifo_rpc_opts_value;
 
 	// Get configuration params
@@ -448,29 +461,29 @@ void * FifoRPC::Create(PF_ObjectParams *params) {
 	sd.response = &data_out;
 
 	int32_t response = params->
-		platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
-	if (response!=PF_SERVICE_DONE)
+	                   platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
+	if (response != PF_SERVICE_DONE)
 		return NULL;
 
 	if (daemonized)
 		syslog(LOG_INFO, "Using RPC FIFOs dir [%s]",
-				conf_fifo_dir.c_str());
+		       conf_fifo_dir.c_str());
 	else
 		fprintf(stderr, FI("FIFO RPC: using dir [%s]\n"),
-				conf_fifo_dir.c_str());
+		        conf_fifo_dir.c_str());
 
 	return new FifoRPC(conf_fifo_dir);
 
 }
 
-int32_t FifoRPC::Destroy(void *plugin) {
-  if (!plugin)
-    return -1;
-  delete (FifoRPC *)plugin;
-  return 0;
+int32_t FifoRPC::Destroy(void *plugin)
+{
+	if (!plugin)
+		return -1;
+	delete (FifoRPC *)plugin;
+	return 0;
 }
 
 } // namesapce plugins
 
 } // namespace bque
-

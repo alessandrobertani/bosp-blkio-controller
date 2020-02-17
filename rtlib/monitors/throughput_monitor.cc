@@ -89,9 +89,9 @@ void ThroughputMonitor::stop(uint16_t id, double data) {
 }
 
 void ThroughputMonitor::_start(uint16_t id) {
-	if (unlikely(goalList.find(id) == goalList.end()))
+	if (BBQUE_UNLIKELY(goalList.find(id) == goalList.end()))
 		return;
-	if (unlikely(dynamic_cast<ThroughputWindow*>(goalList[id])->started))
+	if (BBQUE_UNLIKELY(dynamic_cast<ThroughputWindow*>(goalList[id])->started))
 		return;
 
 	dynamic_cast<ThroughputWindow*> (goalList[id])->started = true;
@@ -99,9 +99,9 @@ void ThroughputMonitor::_start(uint16_t id) {
 }
 
 void ThroughputMonitor::_stop(uint16_t id, const double &data) {
-	if (unlikely(goalList.find(id) == goalList.end()))
+	if (BBQUE_UNLIKELY(goalList.find(id) == goalList.end()))
 		return;
-	if (unlikely(!dynamic_cast<ThroughputWindow*>(goalList[id])->started))
+	if (BBQUE_UNLIKELY(!dynamic_cast<ThroughputWindow*>(goalList[id])->started))
 		return;
 
 	dynamic_cast<ThroughputWindow*>(goalList[id])->tStop = chr_mc::now();
@@ -116,7 +116,7 @@ void ThroughputMonitor::_stop(uint16_t id, const double &data) {
 }
 
 void ThroughputMonitor::_start() {
-	if (unlikely(started))
+	if (BBQUE_UNLIKELY(started))
 		return;
 
 	started = true;
@@ -124,7 +124,7 @@ void ThroughputMonitor::_start() {
 }
 
 double ThroughputMonitor::_getThroughput(const double &data) {
-	if (unlikely(!started))
+	if (BBQUE_UNLIKELY(!started))
 		return 0;
 
 	started = false;

@@ -20,15 +20,19 @@
 #define DEFERRABLE_NAMESPACE "bq.df"
 #define MODULE_NAMESPACE DEFERRABLE_NAMESPACE
 
-namespace bbque { namespace utils {
+namespace bbque
+{
+namespace utils
+{
 
 Deferrable::Deferrable(const char *name,
-		DeferredFunction_t func,
-		milliseconds period) : Worker(),
+                       DeferredFunction_t func,
+                       milliseconds period) : Worker(),
 	name(name),
 	func(func),
 	max_time(period),
-	next_time(system_clock::now()) {
+	next_time(system_clock::now())
+{
 
 	//---------- Setup Worker
 	snprintf(thdName, BBQUE_DEFERRABLE_THDNAME_MAXLEN, DEFERRABLE_NAMESPACE ".%s", Name());
@@ -36,10 +40,10 @@ Deferrable::Deferrable(const char *name,
 
 	if (max_time == SCHEDULE_NONE) {
 		logger->Debug("Starting new \"on-demand\" deferrable [%s]...",
-				Name());
+		              Name());
 	} else {
 		logger->Debug("Starting new \"repetitive\" deferrable [%s], period %d[ms]...",
-				Name(), max_time);
+		              Name(), max_time);
 	}
 
 	// Start "periodic" deferrables
@@ -47,10 +51,12 @@ Deferrable::Deferrable(const char *name,
 
 }
 
-Deferrable::~Deferrable() {
+Deferrable::~Deferrable()
+{
 }
 
-void Deferrable::Schedule(milliseconds time) {
+void Deferrable::Schedule(milliseconds time)
+{
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	DeferredTime_t request_time = system_clock::now();
 	DeferredTime_t schedule_time = request_time + time;
@@ -65,45 +71,45 @@ void Deferrable::Schedule(milliseconds time) {
 
 	// Return if _now_ (i.e. schedule_time) we already have a pending
 	// schedule which is nearest then the required schedule time
-	if (likely(next_time > request_time)) {
-
+	if (BBQUE_LIKELY(next_time > request_time)) {
 		logger->Debug("DF[%s] checking for future schedule...", Name());
-
 		if (schedule_time >= next_time) {
 			DB(logger->Debug("DF[%s: %9.3f] nearest then %d[ms] schedule pending",
-					Name(), tmr.getElapsedTimeMs(), time));
+			                 Name(), tmr.getElapsedTimeMs(), time));
 			return;
 		}
 	}
 
 	// Update for next nearest schedule time
 	DB(logger->Debug("DF[%s: %9.3f] update nearest schedule to %d[ms]",
-			Name(), tmr.getElapsedTimeMs(), time));
+	                 Name(), tmr.getElapsedTimeMs(), time));
 	next_time = schedule_time;
 	next_timeout = time;
 	worker_status_cv.notify_one();
 
 }
 
-void Deferrable::SetPeriodic(milliseconds period) {
+void Deferrable::SetPeriodic(milliseconds period)
+{
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 
 	if (period == SCHEDULE_NONE) {
 		logger->Info("DF[%s] unexpected SetPeriodic() 0[ms], "
-				"must use the SetOnDemand() instead.",
-				Name());
+		             "must use the SetOnDemand() instead.",
+		             Name());
 		assert(period != SCHEDULE_NONE);
 		return;
 	}
 
 	logger->Info("DF[%s] set \"repetitive\" mode, period %d[ms]",
-			Name(), period);
+	             Name(), period);
 
 	max_time = period;
 	worker_status_cv.notify_one();
 }
 
-void Deferrable::SetOnDemand() {
+void Deferrable::SetOnDemand()
+{
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	logger->Info("DF[%s] set \"on-demand\" mode", Name());
 	max_time = SCHEDULE_NONE;
@@ -118,7 +124,8 @@ void Deferrable::SetOnDemand() {
 		next_time = system_clock::now() + next_timeout; \
 	} while(0)
 
-void Deferrable::Task() {
+void Deferrable::Task()
+{
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	std::cv_status wakeup_reason;
 
@@ -133,29 +140,29 @@ void Deferrable::Task() {
 		// Wait for next execution or re-scheduling
 		if (next_timeout == SCHEDULE_NONE) {
 			DB(logger->Debug("DF[%s: %9.3f] on-demand waiting...",
-					Name(), tmr.getElapsedTimeMs()));
+			                 Name(), tmr.getElapsedTimeMs()));
 
 			DB(tmr.start());
 			worker_status_cv.wait(worker_status_ul);
 			DB(logger->Debug("DF[%s: %9.3f] wakeup ON-DEMAND",
-					Name(), tmr.getElapsedTimeMs()));
+			                 Name(), tmr.getElapsedTimeMs()));
 
 		} else {
 			DB(logger->Debug("DF[%s: %9.3f] waiting for %d[ms]...",
-					Name(), tmr.getElapsedTimeMs(),
-					next_timeout));
+			                 Name(), tmr.getElapsedTimeMs(),
+			                 next_timeout));
 
 			DB(tmr.start());
 			wakeup_reason = worker_status_cv.wait_for(worker_status_ul, next_timeout);
 			if (wakeup_reason == std::cv_status::timeout) {
 				DB(logger->Debug("DF[%s: %9.3f] wakeup TIMEOUT",
-						Name(), tmr.getElapsedTimeMs()));
+				                 Name(), tmr.getElapsedTimeMs()));
 				next_timeout = SCHEDULE_NOW;
 			}
 
 		}
 
-		if (unlikely(done)) {
+		if (BBQUE_UNLIKELY(done)) {
 			DB(fprintf(stderr, FD("DF[%s] exiting executor..."), Name()));
 			continue;
 		}
@@ -163,8 +170,8 @@ void Deferrable::Task() {
 		// Timeout rescheduling due to nearest schedule
 		if (next_timeout != SCHEDULE_NOW) {
 			DB(logger->Debug("DF[%s: %9.3f] rescheduling timeout in %d[ms]",
-					Name(), tmr.getElapsedTimeMs(),
-					next_timeout));
+			                 Name(), tmr.getElapsedTimeMs(),
+			                 next_timeout));
 			continue;
 		}
 
@@ -185,4 +192,3 @@ void Deferrable::Task() {
 } // namespace utils
 
 } // namespace bbque
-

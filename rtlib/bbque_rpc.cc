@@ -661,7 +661,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCheckInitialization()
 	// Initialize CGroup Library
 	bu::CGroups::Init(BBQUE_LOG_MODULE);
 
-	if (likely(! rtlib_configuration.cgroup_support.enabled))
+	if (BBQUE_LIKELY(! rtlib_configuration.cgroup_support.enabled))
 		return RTLIB_OK;
 
 	// If not present, setup the "master" BBQUE CGroup as a clone
@@ -1078,7 +1078,7 @@ void BbqueRPC::DumpStats(pRegisteredEXC_t exc, bool verbose)
 
 bool BbqueRPC::CheckDurationTimeout(pRegisteredEXC_t exc)
 {
-	if (likely(! rtlib_configuration.duration.enabled))
+	if (BBQUE_LIKELY(! rtlib_configuration.duration.enabled))
 		return false;
 
 	if (! rtlib_configuration.duration.time_limit)
@@ -1125,7 +1125,7 @@ void BbqueRPC::SyncTimeEstimation(pRegisteredEXC_t exc)
 	pAwmStats_t awm_stats(exc->current_awm_stats);
 
 	// Check if we already ran on this AWM
-	if (unlikely(! awm_stats)) {
+	if (BBQUE_UNLIKELY(! awm_stats)) {
 		// This condition is verified just when we entered a SYNC
 		// before sending a GWM. In this case, statistics have not
 		// yet been setup
@@ -1345,7 +1345,7 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 		exc->blocked_time_ms += exc->execution_timer.getElapsedTimeMs();
 
 		// Update start latency
-		if (unlikely(exc->starting_time_ms == 0))
+		if (BBQUE_UNLIKELY(exc->starting_time_ms == 0))
 			exc->starting_time_ms = exc->blocked_time_ms;
 	}
 
@@ -1598,7 +1598,7 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
-	if (unlikely(exc->control_thread_pid == 0)) {
+	if (BBQUE_UNLIKELY(exc->control_thread_pid == 0)) {
 		// Keep track of the Control Thread PID
 		exc->control_thread_pid = gettid();
 		logger->Debug("Tracking control thread PID [%d] for EXC [%d]...",
@@ -3265,7 +3265,7 @@ void BbqueRPC::ForceCPS(pRegisteredEXC_t exc)
 	exc->cps_enforcing_sleep_time_ms = 0;
 
 	// Timing initialization
-	if (unlikely(exc->cycle_start_time_ms == 0)) {
+	if (BBQUE_UNLIKELY(exc->cycle_start_time_ms == 0)) {
 		// The first frame is used to setup the start time
 		exc->cycle_start_time_ms = bbque_tmr.getElapsedTimeMs();
 		return;
@@ -3503,7 +3503,7 @@ void BbqueRPC::NotifyPreRun(
 		bool pcounters_monitor_rtlib_overheads =
 		        rtlib_configuration.profile.perf_counters.overheads;
 
-		if (unlikely(pcounters_monitor_rtlib_overheads)) {
+		if (BBQUE_UNLIKELY(pcounters_monitor_rtlib_overheads)) {
 			logger->Debug("Pre-Run: RTLIB overheads mode: disabling perf");
 			PerfDisable(exc);
 			PerfCollectStats(exc);
@@ -3541,7 +3541,7 @@ void BbqueRPC::NotifyPostRun(
 		bool pcounters_monitor_rtlib_overheads =
 		        rtlib_configuration.profile.perf_counters.overheads;
 
-		if (unlikely(pcounters_monitor_rtlib_overheads)) {
+		if (BBQUE_UNLIKELY(pcounters_monitor_rtlib_overheads)) {
 			logger->Debug("Post-Run: RTLIB overheads mode: enabling perf");
 			PerfEnable(exc);
 		} else {

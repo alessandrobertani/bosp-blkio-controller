@@ -419,7 +419,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 	ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
 	// Set the next AWM only if the application is not going to be blocked
-	if (likely(!papp->Blocking())) {
+	if (BBQUE_LIKELY(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
 #ifndef CONFIG_TARGET_SIMULATED_PLATFORM
 		// CPUs (processors)

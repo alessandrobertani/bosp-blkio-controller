@@ -49,10 +49,12 @@
 namespace bu = bbque::utils;
 namespace br = bbque::res;
 
-namespace bbque {
+namespace bbque
+{
 
 
-class PowerMonitor: public CommandHandler, bu::Worker {
+class PowerMonitor: public CommandHandler, bu::Worker
+{
 
 public:
 
@@ -90,15 +92,15 @@ public:
 	 * reference any resource, OK otherwise
 	 */
 	ExitCode_t Register(
-			br::ResourcePathPtr_t rp,
-			PowerManager::SamplesArray_t const & samples_window =
-				{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
+	        br::ResourcePathPtr_t rp,
+	        PowerManager::SamplesArray_t const & samples_window =
+	{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
 	);
 
 	ExitCode_t Register(
-			const std::string & rp_str,
-			PowerManager::SamplesArray_t const & samples_window =
-				{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
+	        const std::string & rp_str,
+	        PowerManager::SamplesArray_t const & samples_window =
+	{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
 	);
 
 	/**
@@ -118,7 +120,8 @@ public:
 	 *
 	 * @return The temperature in Celsius degree
 	 */
-	inline uint32_t GetThermalThreshold() const {
+	inline uint32_t GetThermalThreshold() const
+	{
 		return GetThreshold(PowerManager::InfoType::TEMPERATURE);
 	}
 
@@ -130,9 +133,10 @@ public:
 	 * For BATTERY_LEVEL the charge level under which a policy execution could be triggered.
 	 * For BATTERY_RATE the maximum discharging rate tolerated.
 	 */
-	inline uint32_t GetThreshold(PowerManager::InfoType t) const {
+	inline uint32_t GetThreshold(PowerManager::InfoType t) const
+	{
 		auto v = triggers.find(t);
-		if (unlikely(v == triggers.end())) return 0;
+		if (BBQUE_UNLIKELY(v == triggers.end())) return 0;
 		return v->second->threshold_high;
 	}
 
@@ -143,11 +147,12 @@ public:
 	 * @return Chrono duration object (seconds) with the count of the
 	 * remaining seconds
 	 */
-	inline std::chrono::seconds GetSysLifetimeLeft() const {
+	inline std::chrono::seconds GetSysLifetimeLeft() const
+	{
 		std::chrono::system_clock::time_point now =
-			std::chrono::system_clock::now();
+		        std::chrono::system_clock::now();
 		return std::chrono::duration_cast<std::chrono::seconds>(
-				sys_lifetime.target_time - now);
+		               sys_lifetime.target_time - now);
 	}
 #endif
 
@@ -162,7 +167,8 @@ public:
 	/**
 	 * @brief Return the length of the sampling period (in milliseconds)
 	 */
-	uint32_t GetPeriodLengthMs() const {
+	uint32_t GetPeriodLengthMs() const
+	{
 		return wm_info.period_ms;
 	}
 
@@ -293,8 +299,8 @@ private:
 
 
 	/** Function pointer to PowerManager member functions */
-	using PMfunc = std::function<
-		PowerManager::PMResult(PowerManager&, br::ResourcePathPtr_t const &, uint32_t &)>;
+	using PMfunc = std::function <
+	               PowerManager::PMResult(PowerManager&, br::ResourcePathPtr_t const &, uint32_t &) >;
 
 	/**
 	 * @brief Array of Power Manager member functions
@@ -329,10 +335,10 @@ private:
 	virtual void Task();
 
 	void BuildLogString(
-			br::ResourcePtr_t rsrsc,
-			uint info_idx,
-			std::string & inst_values,
-			std::string & mean_values);
+	        br::ResourcePtr_t rsrsc,
+	        uint info_idx,
+	        std::string & inst_values,
+	        std::string & mean_values);
 
 	/**
 	 * @brief Log a data text line to file
@@ -342,9 +348,9 @@ private:
 	 * @param om C++ stream open mode
 	 */
 	void DataLogWrite(
-			br::ResourcePathPtr_t rp,
-			std::string const & data_line,
-			std::ios_base::openmode om = std::ios::out | std::ios_base::app);
+	        br::ResourcePathPtr_t rp,
+	        std::string const & data_line,
+	        std::ios_base::openmode om = std::ios::out | std::ios_base::app);
 
 	/**
 	 * @brief Clear data log files
@@ -371,8 +377,9 @@ private:
 	 * @brief Trigger execution: check if the current monitored value worth an
 	 * optimization policy execution request
 	 */
-	inline void ExecuteTrigger(br::ResourcePtr_t rsrc, PowerManager::InfoType info_type) {
-			ManageRequest(info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN));
+	inline void ExecuteTrigger(br::ResourcePtr_t rsrc, PowerManager::InfoType info_type)
+	{
+		ManageRequest(info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN));
 	}
 
 	/**
@@ -391,12 +398,13 @@ private:
 	 * @brief Compute the system power budget
 	 * @return The power value in milliwatts.
 	 */
-	inline uint32_t ComputeSysPowerBudget() const {
+	inline uint32_t ComputeSysPowerBudget() const
+	{
 		// How many seconds remains before lifetime target is reached?
 		std::chrono::seconds secs_from_now = GetSysLifetimeLeft();
 		// System energy budget in mJ
 		uint32_t energy_budget = pbatt->GetChargeMAh() * 3600 *
-					pbatt->GetVoltage() / 1e3;
+		                         pbatt->GetVoltage() / 1e3;
 		return energy_budget / secs_from_now.count();
 	}
 
@@ -418,8 +426,8 @@ private:
 	 * @return 0 for success, a negative number in case of error
 	 */
 	int SystemLifetimeCmdHandler(
-			const std::string action,
-			const std::string arg);
+	        const std::string action,
+	        const std::string arg);
 
 	/**
 	 * @brief System target lifetime information report
@@ -433,4 +441,3 @@ private:
 } // namespace bbque
 
 #endif // BBQUE_POWER_MONITOR_H_
-

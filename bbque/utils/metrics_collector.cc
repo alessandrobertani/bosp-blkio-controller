@@ -377,12 +377,12 @@ MetricsCollector::PeriodSample(MetricHandler_t mh,
 
 	// Start the submetrics sampling timer (if not already)
 	if (m->HasSubmetrics() &&
-		unlikely(!m->sm_period_tmr[idx].Running())) {
+		BBQUE_UNLIKELY(!m->sm_period_tmr[idx].Running())) {
 		m->sm_period_tmr[idx].start();
 	}
 
 	// Just start the sampling timer (if not already)
-	if (unlikely(!m->period_tmr.Running())) {
+	if (BBQUE_UNLIKELY(!m->period_tmr.Running())) {
 		m->period_tmr.start();
 		last_period = 0;
 		return OK;

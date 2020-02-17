@@ -90,9 +90,9 @@ void TimeMonitor::stop(uint16_t id) {
 }
 
 void TimeMonitor::_start(uint16_t id) {
-	if (unlikely(goalList.find(id) == goalList.end()))
+	if (BBQUE_UNLIKELY(goalList.find(id) == goalList.end()))
 		return;
-	if (unlikely(dynamic_cast<TimeWindow*>(goalList[id])->started))
+	if (BBQUE_UNLIKELY(dynamic_cast<TimeWindow*>(goalList[id])->started))
 		return;
 
 	dynamic_cast<TimeWindow*>(goalList[id])->started = true;
@@ -100,9 +100,9 @@ void TimeMonitor::_start(uint16_t id) {
 }
 
 void TimeMonitor::_stop(uint16_t id) {
-	if (unlikely(goalList.find(id) == goalList.end()))
+	if (BBQUE_UNLIKELY(goalList.find(id) == goalList.end()))
 		return;
-	if (unlikely(!dynamic_cast<TimeWindow*>(goalList[id])->started))
+	if (BBQUE_UNLIKELY(!dynamic_cast<TimeWindow*>(goalList[id])->started))
 		return;
 
 	dynamic_cast<TimeWindow*>(goalList[id])->tStop = chr_mc::now();
@@ -117,7 +117,7 @@ void TimeMonitor::_stop(uint16_t id) {
 }
 
 void TimeMonitor::_start() {
-	if (unlikely(started))
+	if (BBQUE_UNLIKELY(started))
 		return;
 
 	started = true;
@@ -125,7 +125,7 @@ void TimeMonitor::_start() {
 }
 
 void TimeMonitor::_stop() {
-	if (unlikely(!started))
+	if (BBQUE_UNLIKELY(!started))
 		return;
 
 	started = false;

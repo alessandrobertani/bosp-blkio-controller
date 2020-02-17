@@ -126,9 +126,9 @@
 #define XSTR(s) #s
 
 /** Optimize branch prediction for "taken" */
-#define likely(x)       __builtin_expect((x),1)
+#define BBQUE_LIKELY(x)   __builtin_expect((x), 1)
 /** Optimize branch prediction for "untaken" */
-#define unlikely(x)     __builtin_expect((x),0)
+#define BBQUE_UNLIKELY(x) __builtin_expect((x), 0)
 
 /** Silence the unused variable warning for a specific variable*/
 #define UNUSED(x) (void)(x);

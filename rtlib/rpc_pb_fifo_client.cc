@@ -216,7 +216,7 @@ void BbqueRPC_PB_FIFO_Client::ChannelTrd(const char * name)
 	std::unique_lock<std::mutex> trdStatus_ul(trdStatus_mtx);
 
 	// Set the thread name
-	if (unlikely(prctl(PR_SET_NAME, (long unsigned int) "bq.fifo", 0, 0, 0)))
+	if (BBQUE_UNLIKELY(prctl(PR_SET_NAME, (long unsigned int) "bq.fifo", 0, 0, 0)))
 		logger->Error("Set name FAILED! (Error: %s)\n", strerror(errno));
 
 	// Setup the RTLib UID
