@@ -1,6 +1,0 @@
-config BBQUE_RLOADER_XML
-  bool "XML"
-  default n
-  select EXTERNAL_TICPP
-  ---help---
-  XML Recipe loader based on library TiCPP (TinyXML for C++)

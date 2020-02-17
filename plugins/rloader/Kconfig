@@ -2,9 +2,7 @@
 choice
   prompt "Default recipe loader"
   default BBQUE_RLOADER_DEFAULT_RXML
-  config BBQUE_RLOADER_DEFAULT_XML
-    bool "XML"
-    select BBQUE_RLOADER_XML
+
   config BBQUE_RLOADER_DEFAULT_RXML
     bool "RXML"
     select BBQUE_RLOADER_RXML
@@ -12,5 +10,4 @@ choice
 
 endchoice
 
-source barbeque/plugins/rloader/xml/Kconfig
 source barbeque/plugins/rloader/rxml/Kconfig
