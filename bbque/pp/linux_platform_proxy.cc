@@ -1634,16 +1634,32 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 	criu_set_log_level(4);
 	criu_set_log_file("restore.log");
 	criu_set_pid(pid);
+	criu_set_ext_unix_sk(true);
+	criu_set_tcp_established(true);
+	criu_set_evasive_devices(true);
+	criu_set_file_locks(true);
 
-	// Do restore
+	int np = fork();
+	if (np != 0) {
+		logger->Debug("Restore: [pid=%d] child pid=%d", pid, np);
+	} else {
+		prctl(PR_SET_NAME, exe_name.c_str()); // Process name = binary name
+		int c_ret = criu_restore();           // Do restore
+		if (c_ret < 0) {
+			logger->Error("Restore: [pid=%d] error=%d", pid, c_ret);
+			return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
+		}
+	}
+
+	/*
 	int c_ret = criu_restore_child();
-	if (c_ret != 0) {
+	if (c_ret < 0) {
 		logger->Error("Restore: [pid=%d] error=%d", pid, c_ret);
 		return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
 	}
+	*/
 
-	logger->Debug("Restore: [pid=%d] resumed", pid);
-
+	logger->Info("Restore: [pid=%d] execution resumed", pid);
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
