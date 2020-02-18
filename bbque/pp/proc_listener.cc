@@ -66,8 +66,8 @@ ProcessListener::ProcessListener():
 	 * Initialization of Linux Connector Channel
 	 */
 	//Socket creation (Datagram)
-	sock = socket (PF_NETLINK, SOCK_DGRAM | SOCK_NONBLOCK | SOCK_CLOEXEC,
-		NETLINK_CONNECTOR);
+	sock = socket (PF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC, NETLINK_CONNECTOR); // SOCK_NONBLOCK
+
 	//Socket Binding
 	sockaddr_nl addr;
 	addr.nl_family = AF_NETLINK;
@@ -160,8 +160,11 @@ void ProcessListener::Task() {
 	 */
 	while (!done) {
 		len = recvmsg (sock, &msghdr, 0);
-		if (len<=0)
+		if (len <= 0) {
+			logger->Debug("Task: spurious socket read?");
 			continue;
+		}
+
 		/*
 		 * So now we have a netlink message package from the kernel,
 		 * this may contain multiple individual netlink messages
