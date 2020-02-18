@@ -1562,15 +1562,7 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 	criu_set_log_file("dump.log");
 	criu_set_pid(psched->Pid());
 	criu_set_leave_running(true);
-
-	// Is the application a shell job?
-	std::string parent_name(GetParentProcessName(psched->Pid()));
-	logger->Debug("Dump: [%s] parent process: [%s]",
-	              psched->StrId(), parent_name.c_str());
-	if (parent_name.compare("bash") >= 0) {
-		logger->Debug("Dump: [%s] is a shell job", psched->StrId());
-		criu_set_shell_job(true);
-	}
+	criu_set_shell_job(true);
 
 	// Checkpoint image dump
 	int c_ret = criu_dump();
