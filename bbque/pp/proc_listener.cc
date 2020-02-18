@@ -29,14 +29,17 @@
 
 #define MODULE_NAMESPACE "bq.pp.linux_ps"
 
-namespace bbque {
+namespace bbque
+{
 
-ProcessListener & ProcessListener::GetInstance() {
+ProcessListener & ProcessListener::GetInstance()
+{
 	static ProcessListener instance;
 	return instance;
 }
 
-std::string ProcessListener::GetProcName(int pid) {
+std::string ProcessListener::GetProcName(int pid)
+{
 	std::stringstream ss;
 	std::string pname("");
 	ss << "/proc/" << pid << "/comm";
@@ -44,15 +47,15 @@ std::string ProcessListener::GetProcName(int pid) {
 		std::ifstream ifs(ss.str());
 		ifs >> pname;
 		ifs.close();
-	}
-	catch(std::exception & ex) {
+	} catch(std::exception & ex) {
 		logger->Debug("GetProcName: %s", ex.what());
 	}
 	return pname;
 }
 
 ProcessListener::ProcessListener():
-		prm(ProcessManager::GetInstance()) {
+	prm(ProcessManager::GetInstance())
+{
 	sock = -1;
 	buffSize = getpagesize();
 	buf = new char[buffSize];
@@ -74,9 +77,9 @@ ProcessListener::ProcessListener():
 	addr.nl_pid = getpid(); //current process's pid
 	addr.nl_groups = CN_IDX_PROC;
 	bind(sock, (struct sockaddr *)&addr, sizeof addr);
-	if (errno == EPERM){
+	if (errno == EPERM) {
 		logger->Error("Linux Process Listener does not have the proper"
-			" permission to connect the socket");
+		              " permission to connect the socket");
 	}
 	/*
 	 * The proc connector doesn't send any messages until a process has
@@ -123,14 +126,16 @@ ProcessListener::ProcessListener():
 	}
 }
 
-ProcessListener::~ProcessListener() {
+ProcessListener::~ProcessListener()
+{
 	Terminate();
-	if (sock!=-1)
+	if (sock != -1)
 		close(sock);
 	delete[] buf;
 }
 
-void ProcessListener::Task() {
+void ProcessListener::Task()
+{
 	/*
 	 * Now we need to read the stream of messages. Just like the message we sent,
 	 * the stream of messages we receive are actually netlink messages,
@@ -171,13 +176,13 @@ void ProcessListener::Task() {
 		 * (it doesn’t, but it may). So we iterate over those.
 		 */
 		for (struct nlmsghdr *_nlmsghdr = (struct nlmsghdr *)buf;
-			NLMSG_OK (_nlmsghdr, len);
-			_nlmsghdr = NLMSG_NEXT (_nlmsghdr, len)){
+		     NLMSG_OK (_nlmsghdr, len);
+		     _nlmsghdr = NLMSG_NEXT (_nlmsghdr, len)) {
 			/*
 			* Ignore No-Op messages
 			*/
 			if ((_nlmsghdr->nlmsg_type == NLMSG_ERROR) ||
-				(_nlmsghdr->nlmsg_type == NLMSG_NOOP))
+			    (_nlmsghdr->nlmsg_type == NLMSG_NOOP))
 				continue;
 			/*
 			 * Inside each individual netlink message is a connector
@@ -186,7 +191,7 @@ void ProcessListener::Task() {
 			 */
 			cn_msg *_cn_msg = (cn_msg *)(NLMSG_DATA (_nlmsghdr));
 			if ((_cn_msg->id.idx != CN_IDX_PROC) ||
-				(_cn_msg->id.val != CN_VAL_PROC))
+			    (_cn_msg->id.val != CN_VAL_PROC))
 				continue;
 			/*
 			 * Now we can safely extract the proc connector message;
@@ -196,24 +201,24 @@ void ProcessListener::Task() {
 			 */
 			proc_event * e = (proc_event *)_cn_msg->data;
 			// Event Processing
-			switch (e->what){
+			switch (e->what) {
 			case proc_event::PROC_EVENT_EXEC:
-				logger->Debug("Event : [ EXEC, pid: %i, name: %s ]",
-					e->event_data.exec.process_pid,
-					GetProcName(e->event_data.exec.process_pid).c_str());
+				logger->Debug("Task: event [ EXEC, pid: %i, name: %s ]",
+				              e->event_data.exec.process_pid,
+				              GetProcName(e->event_data.exec.process_pid).c_str());
 				prm.NotifyStart(
-					GetProcName(e->event_data.exec.process_pid),
-					e->event_data.exec.process_pid);
+				        GetProcName(e->event_data.exec.process_pid),
+				        e->event_data.exec.process_pid);
 				break;
 			case proc_event::PROC_EVENT_EXIT:
-				logger->Debug("Event : [ EXIT, pid: %i, name: %s, "
-						"exit code: %i ]",
-					e->event_data.exec.process_pid,
-					GetProcName(e->event_data.exec.process_pid).c_str(),
-					e->event_data.exit.exit_code);
+				logger->Debug("Task: event [ EXIT, pid: %i, name: %s, "
+				              "exit code: %i ]",
+				              e->event_data.exec.process_pid,
+				              GetProcName(e->event_data.exec.process_pid).c_str(),
+				              e->event_data.exit.exit_code);
 				prm.NotifyExit(
-					GetProcName(e->event_data.exec.process_pid),
-					e->event_data.exec.process_pid);
+				        GetProcName(e->event_data.exec.process_pid),
+				        e->event_data.exec.process_pid);
 				break;
 			default:
 				break;
@@ -223,4 +228,3 @@ void ProcessListener::Task() {
 }
 
 } // namespace bbque
-
