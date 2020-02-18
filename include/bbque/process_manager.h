@@ -52,14 +52,14 @@ public:
 	 * @brief Get the ProcessManager instance
 	 */
 	enum ExitCode_t {
-	        SUCCESS = 0,
-	        PROCESS_NOT_SCHEDULED,
-	        PROCESS_NOT_SCHEDULABLE,
-	        PROCESS_NOT_FOUND,
-	        PROCESS_MISSING_AWM,
-	        PROCESS_WRONG_STATE,
-	        PROCESS_SCHED_REQ_REJECTED,
-	        ABORT
+		SUCCESS = 0,
+		PROCESS_NOT_SCHEDULED,
+		PROCESS_NOT_SCHEDULABLE,
+		PROCESS_NOT_FOUND,
+		PROCESS_MISSING_AWM,
+		PROCESS_WRONG_STATE,
+		PROCESS_SCHED_REQ_REJECTED,
+		ABORT
 	};
 
 	/**
@@ -227,7 +227,8 @@ public:
 	 * available.
 	 */
 	ExitCode_t ScheduleRequestAsPrev(
-	        ProcPtr_t proc, br::RViewToken_t status_view) {
+	        ProcPtr_t proc, br::RViewToken_t status_view)
+	{
 		return ScheduleRequest(proc, proc->CurrentAWM(), status_view, 0);
 	}
 
@@ -250,7 +251,8 @@ public:
 	 * @brief Do not schedule the application
 	 * @param proc the application
 	 */
-	ExitCode_t NoSchedule(ProcPtr_t proc) {
+	ExitCode_t NoSchedule(ProcPtr_t proc)
+	{
 		return ChangeState(proc,
 		                   Schedulable::SYNC, Schedulable::BLOCKED);
 	}
@@ -304,7 +306,8 @@ private:
 	class ProcessInstancesInfo
 	{
 	public:
-		ProcessInstancesInfo() {
+		ProcessInstancesInfo()
+		{
 			sched_req = std::make_shared<app::Process::ScheduleRequest>();
 			pid_set   = std::make_shared<PidSet_t>();
 		}
