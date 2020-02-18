@@ -156,6 +156,13 @@ public:
 	 */
 	ProcPtr_t const GetProcess(app::AppPid_t pid) const;
 
+	/**
+	 * @brief Check if a process is alive
+	 * @param pid the process id
+	 * @param release terminate if dead
+	 * @return true if alive, false otherwise
+	 */
+	bool CheckProcess(app::AppPid_t pid, bool release);
 
 	/**
 	 * @brief Get the first process in the map

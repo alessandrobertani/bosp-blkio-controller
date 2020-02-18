@@ -408,6 +408,23 @@ uint32_t ProcessManager::ProcessesCount(app::Schedulable::State_t state)
 }
 
 
+bool ProcessManager::CheckProcess(AppPid_t pid, bool release)
+{
+	logger->Debug("CheckProcess: [pid=%d] checking life status...", pid);
+
+	bool dead = false;
+	int ret = kill(pid, 0);
+	if (ret != 0) {
+		dead = true;
+		logger->Warn("CheckProcess: [pid=%d] is dead", pid);
+	}
+	if (dead && release) {
+		logger->Debug("CheckProcess: [pid=%d] to release", pid);
+		NotifyExit(pid);
+	}
+
+	return !dead;
+}
 
 
 /*******************************************************************************
