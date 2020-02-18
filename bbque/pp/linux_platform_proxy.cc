@@ -31,6 +31,7 @@
 #include <criu/criu.h>
 #endif
 
+#include <cstring>
 #include <fstream>
 #include <libcgroup.h>
 #include <linux/ethtool.h>
@@ -39,6 +40,7 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
+#include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -1603,7 +1605,6 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 {
-
 	// Retrieve checkpoint image directory
 	std::string image_dir(image_prefix_dir
 	                      + "/" + std::to_string(pid)
@@ -1622,7 +1623,6 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 	if (fd < 0) {
 		logger->Warn("Restore: [pid=%d] image directory [%s] not accessible",
 		             pid, image_dir.c_str());
-		perror("CRIU");
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	} else {
 		logger->Debug("Restore: [pid=%d] image directory [%s] open",
