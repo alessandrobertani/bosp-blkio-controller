@@ -69,46 +69,46 @@ public:
 	 * @brief Exit codes
 	 */
 	enum ExitCode_t {
-	        /** Successful return  */
-	        RA_SUCCESS = 0,
-	        /** Generic ResourceAccounter errro */
-	        RA_FAILED,
-	        /** Argument "path" missing */
-	        RA_ERR_MISS_PATH,
-	        /** Unable to allocate a new resource descriptor */
-	        RA_ERR_MEM,
-	        /** Unable to find the state view specified */
-	        RA_ERR_MISS_VIEW,
-	        /** Unauthorized system state view manipulation attempt */
-	        RA_ERR_UNAUTH_VIEW,
-	        /** Application reference missing */
-	        RA_ERR_MISS_APP,
-	        /** Resource usages map missing	 */
-	        RA_ERR_MISS_USAGES,
-	        /** Next AWM is missing */
-	        RA_ERR_MISS_AWM,
-	        /** Application uses yet another resource set */
-	        RA_ERR_APP_USAGES,
-	        /** Resource usage required exceeds the availabilities */
-	        RA_ERR_USAGE_EXC,
+		/** Successful return  */
+		RA_SUCCESS = 0,
+		/** Generic ResourceAccounter errro */
+		RA_FAILED,
+		/** Argument "path" missing */
+		RA_ERR_MISS_PATH,
+		/** Unable to allocate a new resource descriptor */
+		RA_ERR_MEM,
+		/** Unable to find the state view specified */
+		RA_ERR_MISS_VIEW,
+		/** Unauthorized system state view manipulation attempt */
+		RA_ERR_UNAUTH_VIEW,
+		/** Application reference missing */
+		RA_ERR_MISS_APP,
+		/** Resource usages map missing	 */
+		RA_ERR_MISS_USAGES,
+		/** Next AWM is missing */
+		RA_ERR_MISS_AWM,
+		/** Application uses yet another resource set */
+		RA_ERR_APP_USAGES,
+		/** Resource usage required exceeds the availabilities */
+		RA_ERR_USAGE_EXC,
 
-	        // --- Update mode ---
+		// --- Update mode ---
 
-	        /** Resource has not been registered at boot */
-	        RA_ERR_NOT_REGISTERED,
-	        /** The resource path specified is not valid */
-	        RA_ERR_INVALID_PATH,
-	        /** Amount exceeding registered total amount */
-	        RA_ERR_OVERFLOW,
+		/** Resource has not been registered at boot */
+		RA_ERR_NOT_REGISTERED,
+		/** The resource path specified is not valid */
+		RA_ERR_INVALID_PATH,
+		/** Amount exceeding registered total amount */
+		RA_ERR_OVERFLOW,
 
-	        // --- Synchronization mode ---
+		// --- Synchronization mode ---
 
-	        /** Initialization failed */
-	        RA_ERR_SYNC_INIT,
-	        /** Error occured in using/getting the resource view  */
-	        RA_ERR_SYNC_VIEW,
-	        /** Synchronization session has not been started */
-	        RA_ERR_SYNC_START
+		/** Initialization failed */
+		RA_ERR_SYNC_INIT,
+		/** Error occured in using/getting the resource view  */
+		RA_ERR_SYNC_VIEW,
+		/** Synchronization session has not been started */
+		RA_ERR_SYNC_START
 	};
 
 	/**
@@ -116,16 +116,16 @@ public:
 	 * @brief The class of resource path specified in the query functions
 	 */
 	enum PathClass_t {
-	        UNDEFINED = 0,
-	        /** Exact resource path matching (type+ID). <br>
-	         *  Example: sys1.cpu2.pe0 */
-	        EXACT   ,
-	        /** Type matching if no ID provided, otherwise type+ID. <br>
-	         *  Example: sys1.cpu.pe0  */
-	        MIXED   ,
-	        /** Only type matching. <br>
-	         *  Example: sys.cpu.pe    */
-	        TEMPLATE
+		UNDEFINED = 0,
+		/** Exact resource path matching (type+ID). <br>
+		 *  Example: sys1.cpu2.pe0 */
+		EXACT,
+		/** Type matching if no ID provided, otherwise type+ID. <br>
+		 *  Example: sys1.cpu.pe0  */
+		MIXED,
+		/** Only type matching. <br>
+		 *  Example: sys.cpu.pe    */
+		TEMPLATE
 	};
 
 	/**
@@ -394,6 +394,17 @@ public:
 	virtual bool ExistResource(std::string const & path) = 0;
 
 	virtual bool ExistResource(br::ResourcePathPtr_t ppath) const = 0;
+
+	/**
+	 * @brief Show the system resources status
+	 *
+	 * This is an utility function for debug purpose that print out all the
+	 * resources path and values about usage and total amount.
+	 *
+	 * @param status_view Token of the resources state view
+	 * @param verbose print in INFO log level is true, while false in DEBUG
+	 */
+	virtual void PrintStatusReport(br::RViewToken_t status_view, bool verbose) const = 0;
 };
 
 }   // namespace bbque
