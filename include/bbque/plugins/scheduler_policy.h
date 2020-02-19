@@ -344,6 +344,11 @@ protected:
 			do_func(app_ptr);
 		}
 
+		app_ptr = sys->GetFirstRestoring(app_it);
+		for (; app_ptr; app_ptr = sys->GetNextRestoring(app_it)) {
+			do_func(app_ptr);
+		}
+
 		app_ptr = sys->GetFirstRunning(app_it);
 		for (; app_ptr; app_ptr = sys->GetNextRunning(app_it)) {
 			do_func(app_ptr);
@@ -371,6 +376,11 @@ protected:
 
 		proc = prm.GetFirst(ba::Schedulable::THAWED, proc_it);
 		for (; proc; proc = prm.GetNext(ba::Schedulable::THAWED, proc_it)) {
+			do_func(proc);
+		}
+
+		proc = prm.GetFirst(ba::Schedulable::RESTORING, proc_it);
+		for (; proc; proc = prm.GetNext(ba::Schedulable::RESTORING, proc_it)) {
 			do_func(proc);
 		}
 
