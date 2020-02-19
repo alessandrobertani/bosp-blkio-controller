@@ -34,6 +34,7 @@
 #include "bbque/profile_manager.h"
 #include "bbque/scheduler_manager.h"
 #include "bbque/synchronization_manager.h"
+#include "bbque/system.h"
 #include "bbque/reliability_manager.h"
 #include "bbque/resource_accounter.h"
 
@@ -225,6 +226,8 @@ private:
 #ifdef CONFIG_BBQUE_EM
 	em::EventManager & em;
 #endif
+
+	System & sys;
 
 	/**
 	 * @ brief Events to be managed

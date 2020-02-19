@@ -16,8 +16,6 @@
  */
 
 #include "bbque/resource_manager.h"
-
-#include "bbque/application_manager.h"
 #include "bbque/configuration_manager.h"
 #include "bbque/signals_manager.h"
 #include "bbque/utils/utility.h"
@@ -155,29 +153,19 @@ ResourceManager::ResourceManager() :
 #ifdef CONFIG_BBQUE_EM
 	em(em::EventManager::GetInstance()),
 #endif
-
-	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this))
+	sys(System::GetInstance()),
+	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)),
+	opt_interval(BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
+	plat_event(false)
 {
-
-	plat_event = false;
-
 	//---------- Setup all the module metrics
 	mc.Register(metrics, RM_METRICS_COUNT);
 
 	//---------- Register commands
 	CommandManager &cm = CommandManager::GetInstance();
-#define CMD_STATUS_EXC ".exc_status"
-	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_EXC, static_cast<CommandHandler*>(this),
+#define CMD_SYS_STATUS ".sys_status"
+	cm.RegisterCommand(MODULE_NAMESPACE CMD_SYS_STATUS, static_cast<CommandHandler*>(this),
 	                   "Dump the status of each registered EXC");
-#define CMD_STATUS_QUEUES ".que_status"
-	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_QUEUES, static_cast<CommandHandler*>(this),
-	                   "Dump the status of each Scheduling Queue");
-#define CMD_STATUS_RESOURCES ".res_status"
-	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_RESOURCES, static_cast<CommandHandler*>(this),
-	                   "Dump the status of each registered Resource");
-#define CMD_STATUS_SYNC ".syn_status"
-	cm.RegisterCommand(MODULE_NAMESPACE CMD_STATUS_SYNC, static_cast<CommandHandler*>(this),
-	                   "Dump the status of each Synchronization Queue");
 #define CMD_OPT_FORCE ".opt_force"
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_OPT_FORCE, static_cast<CommandHandler*>(this),
 	                   "Force a new scheduling event");
@@ -202,11 +190,9 @@ ResourceManager::Setup()
 	po::options_description opts_desc("Resource Manager Options");
 	opts_desc.add_options()
 	("ResourceManager.opt_interval",
-	 po::value<uint32_t>
-	 (&opt_interval)->default_value(
+	 po::value<uint32_t>(&opt_interval)->default_value(
 	         BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
-	 "The interval [ms] of activation of the periodic optimization")
-	;
+	 "The interval [ms] of activation of the periodic optimization");
 	po::variables_map opts_vm;
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
@@ -350,28 +336,15 @@ void ResourceManager::Optimize()
 	// If the optimization has been triggered by a platform event (BBQ_PLAT) the policy must be
 	// executed anyway. To the contrary, if it is an application event (BBQ_OPTS) check if
 	// there are actually active applications
-	if (!plat_event &&
-	    !am.HasApplications(Application::READY) &&
-	    !am.HasApplications(Application::RUNNING)
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	    &&
-	    !prm.HasProcesses(Schedulable::READY) &&
-	    !prm.HasProcesses(Schedulable::RUNNING)
-#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
-	   ) {
-		logger->Debug("Optimize: nothing to schedule...");
+	if (!plat_event && !sys.HasSchedulablesToRun()) {
+		logger->Warn("Optimize: no applications or processes to schedule");
 		active_apps = false;
 	}
-
 	plat_event = false;
 
 	if (active_apps) {
-		ra.PrintStatusReport();
-		am.PrintStatus();
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		prm.PrintStatus(true);
-#endif
-		logger->Info("Optimize: lauching scheduler...");
+		sys.PrintStatus(true);
+		logger->Info("Optimize: scheduler invocation...");
 
 		// Account for a new schedule activation
 		RM_COUNT_EVENT(metrics, RM_SCHED_TOTAL);
@@ -398,12 +371,10 @@ void ResourceManager::Optimize()
 		default:
 			assert(schedResult == SchedulerManager::DONE);
 		}
+
 		logger->Notice("Optimize: scheduling time: %11.3f[us]",
 		               optimization_tmr.getElapsedTimeUs());
-		am.PrintStatus(true);
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		prm.PrintStatus(true);
-#endif
+		sys.PrintStatus(true);
 	}
 
 #ifdef CONFIG_BBQUE_PM
@@ -413,12 +384,7 @@ void ResourceManager::Optimize()
 #endif
 
 	// Check if there is at least one application to synchronize
-	if (!am.HasApplications(Application::SYNC)
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	    &&
-	    !prm.HasProcesses(Schedulable::SYNC)
-#endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
-	   ) {
+	if (!sys.HasSchedulables(Schedulable::SYNC)) {
 		logger->Debug("Optimize: no applications in SYNC state");
 		RM_COUNT_EVENT(metrics, RM_SCHED_EMPTY);
 	} else {
@@ -438,11 +404,8 @@ void ResourceManager::Optimize()
 			// FIXME here we should implement some counter-meaure to
 			// ensure consistency
 		}
-		ra.PrintStatusReport(0, true);
-		am.PrintStatus(true);
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		prm.PrintStatus(true);
-#endif
+
+		sys.PrintStatus(true);
 		logger->Notice("Optimize: synchronization time: %11.3f[us]",
 		               optimization_tmr.getElapsedTimeUs());
 	}
@@ -480,11 +443,7 @@ void ResourceManager::Optimize()
 
 void ResourceManager::EvtExcStart()
 {
-	uint32_t timeout = 0;
-
-	logger->Info("EXC Enabled");
-
-	// Reset timer for START event execution time collection
+	logger->Info("EvtExcStart");
 	RM_RESET_TIMING(rm_tmr);
 
 	// This is a simple optimization triggering policy based on the
@@ -504,38 +463,30 @@ void ResourceManager::EvtExcStart()
 		DB(logger->Warn("Overdue processing of a START event"));
 		return;
 	}
-	timeout = BBQUE_RM_OPT_EXC_START_DEFER_MS;
+
+	unsigned int timeout = BBQUE_RM_OPT_EXC_START_DEFER_MS;
 	optimize_dfr.Schedule(milliseconds(timeout));
 
-	// Collecing execution metrics
 	RM_GET_TIMING(metrics, RM_EVT_TIME_START, rm_tmr);
 }
 
 void ResourceManager::EvtExcStop()
 {
-	uint32_t timeout = 0;
-
-	logger->Info("EXC Disabled");
-
-	// Reset timer for START event execution time collection
+	logger->Info("EvtExcStop");
 	RM_RESET_TIMING(rm_tmr);
 
 	// This is a simple optimization triggering policy
-	timeout = BBQUE_RM_OPT_EXC_STOP_DEFER_MS;
+	unsigned int timeout = BBQUE_RM_OPT_EXC_STOP_DEFER_MS;
 	optimize_dfr.Schedule(milliseconds(timeout));
 
-	// Collecing execution metrics
 	RM_GET_TIMING(metrics, RM_EVT_TIME_STOP, rm_tmr);
 }
 
 void ResourceManager::EvtBbqPlat()
 {
-
-	logger->Info("BarbequeRTRM Optimization Request for Platform Event");
-	plat_event = true;
-
-	// Reset timer for START event execution time collection
+	logger->Info("EvtBbqPlat");
 	RM_RESET_TIMING(rm_tmr);
+	plat_event = true;
 
 	// Platform generated events triggers an immediate rescheduling.
 	// TODO add a better policy which triggers immediate rescheduling only
@@ -549,80 +500,40 @@ void ResourceManager::EvtBbqPlat()
 
 void ResourceManager::EvtBbqOpts()
 {
-	uint32_t timeout = 0;
-
-	logger->Info("BarbequeRTRM Optimization Request for Application Event");
-
-	// Reset timer for START event execution time collection
+	logger->Info("EvtBbqOpts");
 	RM_RESET_TIMING(rm_tmr);
 
 	// Explicit applications requests for optimization are delayed by
 	// default just to increase the chance for aggregation of multiple
 	// requests
-	timeout = BBQUE_RM_OPT_REQUEST_DEFER_MS;
+	unsigned int timeout = BBQUE_RM_OPT_REQUEST_DEFER_MS;
 	optimize_dfr.Schedule(milliseconds(timeout));
 
-	// Collecing execution metrics
 	RM_GET_TIMING(metrics, RM_EVT_TIME_OPTS, rm_tmr);
 }
 
 
 void ResourceManager::EvtBbqUsr1()
 {
-
-	// Reset timer for START event execution time collection
+	logger->Info("EvtBbqUsr1");
 	RM_RESET_TIMING(rm_tmr);
 
-	logger->Info("");
-	logger->Info("=======[ Status Queues ]============"
-	             "========================================");
-	logger->Info("");
-	am.PrintStatusQ();
-
-	logger->Info("");
-	logger->Info("");
-	logger->Info("=======[ Synchronization Queues ]==="
-	             "========================================");
-	logger->Info("");
-	am.PrintSyncQ();
-
-	logger->Notice("");
-	logger->Notice("");
-	logger->Notice("=======[ Resources Status ]========="
-	               "========================================");
-	logger->Notice("");
-	ra.PrintStatusReport(0, true);
-
-	logger->Notice("");
-	logger->Notice("");
-	logger->Notice("=======[ EXCs Status ]=============="
-	               "========================================");
-	logger->Notice("");
-	am.PrintStatus(true);
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	prm.PrintStatus(true);
-#endif
-
-	// Clear the corresponding event flag
-	logger->Notice("");
+	sys.PrintStatus(true);
 	pendingEvts.reset(BBQ_USR1);
 
-	// Collecing execution metrics
 	RM_GET_TIMING(metrics, RM_EVT_TIME_USR1, rm_tmr);
 }
 
 void ResourceManager::EvtBbqUsr2()
 {
-	// Reset timer for START event execution time collection
+	logger->Info("EvtBbqUsr2");
 	RM_RESET_TIMING(rm_tmr);
 
 	logger->Debug("Dumping metrics collection...");
 	mc.DumpMetrics();
 
-	// Clear the corresponding event flag
 	pendingEvts.reset(BBQ_USR2);
 
-	// Collecing execution metrics
 	RM_GET_TIMING(metrics, RM_EVT_TIME_USR2, rm_tmr);
 }
 
@@ -660,88 +571,50 @@ void ResourceManager::EvtBbqExit()
 
 int ResourceManager::CommandsCb(int argc, char *argv[])
 {
+	UNUSED(argc);
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
-	// Fix compiler warnings
-	(void)argc;
-
 	logger->Debug("Processing command [%s]", argv[0] + cmd_offset);
 
-	bool exit_cmd_not_found = false;
+	bool cmd_not_found = false;
 
 	switch (argv[0][cmd_offset]) {
-	case 'e':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_EXC)) {
-			exit_cmd_not_found = true;
-			break;
-		}
-
-		logger->Notice("");
-		logger->Notice("");
-		logger->Notice("==========[ EXCs Status ]=============="
-		               "========================================");
-		logger->Notice("");
-		am.PrintStatus(true);
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		prm.PrintStatus(true);
-#endif
-		break;
-
-	case 'q':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_QUEUES)) {
-			exit_cmd_not_found = true;
-			break;
-		}
-
-		logger->Info("");
-		logger->Info("==========[ Status Queues ]============"
-		             "========================================");
-		logger->Info("");
-		am.PrintStatusQ();
-		break;
-
-	case 'r':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_RESOURCES)) {
-			exit_cmd_not_found = true;
-			break;
-		}
-
-		logger->Notice("");
-		logger->Notice("");
-		logger->Notice("==========[ Resources Status ]========="
-		               "========================================");
-		logger->Notice("");
-		ra.PrintStatusReport(0, true);
-		break;
 
 	case 's':
-		if (strcmp(argv[0], MODULE_NAMESPACE CMD_STATUS_SYNC)) {
-			exit_cmd_not_found = true;
+		if (strcmp(argv[0], MODULE_NAMESPACE CMD_SYS_STATUS)) {
+			cmd_not_found = true;
 			break;
 		}
 
-		logger->Info("");
-		logger->Info("");
-		logger->Info("==========[ Synchronization Queues ]==="
-		             "========================================");
-		logger->Info("");
-		am.PrintSyncQ();
+		logger->Notice("");
+		logger->Notice("===========[ System Status ]=========="
+		               "======================================");
+		logger->Notice("");
+		sys.PrintStatus(true);
 		break;
+
 	case 'o':
-		logger->Info("");
-		logger->Info("");
-		logger->Info("==========[ User Required Scheduling ]==="
-		             "===============================");
-		logger->Info("");
+		if (strcmp(argv[0], MODULE_NAMESPACE CMD_OPT_FORCE)) {
+			cmd_not_found = true;
+			break;
+		}
+
+		logger->Notice("");
+		logger->Notice("========[ User Required Scheduling ]==="
+		               "=======================================");
+		logger->Notice("");
 		NotifyEvent(ResourceManager::BBQ_OPTS);
 		break;
+
+	default:
+		cmd_not_found = true;
 	}
 
-	if ( ! exit_cmd_not_found ) {
-		return 0;
+	if (cmd_not_found) {
+		logger->Error("Command [%s] not supported by this module", argv[0]);
+		return -1;
 	}
 
-	logger->Error("Command [%s] not suppported by this moduel", argv[0]);
-	return -1;
+	return 0;
 }
 
 
