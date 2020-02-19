@@ -394,6 +394,28 @@ public:
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
+
+	/*******************************************************************************
+	 *     Status logging
+	 ******************************************************************************/
+
+	/**
+	 * @brief Dump a logline to report on current Status queue counts
+	 */
+	virtual void PrintStatusQ() const = 0;
+
+	/**
+	 * @brief Dump a logline to report on current Status queue counts
+	 */
+	virtual void PrintSyncQ() const = 0;
+
+	/**
+	 * @brief Dump a logline to report all applications status
+	 *
+	 * @param verbose print in INFO logleve is ture, in DEBUG if false
+	 */
+	virtual void PrintStatus(bool verbose) = 0;
+
 };
 
 } // namespace bbque
