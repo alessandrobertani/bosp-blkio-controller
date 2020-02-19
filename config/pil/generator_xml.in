@@ -240,8 +240,10 @@ PrintTopology # Show the user the topology, so he chooses a host partition
 SetHostPartition # Make the user choose a host partition
 SetManagedPartition # Make the user choose a host partition
 
-MACHINE_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
-PopulateDebugLog "Ip of this machine: $MACHINE_IP"
+#MACHINE_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+# Localhost (we are generating a system description for the local machine
+MACHINE_IP=127.0.0.1 
+PopulateDebugLog "IP of this machine: $MACHINE_IP"
 
 HOSTNAME=$(hostname)
 PopulateDebugLog "Hostname of this machine: $HOSTNAME"
