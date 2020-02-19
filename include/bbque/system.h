@@ -31,6 +31,8 @@ namespace br = bbque::res;
 namespace bbque
 {
 
+//extern std::set<ba::Schedulable::State_t> pending_states;
+
 /**
  * @class System
  *
@@ -127,6 +129,18 @@ public:
 		return am.GetNext(ba::ApplicationStatusIF::THAWED, ait);
 	}
 
+	/**
+	 * @brief Map of applications to restore (descriptors)
+	 */
+	ba::AppCPtr_t GetFirstRestoring(AppsUidMapIt & ait)
+	{
+		return am.GetFirst(ba::ApplicationStatusIF::RESTORING, ait);
+	}
+
+	ba::AppCPtr_t GetNextRestoring(AppsUidMapIt & ait)
+	{
+		return am.GetNext(ba::ApplicationStatusIF::RESTORING, ait);
+	}
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -208,7 +222,8 @@ public:
 		       );
 	}
 
-	bool HasSchedulables(ba::Schedulable::State_t state) {
+	bool HasSchedulables(ba::Schedulable::State_t state) const
+	{
 		return (am.HasApplications(state)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		        || prm.HasProcesses(state)
@@ -216,7 +231,8 @@ public:
 		       );
 	}
 
-	bool HasSchedulables(ba::Schedulable::SyncState_t sync_state) {
+	bool HasSchedulables(ba::Schedulable::SyncState_t sync_state) const
+	{
 		return (am.HasApplications(sync_state)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		        || prm.HasProcesses(sync_state)
@@ -224,6 +240,18 @@ public:
 		       );
 	}
 
+	/**
+	 * @brief Applications or processes to be scheduled
+	 * @return true if there are some, false otherwise
+	 */
+	bool HasSchedulablesToRun() const
+	{
+		for (auto & s : ba::Schedulable::pending_states) {
+			if (HasSchedulables(s))
+				return true;
+		}
+		return false;
+	}
 
 	/**************************************************************************
 	 *  Resource management                                                   *
@@ -412,6 +440,22 @@ public:
 	        br::RViewToken_t tok)
 	{
 		return ra.PutView(tok);
+	}
+
+
+	/***************************************************************
+	 * Utility functions
+	 ***************************************************************/
+
+	void PrintStatus(bool verbose) const
+	{
+		ra.PrintStatusReport(0, verbose);
+		am.PrintStatus(verbose);
+		am.PrintStatusQ();
+		am.PrintSyncQ();
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+		prm.PrintStatus(verbose);
+#endif
 	}
 
 private:
