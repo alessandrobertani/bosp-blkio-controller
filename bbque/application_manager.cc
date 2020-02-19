@@ -469,26 +469,25 @@ AppPtr_t ApplicationManager::GetNext(
 	return papp;
 }
 
-bool ApplicationManager::HasApplications (
-        AppPrio_t prio)
+bool ApplicationManager::HasApplications(AppPrio_t prio) const
 {
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	return !(prio_vec[prio].empty());
 }
 
-bool ApplicationManager::HasApplications (ApplicationStatusIF::State_t state)
+bool ApplicationManager::HasApplications(ApplicationStatusIF::State_t state) const
 {
 	assert(state < Application::STATE_COUNT);
 	return !(status_vec[state].empty());
 }
 
-bool ApplicationManager::HasApplications (ApplicationStatusIF::SyncState_t state)
+bool ApplicationManager::HasApplications(ApplicationStatusIF::SyncState_t state) const
 {
 	assert(state < Application::SYNC_STATE_COUNT);
 	return !(sync_vec[state].empty());
 }
 
-bool ApplicationManager::HasApplications (RTLIB_ProgrammingLanguage_t lang)
+bool ApplicationManager::HasApplications(RTLIB_ProgrammingLanguage_t lang) const
 {
 	assert(lang < RTLIB_LANG_COUNT);
 	return !(lang_vec[lang].empty());
@@ -1062,7 +1061,6 @@ ApplicationManager::DestroyEXC(AppPid_t pid)
 
 	return AM_SUCCESS;
 }
-
 
 /*******************************************************************************
  *  EXC Constraints management

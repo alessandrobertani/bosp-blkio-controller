@@ -220,22 +220,22 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(AppPrio_t prio);
+	bool HasApplications(AppPrio_t prio) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(ApplicationStatusIF::State_t state);
+	bool HasApplications(ApplicationStatusIF::State_t state) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(ApplicationStatusIF::SyncState_t state);
+	bool HasApplications(ApplicationStatusIF::SyncState_t state) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(RTLIB_ProgrammingLanguage_t lang);
+	bool HasApplications(RTLIB_ProgrammingLanguage_t lang) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -566,7 +566,7 @@ private:
 	/**
 	 * Mutex to protect concurrent access to the map of applications.
 	 */
-	std::mutex apps_mtx;
+	mutable std::mutex apps_mtx;
 
 
 	/**
@@ -580,7 +580,7 @@ private:
 	/**
 	 * Mutex to protect concurrent access to the map of applications UIDs.
 	 */
-	std::recursive_mutex uids_mtx;
+	mutable std::recursive_mutex uids_mtx;
 
 	/**
 	 * Array of iterator retainers for "in loop erase" support on UID map
@@ -602,7 +602,7 @@ private:
 	 * behaviors if more applications/EXC are loading the same recipe in
 	 * parallel.
 	 */
-	std::mutex recipes_mtx;
+	mutable std::mutex recipes_mtx;
 
 
 	/**
@@ -617,7 +617,7 @@ private:
 	/**
 	 * Array of mutexes protecting the priority queues
 	 */
-	std::mutex prio_mtx[BBQUE_APP_PRIO_LEVELS];
+	mutable std::mutex prio_mtx[BBQUE_APP_PRIO_LEVELS];
 
 	/**
 	 * Array of iterator retainers for "in loop erase" support on priority
@@ -635,7 +635,7 @@ private:
 	/**
 	 * Array of mutexes protecting the status queues.
 	 */
-	std::mutex status_mtx[ApplicationStatusIF::STATE_COUNT];
+	mutable std::mutex status_mtx[ApplicationStatusIF::STATE_COUNT];
 
 	/**
 	 * Array of iterator retainers for "in loop erase" support on STATUS
@@ -653,7 +653,7 @@ private:
 	/**
 	 * Array of mutexes protecting the programming language queue
 	 */
-	std::mutex lang_mtx[RTLIB_LANG_COUNT];
+	mutable std::mutex lang_mtx[RTLIB_LANG_COUNT];
 
 	/**
 	 * Array of iterator retainers for "in loop erase" support on STATUS
@@ -674,7 +674,7 @@ private:
 	/**
 	 * Array of mutexes protecting the synchronization queues.
 	 */
-	std::mutex sync_mtx[ApplicationStatusIF::SYNC_STATE_COUNT];
+	mutable std::mutex sync_mtx[ApplicationStatusIF::SYNC_STATE_COUNT];
 
 	/**
 	 * Array of iterator retainers for "in loop erase" support on SYNC

@@ -301,22 +301,22 @@ public:
 	/**
 	 * @brief Check if the specified PRIO queue has applications
 	 */
-	virtual bool HasApplications (AppPrio_t prio) = 0;
+	virtual bool HasApplications(AppPrio_t prio) const = 0;
 
 	/**
 	 * @brief Check if the specified STATUS queue has applications
 	 */
-	virtual bool HasApplications (ApplicationStatusIF::State_t state) = 0;
+	virtual bool HasApplications(ApplicationStatusIF::State_t state) const = 0;
 
 	/**
 	 * @brief Check if the specified SYNC queue has applications
 	 */
-	virtual bool HasApplications (ApplicationStatusIF::SyncState_t state) = 0;
+	virtual bool HasApplications(ApplicationStatusIF::SyncState_t state) const = 0;
 
 	/**
 	 * @brief Check if the specified language queue has applications
 	 */
-	virtual bool HasApplications (RTLIB_ProgrammingLanguage_t lang) = 0;
+	virtual bool HasApplications(RTLIB_ProgrammingLanguage_t lang) const = 0;
 
 
 	/**
