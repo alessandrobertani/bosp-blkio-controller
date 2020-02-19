@@ -93,8 +93,12 @@ public:
 	 * @brief Notify the start of a process/program
 	 * @param name the binary name
 	 * @param pid the process id
+	 * @param state initial state (READY by default)
 	 */
-	void NotifyStart(std::string const & name, app::AppPid_t pid);
+	void NotifyStart(
+	        std::string const & name,
+	        app::AppPid_t pid,
+	        app::Schedulable::State_t state = app::Schedulable::READY);
 
 	/**
 	 * @brief Notify the termination of a process/program

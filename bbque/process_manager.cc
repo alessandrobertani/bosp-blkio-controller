@@ -204,24 +204,26 @@ bool ProcessManager::IsToManage(std::string const & name) const
 }
 
 
-void ProcessManager::NotifyStart(std::string const & name, app::AppPid_t pid)
+void ProcessManager::NotifyStart(
+        std::string const & name, app::AppPid_t pid, Schedulable::State_t state)
 {
 	if (!IsToManage(name)) {
 //		logger->Debug("NotifyStart: %s not managed", name.c_str());
 		return;
 	}
-	logger->Info("NotifyStart: scheduling required for [%s: %d]",
-	             name.c_str(), pid);
+	logger->Debug("NotifyStart: adding process [%s: %d]", name.c_str(), pid);
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	managed_procs[name].pid_set->emplace(pid);
 
 	// Create a new process descriptor and enqueue it
 	ProcPtr_t new_proc = std::make_shared<Process>(name, pid);
-	new_proc->SetState(Schedulable::READY);
-	state_procs[app::Schedulable::READY].emplace(pid, new_proc);
+	new_proc->SetState(state);
+	state_procs[state].emplace(pid, new_proc);
 	all_procs.emplace(pid, new_proc);
 
 	// Trigger a re-scheduling
+	logger->Info("NotifyStart: launching a scheduling request for [%s]",
+	             new_proc->StrId());
 	ResourceManager & rm(ResourceManager::GetInstance());
 	rm.NotifyEvent(ResourceManager::BBQ_OPTS);
 }
@@ -604,10 +606,10 @@ ProcessManager::ExitCode_t ProcessManager::SyncCommit(ProcPtr_t proc)
 			auto & state_map(*state_it);
 			auto proc_it = state_map.find(proc->Pid());
 			if (proc_it != state_map.end()) {
-				logger->Debug("SyncCommit: [%s: %d] "
+				logger->Debug("SyncCommit: [%d: %s] "
 				              "removing from map...",
-				              proc->Name().c_str(),
-				              proc->Pid());
+				              proc->Pid(),
+				              proc->Name().c_str());
 				UpdateIterators(
 				        state_retain[Schedulable::FINISHED],
 				        proc);
