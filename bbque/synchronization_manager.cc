@@ -612,7 +612,8 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 	              papp->SyncStateStr(papp->SyncState()),
 	              papp->StrId());
 
-
+	// Check the status before the scheduling in order to identify
+	// restoring or thawed applications/processes
 	auto pre_sync_state = papp->PreSyncState();
 	logger->Debug("MapResources <%s>: [%s] pre-sync-state: %s",
 	              papp->SyncStateStr(papp->SyncState()),
@@ -624,7 +625,6 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 		logger->Debug("MapResources <%s>: [%s] restoring...",
 		              papp->SyncStateStr(papp->SyncState()),
 		              papp->StrId());
-	switch (papp->SyncState()) {
 
 		auto ret = plm.Restore(papp->Pid(), papp->Name());
 		if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
@@ -633,6 +633,16 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 			              papp->StrId());
 		}
 	}
+	// Was frozen?
+	else if (pre_sync_state == Schedulable::THAWED) {
+		logger->Debug("MapResources <%s>: [%s] thawing...",
+		              papp->SyncStateStr(papp->SyncState()),
+		              papp->StrId());
+		plm.Thaw(papp);
+	}
+
+	// Synchronization of the scheduling decision
+	switch (papp->SyncState()) {
 	case Schedulable::STARTING:
 	case Schedulable::RECONF:
 	case Schedulable::MIGREC:
@@ -640,14 +650,6 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 		result = plm.MapResources(
 		                 papp,
 		                 papp->NextAWM()->GetResourceBinding());
-
-		// Was it frozen?
-		if (pre_sync_state == Schedulable::THAWED) {
-			logger->Debug("MapResources <%s>: [%s] thawing...",
-			              papp->SyncStateStr(papp->SyncState()),
-			              papp->StrId());
-			plm.Thaw(papp);
-		}
 		break;
 
 	case Schedulable::BLOCKED:
@@ -783,6 +785,7 @@ SynchronizationManager::SyncSchedule()
 	// synched. As soon as the queue of apps to sync returned is empty, the
 	// syncronization is considered terminated and will start again only at
 	// the next synchronization event.
+	logger->Debug("SyncSchedule: getting the applications queue...");
 	syncState = policy->GetApplicationsQueue(sv, true);
 	if (syncState == ApplicationStatusIF::SYNC_NONE) {
 		logger->Info("SyncSchedule: session=%d ABORTED", sync_count);
@@ -792,6 +795,7 @@ SynchronizationManager::SyncSchedule()
 	}
 
 	// Start the resource accounter synchronized session
+	logger->Debug("SyncSchedule: starting the synchronization...");
 	raResult = ra.SyncStart();
 	if (raResult != ResourceAccounter::RA_SUCCESS) {
 		logger->Fatal("SyncSchedule: session=%d unable to start "
@@ -803,18 +807,22 @@ SynchronizationManager::SyncSchedule()
 	while (syncState != ApplicationStatusIF::SYNC_NONE) {
 		// Synchronize the adaptive applications/EXC in order of status
 		// as returned by the policy
+		logger->Debug("SyncSchedule: adaptive applications <%s>...",
+		              app::Schedulable::SyncStateStr(syncState));
+
 		result = SyncApps(syncState);
 		if ((result != NOTHING_TO_SYNC) && (result != OK)) {
 			logger->Warn("SyncSchedule: session %d: not possible "
-			             "to sync <%s> application...",
+			             "to sync <%s> applications...",
 			             sync_count, app::Schedulable::SyncStateStr(syncState));
-
 			syncState = policy->GetApplicationsQueue(sv);
 			continue;
 		}
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		// Synchronization of generic processes
+		logger->Debug("SyncSchedule: not integrated processes <%s>...",
+		              app::Schedulable::SyncStateStr(syncState));
 		result = SyncProcesses();
 		if ((result != NOTHING_TO_SYNC) && (result != OK)) {
 			logger->Warn("SyncSchedule: session %d: not possible "
