@@ -444,16 +444,13 @@ void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
 			return;
 		}
 	}
+
+	// TODO: Need code to handle ADAPTIVE applications also
+	prm.NotifyStart(exe_name, pid, app::Schedulable::RESTORING);
+
 #endif
 
-	auto ret = plm.Restore(pid, exe_name);
-	if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
-		logger->Error("Restore: [pid=%d name=%s] restore failed",
-		              pid, exe_name.c_str());
-		return;
-	}
-
-	logger->Debug("Restore: [pid=%d name=%s] resumed",
+	logger->Debug("Restore: [pid=%d name=%s] restore sequence started",
 	              pid, exe_name.c_str());
 }
 

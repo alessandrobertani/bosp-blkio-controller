@@ -619,8 +619,20 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 	              papp->StrId(),
 	              papp->StateStr(pre_sync_state));
 
+	// To restore?
+	if (pre_sync_state == Schedulable::RESTORING) {
+		logger->Debug("MapResources <%s>: [%s] restoring...",
+		              papp->SyncStateStr(papp->SyncState()),
+		              papp->StrId());
 	switch (papp->SyncState()) {
 
+		auto ret = plm.Restore(papp->Pid(), papp->Name());
+		if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
+			logger->Error("MapResources: [%s] restore "
+			              "failed. Skipping...",
+			              papp->StrId());
+		}
+	}
 	case Schedulable::STARTING:
 	case Schedulable::RECONF:
 	case Schedulable::MIGREC:
