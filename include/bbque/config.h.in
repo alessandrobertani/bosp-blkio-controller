@@ -126,7 +126,7 @@
 #cmakedefine CONFIG_TARGET_ARM
 
 /** Simulated Test Platform */
-#cmakedefine CONFIG_TARGET_SIMULATED_PLATFORM
+#cmakedefine CONFIG_TARGET_EMULATED_HOST
 
 /** Target platform: Linux-Mango */
 #cmakedefine CONFIG_TARGET_LINUX_MANGO

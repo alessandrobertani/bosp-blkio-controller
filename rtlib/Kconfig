@@ -61,8 +61,8 @@ config BBQUE_RTLIB_PERF_SUPPORT
 config BBQUE_RTLIB_CGROUPS_SUPPORT
   bool "CGroups Profiling Support"
   depends on TARGET_LINUX
-  depends on !TARGET_SIMULATED_PLATFORM
-  default n if TARGET_SIMULATED_PLATFORM
+  depends on !TARGET_EMULATED_HOST
+  default n if TARGET_EMULATED_HOST
   default y
   ---help---
   Build the Run-Time Library (RTLib) with support for CGroups.

@@ -150,31 +150,27 @@ if (CONFIG_BBQUE_DIST_MODE)
 	set (BARBEQUE_SRC pp/remote_platform_proxy ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_DIST_MODE)
 
-# Target platform
-if (CONFIG_TARGET_SIMULATED_PLATFORM)
+# Target platforms
+if (CONFIG_TARGET_EMULATED_HOST)
 	set (BARBEQUE_SRC pp/test_platform_proxy ${BARBEQUE_SRC})
-else (CONFIG_TARGET_SIMULATED_PLATFORM)
-  if (CONFIG_TARGET_LINUX)
+endif (CONFIG_TARGET_EMULATED_HOST)
+
+if (CONFIG_TARGET_LINUX)
 	set (BARBEQUE_SRC pp/linux_platform_proxy ${BARBEQUE_SRC})
-  endif (CONFIG_TARGET_LINUX)
+endif (CONFIG_TARGET_LINUX)
 
-  if (CONFIG_TARGET_LINUX_MANGO)
-	set (BARBEQUE_SRC pp/mango_platform_proxy pp/test_platform_proxy ${BARBEQUE_SRC})
-        if (CONFIG_MANGO_GN_EMULATION)
-	  set (BARBEQUE_SRC pp/test_platform_proxy ${BARBEQUE_SRC})
-        else (CONFIG_MANGO_GN_EMULATION)
-	  set (BARBEQUE_SRC pp/linux_platform_proxy ${BARBEQUE_SRC})
-        endif (CONFIG_MANGO_GN_EMULATION)
-  endif (CONFIG_TARGET_LINUX_MANGO)
-
-  if (CONFIG_TARGET_ANDROID)
+if (CONFIG_TARGET_ANDROID)
         set (BARBEQUE_SRC pp/android_platform_proxy ${BARBEQUE_SRC})
-  endif (CONFIG_TARGET_ANDROID)
-endif (CONFIG_TARGET_SIMULATED_PLATFORM)
+endif (CONFIG_TARGET_ANDROID)
+
+if (CONFIG_TARGET_LINUX_MANGO)
+	set (BARBEQUE_SRC pp/mango_platform_proxy  ${BARBEQUE_SRC})
+endif (CONFIG_TARGET_LINUX_MANGO)
 
 if (CONFIG_TARGET_OPENCL)
 	set (BARBEQUE_SRC pp/opencl_platform_proxy ${BARBEQUE_SRC})
 endif (CONFIG_TARGET_OPENCL)
+
 if (CONFIG_TARGET_NVIDIA)
 	set (BARBEQUE_SRC pp/nvml_platform_proxy ${BARBEQUE_SRC})
 endif (CONFIG_TARGET_NVIDIA)

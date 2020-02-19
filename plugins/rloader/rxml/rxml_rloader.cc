@@ -245,7 +245,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 {
 	rapidxml::xml_node<> * pp_elem = nullptr;
 	rapidxml::xml_node<> * pp_last = nullptr;
-#ifndef CONFIG_TARGET_SIMULATED_PLATFORM
+#ifndef CONFIG_TARGET_EMULATED_HOST
 	rapidxml::xml_node<> * pp_gen_elem = nullptr;
 	const char * sys_platform_id;
 	std::string sys_platform_hw;
@@ -260,7 +260,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 		pp_elem = _xml_elem->first_node("platform", 0, true);
 		pp_last = pp_elem;
 		CheckMandatoryNode(pp_elem, "platform", _xml_elem);
-#ifndef CONFIG_TARGET_SIMULATED_PLATFORM
+#ifndef CONFIG_TARGET_EMULATED_HOST
 		// System platform ID
 		sys_platform_id = plm.GetPlatformID();
 		if (!sys_platform_id) {

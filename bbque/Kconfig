@@ -29,13 +29,13 @@ endmenu
 menu "Linux Resource Management"
 
   menu "Linux Control Groups"
-  depends on !TARGET_SIMULATED_PLATFORM
+  depends on !TARGET_EMULATED_HOST
   
     config BBQUE_LINUX_CG_SYSTEMD
       bool "Mount CGroups in systemd directory"
       default y
       depends on TARGET_LINUX
-      depends on !TARGET_SIMULATED_PLATFORM
+      depends on !TARGET_EMULATED_HOST
       ---help---
       Mount Control Groups into the /sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls
       directory.
@@ -44,7 +44,7 @@ menu "Linux Resource Management"
       bool "Memory controller"
       default n
       depends on TARGET_LINUX
-      depends on !TARGET_SIMULATED_PLATFORM
+      depends on !TARGET_EMULATED_HOST
       ---help---
       Enable the Control Groups memory controller for enforcing the memory
       assignment control.
@@ -53,7 +53,7 @@ menu "Linux Resource Management"
       bool "Network bandwidth controller"
       default n
       depends on TARGET_LINUX
-      depends on !TARGET_SIMULATED_PLATFORM
+      depends on !TARGET_EMULATED_HOST
       ---help---
       Enable the Control Groups net_cls controller for enforcing the network
       bandwidth assignment control.
@@ -62,7 +62,7 @@ menu "Linux Resource Management"
       bool "CGroups handled at RTLIb level"
       default n
       depends on TARGET_LINUX
-      depends on !TARGET_SIMULATED_PLATFORM
+      depends on !TARGET_EMULATED_HOST
       ---help---
       Control Groups are written by the RTLib rather than the Platform Proxy.
       Indeed, what is written into the CGroups is nonetheless decided by Barbeque.
@@ -78,10 +78,11 @@ menu "Linux Resource Management"
     on the machine, and take actions (if the suitable policy has been selected)
   
   choice
-  depends on !TARGET_SIMULATED_PLATFORM
-  depends on BBQUE_PIL_LEGACY
+    depends on !TARGET_EMULATED_HOST
+    depends on BBQUE_PIL_LEGACY
+    
     prompt "Memory locality"
-    default BBQUE_MEMLOC_L3
+      default BBQUE_MEMLOC_L3
   
     config BBQUE_MEMLOC_L3
       bool "L3 cache"
@@ -89,7 +90,7 @@ menu "Linux Resource Management"
     config BBQUE_MEMLOC_L2
       bool "L2 cache"
   
-    depends on !TARGET_SIMULATED_PLATFORM
+    depends on !TARGET_EMULATED_HOST
     ---help---
     Select the memory locality that the BarbequeRTRM optimization policy should
     take into account to properly perform scheduling and resource allocation
@@ -107,7 +108,7 @@ endmenu # Linux Resource Management
 ################################################################################
 
 menu "Power Management"
-depends on !TARGET_SIMULATED_PLATFORM
+depends on !TARGET_EMULATED_HOST
 	source "barbeque/bbque/pm/Kconfig"
 
 endmenu # Power Management
