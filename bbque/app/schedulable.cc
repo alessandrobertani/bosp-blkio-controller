@@ -33,6 +33,7 @@ char const *Schedulable::stateStr[] = {
 	"RUNNING",
 	"FROZEN",
 	"THAWED",
+	"RESTORING",
 	"FINISHED"
 };
 
@@ -44,6 +45,15 @@ char const *Schedulable::syncStateStr[] = {
 	"BLOCKED",
 	"DISABLED"
 };
+
+
+std::set<Schedulable::State_t> Schedulable::pending_states = {
+	Schedulable::READY,
+	Schedulable::RUNNING,
+	Schedulable::THAWED,
+	Schedulable::RESTORING
+};
+
 
 /*******************************************************************************
  *  EXC State and SyncState Management

@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <memory>
+#include <set>
 
 #include "bbque/config.h"
 #include "bbque/cpp11/mutex.h"
@@ -93,6 +94,7 @@ public:
 		RUNNING,  	/** Running */
 		FROZEN,         /** Frozen */
 		THAWED,         /** Thawed after freezing - need new resource assignment */
+		RESTORING,      /** To restore from a checkpoint */
 		FINISHED, 	/** Regular termination */
 
 		STATE_COUNT	/** This must alwasy be the last entry */
@@ -450,6 +452,9 @@ public:
 	}
 
 #endif
+
+	/** States for which may require the launch of a scheduling policy */
+	static std::set<Schedulable::State_t> pending_states;
 
 protected:
 
