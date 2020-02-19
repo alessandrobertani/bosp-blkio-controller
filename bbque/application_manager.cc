@@ -282,8 +282,7 @@ bp::RecipeLoaderIF::ExitCode_t ApplicationManager::LoadRecipe(
   *****************************************************************************/
 
 void
-ApplicationManager::UpdateIterators(AppsUidMapItRetainer_t & ret,
-                                    AppPtr_t papp)
+ApplicationManager::UpdateIterators(AppsUidMapItRetainer_t & ret, AppPtr_t papp)
 {
 	AppsUidMapItRetainer_t::iterator it;
 	AppsUidMapIt* pati;
@@ -299,7 +298,8 @@ ApplicationManager::UpdateIterators(AppsUidMapItRetainer_t & ret,
 			continue;
 
 		// Update the iterator position one step backward
-		logger->Debug("~ Updating iterator [@%p => %d]", pati->it, papp->Uid());
+		logger->Debug("~ Updating iterator [@%p => %d]",
+		              pati->it, papp->Uid());
 
 		// Move the iterator forward
 		pati->Update();
@@ -345,8 +345,7 @@ AppPtr_t ApplicationManager::GetNext(AppsUidMapIt & ait)
 	return papp;
 }
 
-AppPtr_t ApplicationManager::GetFirst(AppPrio_t prio,
-                                      AppsUidMapIt & ait)
+AppPtr_t ApplicationManager::GetFirst(AppPrio_t prio, AppsUidMapIt & ait)
 {
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	std::unique_lock<std::mutex> prio_ul(prio_mtx[prio]);
@@ -366,8 +365,7 @@ AppPtr_t ApplicationManager::GetFirst(AppPrio_t prio,
 	return papp;
 }
 
-AppPtr_t ApplicationManager::GetNext(AppPrio_t prio,
-                                     AppsUidMapIt & ait)
+AppPtr_t ApplicationManager::GetNext(AppPrio_t prio, AppsUidMapIt & ait)
 {
 	assert(prio < BBQUE_APP_PRIO_LEVELS);
 	std::unique_lock<std::mutex> prio_ul(prio_mtx[prio]);
@@ -386,8 +384,8 @@ AppPtr_t ApplicationManager::GetNext(AppPrio_t prio,
 	return papp;
 }
 
-AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::State_t state,
-                                      AppsUidMapIt & ait)
+AppPtr_t ApplicationManager::GetFirst(
+        ApplicationStatusIF::State_t state, AppsUidMapIt & ait)
 {
 	assert(state < Application::STATE_COUNT);
 	std::unique_lock<std::mutex> status_ul(status_mtx[state]);
@@ -407,8 +405,8 @@ AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::State_t state,
 	return papp;
 }
 
-AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::State_t state,
-                                     AppsUidMapIt & ait)
+AppPtr_t ApplicationManager::GetNext(
+        ApplicationStatusIF::State_t state, AppsUidMapIt & ait)
 {
 	assert(state < Application::STATE_COUNT);
 	std::unique_lock<std::mutex> status_ul(status_mtx[state]);
@@ -427,8 +425,9 @@ AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::State_t state,
 	return papp;
 }
 
-AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::SyncState_t state,
-                                      AppsUidMapIt & ait)
+AppPtr_t ApplicationManager::GetFirst(
+        ApplicationStatusIF::SyncState_t state,
+        AppsUidMapIt & ait)
 {
 	assert(state < Application::SYNC_STATE_COUNT);
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);
@@ -449,8 +448,9 @@ AppPtr_t ApplicationManager::GetFirst(ApplicationStatusIF::SyncState_t state,
 	return papp;
 }
 
-AppPtr_t ApplicationManager::GetNext(ApplicationStatusIF::SyncState_t state,
-                                     AppsUidMapIt & ait)
+AppPtr_t ApplicationManager::GetNext(
+        ApplicationStatusIF::SyncState_t state,
+        AppsUidMapIt & ait)
 {
 	assert(state < Application::SYNC_STATE_COUNT);
 	std::unique_lock<std::mutex> sync_ul(sync_mtx[state]);

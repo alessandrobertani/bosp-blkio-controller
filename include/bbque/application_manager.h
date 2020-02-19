@@ -182,38 +182,40 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t GetFirst(AppPrio_t prio,
-	                  AppsUidMapIt & it);
+	AppPtr_t GetFirst(AppPrio_t prio, AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t GetNext(AppPrio_t prio,
-	                 AppsUidMapIt & it);
+	AppPtr_t GetNext(AppPrio_t prio, AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t GetFirst(ApplicationStatusIF::State_t state,
-	                  AppsUidMapIt & it);
+	AppPtr_t GetFirst(
+	        ApplicationStatusIF::State_t state,
+	        AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t GetNext(ApplicationStatusIF::State_t state,
-	                 AppsUidMapIt & it);
+	AppPtr_t GetNext(
+	        ApplicationStatusIF::State_t state,
+	        AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t GetFirst(ApplicationStatusIF::SyncState_t state,
-	                  AppsUidMapIt & it);
+	AppPtr_t GetFirst(
+	        ApplicationStatusIF::SyncState_t state,
+	        AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t GetNext(ApplicationStatusIF::SyncState_t state,
-	                 AppsUidMapIt & it);
+	AppPtr_t GetNext(
+	        ApplicationStatusIF::SyncState_t state,
+	        AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -283,7 +285,8 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	inline app::AppPrio_t LowestPriority() const {
+	inline app::AppPrio_t LowestPriority() const
+	{
 		return BBQUE_APP_PRIO_LEVELS - 1;
 	};
 
@@ -464,7 +467,8 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	inline ExitCode_t GetRuntimeProfile(AppPtr_t papp,
-	                                    struct app::RuntimeProfiling_t &profile) {
+	                                    struct app::RuntimeProfiling_t &profile)
+	{
 		profile = papp->GetRuntimeProfile();
 		return AM_SUCCESS;
 	}
@@ -482,7 +486,8 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	inline ExitCode_t SetRuntimeProfile(AppPtr_t papp,
-	                                    struct app::RuntimeProfiling_t profile) {
+	                                    struct app::RuntimeProfiling_t profile)
+	{
 		papp->SetRuntimeProfile(profile);
 		return AM_SUCCESS;
 	}
@@ -500,7 +505,8 @@ public:
 	 * @brief Load the task-graph of an application
 	 * @param The application descriptor
 	 */
-	inline void LoadTaskGraph(AppPtr_t papp) {
+	inline void LoadTaskGraph(AppPtr_t papp)
+	{
 		papp->LoadTaskGraph();
 	}
 

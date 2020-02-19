@@ -27,7 +27,8 @@ using bbque::app::AppPrio_t;
 using bbque::app::AppPtr_t;
 
 
-namespace bbque {
+namespace bbque
+{
 
 /**
  * Map containing shared pointers to Application descriptors, where the key is
@@ -77,11 +78,13 @@ typedef std::list<struct AppsUidMapIt*> AppsUidMapItRetainer_t;
  * elements using a pair of provided functions "GetFirst" and "GetNext".
  * @see @ref GetFirst, @ref GetNext
  */
-class AppsUidMapIt {
+class AppsUidMapIt
+{
 
 public:
 
-	~AppsUidMapIt() {
+	~AppsUidMapIt()
+	{
 		Release();
 	};
 
@@ -99,29 +102,37 @@ private:
 	/** The retantion list on which this has been inserted */
 	AppsUidMapItRetainer_t *ret = NULL;
 
-	void Init(AppsUidMap_t & m, AppsUidMapItRetainer_t & rl) {
+	void Init(AppsUidMap_t & m, AppsUidMapItRetainer_t & rl)
+	{
 		map = &m;
 		ret = &rl;
 		it = map->begin();
 	}
-	void Retain() {
+	void Retain()
+	{
 		ret->push_front(this);
 	};
-	void Release() {
+	void Release()
+	{
 		if (ret) ret->remove(this);
 		ret = NULL;
 	};
-	void Update() {
-		++it; updated = true;
+	void Update()
+	{
+		++it;
+		updated = true;
 	};
-	void operator++(int) {
+	void operator++(int)
+	{
 		if (!updated) ++it;
 		updated = false;
 	};
-	bool End() {
+	bool End()
+	{
 		return (it == map->end());
 	};
-	AppPtr_t Get() {
+	AppPtr_t Get()
+	{
 		return (*it).second;
 	};
 
@@ -144,7 +155,8 @@ private:
  * managed, and maps of application descriptors, even querying by scheduling
  * status or priority level.
  */
-class ApplicationManagerStatusIF {
+class ApplicationManagerStatusIF
+{
 
 public:
 
@@ -244,8 +256,8 @@ public:
 	 * @return a reference to the first application in the specified STATUS
 	 * queue, or NULL if no applications are present.
 	 */
-	virtual AppPtr_t GetFirst(ApplicationStatusIF::State_t state,
-			AppsUidMapIt & ait) = 0;
+	virtual AppPtr_t GetFirst(
+	        ApplicationStatusIF::State_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Get the next element of STATUS queue using an ILES iterator.
@@ -257,8 +269,8 @@ public:
 	 * @return a reference to the next application in the STATUS queue, or NULL
 	 * if no applications are present.
 	 */
-	virtual AppPtr_t GetNext(ApplicationStatusIF::State_t state,
-			AppsUidMapIt & ait) = 0;
+	virtual AppPtr_t GetNext(
+	        ApplicationStatusIF::State_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Get the next element of SYNC queue using an ILES iterator.
@@ -270,8 +282,8 @@ public:
 	 * @return a reference to the first application in the specified SYNC
 	 * queue, or NULL if no applications are present.
 	 */
-	virtual AppPtr_t GetFirst(ApplicationStatusIF::SyncState_t state,
-			AppsUidMapIt & ait) = 0;
+	virtual AppPtr_t GetFirst(
+	        ApplicationStatusIF::SyncState_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Get the next element of SYNC queue using an ILES iterator.
@@ -283,8 +295,8 @@ public:
 	 * @return a reference to the next application in the SYNC queue, or NULL
 	 * if no applications are present.
 	 */
-	virtual AppPtr_t GetNext(ApplicationStatusIF::SyncState_t state,
-			AppsUidMapIt & ait) = 0;
+	virtual AppPtr_t GetNext(
+	        ApplicationStatusIF::SyncState_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Check if the specified PRIO queue has applications
