@@ -276,7 +276,7 @@ YamsSchedPol::Schedule(System & sys_if, br::RViewToken_t & rav) {
 	Clear();
 
 	// Report table
-	ra.PrintStatusReport(status_view);
+	ra.PrintStatus(status_view);
 	return SCHED_DONE;
 
 error:

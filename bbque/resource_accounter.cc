@@ -39,10 +39,10 @@
 #undef  MODULE_CONFIG
 #define MODULE_CONFIG "ResourceAccounter"
 
-#define RA_DIV1 "============================================================================"
-#define RA_DIV2 "|------------------------------+-----+-----------+------------+------------|"
-#define RA_HEAD "|   RESOURCES              I/O | MOD |   USED    | UNRESERVED |    TOTAL   |"
-#define RA_DIV3 "|                                    |           |            |            |"
+#define RA_DIV1 "==========================================================================="
+#define RA_DIV2 "|-------------------------------+-----+-----------+-----------+-----------|"
+#define RA_HEAD "|   RESOURCES                ON | MOD |   USED    | AVAILABLE |   TOTAL   |"
+#define RA_DIV3 "|                               |     |           |           |           |"
 
 
 namespace ba = bbque::app;
@@ -134,13 +134,9 @@ void ResourceAccounter::WaitForPlatformReady()
  *                   LOGGER REPORTS                                     *
  ************************************************************************/
 
-void ResourceAccounter::PrintStatusReport(
+void ResourceAccounter::PrintStatus(
         br::RViewToken_t status_view, bool verbose) const
 {
-
-	// Row string
-	char rsrc_text_row[] = RA_DIV3;
-
 	// Print the head of the report table
 	if (verbose) {
 		logger->Notice("Report on state view: %ld", status_view);
@@ -158,52 +154,52 @@ void ResourceAccounter::PrintStatusReport(
 
 	// For each resource get the used amount
 	for (auto & resource_ptr : resource_set) {
-		uint8_t len = 0;
 
 		// Attribute for online/offline resource status
-		char online = 'I';
+		char online = 'Y';
 		if (resource_ptr->IsOffline())
-			online  = 'O';
+			online  = 'N';
 
 		// Append '%' if resource is a processing element (core)
-		bool percent = (resource_ptr->Type() == br::ResourceType::PROC_ELEMENT);
+		bool show_percent = (resource_ptr->Type() == br::ResourceType::PROC_ELEMENT);
 
-		// Resource model [xxx]
-		char model[] = "   ";
-		strncpy(model, resource_ptr->Model().c_str(), 3);
+		// Resource info string
+		std::stringstream resource_ss;
+		resource_ss << "| " << std::left << std::setw(27)
+		            << resource_ptr->Path()->ToString() << " "
+		            << online << " | "
+		            << std::setw(3)
+		            << resource_ptr->Model().substr(0, 3).c_str();
+		// Used
+		resource_ss << " | "  << std::setw(9) << std::right
+		            << bu::GetValueUnitStr(
+		                    resource_ptr->Used(status_view), show_percent).c_str();
+		// Unreserved
+		resource_ss << " | " << std::setw(9) << std::right
+		            << bu::GetValueUnitStr(
+		                    resource_ptr->Unreserved(), show_percent).c_str();
+		// Total
+		resource_ss << " | " << std::setw(9) << std::right
+		            << bu::GetValueUnitStr(
+		                    resource_ptr->Total(), show_percent).c_str()
+		            << " | ";
 
-		// Build the resource amount string
-		// ...USED
-		len += sprintf(rsrc_text_row + len, "| %-26s %c | %3s | %9s | ",
-		               resource_ptr->Path()->ToString().c_str(),
-		               online, model,
-		               bu::GetValueUnitStr(
-		                       resource_ptr->Used(status_view), percent).c_str());
-		// UNRESERVED
-		len += sprintf(rsrc_text_row + len, "%10s | ",
-		               bu::GetValueUnitStr(
-		                       resource_ptr->Unreserved(), percent).c_str());
-		// TOTAL
-		len += sprintf(rsrc_text_row + len, "%10s |",
-		               bu::GetValueUnitStr(
-		                       resource_ptr->Total(), percent).c_str());
-		PRINT_NOTICE_IF_VERBOSE(verbose, rsrc_text_row);
+		PRINT_NOTICE_IF_VERBOSE(verbose, resource_ss.str().c_str());
 
-		// Print details about how usage is partitioned among applications
+		// Application resource allocation information
 		if (resource_ptr->Used(status_view) > 0)
-			PrintAppDetails(resource_ptr, percent, status_view, verbose);
+			PrintApplicationInfo(resource_ptr, show_percent, status_view, verbose);
 	}
 
 	PRINT_NOTICE_IF_VERBOSE(verbose, RA_DIV1);
 }
 
-void ResourceAccounter::PrintAppDetails(
+void ResourceAccounter::PrintApplicationInfo(
         br::ResourcePtr_t resource_ptr,
         bool percent,
         br::RViewToken_t status_view,
         bool verbose) const
 {
-	char app_text_row[] = RA_DIV3;
 	if (resource_ptr == nullptr) {
 		logger->Warn("Null resource descriptor passed");
 		return;
@@ -250,37 +246,39 @@ void ResourceAccounter::PrintAppDetails(
 			continue;
 		}
 
-#define RA_PROGRESS_BAR_LEN 22
+#define RA_PROGRESS_BAR_LEN 21
 		char prog_bar[RA_PROGRESS_BAR_LEN];
 		utils::SchedLog::BuildProgressBar(
 		        app_usage, resource_ptr->Total(), prog_bar,
-		        RA_PROGRESS_BAR_LEN, '*');
+		        RA_PROGRESS_BAR_LEN, '|');
 
-		// Build the row to print
-		sprintf(app_text_row, "|  - %15s,P%02d,AWM%02d       : %9s : %-23s |",
-		        papp->StrId(),
-		        papp->Priority(),
-		        papp->CurrentAWM()->Id(),
-		        bu::GetValueUnitStr(app_usage, percent).c_str(),
-		        prog_bar);
-		PRINT_NOTICE_IF_VERBOSE(verbose, app_text_row);
+		// Build the row with the application info
+		std::stringstream info_ss;
+		info_ss << "| > "
+		        << std::setw(15) << papp->StrId() << ","
+		        << "pr:" << std::setw(2) << papp->Priority() << ","
+		        << "wm:" << std::setw(2) << papp->CurrentAWM()->Id() << " | "
+		        << std::setw(6) << std::setfill(' ') << " | "
+		        << std::setw(9) << bu::GetValueUnitStr(app_usage, percent).c_str() << " | "
+		        << std::setw(RA_PROGRESS_BAR_LEN) << prog_bar << " |";
+		PRINT_NOTICE_IF_VERBOSE(verbose, info_ss.str().c_str());
 	}
 	// Print a separator line
-	PRINT_NOTICE_IF_VERBOSE(verbose, RA_DIV3);
+	PRINT_NOTICE_IF_VERBOSE(verbose, RA_DIV2);
 }
 
 
 void ResourceAccounter::PrintCountPerType() const
 {
-	logger->Debug("==================");
-	logger->Debug("| COUNT PER TYPE |");
-	logger->Debug("|----------------|");
+	logger->Debug("======================");
+	logger->Debug("| Resources per type |");
+	logger->Debug("|--------------------|");
 	for (auto const & entry : r_ids_per_type) {
 		auto & type(entry.first);
 		auto & ids(entry.second);
-		logger->Debug("| <%3s> : %5d  |", GetResourceTypeString(type), ids.size());
+		logger->Debug("| <%3s> : %9d  |", GetResourceTypeString(type), ids.size());
 	}
-	logger->Debug("==================");
+	logger->Debug("======================");
 }
 
 
@@ -1251,7 +1249,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit()
 	logger->Info("SyncCommit [%d]: session committed", sync_ssn.count);
 
 	// Log the status report
-	PrintStatusReport();
+	PrintStatus();
 	return result;
 }
 
@@ -1675,7 +1673,7 @@ int ResourceAccounter::SetResourceTotalHandler(char * r_path, char * value)
 
 	logger->Info("SetResourceTotalHandler: "
 	             "set quota %" PRIu64 " to [%s]", amount, r_path);
-	PrintStatusReport(0, true);
+	PrintStatus(0, true);
 
 	return 0;
 }

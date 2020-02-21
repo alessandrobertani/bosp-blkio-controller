@@ -298,7 +298,7 @@ public:
 	 * @param status_view Token of the resources state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	void PrintStatusReport(
+	void PrintStatus(
 	        br::RViewToken_t status_view = 0, bool verbose = false) const;
 
 	/**
@@ -310,7 +310,7 @@ public:
 	 * @param status_view The token referencing the resource state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	void PrintAppDetails(
+	void PrintApplicationInfo(
 	        br::ResourcePtr_t resource_ptr, bool percent,
 	        br::RViewToken_t status_view, bool verbose) const;
 

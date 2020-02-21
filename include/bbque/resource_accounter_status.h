@@ -404,7 +404,7 @@ public:
 	 * @param status_view Token of the resources state view
 	 * @param verbose print in INFO log level is true, while false in DEBUG
 	 */
-	virtual void PrintStatusReport(br::RViewToken_t status_view, bool verbose) const = 0;
+	virtual void PrintStatus(br::RViewToken_t status_view, bool verbose) const = 0;
 };
 
 }   // namespace bbque

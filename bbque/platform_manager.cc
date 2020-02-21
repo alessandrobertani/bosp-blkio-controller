@@ -241,7 +241,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ra.SetPlatformReady();
-	ra.PrintStatusReport(0, true);
+	ra.PrintStatus(0, true);
 
 #ifdef CONFIG_BBQUE_DIST_MODE
 	logger->Info("Starting the Agent Proxy server...");

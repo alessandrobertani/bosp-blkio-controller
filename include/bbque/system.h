@@ -449,7 +449,7 @@ public:
 
 	void PrintStatus(bool verbose) const
 	{
-		ra.PrintStatusReport(0, verbose);
+		ra.PrintStatus(0, verbose);
 		am.PrintStatus(verbose);
 		am.PrintStatusQ();
 		am.PrintSyncQ();

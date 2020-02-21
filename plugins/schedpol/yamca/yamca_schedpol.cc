@@ -144,7 +144,7 @@ SchedulerPolicyIF::ExitCode_t YamcaSchedPol::Schedule(
 	logger->Debug(
 			">>>>>>>>>>>>>>>>> Scheduling policy exiting <<<<<<<<<<<<<<<<<<<");
 
-	rsrc_acct.PrintStatusReport(rsrc_view_token);
+	rsrc_acct.PrintStatus(rsrc_view_token);
 
 	rav = rsrc_view_token;
 	return SCHED_DONE;

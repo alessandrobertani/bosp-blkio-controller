@@ -199,7 +199,7 @@ ClovesSchedPol::Schedule(
 	// Return the new resource status view according to the new resource
 	// allocation performed
 	status_view = sched_status_view;
-	ra.PrintStatusReport(status_view);
+	ra.PrintStatus(status_view);
 	return SCHED_DONE;
 error:
 	ra.PutView(status_view);
