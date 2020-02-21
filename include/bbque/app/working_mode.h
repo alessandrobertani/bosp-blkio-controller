@@ -78,7 +78,7 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline int8_t Id() const {
+	inline int32_t Id() const {
 		return id;
 	}
 
