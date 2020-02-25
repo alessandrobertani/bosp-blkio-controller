@@ -285,6 +285,10 @@ if (CONFIG_TARGET_LINUX_MANGO)
   include_directories (barbeque ${CONFIG_MANGO_ROOT_PATH}/include/)
 endif (CONFIG_TARGET_LINUX_MANGO)
 
+if (CONFIG_TARGET_LINUX_RECIPE)
+  include_directories (barbeque ${CONFIG_MANGO_ROOT_PATH}/include/)
+endif (CONFIG_TARGET_LINUX_RECIPE)
+
 if (CONFIG_BBQUE_RELIABILITY)
   target_link_libraries (barbeque
 	criu)
