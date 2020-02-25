@@ -128,8 +128,11 @@
 /** Simulated Test Platform */
 #cmakedefine CONFIG_TARGET_EMULATED_HOST
 
-/** Target platform: Linux-Mango */
+/** Target platform: Linux-MANGO */
 #cmakedefine CONFIG_TARGET_LINUX_MANGO
+
+/** Target platform: Linux-RECIPE */
+#cmakedefine CONFIG_TARGET_LINUX_RECIPE
 
 /** Enable OpenCL applications support */
 #cmakedefine CONFIG_TARGET_OPENCL
