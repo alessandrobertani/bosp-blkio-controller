@@ -75,22 +75,22 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 	// Get platform
 	status = clGetPlatformIDs(0, NULL, &num_platforms);
 	if (status != CL_SUCCESS) {
-		logger->Error("PLAT OCL: Platform error %d", status);
+		logger->Error("LoadPlatformData: platform error %d", status);
 		return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
 	}
-	logger->Info("PLAT OCL: Number of platform(s) found: %d", num_platforms);
+	logger->Info("LoadPlatformData: number of platform(s) found: %d", num_platforms);
 	platforms = new cl_platform_id[num_platforms];
 	status = clGetPlatformIDs(num_platforms, platforms, NULL);
 
-	logger->Info("PLAT OCL: Looking for platform <%s>", TARGET_OPENCL_PLATFORM);
+	logger->Info("LoadPlatformData: looking for platform <%s>", TARGET_OPENCL_PLATFORM);
 	for (uint8_t i = 0; i < num_platforms; ++i) {
 		status = clGetPlatformInfo(
 		                 platforms[i], CL_PLATFORM_NAME, sizeof(platform_name),
 		                 platform_name, NULL);
-		logger->Info("PLAT OCL: P[%d]: %s", i, platform_name);
+		logger->Info("LoadPlatformData: P[%d]: %s", i, platform_name);
 
 		if (!strlen(TARGET_OPENCL_PLATFORM) || !strcmp(platform_name, TARGET_OPENCL_PLATFORM)) {
-			logger->Notice("PLAT OCL: Platform selected: %s", platform_name);
+			logger->Notice("LoadPlatformData: selected platform= %s", platform_name);
 			platform = platforms[i];
 			break;
 		}
@@ -99,10 +99,10 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 	// Get devices
 	status = clGetDeviceIDs(platform, dev_type, 0, NULL, &num_devices);
 	if (status != CL_SUCCESS) {
-		logger->Error("PLAT OCL: Device error %d", status);
+		logger->Error("LoadPlatformData: device error %d", status);
 		return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
 	}
-	logger->Info("PLAT OCL: Number of device(s) found: %d", num_devices);
+	logger->Info("LoadPlatformData: number of device(s) found: %d", num_devices);
 	devices = new cl_device_id[num_devices];
 	status  = clGetDeviceIDs(platform, dev_type, num_devices, devices, NULL);
 
@@ -111,10 +111,11 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 
 	// Power management support
 #ifdef CONFIG_BBQUE_PM
-	PrintGPUPowerInfo();
+	PrintDevicesPowerInfo();
 #endif
 	return PlatformProxy::PLATFORM_OK;
 }
+
 
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::Setup(SchedPtr_t papp)
 {
@@ -165,64 +166,70 @@ bool OpenCLPlatformProxy::IsHighPerformance(
 
 
 #ifdef CONFIG_BBQUE_PM
-void OpenCLPlatformProxy::PrintGPUPowerInfo()
+
+void OpenCLPlatformProxy::PrintPowerInfo(br::ResourcePathPtr_t r_path)
 {
 	uint32_t min, max, step, s_min, s_max, ps_count;
 	int  s_step;
-	PowerManager::PMResult pm_result;
+	auto pm_result = pm.GetFanSpeedInfo(r_path, min, max, step);
+	if (pm_result == PowerManager::PMResult::OK)
+		logger->Info("PrintPowerInfo: [%s] Fanspeed range: [%4d, %4d, s:%2d] RPM ",
+			     r_path->ToString().c_str(), min, max, step);
 
-	ResourcePathListPtr_t pgpu_paths(
-	        GetDevicePaths(br::ResourceType::GPU));
-	if (pgpu_paths == nullptr) return;
+	pm_result = pm.GetVoltageInfo(r_path, min, max, step);
+	if (pm_result == PowerManager::PMResult::OK)
+		logger->Info("PrintPowerInfo: [%s] Voltage range:  [%4d, %4d, s:%2d] mV ",
+			     r_path->ToString().c_str(), min, max, step);
 
-	for (auto gpu_rp : * (pgpu_paths.get())) {
-		pm_result = pm.GetFanSpeedInfo(gpu_rp, min, max, step);
-		if (pm_result == PowerManager::PMResult::OK)
-			logger->Info("PLAT OCL: [%s] Fanspeed range: [%4d, %4d, s:%2d] RPM ",
-			             gpu_rp->ToString().c_str(), min, max, step);
+	pm_result = pm.GetClockFrequencyInfo(r_path, min, max, step);
+	if (pm_result == PowerManager::PMResult::OK)
+		logger->Info("PrintPowerInfo: [%s] ClkFreq range:  [%4d, %4d, s:%2d] MHz ",
+			     r_path->ToString().c_str(),
+			     min / 1000, max / 1000, step / 1000);
 
-		pm_result = pm.GetVoltageInfo(gpu_rp, min, max, step);
-		if (pm_result == PowerManager::PMResult::OK)
-			logger->Info("PLAT OCL: [%s] Voltage range:  [%4d, %4d, s:%2d] mV ",
-			             gpu_rp->ToString().c_str(), min, max, step);
-
-		pm_result = pm.GetClockFrequencyInfo(gpu_rp, min, max, step);
-		if (pm_result == PowerManager::PMResult::OK)
-			logger->Info("PLAT OCL: [%s] ClkFreq range:  [%4d, %4d, s:%2d] MHz ",
-			             gpu_rp->ToString().c_str(),
-			             min / 1000, max / 1000, step / 1000);
-
-		std::vector<uint32_t> freqs;
-		std::string freqs_str(" ");
-		pm_result = pm.GetAvailableFrequencies(gpu_rp, freqs);
-		if (pm_result == PowerManager::PMResult::OK) {
-			for (auto & f : freqs)
-				freqs_str += (std::to_string(f) + " ");
-			logger->Info("PLAT OCL: [%s] ClkFrequencies:  [%s] MHz ",
-			             gpu_rp->ToString().c_str(), freqs_str.c_str());
-		}
-
-		pm_result = pm.GetPowerStatesInfo(gpu_rp, s_min, s_max, s_step);
-		if (pm_result == PowerManager::PMResult::OK)
-			logger->Info("PLAT OCL: [%s] Power states:   [%4d, %4d, s:%2d] ",
-			             gpu_rp->ToString().c_str(), s_min, s_max, s_step);
-
-		pm_result = pm.GetPerformanceStatesCount(gpu_rp, ps_count);
-		if (pm_result == PowerManager::PMResult::OK)
-			logger->Info("PLAT OCL: [%s] Performance states: %2d",
-			             gpu_rp->ToString().c_str(), ps_count);
-//		pm.SetFanSpeed(gpu_rp,PowerManager::FanSpeedType::PERCENT, 5);
-//		pm.ResetFanSpeed(gpu_rp);
+	std::vector<uint32_t> freqs;
+	std::string freqs_str(" ");
+	pm_result = pm.GetAvailableFrequencies(r_path, freqs);
+	if (pm_result == PowerManager::PMResult::OK) {
+		for (auto & f : freqs)
+			freqs_str += (std::to_string(f) + " ");
+		logger->Info("PrintPowerInfo: [%s] ClkFrequencies:  [%s] MHz ",
+			     r_path->ToString().c_str(), freqs_str.c_str());
 	}
-	logger->Info("PLAT OCL: Monitoring %d GPU adapters", pgpu_paths->size());
+
+	pm_result = pm.GetPowerStatesInfo(r_path, s_min, s_max, s_step);
+	if (pm_result == PowerManager::PMResult::OK)
+		logger->Info("PrintPowerInfo: [%s] Power states:   [%4d, %4d, s:%2d] ",
+			     r_path->ToString().c_str(), s_min, s_max, s_step);
+
+	pm_result = pm.GetPerformanceStatesCount(r_path, ps_count);
+	if (pm_result == PowerManager::PMResult::OK)
+		logger->Info("PrintPowerInfo: [%s] Performance states: %2d",
+			     r_path->ToString().c_str(), ps_count);
+//		pm.SetFanSpeed(r_path,PowerManager::FanSpeedType::PERCENT, 5);
+//		pm.ResetFanSpeed(r_path);
+}
+
+void OpenCLPlatformProxy::PrintDevicesPowerInfo()
+{
+	auto gpus(GetDevicePaths(br::ResourceType::GPU));
+	for (auto gpu_rp : *(gpus.get())) {
+		PrintPowerInfo(gpu_rp);
+	}
+	logger->Info("PrintPowerInfo: number of GPUs %d", gpus->size());
+
+	auto accelerators(GetDevicePaths(br::ResourceType::ACCELERATOR));
+	for (auto acc_rp : *(accelerators.get())) {
+		PrintPowerInfo(acc_rp);
+	}
+	logger->Info("PrintPowerInfo: nuner of accelerators = %d", accelerators->size());
 }
 #endif // CONFIG_BBQUE_PM
 
 
 VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(br::ResourceType r_type) const
 {
-
-	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
+	auto const d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("GetDeviceIDs: No OpenCL devices of type '%s'",
 		              br::GetResourceTypeString(r_type));
@@ -235,7 +242,7 @@ VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(br::ResourceType r_type) cons
 uint8_t OpenCLPlatformProxy::GetDevicesNum(br::ResourceType r_type) const
 {
 
-	ResourceTypeIDMap_t::const_iterator d_it(GetDeviceConstIterator(r_type));
+	auto const d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("GetDevicesNum: No OpenCL devices of type '%s'",
 		              br::GetResourceTypeString(r_type));
@@ -248,7 +255,7 @@ ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
         br::ResourceType r_type) const
 {
 
-	ResourceTypePathMap_t::const_iterator p_it(device_paths.find(r_type));
+	auto const p_it(device_paths.find(r_type));
 	if (p_it == device_paths.end()) {
 		logger->Error("GetDevicePaths: No OpenCL devices of type  '%s'",
 		              br::GetResourceTypeString(r_type));
@@ -284,12 +291,10 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 	cl_int status;
 	cl_device_type dev_type;
 	char dev_name[64];
-	char gpu_pe_path[]  = "sys0.gpu256.pe256";
+
+	std::string sys_path("sys0.");
 	br::ResourceType r_type = br::ResourceType::UNDEFINED;
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-#ifdef CONFIG_BBQUE_WM
-	PowerMonitor & wm(PowerMonitor::GetInstance());
-#endif
+
 	for (uint16_t dev_id = 0; dev_id < num_devices; ++dev_id) {
 		status = clGetDeviceInfo(
 		                 devices[dev_id], CL_DEVICE_NAME,
@@ -298,41 +303,59 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 		                 devices[dev_id], CL_DEVICE_TYPE,
 		                 sizeof(dev_type), &dev_type, NULL);
 		if (status != CL_SUCCESS) {
-			logger->Error("PLAT OCL: Device info error %d", status);
+			logger->Error("RegisterDevices: device info error %d", status);
 			return PLATFORM_ENUMERATION_FAILED;
 		}
 
-		if (dev_type != CL_DEVICE_TYPE_CPU &&
-		    dev_type != CL_DEVICE_TYPE_GPU) {
-			logger->Warn("PLAT OCL: Unexpected device type [%d]",
-			             dev_type);
+		std::string r_path(sys_path);
+
+		// Register devices of type GPU or ACCELERATOR
+		switch (dev_type) {
+
+		case CL_DEVICE_TYPE_CPU:
+			r_type = br::ResourceType::CPU;
+			break;
+
+		case CL_DEVICE_TYPE_GPU:
+			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
+			r_type = br::ResourceType::GPU;
+			break;
+
+		case CL_DEVICE_TYPE_ACCELERATOR:
+			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
+			r_type = br::ResourceType::ACCELERATOR;
+			break;
+
+		default:
+			logger->Warn("RegisterDevices: id=%d is of unexpected type [%d]",
+			             dev_id, dev_type);
 			continue;
 		}
 
-		switch (dev_type) {
-		case CL_DEVICE_TYPE_GPU:
-			snprintf(gpu_pe_path + 5, 12, "gpu%hu.pe0", dev_id);
-			ra.RegisterResource(gpu_pe_path, "", 100);
-			r_type = br::ResourceType::GPU;
-#ifdef CONFIG_BBQUE_WM
-			wm.Register(ra.GetPath(gpu_pe_path));
-#endif
-			break;
-		case CL_DEVICE_TYPE_CPU:
-			r_type = br::ResourceType::CPU;
-			memset(gpu_pe_path, '\0', strlen(gpu_pe_path));
-			break;
-		}
+		logger->Info("RegisterDevices: id=%d is of type %s",
+			     dev_id, br::GetResourceTypeString(r_type));
 
+		// No need to register CPU devices (already done in the host
+		// platform proxy)
+		if (r_type == br::ResourceType::CPU)
+			continue;
+
+		r_path += std::string(".pe0");
+		ResourceAccounter &ra(ResourceAccounter::GetInstance());
+		auto resource = ra.RegisterResource(r_path, "", 100);
+
+#ifdef CONFIG_BBQUE_WM
+		PowerMonitor & wm(PowerMonitor::GetInstance());
+		wm.Register(resource->Path());
+#endif
 		// Keep track of OpenCL device IDs and resource paths
 		InsertDeviceID(r_type, dev_id);
-		if (r_type == br::ResourceType::GPU)
-			InsertDevicePath(r_type, gpu_pe_path);
+		InsertDevicePath(r_type, resource->Path());
 
-		logger->Info("PLAT OCL: D[%d]: {%s}, type: [%s], path: [%s]",
+		logger->Info("RegisterDevices: id=%d {%s}, type=[%s], path=<%s>",
 		             dev_id, dev_name,
 		             br::GetResourceTypeString(r_type),
-		             gpu_pe_path);
+		             r_path.c_str());
 	}
 
 	return PlatformProxy::PLATFORM_OK;
@@ -343,63 +366,38 @@ void OpenCLPlatformProxy::InsertDeviceID(
         br::ResourceType r_type,
         uint8_t dev_id)
 {
-	ResourceTypeIDMap_t::iterator d_it;
-	VectorUInt8Ptr_t pdev_ids;
-
-	logger->Debug("PLAT OCL: Insert device %d of type %s",
+	logger->Debug("InsertDeviceID: insert device %d of type %s",
 	              dev_id, br::GetResourceTypeString(r_type));
-	d_it = GetDeviceIterator(r_type);
+	auto d_it = GetDeviceIterator(r_type);
 	if (d_it == device_ids.end()) {
-		device_ids.insert(
-		        std::pair<br::ResourceType, VectorUInt8Ptr_t>
-		        (r_type, VectorUInt8Ptr_t(new VectorUInt8_t))
-		);
+		device_ids.emplace(r_type, std::make_shared<VectorUInt8_t>());
 	}
 
-	pdev_ids = device_ids[r_type];
+	auto pdev_ids = device_ids[r_type];
 	pdev_ids->push_back(dev_id);
-	if (r_type != br::ResourceType::GPU)
-		return;
-
-	// Resource path to GPU memory
-	char gpu_mem_path[] = "sys0.gpu256.mem256";
-	snprintf(gpu_mem_path + 5, 12, "gpu%hu.mem0", dev_id);
-	gpu_mem_paths.insert(std::pair<int, ResourcePathPtr_t>(
-	                             dev_id, ResourcePathPtr_t(new br::ResourcePath(gpu_mem_path))));
-	logger->Debug("PLAT OCL: GPU memory registered: %s", gpu_mem_path);
 }
 
 void OpenCLPlatformProxy::InsertDevicePath(
         br::ResourceType r_type,
-        std::string const & dev_path_str)
+        br::ResourcePathPtr_t r_path_ptr)
 {
-	ResourceTypePathMap_t::iterator p_it;
-	ResourcePathListPtr_t pdev_paths;
+	logger->Debug("InsertDevicePath: insert device resource path <%s>",
+	              r_path_ptr->ToString().c_str());
 
-	logger->Debug("PLAT OCL: Insert device resource path  %s",
-	              dev_path_str.c_str());
-	p_it = device_paths.find(r_type);
+	auto p_it = device_paths.find(r_type);
 	if (p_it == device_paths.end()) {
-		device_paths.insert(
-		        std::pair<br::ResourceType, ResourcePathListPtr_t>
-		        (r_type, ResourcePathListPtr_t(new ResourcePathList_t))
-		);
+		device_paths.emplace(
+			r_type,
+			std::make_shared<std::list<br::ResourcePathPtr_t>>());
 	}
 
-	ResourcePathPtr_t rp(new br::ResourcePath(dev_path_str));
-	if (rp == nullptr) {
-		logger->Error("PLAT OCL: Invalid resource path %s",
-		              dev_path_str.c_str());
-		return;
-	}
-
-	pdev_paths = device_paths[r_type];
-	pdev_paths->push_back(rp);
+	auto pdev_paths = device_paths[r_type];
+	pdev_paths->push_back(r_path_ptr);
 }
 
 void OpenCLPlatformProxy::Exit()
 {
-	logger->Debug("Destroying the OpenCL Platform Proxy...");
+	logger->Info("Exit: terminating OpenCL Platform Proxy...");
 	delete platforms;
 	delete devices;
 	device_ids.clear();

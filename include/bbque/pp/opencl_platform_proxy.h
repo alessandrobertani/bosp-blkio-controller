@@ -68,7 +68,7 @@ public:
 	/**
 	 * @brief Return the Platform specific string identifier
 	 */
-	const char * GetPlatformID(int16_t system_id = -1) const override final {
+	const char * GetPlatformID(int16_t system_id = -1) const override {
 		(void) system_id;
 		return "OpenCL";
 	}
@@ -76,7 +76,7 @@ public:
 	/**
 	 * @brief Return the Hardware identifier string
 	 */
-	const char * GetHardwareID(int16_t system_id = -1) const override final {
+	const char * GetHardwareID(int16_t system_id = -1) const override {
 		(void) system_id;
 		return "opencl";
 	}
@@ -84,32 +84,32 @@ public:
 	/**
 	 * @brief Platform specific resource setup interface.
 	 */
-	ExitCode_t Setup(SchedPtr_t papp) override final;
+	ExitCode_t Setup(SchedPtr_t papp) override;
 
 	/**
 	 * @brief Load OpenCL platform data function
 	 */
-	ExitCode_t LoadPlatformData() override final;
+	ExitCode_t LoadPlatformData() override;
 
 	/**
 	 * @brief OpenCL specific resources refresh function
 	 */
-	ExitCode_t Refresh() override final;
+	ExitCode_t Refresh() override;
 	/**
 	 * @brief OpenCL specific resources release function
 	 */
-	ExitCode_t Release(SchedPtr_t papp) override final;
+	ExitCode_t Release(SchedPtr_t papp) override;
 
 	/**
 	 * @brief OpenCL specific resource claiming function
 	 */
-	ExitCode_t ReclaimResources(SchedPtr_t papp) override final;
+	ExitCode_t ReclaimResources(SchedPtr_t papp) override;
 
 	/**
 	 * @brief OpenCL resource assignment mapping
 	 */
 	ExitCode_t MapResources(
-	        ba::SchedPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map, bool excl) override final;
+	        ba::SchedPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map, bool excl) override;
 
 	/**
 	 * OpenCL specific termination
@@ -189,8 +189,9 @@ private:
 	/*** Power Manager instance */
 	PowerManager & pm;
 
-	/*** Print the GPU power information */
-	void PrintGPUPowerInfo();
+	void PrintPowerInfo(br::ResourcePathPtr_t r_path_ptr);
+
+	void PrintDevicesPowerInfo();
 
 #endif // CONFIG_BBQUE_PM
 
@@ -209,7 +210,7 @@ private:
 	 * @param dev_p_str A resource path referencing a device of the type in the key
 	 */
 	void InsertDevicePath(
-	        br::ResourceType r_type, std::string const & dev_rp_str);
+	        br::ResourceType r_type, br::ResourcePathPtr_t r_path_ptr);
 
 	/**
 	 * @brief Register device resources
