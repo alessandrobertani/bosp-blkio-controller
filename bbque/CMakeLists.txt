@@ -197,6 +197,8 @@ target_link_libraries(barbeque
 	bbque_apps
 	${Boost_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
+	dl
+	rt
 )
 
 # Linking dependencies due to task-graph based programming models
@@ -282,10 +284,7 @@ if (CONFIG_TARGET_LINUX_MANGO)
     message(FATAL_ERROR "MANGO GN/HN library Not found")
   endif()
 
-  target_link_libraries (barbeque
-	${HN}
-	dl
-	rt)
+  target_link_libraries (barbeque ${HN})
   include_directories (barbeque ${CONFIG_MANGO_ROOT_PATH}/include/)
 endif (CONFIG_TARGET_LINUX_MANGO)
 
