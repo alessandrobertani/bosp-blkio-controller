@@ -222,7 +222,7 @@ void OpenCLPlatformProxy::PrintDevicesPowerInfo()
 	for (auto acc_rp : *(accelerators.get())) {
 		PrintPowerInfo(acc_rp);
 	}
-	logger->Info("PrintPowerInfo: nuner of accelerators = %d", accelerators->size());
+	logger->Info("PrintPowerInfo: number of accelerators = %d", accelerators->size());
 }
 #endif // CONFIG_BBQUE_PM
 
@@ -317,13 +317,13 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 			break;
 
 		case CL_DEVICE_TYPE_GPU:
-			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
 			r_type = br::ResourceType::GPU;
+			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
 			break;
 
 		case CL_DEVICE_TYPE_ACCELERATOR:
-			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
 			r_type = br::ResourceType::ACCELERATOR;
+			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
 			break;
 
 		default:
