@@ -1556,16 +1556,14 @@ void rtlib_ocl_set_device(uint8_t device_id, RTLIB_ExitCode_t status)
 void rtlib_ocl_coll_event(cl_command_queue cmd_queue, cl_event * event,
                           void * addr)
 {
-	std::map<cl_command_queue, QueueProfPtr_t>::iterator it;
 	clRetainEvent(*event);
+
 	// Collect events per command queue
-	it = ocl_queues_prof.find(cmd_queue);
-
+	auto it = ocl_queues_prof.find(cmd_queue);
 	if (it == ocl_queues_prof.end())
-		ocl_queues_prof.insert(QueueProfPair_t(
-		                               cmd_queue, QueueProfPtr_t(new RTLIB_OCL_QueueProf)));
+		ocl_queues_prof.emplace(cmd_queue, std::make_shared<RTLIB_OCL_QueueProf>());
 
-	ocl_queues_prof[cmd_queue]->events.insert(AddrEventPair_t(addr, *event));
+	ocl_queues_prof[cmd_queue]->events.emplace(addr, *event);
 }
 
 void rtlib_ocl_prof_clean()
@@ -1575,12 +1573,11 @@ void rtlib_ocl_prof_clean()
 
 void rtlib_ocl_flush_events()
 {
-	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
 	cl_command_queue cq;
 
-	for (it_cq = ocl_queues_prof.begin(); it_cq != ocl_queues_prof.end(); it_cq ++) {
-		QueueProfPtr_t stPtr = it_cq->second;
-		cq = it_cq->first;
+	for (auto & it_cq: ocl_queues_prof) {
+		QueueProfPtr_t stPtr = it_cq.second;
+		cq = it_cq.first;
 		stPtr->events.clear();
 	}
 
@@ -1594,30 +1591,27 @@ void rtlib_ocl_prof_run(
 {
 	cl_command_type cmd_type = 0;
 	cl_int status;
-	std::map<cl_command_queue, QueueProfPtr_t>::iterator it_cq;
 
-	for (it_cq = ocl_queues_prof.begin();
-	     it_cq != ocl_queues_prof.end(); it_cq ++) {
-		cl_command_queue cq = it_cq->first;
+	for (auto & it_cq: ocl_queues_prof) {
+		cl_command_queue cq = it_cq.first;
 		clFinish(cq);
 
 		// Resume previously stored statistics
-		QueueProfPtr_t stPtr = it_cq->second;
+		QueueProfPtr_t stPtr = it_cq.second;
 		if (awm_ocl_events[cq] != nullptr) {
 			stPtr->cmd_prof  = awm_ocl_events[cq]->cmd_prof;
 			stPtr->addr_prof = awm_ocl_events[cq]->addr_prof;
 		}
 
 		// Extract event profiling timings
-		std::map<void *, cl_event>::iterator it_ev;
-		for (it_ev = stPtr->events.begin(); it_ev != stPtr->events.end(); it_ev ++) {
-			cl_event & ev(it_ev->second);
+		for (auto & it_ev: stPtr->events) {
+			cl_event & ev(it_ev.second);
 			status = clWaitForEvents(1, &ev);
 			if (status != CL_SUCCESS)
 				logger->Error("OCL: Error [%d] in clWaitForEvents", status);
 
 			acc_command_event_info(
-			        stPtr, ev, cmd_type, it_ev->first, awm_id, prof_level);
+			        stPtr, ev, cmd_type, it_ev.first, awm_id, prof_level);
 		}
 
 		rtlib_ocl_prof_save(cq, awm_ocl_events);
@@ -1630,11 +1624,10 @@ void rtlib_ocl_prof_save(
         cl_command_queue cmd_queue,
         OclEventsStatsMap_t & awm_ocl_events)
 {
-	OclEventsStatsMap_t::iterator it_cq;
-	it_cq = awm_ocl_events.find(cmd_queue);
+	auto it_cq = awm_ocl_events.find(cmd_queue);
 	if (it_cq == awm_ocl_events.end()) {
-		QueueProfPtr_t p(new RTLIB_OCL_QueueProf(*(ocl_queues_prof[cmd_queue].get())));
-		awm_ocl_events.insert(QueueProfPair_t(cmd_queue, p));
+		QueueProfPtr_t prof = ocl_queues_prof[cmd_queue];
+		awm_ocl_events.emplace(cmd_queue, prof);
 	} else {
 		awm_ocl_events[cmd_queue] = ocl_queues_prof[cmd_queue];
 	}
@@ -1647,15 +1640,14 @@ void acc_command_stats(
         double submit_time,
         double exec_time)
 {
-	std::map<cl_command_type, AccArray_t>::iterator it_ct;
 	AccArray_t accs;
-	it_ct = stPtr->cmd_prof.find(cmd_type);
+	auto it_ct = stPtr->cmd_prof.find(cmd_type);
 
 	if (it_ct == stPtr->cmd_prof.end()) {
 		accs[CL_CMD_QUEUED_TIME](queued_time);
 		accs[CL_CMD_SUBMIT_TIME](submit_time);
 		accs[CL_CMD_EXEC_TIME](exec_time);
-		stPtr->cmd_prof.insert(CmdProfPair_t(cmd_type, accs));
+		stPtr->cmd_prof.emplace(cmd_type, accs);
 		return;
 	}
 
@@ -1671,15 +1663,14 @@ void acc_address_stats(
         double submit_time,
         double exec_time)
 {
-	std::map<void *, AccArray_t>::iterator it_ca;
 	AccArray_t accs;
-	it_ca = stPtr->addr_prof.find(addr);
+	auto it_ca = stPtr->addr_prof.find(addr);
 
 	if (it_ca == stPtr->addr_prof.end()) {
 		accs[CL_CMD_QUEUED_TIME](queued_time);
 		accs[CL_CMD_SUBMIT_TIME](submit_time);
 		accs[CL_CMD_EXEC_TIME](exec_time);
-		stPtr->addr_prof.insert(AddrProfPair_t(addr, accs));
+		stPtr->addr_prof.emplace(addr, accs);
 		return;
 	}
 
@@ -1803,9 +1794,8 @@ void acc_command_event_info(
 cl_command_type rtlib_ocl_get_command_type(void * addr)
 {
 	cl_command_type cmd_type = CL_COMMAND_USER;
-	std::map<void *, cl_command_type>::iterator it_ev;
-	it_ev = ocl_addr_cmd.find(addr);
 
+	auto it_ev = ocl_addr_cmd.find(addr);
 	if (it_ev == ocl_addr_cmd.end()) {
 		logger->Warn("OCL Unexpected missing command instance...");
 		return cmd_type;

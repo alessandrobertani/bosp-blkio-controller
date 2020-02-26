@@ -39,18 +39,13 @@
 namespace bac = boost::accumulators;
 
 typedef class RTLIB_OCL_QueueProf RTLIB_OCL_QueueProf_t;
-typedef std::array<bac::accumulator_set<double,
-		bac::stats<bac::tag::sum, bac::tag::min, bac::tag::max,
-		bac::tag::variance, bac::tag::mean>>, 3> AccArray_t;
-typedef std::map<cl_command_type, AccArray_t> CmdProf_t;
-typedef std::shared_ptr<RTLIB_OCL_QueueProf_t> QueueProfPtr_t;
-typedef std::shared_ptr<CmdProf_t> CmdProfPtr_t;
-typedef std::map<cl_command_queue, QueueProfPtr_t> OclEventsStatsMap_t;
-typedef std::pair<cl_command_type, std::string> CmdStrPair_t;
-typedef std::pair<cl_command_queue, QueueProfPtr_t> QueueProfPair_t;
-typedef std::pair<cl_command_type, AccArray_t> CmdProfPair_t;
-typedef std::pair<void *, cl_event> AddrEventPair_t;
-typedef std::pair<void *, AccArray_t> AddrProfPair_t;
+using AccArray_t = std::array<bac::accumulator_set<double,
+			bac::stats<bac::tag::sum, bac::tag::min, bac::tag::max,
+			bac::tag::variance, bac::tag::mean>>, 3> ;
+using CmdProf_t = std::map<cl_command_type, AccArray_t> ;
+using QueueProfPtr_t = std::shared_ptr<RTLIB_OCL_QueueProf_t> ;
+using CmdProfPtr_t   = std::shared_ptr<CmdProf_t> ;
+using OclEventsStatsMap_t = std::map<cl_command_queue, QueueProfPtr_t> ;
 
 extern std::map<cl_command_type, std::string> ocl_cmd_str;
 
