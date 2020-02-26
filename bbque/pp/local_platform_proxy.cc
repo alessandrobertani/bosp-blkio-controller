@@ -35,6 +35,10 @@
   #include "bbque/pp/mango_platform_proxy.h"
 #endif
 
+#if defined CONFIG_TARGET_LINUX_RECIPE
+  #include "bbque/pp/recipe_platform_proxy.h"
+#endif
+
 #ifdef CONFIG_TARGET_OPENCL
   #include "bbque/pp/opencl_platform_proxy.h"
 #endif
@@ -67,7 +71,9 @@ LocalPlatformProxy::LocalPlatformProxy()
 	this->aux.push_back(std::unique_ptr<MangoPlatformProxy>(MangoPlatformProxy::GetInstance()));
 #endif
 
-#ifdef CONFIG_TARGET_OPENCL
+#ifdef CONFIG_TARGET_LINUX_RECIPE
+	this->aux.push_back(std::unique_ptr<RecipePlatformProxy>(RecipePlatformProxy::GetInstance()));
+#elif CONFIG_TARGET_OPENCL
 	this->aux.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 

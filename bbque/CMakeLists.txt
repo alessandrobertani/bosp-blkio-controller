@@ -167,6 +167,10 @@ if (CONFIG_TARGET_LINUX_MANGO)
 	set (BARBEQUE_SRC pp/mango_platform_proxy  ${BARBEQUE_SRC})
 endif (CONFIG_TARGET_LINUX_MANGO)
 
+if (CONFIG_TARGET_LINUX_RECIPE)
+	set (BARBEQUE_SRC pp/recipe_platform_proxy ${BARBEQUE_SRC})
+endif (CONFIG_TARGET_OPENCL)
+
 if (CONFIG_TARGET_OPENCL)
 	set (BARBEQUE_SRC pp/opencl_platform_proxy ${BARBEQUE_SRC})
 endif (CONFIG_TARGET_OPENCL)

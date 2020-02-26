@@ -44,14 +44,14 @@ namespace bu = bbque::utils;
 
 namespace bbque {
 
-typedef std::list<ResourcePathPtr_t> ResourcePathList_t;
-typedef std::shared_ptr<ResourcePathList_t> ResourcePathListPtr_t;
-typedef std::vector<uint8_t> VectorUInt8_t;
-typedef std::shared_ptr<VectorUInt8_t> VectorUInt8Ptr_t;
-typedef std::map<br::ResourceType, VectorUInt8Ptr_t> ResourceTypeIDMap_t;
-typedef std::map<br::ResourceType, ResourcePathListPtr_t> ResourceTypePathMap_t;
-typedef std::map<int, std::ofstream *> DevFileMap_t;
-typedef std::map<int, ResourcePathPtr_t> DevPathMap_t;
+using ResourcePathList_t =std::list<ResourcePathPtr_t> ;
+using ResourcePathListPtr_t = std::shared_ptr<ResourcePathList_t> ;
+using VectorUInt8_t = std::vector<uint8_t> ;
+using VectorUInt8Ptr_t = std::shared_ptr<VectorUInt8_t> ;
+using ResourceTypeIDMap_t = std::map<br::ResourceType, VectorUInt8Ptr_t> ;
+using ResourceTypePathMap_t = std::map<br::ResourceType, ResourcePathListPtr_t> ;
+using DevFileMap_t = std::map<int, std::ofstream *> ;
+using DevPathMap_t = std::map<int, ResourcePathPtr_t> ;
 
 
 class OpenCLPlatformProxy: public PlatformProxy {
@@ -137,7 +137,7 @@ public:
 	 */
 	ResourcePathListPtr_t GetDevicePaths(br::ResourceType r_type) const;
 
-private:
+protected:
 
 	/*** Configuration manager instance */
 	ConfigurationManager & cm;
@@ -146,7 +146,7 @@ private:
 	CommandManager & cmm;
 
 	/**
-	 * @brief The logger used by the power manager.
+	 * @brief The logger
 	 */
 	std::unique_ptr<bu::Logger> logger;
 
