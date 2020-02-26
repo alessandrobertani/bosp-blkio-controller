@@ -317,7 +317,7 @@ endif (CONFIG_BBQUE_PIL_LOADER)
 
 # Use link path ad RPATH
 set_target_properties(barbeque PROPERTIES
-	INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib"
+	INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib;${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque"
 	INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Install the configuration file

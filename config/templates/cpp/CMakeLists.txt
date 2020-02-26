@@ -18,7 +18,7 @@ set (MYAPP_PATH_CONFIG  "etc/bbque")
 set (MYAPP_PATH_RECIPES "etc/bbque/recipes")
 set (MYAPP_PATH_DOCS    "usr/share/bbque/myapp")
 
-set (CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque:${CONFIG_BOSP_RUNTIME_PATH}/lib")
+set (CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque;${CONFIG_BOSP_RUNTIME_PATH}/lib")
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 ################################################################################

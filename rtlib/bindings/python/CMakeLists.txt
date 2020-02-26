@@ -17,7 +17,7 @@ add_library(bbque_python_bindings MODULE
 set_target_properties(bbque_python_bindings PROPERTIES
   OUTPUT_NAME "barbeque"
   PREFIX ""
-  INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque:${CONFIG_BOSP_RUNTIME_PATH}/lib"
+  INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque;${CONFIG_BOSP_RUNTIME_PATH}/lib"
   )
 
 target_link_libraries(bbque_python_bindings

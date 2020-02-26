@@ -16,7 +16,7 @@ add_library(bbque_java_bindings MODULE
 set_target_properties(bbque_java_bindings PROPERTIES
   OUTPUT_NAME "bbque_java_rtlib"
   PREFIX "lib"
-  INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque:${CONFIG_BOSP_RUNTIME_PATH}/lib"
+  INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque;${CONFIG_BOSP_RUNTIME_PATH}/lib"
   )
 
 target_link_libraries(bbque_java_bindings
