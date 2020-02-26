@@ -22,7 +22,8 @@
 #include <cstdint>
 #include <iostream>
 #include <functional>
-#include "bbque/cpp11/thread.h"
+#include <thread>
+
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/utils/logging/logger.h"

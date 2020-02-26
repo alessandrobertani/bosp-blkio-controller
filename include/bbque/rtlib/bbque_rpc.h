@@ -25,9 +25,6 @@
 #include "bbque/utils/utility.h"
 #include "bbque/utils/timer.h"
 #include "bbque/utils/logging/logger.h"
-#include "bbque/cpp11/condition_variable.h"
-#include "bbque/cpp11/mutex.h"
-#include "bbque/cpp11/thread.h"
 
 #include "sys/times.h"
 
@@ -39,12 +36,15 @@
 #include "bbque/rtlib/bbque_ocl_stats.h"
 #endif
 
+#include <condition_variable>
+#include <iomanip>
 #include <map>
 #include <memory>
-#include <string>
-#include <vector>
-#include <iomanip>
+#include <mutex>
 #include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>

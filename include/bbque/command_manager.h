@@ -23,10 +23,10 @@
 #include "bbque/utils/utility.h"
 #include "bbque/utils/worker.h"
 #include "bbque/utils/logging/logger.h"
-#include "bbque/cpp11/thread.h"
 
 #include <poll.h>
 #include <csignal>
+#include <thread>
 
 #define COMMAND_MANAGER_NAMESPACE "bq.cm"
 

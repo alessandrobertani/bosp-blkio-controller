@@ -20,10 +20,10 @@
 
 #include <cassert>
 #include <memory>
+#include <mutex>
 #include <set>
 
 #include "bbque/config.h"
-#include "bbque/cpp11/mutex.h"
 #include "bbque/utils/extra_data_container.h"
 
 #ifdef CONFIG_BBQUE_RELIABILITY
@@ -38,7 +38,6 @@ using namespace boost::accumulators;
 #endif
 
 #define SCHEDULABLE_ID_MAX_LEN  16
-
 
 namespace bbque
 {

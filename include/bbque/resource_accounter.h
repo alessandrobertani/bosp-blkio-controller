@@ -18,8 +18,10 @@
 #ifndef BBQUE_RESOURCE_ACCOUNTER_H_
 #define BBQUE_RESOURCE_ACCOUNTER_H_
 
+#include <condition_variable>
 #include <map>
 #include <set>
+#include <thread>
 
 #include "bbque/resource_accounter_conf.h"
 #include "bbque/config.h"
@@ -30,8 +32,6 @@
 #include "bbque/res/resource_tree.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/utility.h"
-#include "bbque/cpp11/thread.h"
-#include "bbque/cpp11/condition_variable.h"
 
 #define RESOURCE_ACCOUNTER_NAMESPACE  "bq.ra"
 #define SYNC_RVIEW_PATH               "ra.sync."

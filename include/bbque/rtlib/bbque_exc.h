@@ -21,12 +21,12 @@
 #include <bbque/rtlib.h>
 #include <bbque/utils/timer.h>
 #include <bbque/utils/logging/logger.h>
-#include <bbque/cpp11/condition_variable.h>
-#include <bbque/cpp11/thread.h>
 
+#include <condition_variable>
 #include <map>
 #include <memory>
 #include <string>
+#include <thread>
 
 #ifdef CONFIG_TARGET_OPENCL
 #include <CL/cl.h>

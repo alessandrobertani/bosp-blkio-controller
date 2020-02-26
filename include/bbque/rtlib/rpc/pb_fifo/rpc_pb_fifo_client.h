@@ -24,9 +24,9 @@
 #include "bbque/rtlib/rpc/rpc_messages.h"
 #include "rpc_messages.pb.h"
 #include "bbque/rtlib/rpc/pb_fifo/rpc_pb_fifo_server.h"
-#include "bbque/cpp11/condition_variable.h"
-#include "bbque/cpp11/thread.h"
 
+#include <condition_variable>
+#include <thread>
 #include <sys/epoll.h>
 
 namespace bbque

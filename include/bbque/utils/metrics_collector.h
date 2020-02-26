@@ -19,13 +19,12 @@
 #define BBQUE_METRICS_COLLECTOR_H_
 
 #include "bbque/utils/logging/logger.h"
-#include "bbque/utils/timer.h"
-#include "bbque/cpp11/mutex.h"
 #include "bbque/command_manager.h"
 
 #include <map>
-#include <vector>
 #include <memory>
+#include <mutex>
+#include <vector>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>

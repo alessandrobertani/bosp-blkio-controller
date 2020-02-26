@@ -16,6 +16,7 @@
  */
 
 #include <cmath>
+#include <chrono>
 
 #include "bbque/application_manager.h"
 
@@ -31,7 +32,6 @@
 #include "bbque/plugins/recipe_loader.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/resource_manager.h"
-#include "bbque/cpp11/chrono.h"
 #include "bbque/resource_partition_validator.h"
 #include "bbque/utils/assert.h"
 #include "bbque/utils/schedlog.h"

@@ -19,13 +19,13 @@
 #define BBQUE_APPLICATION_MANAGER_H_
 
 #include <map>
+#include <mutex>
 #include <vector>
 
 #include "bbque/app/application_conf.h"
 #include "bbque/application_manager_conf.h"
 #include "bbque/config.h"
 #include "bbque/command_manager.h"
-#include "bbque/cpp11/mutex.h"
 #include "bbque/plugins/recipe_loader.h"
 #include "bbque/utils/deferrable.h"
 #include "bbque/utils/logging/logger.h"

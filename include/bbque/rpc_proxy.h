@@ -21,15 +21,13 @@
 #include "bbque/plugins/rpc_channel.h"
 #include "bbque/utils/worker.h"
 #include "bbque/utils/logging/logger.h"
-
 #include "bbque/utils/metrics_collector.h"
 
-#include "bbque/cpp11/condition_variable.h"
-#include "bbque/cpp11/mutex.h"
-#include "bbque/cpp11/thread.h"
-
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <queue>
+#include <thread>
 
 using bbque::plugins::RPCChannelIF;
 using bbque::utils::MetricsCollector;

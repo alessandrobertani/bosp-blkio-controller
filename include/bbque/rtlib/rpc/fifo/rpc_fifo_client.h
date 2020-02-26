@@ -19,13 +19,12 @@
 #define BBQUE_RPC_FIFO_CLIENT_H_
 
 #include "bbque/rtlib.h"
-
 #include "bbque/rtlib/bbque_rpc.h"
 #include "bbque/rtlib/rpc/rpc_messages.h"
 #include "bbque/rtlib/rpc/fifo/rpc_fifo_server.h"
-#include "bbque/cpp11/condition_variable.h"
-#include "bbque/cpp11/thread.h"
 
+#include <thread>
+#include <condition_variable>
 #include <sys/epoll.h>
 
 namespace bbque

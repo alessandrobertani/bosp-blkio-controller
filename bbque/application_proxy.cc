@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <chrono>
+
 #include "bbque/application_proxy.h"
 
 #include "bbque/config.h"
@@ -25,7 +27,6 @@
 #include "bbque/modules_factory.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/utils/utility.h"
-#include "bbque/cpp11/chrono.h"
 
 #ifdef CONFIG_TARGET_OPENCL
 #include "bbque/pp/opencl_platform_proxy.h"
@@ -648,13 +649,13 @@ RTLIB_ExitCode_t
 ApplicationProxy::SyncP_PreChange_GetResult(pPreChangeRsp_t presp)
 {
 	RTLIB_ExitCode_t result = RTLIB_BBQUE_CHANNEL_TIMEOUT;
-	FutureStatus_t ftrStatus;
+	std::future_status ftrStatus;
 
 	assert(presp);
 
 	// Wait for the promise being returned
 	ftrStatus = presp->pcs->resp_ftr.wait_for(std::chrono::milliseconds(BBQUE_SYNCP_TIMEOUT));
-	if (!FutureTimedout(ftrStatus))
+	if (ftrStatus != std::future_status::timeout)
 		result = presp->pcs->resp_ftr.get();
 
 	// Releasing the command session
@@ -837,14 +838,14 @@ RTLIB_ExitCode_t
 ApplicationProxy::SyncP_SyncChange_GetResult(pSyncChangeRsp_t presp)
 {
 	RTLIB_ExitCode_t result = RTLIB_BBQUE_CHANNEL_TIMEOUT;
-	FutureStatus_t ftrStatus;
+	std::future_status ftrStatus;
 
 	assert(presp);
 
 	// Wait for the promise being returned
 	ftrStatus = presp->pcs->resp_ftr.wait_for(std::chrono::milliseconds(
 	                        BBQUE_SYNCP_TIMEOUT));
-	if (!FutureTimedout(ftrStatus))
+	if (ftrStatus != std::future_status::timeout)
 		result = presp->pcs->resp_ftr.get();
 
 	// Releasing the command session

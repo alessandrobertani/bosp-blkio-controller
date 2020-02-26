@@ -18,10 +18,10 @@
 #ifndef BBQUE_EVENT_H_
 #define BBQUE_EVENT_H_
 
+#include <chrono>
 #include <cstdint>
-#include <string>
 #include <ctime>
-#include "bbque/cpp11/chrono.h"
+#include <string>
 
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/binary_object.hpp>

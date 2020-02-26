@@ -18,17 +18,17 @@
 #ifndef BBQUE_APPLICATION_PROXY_H_
 #define BBQUE_APPLICATION_PROXY_H_
 
+#include <map>
+#include <memory>
+#include <future>
+#include <thread>
+
 #include "bbque/app/application.h"
 #include "bbque/command_manager.h"
 #include "bbque/utils/worker.h"
 #include "bbque/utils/logging/logger.h"
 #include "bbque/plugins/rpc_channel.h"
 #include "bbque/rtlib/rpc/rpc_messages.h"
-#include "bbque/cpp11/thread.h"
-#include "bbque/cpp11/future.h"
-
-#include <map>
-#include <memory>
 
 #define APPLICATION_PROXY_NAMESPACE "bq.ap"
 
