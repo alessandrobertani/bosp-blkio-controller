@@ -40,6 +40,7 @@ RecipePlatformProxy::RecipePlatformProxy()
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
+	logger->Debug("RecipePlatformProxy");
 }
 
 RecipePlatformProxy::~RecipePlatformProxy()

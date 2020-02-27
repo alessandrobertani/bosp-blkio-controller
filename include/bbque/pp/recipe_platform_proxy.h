@@ -53,7 +53,7 @@ public:
 	 */
 	virtual const char * GetPlatformID(int16_t system_id = -1) const override {
 		(void) system_id;
-		return "OpenCL-RECIPE";
+		return "org.opencl.recipe";
 	}
 
 	/**
@@ -61,7 +61,7 @@ public:
 	 */
 	virtual const char * GetHardwareID(int16_t system_id = -1) const override {
 		(void) system_id;
-		return "opencl-recipe";
+		return "recipe";
 	}
 
 private:
