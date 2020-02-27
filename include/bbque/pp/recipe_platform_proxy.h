@@ -64,6 +64,9 @@ public:
 		return "recipe";
 	}
 
+	ExitCode_t MapResources(
+		SchedPtr_t psched, ResourceAssignmentMapPtr_t pres, bool excl) noexcept;
+
 private:
 
 	RecipePlatformProxy();
