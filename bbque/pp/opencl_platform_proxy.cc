@@ -229,6 +229,7 @@ void OpenCLPlatformProxy::PrintDevicesPowerInfo()
 
 VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(br::ResourceType r_type) const
 {
+	logger->Debug("GetDeviceIDs: r_type=%s", br::GetResourceTypeString(r_type));
 	auto const d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("GetDeviceIDs: No OpenCL devices of type '%s'",
@@ -241,7 +242,7 @@ VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(br::ResourceType r_type) cons
 
 uint8_t OpenCLPlatformProxy::GetDevicesNum(br::ResourceType r_type) const
 {
-
+	logger->Debug("GetDevicesNum: r_type=%s", br::GetResourceTypeString(r_type));
 	auto const d_it(GetDeviceConstIterator(r_type));
 	if (d_it == device_ids.end()) {
 		logger->Error("GetDevicesNum: No OpenCL devices of type '%s'",
@@ -254,7 +255,7 @@ uint8_t OpenCLPlatformProxy::GetDevicesNum(br::ResourceType r_type) const
 ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
         br::ResourceType r_type) const
 {
-
+	logger->Debug("GetDevicePaths: r_type=%s", br::GetResourceTypeString(r_type));
 	auto const p_it(device_paths.find(r_type));
 	if (p_it == device_paths.end()) {
 		logger->Error("GetDevicePaths: No OpenCL devices of type  '%s'",
@@ -318,12 +319,10 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 
 		case CL_DEVICE_TYPE_GPU:
 			r_type = br::ResourceType::GPU;
-			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
 			break;
 
 		case CL_DEVICE_TYPE_ACCELERATOR:
 			r_type = br::ResourceType::ACCELERATOR;
-			r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id);
 			break;
 
 		default:
@@ -335,27 +334,42 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 		logger->Info("RegisterDevices: id=%d is of type %s",
 			     dev_id, br::GetResourceTypeString(r_type));
 
+		// Resource path string
+		r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id)
+		       + std::string(".pe");
+		br::ResourcePathPtr_t r_path_ptr;
+		ResourceAccounter &ra(ResourceAccounter::GetInstance());
+
 		// No need to register CPU devices (already done in the host
 		// platform proxy)
-		if (r_type == br::ResourceType::CPU)
-			continue;
-
-		r_path += std::string(".pe0");
-		ResourceAccounter &ra(ResourceAccounter::GetInstance());
-		auto resource = ra.RegisterResource(r_path, "", 100);
+		if (r_type != br::ResourceType::CPU) {
+			r_path += std::string("0");
+			auto resource = ra.RegisterResource(r_path, "", 100);
+			r_path_ptr = resource->Path();
 
 #ifdef CONFIG_BBQUE_WM
-		PowerMonitor & wm(PowerMonitor::GetInstance());
-		wm.Register(resource->Path());
+			PowerMonitor & wm(PowerMonitor::GetInstance());
+			wm.Register(r_path_ptr);
 #endif
+		}
+		else {
+			// Point the first core of the current CPU
+			auto cpu_pes = ra.GetResources(r_path);
+			bbque_assert(!cpu_pes.empty());
+			r_path_ptr = cpu_pes.front()->Path();
+		}
+
+		bbque_assert(r_path_ptr);
+		logger->Debug("RegisterDevices: r_path=<%s>", r_path_ptr->ToString().c_str());
+
 		// Keep track of OpenCL device IDs and resource paths
 		InsertDeviceID(r_type, dev_id);
-		InsertDevicePath(r_type, resource->Path());
+		InsertDevicePath(r_type, r_path_ptr);
 
 		logger->Info("RegisterDevices: id=%d {%s}, type=[%s], path=<%s>",
 		             dev_id, dev_name,
 		             br::GetResourceTypeString(r_type),
-		             r_path.c_str());
+		             r_path_ptr->ToString().c_str());
 	}
 
 	return PlatformProxy::PLATFORM_OK;
@@ -366,7 +380,7 @@ void OpenCLPlatformProxy::InsertDeviceID(
         br::ResourceType r_type,
         uint8_t dev_id)
 {
-	logger->Debug("InsertDeviceID: insert device %d of type %s",
+	logger->Debug("InsertDeviceID: insert device %d of type [%s]",
 	              dev_id, br::GetResourceTypeString(r_type));
 	auto d_it = GetDeviceIterator(r_type);
 	if (d_it == device_ids.end()) {
@@ -375,6 +389,9 @@ void OpenCLPlatformProxy::InsertDeviceID(
 
 	auto pdev_ids = device_ids[r_type];
 	pdev_ids->push_back(dev_id);
+	logger->Debug("InsertDeviceID: type [%s]: count=%d",
+	              br::GetResourceTypeString(r_type),
+	              device_ids[r_type]->size());
 }
 
 void OpenCLPlatformProxy::InsertDevicePath(
@@ -393,6 +410,9 @@ void OpenCLPlatformProxy::InsertDevicePath(
 
 	auto pdev_paths = device_paths[r_type];
 	pdev_paths->push_back(r_path_ptr);
+	logger->Debug("InsertDevicePath: type [%s]: count=%d",
+	              br::GetResourceTypeString(r_type),
+	              device_paths[r_type]->size());
 }
 
 void OpenCLPlatformProxy::Exit()

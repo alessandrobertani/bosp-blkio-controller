@@ -70,7 +70,7 @@ public:
 	 */
 	const char * GetPlatformID(int16_t system_id = -1) const override {
 		(void) system_id;
-		return "OpenCL";
+		return "org.opencl";
 	}
 
 	/**
@@ -152,16 +152,16 @@ protected:
 
 
 	/*** Number of platforms */
-	cl_uint num_platforms = 0;
+	cl_uint num_platforms;
 
 	/*** Number of devices   */
-	cl_uint num_devices   = 0;
+	cl_uint num_devices;
 
 	/*** Platform descriptors */
-	cl_platform_id * platforms = nullptr;
+	cl_platform_id * platforms;
 
 	/*** Device descriptors   */
-	cl_device_id   * devices   = nullptr;
+	cl_device_id * devices;
 
 	/*** Map with all the device IDs for each type available   */
 	ResourceTypeIDMap_t   device_ids;
