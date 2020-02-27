@@ -57,37 +57,45 @@ LocalPlatformProxy::LocalPlatformProxy()
 	logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE ".local");
 	assert(logger);
 
-#if defined CONFIG_TARGET_EMULATED_HOST
+#ifdef CONFIG_TARGET_EMULATED_HOST
 	this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy::GetInstance());
-#elif defined CONFIG_TARGET_LINUX
+#elif CONFIG_TARGET_LINUX
 	this->host = std::unique_ptr<LinuxPlatformProxy>(LinuxPlatformProxy::GetInstance());
-#elif defined CONFIG_TARGET_ANDROID
+#elif CONFIG_TARGET_ANDROID
 	this->host = std::unique_ptr<AndroidPlatformProxy>(AndroidPlatformProxy::GetInstance());
 #else
 #error "No suitable PlatformProxy for host found."
 #endif
 
+	bbque_assert(this->host);
+	std::string host_proxy(this->host->GetPlatformID());
+	logger->Info("LocalPlatformProxy: host = { %s }", host_proxy.c_str());
+
 #ifdef CONFIG_TARGET_LINUX_MANGO
-	this->aux.push_back(std::unique_ptr<MangoPlatformProxy>(MangoPlatformProxy::GetInstance()));
+	this->accl.push_back(std::unique_ptr<MangoPlatformProxy>(MangoPlatformProxy::GetInstance()));
 #endif
 
 #ifdef CONFIG_TARGET_LINUX_RECIPE
-	this->aux.push_back(std::unique_ptr<RecipePlatformProxy>(RecipePlatformProxy::GetInstance()));
+	this->accl.push_back(std::unique_ptr<RecipePlatformProxy>(RecipePlatformProxy::GetInstance()));
 #elif CONFIG_TARGET_OPENCL
-	this->aux.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
+	this->accl.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 
 #ifdef CONFIG_TARGET_NVIDIA
-	this->aux.push_back(std::unique_ptr<NVMLPlatformProxy>(NVMLPlatformProxy::GetInstance()));
+	this->accl.push_back(std::unique_ptr<NVMLPlatformProxy>(NVMLPlatformProxy::GetInstance()));
 #endif
 
-	bbque_assert(this->host);
+	std::string accl_proxies;
+	for (auto & p: this->accl) {
+		accl_proxies += p->GetPlatformID() + std::string(", ");
+	}
+	logger->Info("LocalPlatformProxy: accl = { %s }", accl_proxies.c_str());
 }
 
 const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const
 {
 #ifdef CONFIG_TARGET_LINUX_MANGO
-	return this->aux[0]->GetPlatformID(system_id);
+	return this->accl[0]->GetPlatformID(system_id);
 #else
 	return this->host->GetPlatformID(system_id);
 #endif
@@ -96,7 +104,7 @@ const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const
 const char* LocalPlatformProxy::GetHardwareID(int16_t system_id) const
 {
 #ifdef CONFIG_TARGET_LINUX_MANGO
-	return this->aux[0]->GetHardwareID(system_id);
+	return this->accl[0]->GetHardwareID(system_id);
 #else
 	return this->host->GetHardwareID(system_id);
 #endif
@@ -113,7 +121,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp)
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Setup(papp);
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -133,7 +141,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData()
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->LoadPlatformData();
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -153,7 +161,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh()
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Refresh();
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -173,7 +181,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp)
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Release(papp);
 		if (ec != PLATFORM_OK) {
 			return ec;
@@ -194,14 +202,14 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t p
 		err_count++;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->ReclaimResources(papp);
 		if (ec != PLATFORM_OK) {
 			err_count++;
 		}
 	}
 
-	if (err_count == this->aux.size() + 1) {
+	if (err_count == this->accl.size() + 1) {
 		logger->Error("ReclaimResources: failed");
 		return PLATFORM_MAPPING_FAILED;
 	}
@@ -223,14 +231,14 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
 		err_count++;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->MapResources(papp, pres, excl);
 		if (ec != PLATFORM_OK) {
 			err_count++;
 		}
 	}
 
-	if (err_count == this->aux.size() + 1) {
+	if (err_count == this->accl.size() + 1) {
 		logger->Error("MapResources: failed");
 		return PLATFORM_MAPPING_FAILED;
 	}
@@ -246,7 +254,7 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement()
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->ActuatePowerManagement();
 	}
 	return PLATFORM_OK;
@@ -313,10 +321,10 @@ void LocalPlatformProxy::Exit()
 	logger->Info("Exit: closing host platform proxy [%s]...",
 	             host->GetPlatformID());
 	this->host->Exit();
-	for (auto & aux_pp : aux) {
-		logger->Info("Exit: closing auxiliary platform proxy [%s]...",
-		             aux_pp->GetPlatformID());
-		aux_pp->Exit();
+	for (auto & accl_pp : accl) {
+		logger->Info("Exit: closing accliliary platform proxy [%s]...",
+		             accl_pp->GetPlatformID());
+		accl_pp->Exit();
 	}
 }
 
@@ -339,7 +347,7 @@ ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Dump(app::SchedPtr_t psched
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Dump(psched);
 		if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
 			return ec;
@@ -360,7 +368,7 @@ ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Restore(
 
 	// TODO: Need to retrieve the set of tasks of the application, first...
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Restore(pid);
 		if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
 			return ec;
@@ -378,7 +386,7 @@ ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Freeze(app::SchedPtr_t psch
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Freeze(psched);
 		if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
 			return ec;
@@ -396,7 +404,7 @@ ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Thaw(app::SchedPtr_t psched
 		return ec;
 	}
 
-	for (auto it = this->aux.begin() ; it < this->aux.end(); it++) {
+	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Thaw(psched);
 		if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
 			return ec;

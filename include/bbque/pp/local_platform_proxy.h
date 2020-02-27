@@ -125,10 +125,11 @@ private:
 	std::unique_ptr<PlatformProxy> host;
 
 	/**
-	 * @brief The list of auxiliary platform proxy, used for managing additional
-	 * computing resources (like OpenCL, HW accelerators, Process Listener, etc...)
+	 * @brief The list of platform proxy for accelerator devices, used for
+	 * managing additional computing resources (like OpenCL, CUDA,
+	 * FPGA-based accelerators,...)
 	 */
-	std::vector<std::unique_ptr<PlatformProxy>> aux;
+	std::vector<std::unique_ptr<PlatformProxy>> accl;
 
 };
 
