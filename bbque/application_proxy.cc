@@ -424,6 +424,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 	// Set the next AWM only if the application is not going to be blocked
 	if (BBQUE_LIKELY(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
+
 #ifndef CONFIG_TARGET_EMULATED_HOST
 		// CPUs (processors)
 		local_sys_msg.nr_cpus =
@@ -444,20 +445,30 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 #else
 		logger->Warn("APPs PRX: TPD enabled. No resource assignment enforcing");
 #endif // CONFIG_TARGET_EMULATED_HOST
-		logger->Debug("SyncP_PreChangeSend: Command [RPC_BBQ_SYNCP_PRECHANGE] -> "
-		              "EXC [%s], CPUs=<%d>, PROCs=<%2d [%d%%]>,MEM=<%d> @sv{%d}",
-		              papp->StrId(),
-		              local_sys_msg.nr_cpus,
-		              local_sys_msg.nr_procs,
-		              local_sys_msg.r_proc,
-		              local_sys_msg.r_mem,
-		              ra.GetScheduledView());
 
 #ifdef CONFIG_TARGET_OPENCL
-		br::ResourceBitset gpu_ids(papp->NextAWM()->BindingSet(br::ResourceType::GPU));
-		BBQUE_RID_TYPE r_id = gpu_ids.FirstSet();
+		local_sys_msg.r_gpu = ra.GetAssignedAmount(
+		                              papp->NextAWM()->GetResourceBinding(),
+		                              papp, ra.GetScheduledView(),
+		                              br::ResourceType::GPU);
 
-		// If no GPU have been bound, the CPU is the OpenCL device assigned
+		local_sys_msg.r_acc = ra.GetAssignedAmount(
+		                              papp->NextAWM()->GetResourceBinding(),
+		                              papp, ra.GetScheduledView(),
+		                              br::ResourceType::ACCELERATOR);
+
+		BBQUE_RID_TYPE r_id = R_ID_NONE;
+
+		// Any GPU? Any ACCELERATOR?
+		auto gpu_ids(papp->NextAWM()->BindingSet(br::ResourceType::GPU));
+		auto acc_ids = papp->NextAWM()->BindingSet(br::ResourceType::ACCELERATOR);
+
+		if (gpu_ids.Count() > 0)
+			r_id = gpu_ids.FirstSet();
+		else
+			r_id = acc_ids.FirstSet();
+
+		// Not GPU nor ACCELERATOR => CPU device?
 		if (r_id == R_ID_NONE) {
 			OpenCLPlatformProxy * ocl_proxy(OpenCLPlatformProxy::GetInstance());
 			auto pdev_ids(ocl_proxy->GetDeviceIDs(br::ResourceType::CPU));
@@ -470,16 +481,32 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		local_sys_msg.dev = r_id;
 		switch(r_id) {
 		case R_ID_NONE:
-			logger->Info("SyncP_PreChangeSend: [%s] NO OpenCL device assigned");
+			logger->Info("SyncP_PreChangeSend: [%s] NO OpenCL device assigned",
+			             papp->StrId());
 			break;
 		case R_ID_ANY:
-			logger->Info("SyncP_PreChangeSend: [%s] NO OpenCL device forcing");
+			logger->Info("SyncP_PreChangeSend: [%s] NO OpenCL device forcing",
+			             papp->StrId());
 			break;
 		default:
 			logger->Info("SyncP_PreChangeSend: [%s] OpenCL device assigned: %d",
 			             papp->StrId(), r_id);
 		}
 #endif
+
+		logger->Info("SyncP_PreChangeSend: Command [RPC_BBQ_SYNCP_PRECHANGE] -> "
+		              "EXC [%s]: CPUs=<%d> PROCs=<%2d [%d%%]> MEM=<%d> "
+		              "GPUs=<%d> ACCs=<%d> OCL-dev=%d @sched{%d}",
+		              papp->StrId(),
+		              local_sys_msg.nr_cpus,
+		              local_sys_msg.nr_procs,
+		              local_sys_msg.r_proc,
+		              local_sys_msg.r_mem,
+		              local_sys_msg.r_gpu,
+		              local_sys_msg.r_acc,
+		              local_sys_msg.dev,
+		              ra.GetScheduledView());
+
 	}
 
 	// Send the required synchronization action
