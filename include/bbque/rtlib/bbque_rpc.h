@@ -1238,6 +1238,14 @@ private:
 	        RTLIB_WorkingModeParams * wm);
 
 	/**
+	 * @brief Update the assigned resources information in the
+	 * assigned working mode
+	 */
+	void UpdateWorkingModeAssignments(
+	        pRegisteredEXC_t exc,
+	        RTLIB_WorkingModeParams * wm);
+
+	/**
 	 * @brief Suspend caller waiting for a reconfiguration to complete
 	 *
 	 * When the EXC has notified to switch into a different AWM by the RTRM,

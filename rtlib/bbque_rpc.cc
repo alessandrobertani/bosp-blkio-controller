@@ -1264,10 +1264,30 @@ void BbqueRPC::StartPCountersMonitoring(
  *   Synchronization functions
  **********************************************************************/
 
+void BbqueRPC::UpdateWorkingModeAssignments(
+        pRegisteredEXC_t exc,
+        RTLIB_WorkingModeParams_t * wm)
+{
+	wm->awm_id = exc->current_awm_id;
+	if (wm->nr_sys >= 0)
+		delete[] wm->systems;
+	wm->nr_sys = exc->resource_assignment.size();
+	wm->systems = new RTLIB_SystemResources_t[wm->nr_sys];
+
+	int id = 0;
+	for (auto & system : exc->resource_assignment) {
+		auto resource_assignment = system.second;
+		wm->systems[id] = *resource_assignment.get();
+		++id;
+	}
+}
+
+
 RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
         pRegisteredEXC_t exc,
         RTLIB_WorkingModeParams_t * wm)
 {
+	UNUSED(wm);
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
 
 	if (! isEnabled(exc)) {
@@ -1296,31 +1316,6 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 		logger->Debug("GetAssignedWorkingMode: valid AWM? %s",
 			isAwmValid(exc)? "yes": "no" );
 		return RTLIB_EXC_GWM_FAILED;
-	}
-
-	logger->Debug("Valid AWM assigned");
-	wm->awm_id = exc->current_awm_id;
-	wm->nr_sys = exc->resource_assignment.size();
-	wm->systems = (RTLIB_SystemResources_t *) malloc(sizeof (
-	                        RTLIB_SystemResources_t)
-	                * wm->nr_sys);
-	int i = 0;
-
-	for (auto & system_resources : exc->resource_assignment) {
-		auto allocation = system_resources.second;
-		wm->systems[i].sys_id = allocation->sys_id;
-		wm->systems[i].number_cpus  = allocation->number_cpus;
-		wm->systems[i].number_proc_elements = allocation->number_proc_elements;
-		wm->systems[i].cpu_bandwidth = allocation->cpu_bandwidth;
-		wm->systems[i].mem_bandwidth  = allocation->mem_bandwidth;
-#ifdef CONFIG_TARGET_OPENCL
-#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
-		wm->res_allocation[i].gpu_bandwidth  = allocation->gpu_bandwidth;
-		wm->res_allocation[i].accelerator_bandwidth  =
-		        allocation->accelerator_bandwidth;
-#endif
-#endif // CONFIG_TARGET_OPENCL
-		i ++;
 	}
 
 	// Update AWM statistics
@@ -1364,28 +1359,9 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 
 	logger->Debug("WaitForWorkingMode: updating resource assignments");
 	setAwmValid(exc);
-	wm->awm_id = exc->current_awm_id;
-	wm->nr_sys = exc->resource_assignment.size();
-	wm->systems = (RTLIB_SystemResources_t *) malloc(sizeof (
-	                        RTLIB_SystemResources_t)
-	                * wm->nr_sys);
-	int i = 0;
 
-	for (auto system : exc->resource_assignment) {
-		auto resource_assignment = system.second;
-		wm->systems[i].sys_id = resource_assignment->sys_id;
-		wm->systems[i].number_cpus  = resource_assignment->number_cpus;
-		wm->systems[i].number_proc_elements = resource_assignment->number_proc_elements;
-		wm->systems[i].cpu_bandwidth = resource_assignment->cpu_bandwidth;
-		wm->systems[i].mem_bandwidth  = resource_assignment->mem_bandwidth;
-#ifdef CONFIG_TARGET_OPENCL
-#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
-		wm->res_allocation[i].gpu_bandwidth  = resource_assignment->gpu_bandwidth;
-		wm->res_allocation[i].accelerator_bandwidth  =
-		        resource_assignment->accelerator_bandwidth;
-#endif
-#endif
-	}
+	// Set the assigned resources info
+	UpdateWorkingModeAssignments(exc, wm);
 
 	// Setup AWM statistics
 	SetupStatistics(exc);
@@ -1463,17 +1439,21 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	case MEMORY:
 		r_amount = wm->systems[0].mem_bandwidth;
 		break;
-#ifdef CONFIG_TARGET_OPENCL
-#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	case GPU:
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 		r_amount = wm->res_allocation[0].gpu_bandwidth;
+#else
+		r_amount = wm->systems[0].gpu_bandwidth;
+#endif
 		break;
 
 	case ACCELERATOR:
-		r_amount = wm->res_allocation[0].accelerator_bandwidth;
-		break;
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+		r_amount = wm->res_allocation[0].acc_bandwidth;
+#else
+		r_amount = wm->systems[0].acc_bandwidth;
 #endif
-#endif // CONFIG_TARGET_OPENCL
+		break;
 
 	default:
 		r_amount = - 1;
@@ -1566,8 +1546,6 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 			resources[i] = wm->systems[i].mem_bandwidth;
 
 		break;
-#ifdef CONFIG_TARGET_OPENCL
-#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	case GPU:
 		for (int i = 0; i < n_to_copy; i ++)
 			resources[i] = wm->systems[i].gpu_bandwidth;
@@ -1577,8 +1555,6 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 		for (int i = 0; i < n_to_copy; i ++)
 			resources[i] = wm->systems[i].acc_bandwidth;
 		break;
-#endif
-#endif // CONFIG_TARGET_OPENCL
 
 	default:
 		for (int i = 0; i < n_to_copy; i ++)
@@ -1792,21 +1768,21 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 	if (exc->event != RTLIB_EXC_GWM_BLOCKED) {
 		exc->current_awm_id = msg.awm;
 
-		for (uint16_t i = 0; i < systems.size(); i ++) {
+		// Get info about assigned resources
+		for (uint16_t id = 0; id < systems.size(); ++id) {
 			pSystemResources_t tmp = std::make_shared<RTLIB_SystemResources_t>();
-			tmp->sys_id = i;
-			tmp->number_cpus = systems[i].nr_cpus;
-			tmp->number_proc_elements = systems[i].nr_procs;
-			tmp->cpu_bandwidth = systems[i].r_proc;
-			tmp->mem_bandwidth = systems[i].r_mem;
+			tmp->sys_id = id;
+			tmp->number_cpus   = systems[id].nr_cpus;
+			tmp->number_proc_elements = systems[id].nr_procs;
+			tmp->cpu_bandwidth = systems[id].r_proc;
+			tmp->mem_bandwidth = systems[id].r_mem;
+			tmp->gpu_bandwidth = systems[id].r_gpu;
+			tmp->acc_bandwidth = systems[id].r_acc;
 #ifdef CONFIG_TARGET_OPENCL
-#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
-			tmp->gpu_bandwidth  = res_allocation[i].gpu_bandwidth;
-			tmp->accelerator_bandwidth  = res_allocation[i].accelerator_bandwidth;
-			tmp->ocl_device_id = res_allocation[i].dev;
-#endif
+			tmp->ocl_platform_id = systems[id].ocl_platform_id;
+			tmp->ocl_device_id   = systems[id].ocl_device_id;
 #endif // CONFIG_TARGET_OPENCL
-			exc->resource_assignment[i] = tmp;
+			exc->resource_assignment[id] = tmp;
 		}
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
