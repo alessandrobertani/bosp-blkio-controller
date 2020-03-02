@@ -614,10 +614,9 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
         const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
-	pRegisteredEXC_t exc;
 	assert(exc_handler);
-	exc = getRegistered(exc_handler);
 
+	pRegisteredEXC_t exc = getRegistered(exc_handler);
 	if (! exc) {
 		logger->Error("Disabling EXC [%p] STOP "
 		              "(Error: EXC not registered)",
@@ -626,7 +625,6 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 	}
 
 	assert(isEnabled(exc) == true);
-	// Calling the low-level disable function
 	result = _Disable(exc);
 	logger->Debug("Disable: [%s] disable message sent", exc->name.c_str());
 
@@ -1097,8 +1095,10 @@ void BbqueRPC::_SyncTimeEstimation(pRegisteredEXC_t exc)
 {
 	pAwmStats_t awm_stats(exc->current_awm_stats);
 	std::unique_lock<std::mutex> stats_lock(awm_stats->stats_mutex);
+
 	// "real" cycletime, as seen by the user
 	double user_cycletime_ms = exc->execution_timer.getElapsedTimeMs();
+
 	// Cycletime as seen by bbque, which could insert sleeps to enforce low CPS
 	double bbque_cycletime_ms =
 	        user_cycletime_ms - exc->cps_enforcing_sleep_time_ms;
@@ -1106,22 +1106,27 @@ void BbqueRPC::_SyncTimeEstimation(pRegisteredEXC_t exc)
 	logger->Debug("Last cycle time %10.3f[ms] (%10.3f without sleeps) for EXC "
 	              "[%s:%02hu]", user_cycletime_ms, bbque_cycletime_ms,
 	              exc->name.c_str(), exc->id);
+
 	// Update running counters
 	awm_stats->time_spent_processing += user_cycletime_ms;
 	exc->processing_time_ms += user_cycletime_ms;
 	CheckDurationTimeout(exc);
+
 	// Push sample into accumulator
 	awm_stats->cycle_samples(user_cycletime_ms);
 	exc->cycles_count += 1;
+
 	// Push sample into bbque CPS estimator
 	exc->cycletime_analyser_system.InsertValue(bbque_cycletime_ms);
 	exc->cycletime_analyser_user.InsertValue(user_cycletime_ms);
+
 	// TIMER: Re-sart RUNNING
 	exc->execution_timer.start();
 }
 
 void BbqueRPC::SyncTimeEstimation(pRegisteredEXC_t exc)
 {
+	logger->Debug("SyncTimeEstimation: update current AWM profiling...");
 	pAwmStats_t awm_stats(exc->current_awm_stats);
 
 	// Check if we already ran on this AWM
@@ -1129,6 +1134,7 @@ void BbqueRPC::SyncTimeEstimation(pRegisteredEXC_t exc)
 		// This condition is verified just when we entered a SYNC
 		// before sending a GWM. In this case, statistics have not
 		// yet been setup
+		logger->Debug("SyncTimeEstimation: AWM stats not available yet");
 		return;
 	}
 
@@ -1137,6 +1143,7 @@ void BbqueRPC::SyncTimeEstimation(pRegisteredEXC_t exc)
 
 RTLIB_ExitCode_t BbqueRPC::UpdateStatistics(pRegisteredEXC_t exc)
 {
+	logger->Debug("UpdateStatistics: update current AWM profiling...");
 	pAwmStats_t awm_stats(exc->current_awm_stats);
 	double last_config_ms;
 
@@ -1145,9 +1152,11 @@ RTLIB_ExitCode_t BbqueRPC::UpdateStatistics(pRegisteredEXC_t exc)
 		// TIMER: Get RECONF
 		last_config_ms = exc->execution_timer.getElapsedTimeMs();
 		exc->config_time_ms += last_config_ms;
+
 		// Reconfiguration time statistics collection
 		awm_stats->time_spent_configuring += last_config_ms;
 		awm_stats->config_samples(last_config_ms);
+
 		// TIMER: Sart RUNNING
 		exc->execution_timer.start();
 		return RTLIB_OK;
@@ -1217,9 +1226,11 @@ void BbqueRPC::ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler)
 	exc->last_cycletime_ms = exc->cycletime_analyser_user.GetMean();
 	exc->cycletime_analyser_user.Reset();
 	exc->cycletime_analyser_system.Reset();
+
 	logger->Debug("SetCPSGoal: Resetting CPU quota history");
 	exc->cpu_usage_info.reset_timestamp = true;
 	exc->cpu_usage_analyser.Reset();
+
 	exc->waiting_sync_timeout_ms = 0;
 	exc->is_waiting_for_sync = false;
 }
@@ -1228,10 +1239,8 @@ void BbqueRPC::ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler)
 void BbqueRPC::StartPCountersMonitoring(
         RTLIB_EXCHandler_t exc_handler)
 {
-	pRegisteredEXC_t exc;
 	assert(exc_handler);
-	exc = getRegistered(exc_handler);
-
+	pRegisteredEXC_t exc = getRegistered(exc_handler);
 	if (! exc) {
 		logger->Error("Unregister EXC [%p] FAILED "
 		              "(EXC not registered)", (void *) exc_handler);
@@ -1262,17 +1271,17 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
 
 	if (! isEnabled(exc)) {
-		logger->Debug("Get AWM FAILED (Error: EXC not enabled)");
+		logger->Debug("GetAssignedWorkingMode: FAILED (Error: EXC not enabled)");
 		return RTLIB_EXC_GWM_FAILED;
 	}
 
 	if (isBlocked(exc)) {
-		logger->Debug("BLOCKED");
+		logger->Debug("GetAssignedWorkingMode: BLOCKED");
 		return RTLIB_EXC_GWM_BLOCKED;
 	}
 
 	if (isSyncMode(exc) && ! isAwmValid(exc)) {
-		logger->Debug("SYNC Pending");
+		logger->Debug("GetAssignedWorkingMode: SYNC Pending");
 		// Update AWM statistics
 		// This is required to save the sync_time of the last
 		// completed cycle, thus having a correct cycles count
@@ -1280,9 +1289,12 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 		return RTLIB_EXC_SYNC_MODE;
 	}
 
-	if (! isSyncMode(exc) && ! isAwmValid(exc)) {
+	if (! isSyncMode(exc) && !isAwmValid(exc)) {
 		// This is the case to send a GWM to Barbeque
-		logger->Debug("NOT valid AWM");
+		logger->Debug("GetAssignedWorkingMode: sync mode? %s",
+			isSyncMode(exc)? "yes": "no" );
+		logger->Debug("GetAssignedWorkingMode: valid AWM? %s",
+			isAwmValid(exc)? "yes": "no" );
 		return RTLIB_EXC_GWM_FAILED;
 	}
 
@@ -1324,10 +1336,10 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 
 	// Shortcut in case the AWM has been already assigned
 	if (!isAwmAssigned(exc)) {
+		logger->Debug("WaitForWorkingMode: AWM not assigned yet");
 
 		// Notify we are going to be suspended waiting for an AWM
 		setAwmWaiting(exc);
-		// TIMER: Start BLOCKED
 		exc->execution_timer.start();
 
 		// Wait for the EXC being un-BLOCKED
@@ -1335,13 +1347,11 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 			while (isBlocked(exc))
 				exc->exc_condition_variable.wait(exc_u_lock);
 		else
-
 			// Wait for the EXC being assigned an AWM
 			while (isEnabled(exc) && ! isAwmAssigned(exc) && ! isBlocked(exc))
 				exc->exc_condition_variable.wait(exc_u_lock);
 
 		clearAwmWaiting(exc);
-		// TIMER: Get BLOCKED
 		exc->blocked_time_ms += exc->execution_timer.getElapsedTimeMs();
 
 		// Update start latency
@@ -1349,8 +1359,10 @@ RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
 			exc->starting_time_ms = exc->blocked_time_ms;
 	}
 
-	// TIMER: Sart RECONF
+	// TIMER: Start RECONF
 	exc->execution_timer.start();
+
+	logger->Debug("WaitForWorkingMode: updating resource assignments");
 	setAwmValid(exc);
 	wm->awm_id = exc->current_awm_id;
 	wm->nr_sys = exc->resource_assignment.size();
@@ -1504,7 +1516,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
         RTLIB_EXCHandler_t exc_handler,
         const RTLIB_WorkingModeParams_t * wm,
         RTLIB_ResourceType_t r_type,
-        int32_t * sys_array,
+        int32_t * resources,
         uint16_t array_size)
 {
 	pRegisteredEXC_t exc = getRegistered(exc_handler);
@@ -1527,52 +1539,50 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	switch (r_type) {
 	case SYSTEM:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = wm->systems[i].sys_id;
+			resources[i] = wm->systems[i].sys_id;
 
 		break;
 
 	case CPU:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = wm->systems[i].number_cpus;
+			resources[i] = wm->systems[i].number_cpus;
 
 		break;
 
 	case PROC_NR:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = wm->systems[i].number_proc_elements;
+			resources[i] = wm->systems[i].number_proc_elements;
 
 		break;
 
 	case PROC_ELEMENT:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = wm->systems[i].cpu_bandwidth;
+			resources[i] = wm->systems[i].cpu_bandwidth;
 
 		break;
 
 	case MEMORY:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = wm->systems[i].mem_bandwidth;
+			resources[i] = wm->systems[i].mem_bandwidth;
 
 		break;
 #ifdef CONFIG_TARGET_OPENCL
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	case GPU:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = wm->res_allocation[i].gpu_bandwidth;
-
+			resources[i] = wm->systems[i].gpu_bandwidth;
 		break;
 
 	case ACCELERATOR:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = wm->res_allocation[i].accelerator_bandwidth;
-
+			resources[i] = wm->systems[i].acc_bandwidth;
 		break;
 #endif
 #endif // CONFIG_TARGET_OPENCL
 
 	default:
 		for (int i = 0; i < n_to_copy; i ++)
-			sys_array[i] = - 1;
+			resources[i] = - 1;
 
 		break;
 	}
@@ -1587,21 +1597,20 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
         RTLIB_SyncType_t synch_type)
 {
 	RTLIB_ExitCode_t result;
-	pRegisteredEXC_t exc;
 	(void) synch_type;
 	assert(exc_handler);
 
-	exc = getRegistered(exc_handler);
+	pRegisteredEXC_t exc = getRegistered(exc_handler);
 	if (! exc) {
-		logger->Error("Getting WM for EXC [%p] FAILED "
-		              "(Error: EXC not registered)", (void *) exc_handler);
+		logger->Error("GetWorkingMode: EXC [%p] FAILED "
+		              "(Error: not registered)", (void *) exc_handler);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
 	if (BBQUE_UNLIKELY(exc->control_thread_pid == 0)) {
 		// Keep track of the Control Thread PID
 		exc->control_thread_pid = gettid();
-		logger->Debug("Tracking control thread PID [%d] for EXC [%d]...",
+		logger->Debug("GetWorkingMode: tracking control thread PID [%d] for EXC [%d]...",
 		              exc->control_thread_pid, exc->id);
 	}
 
@@ -1627,34 +1636,29 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 
 #endif
 		// Checking if a valid AWM has been assigned
-		logger->Debug("Looking for assigned AWM...");
+		logger->Debug("GetWorkingMode: looking for assigned AWM...");
 		result = GetAssignedWorkingMode(exc, working_mode_params);
-
-		if (result == RTLIB_OK) {
+		if ((result == RTLIB_OK) || (result == RTLIB_EXC_GWM_BLOCKED)) {
+			// Synchronization completed
 			setSyncDone(exc);
-			// Notify about synchronization completed
 			exc->exc_condition_variable.notify_one();
+			logger->Debug("GetWorkingMode: status synchonized");
 			return RTLIB_OK;
 		}
 
-		// Checking if the EXC has been blocked
-		if (result == RTLIB_EXC_GWM_BLOCKED) {
-			setSyncDone(exc);
-			// Notify about synchronization completed
-			exc->exc_condition_variable.notify_one();
+		// Exit if the EXC has been disabled
+		if (! isEnabled(exc)){
+			logger->Debug("GetWorkingMode: EXC disabled...");
+			return RTLIB_EXC_GWM_FAILED;
 		}
 
-		// Exit if the EXC has been disabled
-		if (! isEnabled(exc))
-			return RTLIB_EXC_GWM_FAILED;
-
 		if (! isSyncMode(exc) && (result == RTLIB_EXC_GWM_FAILED)) {
-			logger->Debug("AWM not assigned, sending schedule request to RTRM...");
+			logger->Debug("GetWorkingMode: AWM not assigned, "
+				      " sending schedule request to RTRM...");
 			// Calling the low-level start
 			result = _ScheduleRequest(exc);
-
 			if (result != RTLIB_OK) {
-				logger->Error("Execution context [%s] ScheduleRequest FAILED "
+				logger->Error("GetWorkingMode: EXC [%s] ScheduleRequest FAILED "
 				              "(Error %d: %s)",
 				              exc->name.c_str(),
 				              result,
@@ -1670,12 +1674,11 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 			       (result == RTLIB_EXC_GWM_BLOCKED));
 		}
 
-		logger->Debug("Waiting for assigned AWM...");
 		// Waiting for an AWM being assigned
+		logger->Debug("GetWorkingMode: waiting for assigned AWM...");
 		result = WaitForWorkingMode(exc, working_mode_params);
-
 		if (result != RTLIB_OK) {
-			logger->Error("Execution context [%s] WaitForWorkingMode FAILED "
+			logger->Error("GetWorkingMode: EXC [%s] WaitForWorkingMode FAILED "
 			              "(Error %d: %s)",
 			              exc->name.c_str(),
 			              result,
@@ -1717,6 +1720,7 @@ RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
 		break;
 	}
 
+	logger->Debug("GetWorkingMode: event = %d", exc->event);
 	return exc->event;
 }
 
@@ -1755,13 +1759,10 @@ uint32_t BbqueRPC::GetSyncLatency(pRegisteredEXC_t exc)
 
 RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(pRegisteredEXC_t exc)
 {
-	// Entering Synchronization mode
-	setSyncMode(exc);
-	// Resetting Sync Done
-	clearSyncDone(exc);
-	// Setting current AWM as invalid
-	clearAwmValid(exc);
-	clearAwmAssigned(exc);
+	setSyncMode(exc);      // Entering Synchronization mode
+	clearSyncDone(exc);    // Resetting Synchronization done flag
+	clearAwmValid(exc);    // Setting current AWM as invalid
+	clearAwmAssigned(exc); // Clear previously assigned AWM
 	return RTLIB_OK;
 }
 
@@ -1770,10 +1771,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
                 std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> & systems)
 {
 	RTLIB_ExitCode_t result;
-	uint32_t syncLatency;
-	pRegisteredEXC_t exc;
-	exc = getRegistered(msg.hdr.exc_id);
 
+	pRegisteredEXC_t exc = getRegistered(msg.hdr.exc_id);
 	if (! exc) {
 		logger->Error("SyncP_1 (Pre-Change) EXC [%d] FAILED "
 		              "(Error: Execution Context not registered)",
@@ -1783,9 +1782,11 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 
 	assert(msg.event < ba::ApplicationStatusIF::SYNC_STATE_COUNT);
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
+
 	// Keep copy of the required synchronization action
 	exc->event = (RTLIB_ExitCode_t) (RTLIB_EXC_GWM_START + msg.event);
 	result = SyncP_PreChangeNotify(exc);
+	logger->Debug("SyncP_PreChangeNotify: ");
 
 	// Set the new required AWM (if not being blocked)
 	if (exc->event != RTLIB_EXC_GWM_BLOCKED) {
@@ -1937,10 +1938,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 		             msg.hdr.exc_id, msg.event);
 	}
 
-	// FIXME add a string representation of the required action
-	syncLatency = 0;
-
 	// Update the synchronzation Latency
+	uint32_t syncLatency = 0;
 	if (! isAwmWaiting(exc) && exc->current_awm_stats) {
 		syncLatency = GetSyncLatency(exc);
 	}
@@ -1949,8 +1948,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 	logger->Debug("SyncP_1 (Pre-Change) EXC [%d], SyncLatency [%u]",
 	              msg.hdr.exc_id, syncLatency);
 	result = _SyncpPreChangeResp(msg.hdr.token, exc, syncLatency);
-#ifndef CONFIG_BBQUE_YM_SYNC_FORCE
 
+#ifndef CONFIG_BBQUE_YM_SYNC_FORCE
 	if (result != RTLIB_OK)
 		return result;
 
@@ -1978,9 +1977,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(
         rpc_msg_BBQ_SYNCP_SYNCCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
-	pRegisteredEXC_t exc;
-	exc = getRegistered(msg.hdr.exc_id);
 
+	pRegisteredEXC_t exc = getRegistered(msg.hdr.exc_id);
 	if (! exc) {
 		logger->Error("SyncP_2 (Sync-Change) EXC [%d] FAILED "
 		              "(Error: Execution Context not registered)",
@@ -2050,9 +2048,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
         rpc_msg_BBQ_SYNCP_POSTCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
-	pRegisteredEXC_t exc;
-
-	exc = getRegistered(msg.hdr.exc_id);
+	pRegisteredEXC_t exc = getRegistered(msg.hdr.exc_id);
 	if (! exc) {
 		logger->Error("SyncP_4 (Post-Change) EXC [%d] FAILED "
 		              "(Error: Execution Context not registered)",
@@ -2061,7 +2057,6 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
 	}
 
 	result = SyncP_PostChangeNotify(exc);
-
 	if (result != RTLIB_OK) {
 		logger->Warn("SyncP_4 (Post-Change) EXC [%d] CRITICAL "
 		             "(Warning: Reconfiguration timeout)",

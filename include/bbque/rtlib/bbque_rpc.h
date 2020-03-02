@@ -771,13 +771,15 @@ protected:
 	{
 		return (exc->flags & EXC_FLAGS_AWM_WAITING);
 	}
-	void setAwmWaiting(pRegisteredEXC_t exc) const
+
+	void setAwmWaiting(pRegisteredEXC_t exc)
 	{
 		logger->Debug("AWM  <= Waiting [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_AWM_WAITING;
 	}
-	void clearAwmWaiting(pRegisteredEXC_t exc) const
+
+	void clearAwmWaiting(pRegisteredEXC_t exc)
 	{
 		logger->Debug("AWM  <= NOT Waiting [%d:%s]",
 		              exc->id, exc->name.c_str());
@@ -789,13 +791,14 @@ protected:
 	{
 		return (exc->flags & EXC_FLAGS_AWM_ASSIGNED);
 	}
-	void setAwmAssigned(pRegisteredEXC_t exc) const
+
+	void setAwmAssigned(pRegisteredEXC_t exc)
 	{
 		logger->Debug("AWM  <= Assigned [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_AWM_ASSIGNED;
 	}
-	void clearAwmAssigned(pRegisteredEXC_t exc) const
+	void clearAwmAssigned(pRegisteredEXC_t exc)
 	{
 		logger->Debug("AWM  <= NOT Assigned [%d:%s]",
 		              exc->id, exc->name.c_str());
@@ -807,13 +810,15 @@ protected:
 	{
 		return (exc->flags & EXC_FLAGS_EXC_SYNC);
 	}
-	void setSyncMode(pRegisteredEXC_t exc) const
+
+	void setSyncMode(pRegisteredEXC_t exc)
 	{
 		logger->Debug("SYNC <= Enter [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_SYNC;
 	}
-	void clearSyncMode(pRegisteredEXC_t exc) const
+
+	void clearSyncMode(pRegisteredEXC_t exc)
 	{
 		logger->Debug("SYNC <= Exit [%d:%s]",
 		              exc->id, exc->name.c_str());
@@ -826,14 +831,14 @@ protected:
 		return (exc->flags & EXC_FLAGS_EXC_SYNC_DONE);
 	}
 
-	void setSyncDone(pRegisteredEXC_t exc) const
+	void setSyncDone(pRegisteredEXC_t exc)
 	{
 		logger->Debug("SYNC <= Done [%d:%s:%d]",
 		              exc->id, exc->name.c_str(), exc->current_awm_id);
 		exc->flags |= EXC_FLAGS_EXC_SYNC_DONE;
 	}
 
-	void clearSyncDone(pRegisteredEXC_t exc) const
+	void clearSyncDone(pRegisteredEXC_t exc)
 	{
 		logger->Debug("SYNC <= Pending [%d:%s]",
 		              exc->id, exc->name.c_str());
@@ -846,14 +851,14 @@ protected:
 		return (exc->flags & EXC_FLAGS_EXC_REGISTERED);
 	}
 
-	void setRegistered(pRegisteredEXC_t exc) const
+	void setRegistered(pRegisteredEXC_t exc)
 	{
 		logger->Debug("EXC  <= Registered [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_REGISTERED;
 	}
 
-	void clearRegistered(pRegisteredEXC_t exc) const
+	void clearRegistered(pRegisteredEXC_t exc)
 	{
 		logger->Debug("EXC  <= Unregistered [%d:%s]",
 		              exc->id, exc->name.c_str());
@@ -866,14 +871,14 @@ protected:
 		return (exc->flags & EXC_FLAGS_EXC_ENABLED);
 	}
 
-	void setEnabled(pRegisteredEXC_t exc) const
+	void setEnabled(pRegisteredEXC_t exc)
 	{
 		logger->Debug("EXC  <= Enabled [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_ENABLED;
 	}
 
-	void clearEnabled(pRegisteredEXC_t exc) const
+	void clearEnabled(pRegisteredEXC_t exc)
 	{
 		logger->Debug("EXC  <= Disabled [%d:%s]",
 		              exc->id, exc->name.c_str());
@@ -885,14 +890,15 @@ protected:
 	{
 		return (exc->flags & EXC_FLAGS_EXC_BLOCKED);
 	}
-	void setBlocked(pRegisteredEXC_t exc) const
+
+	void setBlocked(pRegisteredEXC_t exc)
 	{
 		logger->Debug("EXC  <= Blocked [%d:%s]",
 		              exc->id, exc->name.c_str());
 		exc->flags |= EXC_FLAGS_EXC_BLOCKED;
 	}
 
-	void clearBlocked(pRegisteredEXC_t exc) const
+	void clearBlocked(pRegisteredEXC_t exc)
 	{
 		logger->Debug("EXC  <= UnBlocked [%d:%s]",
 		              exc->id, exc->name.c_str());
@@ -908,17 +914,13 @@ protected:
 
 	void OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status);
 	void OclClearStats();
-	void OclCollectStats(
-	        int8_t current_awm_id, OclEventsStatsMap_t & ocl_events_map);
+	void OclCollectStats(int8_t curr_awm_id, OclEventsStatsMap_t & ocl_events_map);
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);
 	void OclPrintAddrStats(QueueProfPtr_t, cl_command_queue);
 	void OclDumpStats(pRegisteredEXC_t exc);
 	void OclDumpCmdStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
 	void OclDumpAddrStats(QueueProfPtr_t stPtr, cl_command_queue cmd_queue);
-	void OclGetRuntimeProfile(
-	        pRegisteredEXC_t exc,
-	        uint32_t & exec_time,
-	        uint32_t & mem_time);
+	void OclGetRuntimeProfile(pRegisteredEXC_t exc, uint32_t & exec_time, uint32_t & mem_time);
 
 #endif // CONFIG_TARGET_OPENCL
 
