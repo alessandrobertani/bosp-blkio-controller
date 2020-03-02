@@ -237,7 +237,7 @@ PlatformManager::ExitCode_t PlatformManager::LoadPlatformData()
 #endif
 
 	UpdateLocalSystemId();
-	logger->Info("All platform data loaded successfully");
+	logger->Info("LoadPlatformData: platform description loaded");
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ra.SetPlatformReady();
