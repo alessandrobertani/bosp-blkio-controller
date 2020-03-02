@@ -294,11 +294,13 @@ typedef struct RTLIB_SystemResources {
 	int32_t cpu_bandwidth = 0;
 	/** Amount of memory assigned */
 	int32_t mem_bandwidth = 0;
-#ifdef CONFIG_TARGET_OPENCL
 	int32_t gpu_bandwidth = 0;
-	int32_t accelerator_bandwidth = 0;
+	int32_t acc_bandwidth = 0;
+
+#ifdef CONFIG_TARGET_OPENCL
 	/** The ID of the assigned OpenCL device */
-	uint8_t ocl_device_id;
+	int32_t ocl_platform_id;
+	int8_t ocl_device_id;
 #endif
 
 } RTLIB_SystemResources_t;

@@ -411,11 +411,11 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		0, 0,
 		// Resource amount (PROC_ELEMENT, MEMORY)
 		0, 0,
-#ifdef CONFIG_TARGET_OPENCL
 		// Resource amount (GPU, ACCELERATOR)
 		0, 0,
-		// Device ID
-		R_ID_NONE,
+#ifdef CONFIG_TARGET_OPENCL
+		// OpenCL: platform ID and device ID
+		R_ID_NONE, R_ID_NONE
 #endif
 	};
 
