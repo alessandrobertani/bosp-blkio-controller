@@ -311,14 +311,14 @@ typedef struct RTLIB_SystemResources {
  */
 struct RTLIB_WorkingModeParams {
 	/** The ID of the working mode */
-	int8_t awm_id;
+	int8_t awm_id = -1;
 	/** The set of platform supported services */
 	const RTLIB_Services_t * services;
 
 	/** Number of systems **/
-	int16_t nr_sys;
+	int16_t nr_sys = -1 ;
 	/** The array of systems containing resources **/
-	RTLIB_SystemResources_t * systems;
+	RTLIB_SystemResources_t * systems = nullptr;
 };
 
 /**
