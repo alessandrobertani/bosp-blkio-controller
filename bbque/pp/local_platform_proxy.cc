@@ -59,9 +59,9 @@ LocalPlatformProxy::LocalPlatformProxy()
 
 #ifdef CONFIG_TARGET_EMULATED_HOST
 	this->host = std::unique_ptr<TestPlatformProxy>(TestPlatformProxy::GetInstance());
-#elif CONFIG_TARGET_LINUX
+#elif defined CONFIG_TARGET_LINUX
 	this->host = std::unique_ptr<LinuxPlatformProxy>(LinuxPlatformProxy::GetInstance());
-#elif CONFIG_TARGET_ANDROID
+#elif defined CONFIG_TARGET_ANDROID
 	this->host = std::unique_ptr<AndroidPlatformProxy>(AndroidPlatformProxy::GetInstance());
 #else
 #error "No suitable PlatformProxy for host found."
@@ -77,7 +77,7 @@ LocalPlatformProxy::LocalPlatformProxy()
 
 #ifdef CONFIG_TARGET_LINUX_RECIPE
 	this->accl.push_back(std::unique_ptr<RecipePlatformProxy>(RecipePlatformProxy::GetInstance()));
-#elif CONFIG_TARGET_OPENCL
+#elif defined CONFIG_TARGET_OPENCL
 	this->accl.push_back(std::unique_ptr<OpenCLPlatformProxy>(OpenCLPlatformProxy::GetInstance()));
 #endif
 
