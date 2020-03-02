@@ -425,7 +425,9 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 	if (BBQUE_LIKELY(!papp->Blocking())) {
 		syncp_prechange_msg.awm = papp->NextAWM()->Id();
 
-#ifndef CONFIG_TARGET_EMULATED_HOST
+#ifdef CONFIG_TARGET_EMULATED_HOST
+		logger->Warn("APPs PRX: Resource assignment in target emulation mode");
+#endif
 		// CPUs (processors)
 		local_sys_msg.nr_cpus =
 		        papp->NextAWM()->BindingSet(br::ResourceType::CPU).Count();
@@ -442,61 +444,52 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		                              papp->NextAWM()->GetResourceBinding(),
 		                              papp, ra.GetScheduledView(),
 		                              br::ResourceType::MEMORY);
-#else
-		logger->Warn("APPs PRX: TPD enabled. No resource assignment enforcing");
-#endif // CONFIG_TARGET_EMULATED_HOST
 
-#ifdef CONFIG_TARGET_OPENCL
+		// GPUs
 		local_sys_msg.r_gpu = ra.GetAssignedAmount(
 		                              papp->NextAWM()->GetResourceBinding(),
 		                              papp, ra.GetScheduledView(),
 		                              br::ResourceType::GPU);
-
+		// ACCELERATORs
 		local_sys_msg.r_acc = ra.GetAssignedAmount(
 		                              papp->NextAWM()->GetResourceBinding(),
 		                              papp, ra.GetScheduledView(),
 		                              br::ResourceType::ACCELERATOR);
+#ifdef CONFIG_TARGET_OPENCL
 
-		BBQUE_RID_TYPE r_id = R_ID_NONE;
+		// OpenCL platform
+		auto ocl_platform_ids(papp->NextAWM()->BindingSet(br::ResourceType::GROUP));
+		local_sys_msg.ocl_platform_id = ocl_platform_ids.FirstSet();
+		logger->Info("SyncP_PreChangeSend: [%s] OpenCL platform: %d",
+		             papp->StrId(), local_sys_msg.ocl_platform_id);
 
-		// Any GPU? Any ACCELERATOR?
+		// OpenCL device
 		auto gpu_ids(papp->NextAWM()->BindingSet(br::ResourceType::GPU));
-		auto acc_ids = papp->NextAWM()->BindingSet(br::ResourceType::ACCELERATOR);
-
-		if (gpu_ids.Count() > 0)
-			r_id = gpu_ids.FirstSet();
-		else
-			r_id = acc_ids.FirstSet();
-
-		// Not GPU nor ACCELERATOR => CPU device?
-		if (r_id == R_ID_NONE) {
+		auto acc_ids(papp->NextAWM()->BindingSet(br::ResourceType::ACCELERATOR));
+		if (gpu_ids.Count() > 0) {
+			local_sys_msg.ocl_device_id = gpu_ids.FirstSet();
+		}
+		else if (acc_ids.Count() > 0) {
+			local_sys_msg.ocl_device_id = acc_ids.FirstSet();
+		}
+		else { // It is a CPU type device...
 			OpenCLPlatformProxy * ocl_proxy(OpenCLPlatformProxy::GetInstance());
-			auto pdev_ids(ocl_proxy->GetDeviceIDs(br::ResourceType::CPU));
+			auto pdev_ids(ocl_proxy->GetDeviceIDs(
+					local_sys_msg.ocl_platform_id, br::ResourceType::CPU));
 			if (pdev_ids && !pdev_ids->empty())
-				r_id = pdev_ids->at(0);
+				local_sys_msg.ocl_device_id = pdev_ids->at(0);
 			else
-				r_id = R_ID_NONE;
+				local_sys_msg.ocl_device_id = R_ID_NONE;
 		}
 
-		local_sys_msg.dev = r_id;
-		switch(r_id) {
-		case R_ID_NONE:
-			logger->Info("SyncP_PreChangeSend: [%s] NO OpenCL device assigned",
-			             papp->StrId());
-			break;
-		case R_ID_ANY:
-			logger->Info("SyncP_PreChangeSend: [%s] NO OpenCL device forcing",
-			             papp->StrId());
-			break;
-		default:
-			logger->Info("SyncP_PreChangeSend: [%s] OpenCL device assigned: %d",
-			             papp->StrId(), r_id);
-		}
-#endif
+		logger->Info("SyncP_PreChangeSend: [%s] OpenCL device: %d",
+			     papp->StrId(), local_sys_msg.ocl_device_id);
 
-		logger->Info("SyncP_PreChangeSend: Command [RPC_BBQ_SYNCP_PRECHANGE] -> "
+#endif // CONFIG_TARGET_OPENCL
+
+		logger->Debug("SyncP_PreChangeSend: Command [RPC_BBQ_SYNCP_PRECHANGE] -> "
 		              "EXC [%s]: CPUs=<%d> PROCs=<%2d [%d%%]> MEM=<%d> "
-		              "GPUs=<%d> ACCs=<%d> OCL-dev=%d @sched{%d}",
+		              "GPUs=<%d> ACCs=<%d> @sched{%d}",
 		              papp->StrId(),
 		              local_sys_msg.nr_cpus,
 		              local_sys_msg.nr_procs,
@@ -504,9 +497,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		              local_sys_msg.r_mem,
 		              local_sys_msg.r_gpu,
 		              local_sys_msg.r_acc,
-		              local_sys_msg.dev,
 		              ra.GetScheduledView());
-
 	}
 
 	// Send the required synchronization action

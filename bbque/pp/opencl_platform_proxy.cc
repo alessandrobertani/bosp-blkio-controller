@@ -68,8 +68,6 @@ OpenCLPlatformProxy::~OpenCLPlatformProxy()
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 {
 	cl_int status;
-	char platform_name[128];
-	cl_platform_id platform = nullptr;
 	cl_device_type dev_type = CL_DEVICE_TYPE_ALL;
 
 	// Get platform
@@ -81,33 +79,36 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 	logger->Info("LoadPlatformData: number of platform(s) found: %d", num_platforms);
 	platforms = new cl_platform_id[num_platforms];
 	status = clGetPlatformIDs(num_platforms, platforms, NULL);
+	devices.resize(num_platforms);
+	device_ids.resize(num_platforms);
 
-	logger->Info("LoadPlatformData: looking for platform <%s>", TARGET_OPENCL_PLATFORM);
-	for (uint8_t i = 0; i < num_platforms; ++i) {
+	// Local system ID for resource paths construction
+	PlatformManager & plm(PlatformManager::GetInstance());
+	local_sys_id = plm.GetPlatformDescription().GetLocalSystem().GetId();
+
+//	logger->Info("LoadPlatformData: looking for platform <%s>", TARGET_OPENCL_PLATFORM);
+	for (uint32_t id = 0; id < num_platforms; ++id) {
+		char platform_name[128];
 		status = clGetPlatformInfo(
-		                 platforms[i], CL_PLATFORM_NAME, sizeof(platform_name),
+		                 platforms[id], CL_PLATFORM_NAME, sizeof(platform_name),
 		                 platform_name, NULL);
-		logger->Info("LoadPlatformData: P[%d]: %s", i, platform_name);
+		logger->Info("LoadPlatformData: platform <%d> = %s", id, platform_name);
+		cl_platform_id platform = platforms[id];
 
-		if (!strlen(TARGET_OPENCL_PLATFORM) || !strcmp(platform_name, TARGET_OPENCL_PLATFORM)) {
-			logger->Notice("LoadPlatformData: selected platform= %s", platform_name);
-			platform = platforms[i];
-			break;
+		// Get devices
+		status = clGetDeviceIDs(platform, dev_type, 0, NULL, &num_devices);
+		if (status != CL_SUCCESS) {
+			logger->Error("LoadPlatformData: device error %d", status);
+			return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
 		}
+		logger->Info("LoadPlatformData: number of device(s) found: %d", num_devices);
+		devices[id] = new cl_device_id[num_devices];
+		status = clGetDeviceIDs(platform, dev_type, num_devices, devices[id], NULL);
+
+		// Register into Resource Accounter and Power Manager
+		RegisterDevices(id);
 	}
 
-	// Get devices
-	status = clGetDeviceIDs(platform, dev_type, 0, NULL, &num_devices);
-	if (status != CL_SUCCESS) {
-		logger->Error("LoadPlatformData: device error %d", status);
-		return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
-	}
-	logger->Info("LoadPlatformData: number of device(s) found: %d", num_devices);
-	devices = new cl_device_id[num_devices];
-	status  = clGetDeviceIDs(platform, dev_type, num_devices, devices, NULL);
-
-	// Register into Resource Accounter and Power Manager
-	RegisterDevices();
 
 	// Power management support
 #ifdef CONFIG_BBQUE_PM
@@ -213,6 +214,11 @@ void OpenCLPlatformProxy::PrintPowerInfo(br::ResourcePathPtr_t r_path)
 void OpenCLPlatformProxy::PrintDevicesPowerInfo()
 {
 	auto gpus(GetDevicePaths(br::ResourceType::GPU));
+	if (gpus == nullptr) {
+		logger->Debug("PrintPowerInfo: no GPUs installed on the current system");
+		return;
+	}
+
 	for (auto gpu_rp : *(gpus.get())) {
 		PrintPowerInfo(gpu_rp);
 	}
@@ -227,12 +233,20 @@ void OpenCLPlatformProxy::PrintDevicesPowerInfo()
 #endif // CONFIG_BBQUE_PM
 
 
-VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(br::ResourceType r_type) const
+VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(
+	uint32_t platform_id, br::ResourceType r_type) const
 {
 	logger->Debug("GetDeviceIDs: r_type=%s", br::GetResourceTypeString(r_type));
-	auto const d_it(GetDeviceConstIterator(r_type));
-	if (d_it == device_ids.end()) {
-		logger->Error("GetDeviceIDs: No OpenCL devices of type '%s'",
+	if (platform_id >= devices.size()) {
+		logger->Error("GetDeviceIDs: invalid platform_id=%d",
+		              platform_id);
+		return nullptr;
+	}
+
+	auto curr_dev_ids = device_ids[platform_id];	
+	auto const d_it(GetDeviceConstIterator(curr_dev_ids, r_type));
+	if (d_it == curr_dev_ids.end()) {
+		logger->Warn("GetDeviceIDs: No OpenCL devices of type <%s>",
 		              br::GetResourceTypeString(r_type));
 		return nullptr;
 	}
@@ -243,13 +257,14 @@ VectorUInt8Ptr_t OpenCLPlatformProxy::GetDeviceIDs(br::ResourceType r_type) cons
 uint8_t OpenCLPlatformProxy::GetDevicesNum(br::ResourceType r_type) const
 {
 	logger->Debug("GetDevicesNum: r_type=%s", br::GetResourceTypeString(r_type));
-	auto const d_it(GetDeviceConstIterator(r_type));
-	if (d_it == device_ids.end()) {
-		logger->Error("GetDevicesNum: No OpenCL devices of type '%s'",
+	auto devices = GetDevicePaths(r_type);
+	if (devices == nullptr) {
+		logger->Debug("GetDevicesNum: number of OpenCL <%s> = 0", 
 		              br::GetResourceTypeString(r_type));
 		return 0;
 	}
-	return d_it->second->size();
+
+	return devices->size();
 }
 
 ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
@@ -258,7 +273,7 @@ ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
 	logger->Debug("GetDevicePaths: r_type=%s", br::GetResourceTypeString(r_type));
 	auto const p_it(device_paths.find(r_type));
 	if (p_it == device_paths.end()) {
-		logger->Error("GetDevicePaths: No OpenCL devices of type  '%s'",
+		logger->Debug("GetDevicePaths: no OpenCL devices of type <%s>",
 		              br::GetResourceTypeString(r_type));
 		return nullptr;
 	}
@@ -267,41 +282,47 @@ ResourcePathListPtr_t OpenCLPlatformProxy::GetDevicePaths(
 
 
 ResourceTypeIDMap_t::iterator
-OpenCLPlatformProxy::GetDeviceIterator(br::ResourceType r_type)
+OpenCLPlatformProxy::GetDeviceIterator(
+	ResourceTypeIDMap_t & dev_id_map,
+	br::ResourceType r_type)
 {
 	if (platforms == nullptr) {
-		logger->Error("GetDeviceIterator: Missing OpenCL platforms");
-		return device_ids.end();
+		logger->Error("GetDeviceIterator: OpenCL platforms missing");
+		return dev_id_map.end();
 	}
-	return	device_ids.find(r_type);
+	return	dev_id_map.find(r_type);
 }
 
 ResourceTypeIDMap_t::const_iterator
-OpenCLPlatformProxy::GetDeviceConstIterator(br::ResourceType r_type) const
+OpenCLPlatformProxy::GetDeviceConstIterator(
+	ResourceTypeIDMap_t const & dev_id_map,
+	br::ResourceType r_type) const
 {
 	if (platforms == nullptr) {
-		logger->Error("GetDeviceConstIterator: Missing OpenCL platforms");
-		return device_ids.end();
+		logger->Error("GetDeviceConstIterator: OpenCL platforms missing");
+		return dev_id_map.end();
 	}
-	return	device_ids.find(r_type);
+	return	dev_id_map.find(r_type);
 }
 
 
-PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
+PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform_id)
 {
 	cl_int status;
 	cl_device_type dev_type;
 	char dev_name[64];
 
-	std::string sys_path("sys0.");
-	br::ResourceType r_type = br::ResourceType::UNDEFINED;
+	// Each OpenCL plaform is under a specific GROUP domain
+	std::string sys_path(br::GetResourceTypeString(br::ResourceType::SYSTEM));
+	sys_path += std::to_string(local_sys_id) + ".";
 
+	br::ResourceType r_type = br::ResourceType::UNDEFINED;
 	for (uint16_t dev_id = 0; dev_id < num_devices; ++dev_id) {
 		status = clGetDeviceInfo(
-		                 devices[dev_id], CL_DEVICE_NAME,
+		                 devices[platform_id][dev_id], CL_DEVICE_NAME,
 		                 sizeof(dev_name), dev_name, NULL);
 		status = clGetDeviceInfo(
-		                 devices[dev_id], CL_DEVICE_TYPE,
+		                 devices[platform_id][dev_id], CL_DEVICE_TYPE,
 		                 sizeof(dev_type), &dev_type, NULL);
 		if (status != CL_SUCCESS) {
 			logger->Error("RegisterDevices: device info error %d", status);
@@ -317,12 +338,17 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 			r_type = br::ResourceType::CPU;
 			break;
 
+		// GPU or ACCELERATOR -> add a reference to the OpenCL platform (GROUP)
 		case CL_DEVICE_TYPE_GPU:
 			r_type = br::ResourceType::GPU;
+			r_path += br::GetResourceTypeString(br::ResourceType::GROUP)
+			          + std::to_string(platform_id);
 			break;
 
 		case CL_DEVICE_TYPE_ACCELERATOR:
 			r_type = br::ResourceType::ACCELERATOR;
+			r_path += br::GetResourceTypeString(br::ResourceType::GROUP)
+			          + std::to_string(platform_id);
 			break;
 
 		default:
@@ -336,7 +362,10 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 
 		// Resource path string
 		r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id)
-		       + std::string(".pe");
+		          + std::string(".")
+		          + br::GetResourceTypeString(br::ResourceType::PROC_ELEMENT);
+		logger->Debug("RegisterDevices: r_path=<%s>", r_path.c_str());
+
 		br::ResourcePathPtr_t r_path_ptr;
 		ResourceAccounter &ra(ResourceAccounter::GetInstance());
 
@@ -346,7 +375,6 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 			r_path += std::string("0");
 			auto resource = ra.RegisterResource(r_path, "", 100);
 			r_path_ptr = resource->Path();
-
 #ifdef CONFIG_BBQUE_WM
 			PowerMonitor & wm(PowerMonitor::GetInstance());
 			wm.Register(r_path_ptr);
@@ -360,10 +388,10 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 		}
 
 		bbque_assert(r_path_ptr);
-		logger->Debug("RegisterDevices: r_path=<%s>", r_path_ptr->ToString().c_str());
+		logger->Debug("RegisterDevices: r_path_ptr=<%s>", r_path_ptr->ToString().c_str());
 
 		// Keep track of OpenCL device IDs and resource paths
-		InsertDeviceID(r_type, dev_id);
+		InsertDeviceID(platform_id, dev_id, r_type);
 		InsertDevicePath(r_type, r_path_ptr);
 
 		logger->Info("RegisterDevices: id=%d {%s}, type=[%s], path=<%s>",
@@ -377,21 +405,24 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices()
 
 
 void OpenCLPlatformProxy::InsertDeviceID(
-        br::ResourceType r_type,
-        uint8_t dev_id)
+        uint32_t platform_id,
+        uint8_t dev_id,
+        br::ResourceType r_type)
 {
-	logger->Debug("InsertDeviceID: insert device %d of type [%s]",
+	logger->Debug("InsertDeviceID: insert device %d of type <%s>",
 	              dev_id, br::GetResourceTypeString(r_type));
-	auto d_it = GetDeviceIterator(r_type);
-	if (d_it == device_ids.end()) {
-		device_ids.emplace(r_type, std::make_shared<VectorUInt8_t>());
+
+	auto curr_dev_ids = device_ids[platform_id];	
+	auto d_it = GetDeviceIterator(curr_dev_ids, r_type);
+	if (d_it == curr_dev_ids.end()) {
+		curr_dev_ids.emplace(r_type, std::make_shared<VectorUInt8_t>());
 	}
 
-	auto pdev_ids = device_ids[r_type];
+	auto pdev_ids = curr_dev_ids[r_type];
 	pdev_ids->push_back(dev_id);
 	logger->Debug("InsertDeviceID: type [%s]: count=%d",
 	              br::GetResourceTypeString(r_type),
-	              device_ids[r_type]->size());
+	              curr_dev_ids[r_type]->size());
 }
 
 void OpenCLPlatformProxy::InsertDevicePath(
@@ -418,8 +449,13 @@ void OpenCLPlatformProxy::InsertDevicePath(
 void OpenCLPlatformProxy::Exit()
 {
 	logger->Info("Exit: terminating OpenCL Platform Proxy...");
-	delete platforms;
-	delete devices;
+	delete[] platforms;
+
+	for (auto & devs: devices) {
+		delete[] devs;
+	}
+	devices.clear();
+
 	device_ids.clear();
 	device_paths.clear();
 }

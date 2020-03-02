@@ -130,7 +130,8 @@ public:
 	/**
 	 * @brief Set of OpenCL device IDs for a given resource type
 	 */
-	VectorUInt8Ptr_t GetDeviceIDs(br::ResourceType r_type) const;
+	VectorUInt8Ptr_t GetDeviceIDs(
+		int32_t platform_id, br::ResourceType r_type) const;
 
 	/**
 	 * @brief Set of OpenCL device resource path for a given type
@@ -161,10 +162,10 @@ protected:
 	cl_platform_id * platforms;
 
 	/*** Device descriptors   */
-	cl_device_id * devices;
+	std::vector<cl_device_id *> devices;
 
 	/*** Map with all the device IDs for each type available   */
-	ResourceTypeIDMap_t   device_ids;
+	std::vector<ResourceTypeIDMap_t> device_ids;
 
 	/*** Map with all the device paths for each type available */
 	ResourceTypePathMap_t device_paths;
@@ -172,16 +173,20 @@ protected:
 	/*** Map with the resource paths of GPUs memory */
 	DevPathMap_t gpu_mem_paths;
 
+	/*** Local ID of the system resource */
+	uint16_t local_sys_id;
 
 	/*** Constructor */
 	OpenCLPlatformProxy();
 
 	/** Retrieve the iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::iterator GetDeviceIterator(
+		ResourceTypeIDMap_t & dev_id_map,
 	        br::ResourceType r_type);
 
 	/** Retrieve the constant iterator for the vector of device IDs, given a type */
 	ResourceTypeIDMap_t::const_iterator GetDeviceConstIterator(
+		ResourceTypeIDMap_t const & dev_id_map,
 	        br::ResourceType r_type) const;
 
 #ifdef CONFIG_BBQUE_PM
@@ -198,10 +203,14 @@ protected:
 	/**
 	 * @brief Append device ID per device type
 	 *
-	 * @param r_type The resource type (usually ResourceType::CPU or ResourceType::GPU)
+	 * @param platform_id The OpenCL platform ID
 	 * @param dev_id The OpenCL device ID
+	 * @param r_type The resource type (usually ResourceType::CPU or ResourceType::GPU)
 	 */
-	void InsertDeviceID(br::ResourceType r_type, uint8_t dev_id);
+	void InsertDeviceID(
+		uint32_t platform_id,
+		uint8_t dev_id,
+		br::ResourceType r_type);
 
 	/**
 	 * @brief Append resource path per device type
@@ -215,7 +224,7 @@ protected:
 	/**
 	 * @brief Register device resources
 	 */
-	ExitCode_t RegisterDevices();
+	ExitCode_t RegisterDevices(uint32_t platform_id);
 
 };
 
