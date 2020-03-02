@@ -244,19 +244,12 @@ struct RTLIB_OpenCL {
 	enqueueBarrierWithWaitList_t enqueueBarrierWithWaitList;
 #endif
 
-	/** Number of OpenCL platforms on the system */
-	cl_uint num_platforms;
-	/** Number of OpenCL devices to consider */
-	cl_uint num_devices;
-	/** Set of OpenCL platforms */
-	cl_platform_id * platforms;
-	/** Set of OpenCL devices to consider */
-	cl_device_id  *  devices;
-
-	/** Selected OpenCL platform ID */
-	int8_t platform_id;
-	/** Assigned OpenCL device ID */
-	int8_t device_id;
+	cl_uint num_platforms;      // Number of OpenCL platforms on the system
+	cl_uint num_devices;        // Number of OpenCL devices to consider
+	cl_platform_id * platforms; // OpenCL platforms ids
+	cl_device_id  ** devices;   // Allocatable OpenCL devices ids
+	int32_t platform_id;        // Assigned OpenCL platform ID
+	int8_t device_id;           // Assigned OpenCL device ID
 
 	/** Track the execution status */
 	RTLIB_ExitCode_t status;

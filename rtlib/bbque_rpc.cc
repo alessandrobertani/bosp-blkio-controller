@@ -2925,9 +2925,10 @@ void BbqueRPC::PrintNoisePct(double total, double avg)
 #define STDDEV(v) \
 	sqrt(static_cast<double>(variance(it_ct->second[CL_CMD_ ## v ## _TIME])))*1e-06
 
-void BbqueRPC::OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status)
+void BbqueRPC::OclSetDevice(
+	uint32_t platform_id, uint8_t device_id, RTLIB_ExitCode_t status)
 {
-	rtlib_ocl_set_device(device_id, status);
+	rtlib_ocl_set_device(platform_id, device_id, status);
 }
 
 void BbqueRPC::OclClearStats()
@@ -3412,7 +3413,10 @@ void BbqueRPC::NotifyPreConfigure(
 	pSystemResources_t local_sys(exc->resource_assignment[0]);
 	assert(local_sys != nullptr);
 	logger->Debug("NotifyPreConfigure - OCL Device: %d", local_sys->ocl_device_id);
-	OclSetDevice(local_sys->ocl_device_id, exc->event);
+	OclSetDevice(
+		local_sys->ocl_platform_id,
+		local_sys->ocl_device_id,
+		exc->event);
 #endif
 }
 

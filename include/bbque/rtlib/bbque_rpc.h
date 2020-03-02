@@ -912,7 +912,7 @@ protected:
 	 *    OpenCL support
 	 **********************************************************************/
 
-	void OclSetDevice(uint8_t device_id, RTLIB_ExitCode_t status);
+	void OclSetDevice(uint32_t platform_id, uint8_t device_id, RTLIB_ExitCode_t status);
 	void OclClearStats();
 	void OclCollectStats(int8_t curr_awm_id, OclEventsStatsMap_t & ocl_events_map);
 	void OclPrintCmdStats(QueueProfPtr_t, cl_command_queue);

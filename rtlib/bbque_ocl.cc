@@ -108,46 +108,49 @@ CL_API_SUFFIX__VERSION_1_0 {
 	                  "platform: %p, device_type: %u, num_entries: %u, devices: %p, num_devices: %p)...",
 	                  platform, device_type, num_entries, devices, num_devices));
 
-	if (platform != rtlib_ocl.platforms[rtlib_ocl.platform_id])
-	{
+	logger->Info("clGetDeviceIds: BarbequeRTRM assigned platform: %d", rtlib_ocl.platform_id);
+	if (platform != rtlib_ocl.platforms[rtlib_ocl.platform_id]) {
 		logger->Error("OCL: Invalid platform specified");
 		return CL_INVALID_PLATFORM;
 	}
 
-	if (rtlib_ocl.device_id == R_ID_ANY)
-	{
+	// Force the assignment of a single OpenCL Platform
+	platform = rtlib_ocl.platforms[rtlib_ocl.platform_id];
+
+	if (rtlib_ocl.device_id == R_ID_ANY) {
 		DB2(logger->Debug("clGetDeviceIDs: AWM not assigned, call forwarding..."));
-		return rtlib_ocl.getDeviceIDs(platform, device_type,
-		                              num_entries, devices, num_devices);
+		return rtlib_ocl.getDeviceIDs(platform,
+					      device_type,
+		                              num_entries,
+					      devices,
+					      num_devices);
 	}
 
-	if (num_devices)
-	{
+	// Current implementation: return at most ONCE device
+	if (num_devices) {
 		rtlib_ocl.device_id == R_ID_NONE ?
-		(*num_devices) = 0 :
-		(*num_devices) = 1;
+			(*num_devices) = 0 :
+			(*num_devices) = 1;
 	}
 
 	if (devices == NULL)
 		return CL_SUCCESS;
 
-	// Single device forcing
-	assert(rtlib_ocl.device_id >= 0);
-
-
-	cl_device_type dev_type;
 	char dev_name[1024];
+	cl_device_type dev_type;
+	cl_device_id * curr_devices = rtlib_ocl.devices[rtlib_ocl.platform_id];
 
-	for (uint8_t i = 0; i < rtlib_ocl.num_devices; ++ i)
-	{
-		clGetDeviceInfo(rtlib_ocl.devices[i], CL_DEVICE_TYPE, sizeof (dev_type),
+	for (uint8_t i = 0; i < rtlib_ocl.num_devices; ++ i) {
+		clGetDeviceInfo(curr_devices[i],
+			        CL_DEVICE_TYPE,
+			        sizeof (dev_type),
 		                &dev_type, NULL);
-		clGetDeviceInfo(rtlib_ocl.devices[i], CL_DEVICE_NAME, 1024, dev_name, NULL);
+		clGetDeviceInfo(curr_devices[i], CL_DEVICE_NAME, 1024, dev_name, NULL);
 		logger->Debug("OCL: Device type: %d, Name: %s\n", (int) dev_type, dev_name);
 	};
 
-	(*devices) = rtlib_ocl.devices[rtlib_ocl.device_id];
-
+	// Assigned device
+	(*devices) = curr_devices[rtlib_ocl.device_id];
 	logger->Debug("OCL: clGetDeviceIDs [BarbequeRTRM assigned: %d @{%p}]",
 	              rtlib_ocl.device_id, (*devices));
 
@@ -431,7 +434,7 @@ CL_API_SUFFIX__VERSION_1_0 {
 
 	// Second call - The second call is used to collect the values which count
 	// has been identified by the first call.
-	cl_device_id * dev = & rtlib_ocl.devices[rtlib_ocl.device_id];
+	cl_device_id * dev = & rtlib_ocl.devices[rtlib_ocl.platform_id][rtlib_ocl.device_id];
 	result = rtlib_ocl.getContextInfo(
 	        context, param_name, sizeof (cl_device_id),
 	        (*dev), NULL);
@@ -1373,7 +1376,7 @@ void rtlib_ocl_init()
 	assert(logger);
 
 	// Native OpenCL calls
-	logger->Notice("Using OpenCL library: %s", TARGET_OPENCL_PATH_LIB);
+	logger->Notice("OpenCL runtime: %s", TARGET_OPENCL_PATH_LIB);
 	void * handle = dlopen(TARGET_OPENCL_PATH_LIB, RTLD_LOCAL | RTLD_LAZY);
 	*(void **) (&rtlib_ocl.getPlatformIDs)			= dlsym(handle, "clGetPlatformIDs");
 	*(void **) (&rtlib_ocl.getPlatformInfo) 		= dlsym(handle, "clGetPlatformInfo");
@@ -1484,11 +1487,10 @@ void rtlib_init_devices()
 {
 	cl_int status;
 	char platform_name[128];
-	cl_platform_id platform = nullptr;
 	cl_device_type dev_type = CL_DEVICE_TYPE_ALL;
 
 	// By default, at the beginning, we haven't any device assigned
-	rtlib_ocl_set_device(R_ID_ANY, RTLIB_EXC_GWM_BLOCKED);
+	rtlib_ocl_set_device(R_ID_ANY, R_ID_ANY, RTLIB_EXC_GWM_BLOCKED);
 
 	// Get platform
 	status = rtlib_ocl.getPlatformIDs(0, NULL, &rtlib_ocl.num_platforms);
@@ -1497,60 +1499,56 @@ void rtlib_init_devices()
 		return;
 	}
 
-	rtlib_ocl.platforms = (cl_platform_id *) malloc(
-	                              sizeof (cl_platform_id) * rtlib_ocl.num_platforms);
-	status = rtlib_ocl.getPlatformIDs(
-	                 rtlib_ocl.num_platforms, rtlib_ocl.platforms, NULL);
-	for (uint8_t i = 0; i < rtlib_ocl.num_platforms; ++ i) {
+	rtlib_ocl.platforms = (cl_platform_id *)
+			      malloc(sizeof (cl_platform_id) * rtlib_ocl.num_platforms);
+	status = rtlib_ocl.getPlatformIDs(rtlib_ocl.num_platforms, rtlib_ocl.platforms, NULL);
+	logger->Notice("OCL: nr. of available platform(s): %d", rtlib_ocl.num_platforms);
+
+	// Devices for each platform
+	rtlib_ocl.devices = (cl_device_id **) malloc(sizeof (cl_device_id *) * rtlib_ocl.num_platforms);
+
+	for (unsigned int plat_id = 0; plat_id < rtlib_ocl.num_platforms; ++plat_id) {
+		cl_platform_id platform = rtlib_ocl.platforms[plat_id];
 		status = rtlib_ocl.getPlatformInfo(
-		                 rtlib_ocl.platforms[i], CL_PLATFORM_NAME,
-		                 sizeof (platform_name), platform_name, NULL);
+		                 platform,
+		                 CL_PLATFORM_NAME,
+		                 sizeof (platform_name),
+		                 platform_name, NULL);
 
-		logger->Notice("OCL: Plaforms available: %d",
-		               rtlib_ocl.num_platforms);
-		if (!strlen(TARGET_OPENCL_PLATFORM)
-		    || (!strcmp(platform_name, TARGET_OPENCL_PLATFORM))) {
-			logger->Notice("OCL: Found platform selected [%s] @{%d}",
-			               platform_name, i);
-			rtlib_ocl.platform_id = i;
-			platform = rtlib_ocl.platforms[i];
+		// Get devices
+		status = rtlib_ocl.getDeviceIDs(platform, dev_type, 0, NULL, &rtlib_ocl.num_devices);
+		if (status != CL_SUCCESS) {
+			logger->Error("OCL: Error [%d] in getting number of OpenCL devices", status);
+			return;
 		}
-	}
 
-	// Get devices
-	status = rtlib_ocl.getDeviceIDs(
-	                 platform, dev_type, 0, NULL, &rtlib_ocl.num_devices);
-	if (status != CL_SUCCESS) {
-		logger->Error("OCL: Error [%d] in getting number of OpenCL devices",
-		              status);
-		return;
-	}
+		rtlib_ocl.devices[plat_id] = (cl_device_id *)
+				             malloc(sizeof (cl_device_id) * rtlib_ocl.num_devices);
+		status  = rtlib_ocl.getDeviceIDs(
+				  platform,
+				  dev_type,
+				  rtlib_ocl.num_devices,
+				  rtlib_ocl.devices[plat_id],
+				  NULL);
+		if (status != CL_SUCCESS) {
+			logger->Error("OCL: Error [%d] in getting OpenCL deviced list", status);
+			return;
+		}
 
-	rtlib_ocl.devices = (cl_device_id *) malloc(
-	                            sizeof (cl_device_id) * rtlib_ocl.num_devices);
-	status  = rtlib_ocl.getDeviceIDs(
-	                  platform,
-	                  dev_type,
-	                  rtlib_ocl.num_devices,
-	                  rtlib_ocl.devices,
-	                  NULL);
-	if (status != CL_SUCCESS) {
-		logger->Error("OCL: Error [%d] in getting OpenCL deviced list",
-		              status);
-		return;
-	}
+		logger->Debug("OCL: OpenCL devices found: %u [descriptors size: %lu]",
+			      rtlib_ocl.num_devices, sizeof (cl_device_id));
+		logger->Debug("OCL: Devices descriptors @%p", rtlib_ocl.devices);
+		for (uint8_t dev_id = 0; dev_id < rtlib_ocl.num_devices; ++dev_id)
+			logger->Debug("     Device #%02d @%p", dev_id, rtlib_ocl.devices[dev_id]);
 
-	logger->Debug("OCL: OpenCL devices found: %u [descriptors size: %lu]",
-	              rtlib_ocl.num_devices, sizeof (cl_device_id));
-	logger->Debug("OCL: Devices descriptors @%p", rtlib_ocl.devices);
-	for (uint8_t i = 0; i < rtlib_ocl.num_devices; ++ i)
-		logger->Debug("     Device #%02d @%p", i, rtlib_ocl.devices[i]);
+	}
 }
 
-void rtlib_ocl_set_device(uint8_t device_id, RTLIB_ExitCode_t status)
+void rtlib_ocl_set_device(uint32_t platform_id, uint8_t device_id, RTLIB_ExitCode_t status)
 {
-	rtlib_ocl.device_id = device_id;
-	rtlib_ocl.status    = status;
+	rtlib_ocl.platform_id = platform_id;
+	rtlib_ocl.device_id   = device_id;
+	rtlib_ocl.status      = status;
 }
 
 void rtlib_ocl_coll_event(cl_command_queue cmd_queue, cl_event * event,
