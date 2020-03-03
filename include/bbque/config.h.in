@@ -137,9 +137,6 @@
 /** Enable OpenCL applications support */
 #cmakedefine CONFIG_TARGET_OPENCL
 
-/** Selected OpenCL platform */
-#define TARGET_OPENCL_PLATFORM "${OPENCL_PLATFORM}"
-
 /** OpenCL vendor library */
 #define TARGET_OPENCL_PATH_LIB "${OPENCL_LIBRARY}"
 
