@@ -32,6 +32,7 @@
 #include "bbque/app/working_mode.h"
 
 #define MODULE_NAMESPACE "bq.pp.ocl"
+#define PLATFORM_NAME_MAX_LENGTH 50
 
 namespace br = bbque::res;
 namespace po = boost::program_options;
@@ -90,11 +91,19 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 	local_sys_id = plm.GetPlatformDescription().GetLocalSystem().GetId();
 
 	for (uint32_t id = 0; id < num_platforms; ++id) {
-		char platform_name[128];
+		char platform_name[PLATFORM_NAME_MAX_LENGTH];
 		status = clGetPlatformInfo(
 		                 platforms[id], CL_PLATFORM_NAME, sizeof(platform_name),
 		                 platform_name, NULL);
 		logger->Info("LoadPlatformData: platform <%d> = %s", id, platform_name);
+
+#ifdef CONFIG_TARGET_NVIDIA
+		if (strncmp(platform_name, "NVIDIA CUDA", PLATFORM_NAME_MAX_LENGTH) == 0) {
+			logger->Warn("LoadPlatformData: skipping platform %s", platform_name);
+			continue;
+		}
+#endif
+
 		cl_platform_id platform = platforms[id];
 
 		// Get devices
