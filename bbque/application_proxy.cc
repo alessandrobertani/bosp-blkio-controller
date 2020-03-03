@@ -455,37 +455,6 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		                              papp->NextAWM()->GetResourceBinding(),
 		                              papp, ra.GetScheduledView(),
 		                              br::ResourceType::ACCELERATOR);
-#ifdef CONFIG_TARGET_OPENCL
-
-		// OpenCL platform
-		auto ocl_platform_ids(papp->NextAWM()->BindingSet(br::ResourceType::GROUP));
-		local_sys_msg.ocl_platform_id = ocl_platform_ids.FirstSet();
-		logger->Info("SyncP_PreChangeSend: [%s] OpenCL platform: %d",
-		             papp->StrId(), local_sys_msg.ocl_platform_id);
-
-		// OpenCL device
-		auto gpu_ids(papp->NextAWM()->BindingSet(br::ResourceType::GPU));
-		auto acc_ids(papp->NextAWM()->BindingSet(br::ResourceType::ACCELERATOR));
-		if (gpu_ids.Count() > 0) {
-			local_sys_msg.ocl_device_id = gpu_ids.FirstSet();
-		}
-		else if (acc_ids.Count() > 0) {
-			local_sys_msg.ocl_device_id = acc_ids.FirstSet();
-		}
-		else { // It is a CPU type device...
-			OpenCLPlatformProxy * ocl_proxy(OpenCLPlatformProxy::GetInstance());
-			auto pdev_ids(ocl_proxy->GetDeviceIDs(
-					local_sys_msg.ocl_platform_id, br::ResourceType::CPU));
-			if (pdev_ids && !pdev_ids->empty())
-				local_sys_msg.ocl_device_id = pdev_ids->at(0);
-			else
-				local_sys_msg.ocl_device_id = R_ID_NONE;
-		}
-
-		logger->Info("SyncP_PreChangeSend: [%s] OpenCL device: %d",
-			     papp->StrId(), local_sys_msg.ocl_device_id);
-
-#endif // CONFIG_TARGET_OPENCL
 
 		logger->Debug("SyncP_PreChangeSend: Command [RPC_BBQ_SYNCP_PRECHANGE] -> "
 		              "EXC [%s]: CPUs=<%d> PROCs=<%2d [%d%%]> MEM=<%d> "
@@ -498,6 +467,39 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		              local_sys_msg.r_gpu,
 		              local_sys_msg.r_acc,
 		              ra.GetScheduledView());
+
+#ifdef CONFIG_TARGET_OPENCL
+
+		// OpenCL platform
+		auto ocl_platform_ids(papp->NextAWM()->BindingSet(
+		                              br::ResourceType::GROUP));
+		local_sys_msg.ocl_platform_id = ocl_platform_ids.FirstSet();
+		logger->Info("SyncP_PreChangeSend: [%s] OpenCL platform: %d",
+		             papp->StrId(), local_sys_msg.ocl_platform_id);
+
+		// OpenCL device
+		auto gpu_ids(papp->NextAWM()->BindingSet(
+		                     br::ResourceType::GPU));
+		auto acc_ids(papp->NextAWM()->BindingSet(
+		                     br::ResourceType::ACCELERATOR));
+		if (gpu_ids.Count() > 0) {
+			local_sys_msg.ocl_device_id = gpu_ids.FirstSet();
+		} else if (acc_ids.Count() > 0) {
+			local_sys_msg.ocl_device_id = acc_ids.FirstSet();
+		} else { // It is a CPU type device...
+			OpenCLPlatformProxy * ocl_proxy(
+			        OpenCLPlatformProxy::GetInstance());
+			local_sys_msg.ocl_device_id =
+			        ocl_proxy->GetFirstDeviceID(
+			                local_sys_msg.ocl_platform_id,
+			                br::ResourceType::CPU);
+		}
+
+		logger->Info("SyncP_PreChangeSend: [%s] OpenCL device: %d",
+		             papp->StrId(), local_sys_msg.ocl_device_id);
+
+#endif // CONFIG_TARGET_OPENCL
+
 	}
 
 	// Send the required synchronization action

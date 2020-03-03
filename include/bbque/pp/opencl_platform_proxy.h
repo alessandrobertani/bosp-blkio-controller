@@ -42,19 +42,14 @@ namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque {
+namespace bbque
+{
 
-using ResourcePathList_t =std::list<ResourcePathPtr_t> ;
-using ResourcePathListPtr_t = std::shared_ptr<ResourcePathList_t> ;
-using VectorUInt8_t = std::vector<uint8_t> ;
-using VectorUInt8Ptr_t = std::shared_ptr<VectorUInt8_t> ;
-using ResourceTypeIDMap_t = std::map<br::ResourceType, VectorUInt8Ptr_t> ;
-using ResourceTypePathMap_t = std::map<br::ResourceType, ResourcePathListPtr_t> ;
-using DevFileMap_t = std::map<int, std::ofstream *> ;
-using DevPathMap_t = std::map<int, ResourcePathPtr_t> ;
+using DevPathMap_t = std::map<int, ResourcePathPtr_t>;
+using PathDevMap_t = std::map<ResourcePathPtr_t, int>;
 
-
-class OpenCLPlatformProxy: public PlatformProxy {
+class OpenCLPlatformProxy: public PlatformProxy
+{
 
 public:
 
@@ -68,7 +63,8 @@ public:
 	/**
 	 * @brief Return the Platform specific string identifier
 	 */
-	const char * GetPlatformID(int16_t system_id = -1) const override {
+	const char * GetPlatformID(int16_t system_id = -1) const override
+	{
 		(void) system_id;
 		return "org.opencl";
 	}
@@ -76,7 +72,8 @@ public:
 	/**
 	 * @brief Return the Hardware identifier string
 	 */
-	const char * GetHardwareID(int16_t system_id = -1) const override {
+	const char * GetHardwareID(int16_t system_id = -1) const override
+	{
 		(void) system_id;
 		return "opencl";
 	}
@@ -109,7 +106,8 @@ public:
 	 * @brief OpenCL resource assignment mapping
 	 */
 	ExitCode_t MapResources(
-	        ba::SchedPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map, bool excl) override;
+	        ba::SchedPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map,
+	        bool excl) override;
 
 	/**
 	 * OpenCL specific termination
@@ -117,26 +115,31 @@ public:
 	void Exit() override;
 
 
-	bool IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const;
-
-
 	// Class specific member functions
 
 	/**
-	 * @brief Number of OpenCL devices of a given resource type
+	 * @brief OpenCL device id associated to a resource path
+	 * @param platform_id the OpenCL platform
+	 * @param r_path the resource path
+	 * @return the device id as integer value
 	 */
-	uint8_t GetDevicesNum(br::ResourceType r_type) const;
+	int GetDeviceID(uint32_t platform_id, ResourcePathPtr_t r_path) const;
 
 	/**
-	 * @brief Set of OpenCL device IDs for a given resource type
+	 * @brief First OpenCL device id pf a given type (CPU, GPU, ...)
+	 * @param platform_id the OpenCL platform
+	 * @param r_type the resource path
+	 * @return the device id as integer value
 	 */
-	VectorUInt8Ptr_t GetDeviceIDs(
-		int32_t platform_id, br::ResourceType r_type) const;
+	int GetFirstDeviceID(uint32_t platform_id, ResourceType r_type) const;
 
 	/**
-	 * @brief Set of OpenCL device resource path for a given type
+	 * @brief Resource path associated to the OpenCL device id
+	 * @param platform_id the OpenCL platform
+	 * @param device_id the device id as integer value
+	 * @return r_path the resource path
 	 */
-	ResourcePathListPtr_t GetDevicePaths(br::ResourceType r_type) const;
+	ResourcePathPtr_t GetDevicePath(uint32_t platform_id, int device_id) const;
 
 protected:
 
@@ -165,13 +168,14 @@ protected:
 	std::vector<cl_device_id *> devices;
 
 	/*** Map with all the device IDs for each type available   */
-	std::vector<ResourceTypeIDMap_t> device_ids;
+	//std::vector<ResourceTypeIDMap_t> device_ids;
+	std::vector<DevPathMap_t> device_paths;
 
 	/*** Map with all the device paths for each type available */
-	ResourceTypePathMap_t device_paths;
+	std::vector<PathDevMap_t> device_ids;
 
 	/*** Map with the resource paths of GPUs memory */
-	DevPathMap_t gpu_mem_paths;
+	std::vector<PathDevMap_t> mem_paths;
 
 	/*** Local ID of the system resource */
 	uint16_t local_sys_id;
@@ -179,52 +183,41 @@ protected:
 	/*** Constructor */
 	OpenCLPlatformProxy();
 
-	/** Retrieve the iterator for the vector of device IDs, given a type */
-	ResourceTypeIDMap_t::iterator GetDeviceIterator(
-		ResourceTypeIDMap_t & dev_id_map,
-	        br::ResourceType r_type);
-
-	/** Retrieve the constant iterator for the vector of device IDs, given a type */
-	ResourceTypeIDMap_t::const_iterator GetDeviceConstIterator(
-		ResourceTypeIDMap_t const & dev_id_map,
-	        br::ResourceType r_type) const;
 
 #ifdef CONFIG_BBQUE_PM
 
 	/*** Power Manager instance */
 	PowerManager & pm;
 
-	void PrintPowerInfo(br::ResourcePathPtr_t r_path_ptr);
+	void PrintPowerInfo(br::ResourcePathPtr_t r_path_ptr) const;
 
-	void PrintDevicesPowerInfo();
+	void PrintDevicesPowerInfo() const;
 
 #endif // CONFIG_BBQUE_PM
 
 	/**
-	 * @brief Append device ID per device type
+	 * @brief Register device resources
+	 * @param platform_id The OpenCL platform ID
+	 */
+	ExitCode_t RegisterDevices(uint32_t platform_id);
+
+	/**
+	 * @brief Keep track of the device id -> resource path relationship
+	 *
+	 * @param platform_id The OpenCL platform ID
+	 * @param r_path the registered resource path of the device
+	 * @param dev_id The OpenCL device ID
+	 */
+	void InsertDeviceID(uint32_t platform_id, ResourcePathPtr_t r_path, int dev_id);
+
+	/**
+	 * @brief Keep track of the resource path -> device id relationship
 	 *
 	 * @param platform_id The OpenCL platform ID
 	 * @param dev_id The OpenCL device ID
-	 * @param r_type The resource type (usually ResourceType::CPU or ResourceType::GPU)
+	 * @param r_path the registered resource path of the device
 	 */
-	void InsertDeviceID(
-		uint32_t platform_id,
-		uint8_t dev_id,
-		br::ResourceType r_type);
-
-	/**
-	 * @brief Append resource path per device type
-	 *
-	 * @param r_type The resource type (usually ResourceType::CPU or ResourceType::GPU)
-	 * @param dev_p_str A resource path referencing a device of the type in the key
-	 */
-	void InsertDevicePath(
-	        br::ResourceType r_type, br::ResourcePathPtr_t r_path_ptr);
-
-	/**
-	 * @brief Register device resources
-	 */
-	ExitCode_t RegisterDevices(uint32_t platform_id);
+	void InsertDevicePath(uint32_t platform_id, int dev_id, ResourcePathPtr_t r_path);
 
 };
 
