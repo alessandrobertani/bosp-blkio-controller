@@ -38,6 +38,7 @@ config BBQUE_WM
 config  BBQUE_PM_CPU
   bool "CPU(s) Power Management"
   depends on BBQUE_PM
+  depends on !TARGET_EMULATED_HOST
   default n
   ---help---
   Enable the support for the management of CPU(s) from the power-thermal point

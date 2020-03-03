@@ -108,7 +108,6 @@ endmenu # Linux Resource Management
 ################################################################################
 
 menu "Power Management"
-depends on !TARGET_EMULATED_HOST
 	source "barbeque/bbque/pm/Kconfig"
 
 endmenu # Power Management
