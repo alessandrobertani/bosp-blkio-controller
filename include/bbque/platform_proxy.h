@@ -152,7 +152,7 @@ public:
 	 * @return true or false
 	 */
 	virtual bool IsHighPerformance(
-	        bbque::res::ResourcePathPtr_t const & path) const = 0;
+	        bbque::res::ResourcePathPtr_t const & path) const;
 
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
