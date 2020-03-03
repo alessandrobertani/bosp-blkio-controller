@@ -19,6 +19,8 @@ namespace bu = bbque::utils;
 
 namespace bbque
 {
+namespace pp
+{
 
 class NVMLPlatformProxy: public OpenCLPlatformProxy
 {
@@ -84,6 +86,7 @@ private:
 	ExitCode_t RegisterDevices();
 };
 
+} // namespace pp
 } // namespace bbque
 
 #endif

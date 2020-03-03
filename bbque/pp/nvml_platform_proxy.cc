@@ -31,6 +31,9 @@ namespace po = boost::program_options;
 namespace bbque
 {
 
+namespace pp
+{
+
 NVMLPlatformProxy * NVMLPlatformProxy::GetInstance()
 {
 	static NVMLPlatformProxy * instance;
@@ -179,4 +182,5 @@ void NVMLPlatformProxy::Exit()
 	device_paths.clear();
 }
 
+} // namespace pp
 } // namespace bbque

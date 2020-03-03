@@ -30,6 +30,8 @@ namespace po = boost::program_options;
 
 namespace bbque
 {
+namespace pp
+{
 
 RecipePlatformProxy * RecipePlatformProxy::GetInstance()
 {
@@ -108,5 +110,5 @@ RecipePlatformProxy::MapResources(
 	return PLATFORM_OK;
 }
 
-
+} // namespace pp
 } // namespace bbque

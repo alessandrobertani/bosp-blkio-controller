@@ -34,8 +34,10 @@ namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque {
-
+namespace bbque
+{
+namespace pp
+{
 
 class RecipePlatformProxy: public OpenCLPlatformProxy {
 
@@ -78,6 +80,7 @@ private:
 
 };
 
+} // namespace pp
 } // namespace bbque
 
 #endif // BBQUE_LINUX_RECIPE_OCLPROXY_H_

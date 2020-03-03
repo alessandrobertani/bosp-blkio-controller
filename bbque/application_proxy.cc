@@ -487,8 +487,8 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 		} else if (acc_ids.Count() > 0) {
 			local_sys_msg.ocl_device_id = acc_ids.FirstSet();
 		} else { // It is a CPU type device...
-			OpenCLPlatformProxy * ocl_proxy(
-			        OpenCLPlatformProxy::GetInstance());
+			pp::OpenCLPlatformProxy * ocl_proxy(
+			        pp::OpenCLPlatformProxy::GetInstance());
 			local_sys_msg.ocl_device_id =
 			        ocl_proxy->GetFirstDeviceID(
 			                local_sys_msg.ocl_platform_id,

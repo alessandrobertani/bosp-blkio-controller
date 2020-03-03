@@ -40,6 +40,9 @@ namespace po = boost::program_options;
 namespace bbque
 {
 
+namespace pp
+{
+
 OpenCLPlatformProxy * OpenCLPlatformProxy::GetInstance()
 {
 	static OpenCLPlatformProxy * instance;
@@ -427,4 +430,5 @@ void OpenCLPlatformProxy::Exit()
 	mem_paths.clear();
 }
 
+} // namespace pp
 } // namespace bbque

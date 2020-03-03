@@ -45,6 +45,9 @@ namespace bu = bbque::utils;
 namespace bbque
 {
 
+namespace pp
+{
+
 using DevPathMap_t = std::map<int, ResourcePathPtr_t>;
 using PathDevMap_t = std::map<ResourcePathPtr_t, int>;
 
@@ -221,6 +224,7 @@ protected:
 
 };
 
+} // namespace pp
 } // namespace bbque
 
 #endif
