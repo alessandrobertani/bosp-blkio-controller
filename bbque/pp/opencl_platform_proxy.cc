@@ -25,6 +25,7 @@
 #include "bbque/power_monitor.h"
 #endif
 
+#include "bbque/platform_manager.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/binder.h"
 #include "bbque/res/resource_path.h"
@@ -275,7 +276,8 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		             dev_id, br::GetResourceTypeString(r_type));
 
 		// Resource path string
-		r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id)
+		r_path += std::string(".")
+		          + br::GetResourceTypeString(r_type) + std::to_string(dev_id)
 		          + std::string(".")
 		          + br::GetResourceTypeString(br::ResourceType::PROC_ELEMENT);
 		logger->Debug("RegisterDevices: r_path=<%s>", r_path.c_str());
@@ -378,7 +380,6 @@ int OpenCLPlatformProxy::GetFirstDeviceID(
 
 	return R_ID_NONE;
 }
-
 
 
 ResourcePathPtr_t OpenCLPlatformProxy::GetDevicePath(
