@@ -22,34 +22,28 @@ INCLUDE (FindPackageHandleStandardArgs)
 
 set (NVML_ROOT_DIR ${CONFIG_TARGET_NVIDIA_RUNTIME_PATH})
 
+set (INC_SUFFIXES include targets/x86_64-linux/include x86_64-linux/include)
+set (LIB_SUFFIXES lib lib/x86_64-linux/)
+
 FIND_PATH (NVML_INCLUDE_DIR
   NAMES nvml.h
         NVML/nvml.h
         nvml/nvml.h
-  PATHS ${NVML_ROOT_DIR}/usr/include/nvidia/gdk
-	/usr/local/cuda-10.1/targets/x86_64-linux/include
+  HINTS ${NVML_ROOT_DIR}
+  PATH_SUFFIXES ${INC_SUFFIXES}
   DOC "NVIDIA Display Library (NVML) include directory")
-
-
-FIND_PATH (NVML_LIBRARY_DIR
-  NAMES libnvidia-ml.so
-  PATHS ${NVML_ROOT_DIR}/usr/src/gdk/nvml/lib
-	/usr/local/cuda-10.1/targets/x86_64-linux/lib/stubs
-  DOC "NVIDIA Display Library (NVML) directory")
-
 
 FIND_LIBRARY(NVML_LIBRARY
   NAMES libnvidia-ml.so
-  HINTS ${NVML_LIBRARY_DIR}
+  HINTS ${NVML_LIBRARY_DIR} ${NVML_ROOT_DIR}
+  PATH_SUFFIXES ${LIB_SUFFIXES}
   DOC "NVIDIA Display Library (NVML) location")
-
 
 MESSAGE("** NVIDIA Display Library (NVML) root directory .....: " ${NVML_ROOT_DIR})
 IF (NVML_INCLUDE_DIR)
   MESSAGE("** NVIDIA Display Library (NVML) include directory...: " ${NVML_INCLUDE_DIR})
 ENDIF (NVML_INCLUDE_DIR)
 IF (NVML_LIBRARY)
-  MESSAGE("** NVIDIA Display Library (NVML) library directory...: " ${NVML_LIBRARY_DIR})
   MESSAGE("** NVIDIA Display Library (NVML) library.............: " ${NVML_LIBRARY})
 ELSE (NVML_LIBRARY)
   MESSAGE("** NVIDIA Display Library (NVML) library.............: NOT FOUND")
