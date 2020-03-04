@@ -252,7 +252,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 			logger->Warn("RegisterDevices: device name error %d", status);
 		}
 
-		char dev_vendor[20];
+		char dev_vendor[64];
 		status = clGetDeviceInfo(
 		                 devices[platform_id][dev_id], CL_DEVICE_VENDOR,
 		                 sizeof(dev_vendor), dev_vendor, NULL);
@@ -282,13 +282,13 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		case CL_DEVICE_TYPE_GPU:
 			r_type = br::ResourceType::GPU;
 			r_path += br::GetResourceTypeString(br::ResourceType::GROUP)
-			          + std::to_string(platform_id);
+			          + std::to_string(platform_id) + std::string(".");
 			break;
 
 		case CL_DEVICE_TYPE_ACCELERATOR:
 			r_type = br::ResourceType::ACCELERATOR;
 			r_path += br::GetResourceTypeString(br::ResourceType::GROUP)
-			          + std::to_string(platform_id);
+			          + std::to_string(platform_id) + std::string(".");
 			break;
 
 		default:
@@ -298,8 +298,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		}
 
 		// Resource path string
-		r_path += std::string(".")
-		          + br::GetResourceTypeString(r_type) + std::to_string(dev_id)
+		r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id)
 		          + std::string(".")
 		          + br::GetResourceTypeString(br::ResourceType::PROC_ELEMENT);
 		logger->Debug("RegisterDevices: r_path=<%s>", r_path.c_str());
