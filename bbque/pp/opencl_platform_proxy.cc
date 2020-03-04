@@ -98,7 +98,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 		status = clGetPlatformInfo(
 		                 platforms[id], CL_PLATFORM_NAME, sizeof(platform_name),
 		                 platform_name, NULL);
-		logger->Info("LoadPlatformData: platform <%d> = %s", id, platform_name);
+		logger->Info("LoadPlatformData: platform id=%d name=%s", id, platform_name);
 
 #ifdef CONFIG_TARGET_NVIDIA
 		if (strncmp(platform_name, "NVIDIA CUDA", PLATFORM_NAME_MAX_LENGTH) == 0) {
@@ -106,7 +106,6 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 			continue;
 		}
 #endif
-
 		cl_platform_id platform = platforms[id];
 
 		// Get devices
@@ -237,7 +236,6 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 {
 	cl_int status;
 	cl_device_type dev_type;
-	char dev_name[64];
 
 	// Each OpenCL plaform is under a specific GROUP domain
 	std::string sys_path(br::GetResourceTypeString(br::ResourceType::SYSTEM));
@@ -245,20 +243,35 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 
 	br::ResourceType r_type = br::ResourceType::UNDEFINED;
 	for (uint16_t dev_id = 0; dev_id < num_devices; ++dev_id) {
+		// Device name for setting the resource model info
+		char dev_name[64];
 		status = clGetDeviceInfo(
 		                 devices[platform_id][dev_id], CL_DEVICE_NAME,
 		                 sizeof(dev_name), dev_name, NULL);
+		if (status != CL_SUCCESS) {
+			logger->Warn("RegisterDevices: device name error %d", status);
+		}
+
+		char dev_vendor[20];
+		status = clGetDeviceInfo(
+		                 devices[platform_id][dev_id], CL_DEVICE_VENDOR,
+		                 sizeof(dev_vendor), dev_vendor, NULL);
+		if (status != CL_SUCCESS) {
+			logger->Warn("RegisterDevices: device vendor error %d", status);
+		}
+
+		// Device type for registration (GPU? ACCELERATOR? ...)
 		status = clGetDeviceInfo(
 		                 devices[platform_id][dev_id], CL_DEVICE_TYPE,
 		                 sizeof(dev_type), &dev_type, NULL);
 		if (status != CL_SUCCESS) {
-			logger->Error("RegisterDevices: device info error %d", status);
+			logger->Error("RegisterDevices: device type error %d", status);
 			return PLATFORM_ENUMERATION_FAILED;
 		}
 
 		std::string r_path(sys_path);
 
-		// Register devices of type GPU or ACCELERATOR
+		// Register devices of type GPU or ACCELERATOR (keep CPU apart)
 		switch (dev_type) {
 
 		case CL_DEVICE_TYPE_CPU:
@@ -284,9 +297,6 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 			continue;
 		}
 
-		logger->Info("RegisterDevices: id=%d is of type %s",
-		             dev_id, br::GetResourceTypeString(r_type));
-
 		// Resource path string
 		r_path += std::string(".")
 		          + br::GetResourceTypeString(r_type) + std::to_string(dev_id)
@@ -302,6 +312,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		if (r_type != br::ResourceType::CPU) {
 			r_path += std::string("0");
 			auto resource = ra.RegisterResource(r_path, "", 100);
+			resource->SetModel(dev_name);
 			r_path_ptr = resource->Path();
 #ifdef CONFIG_BBQUE_WM
 			PowerMonitor & wm(PowerMonitor::GetInstance());
@@ -318,6 +329,10 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		logger->Debug("RegisterDevices: r_path_ptr=<%s>",
 		              r_path_ptr->ToString().c_str());
 
+		logger->Info("RegisterDevices: id=%d name=%s, vendor=%s, type=<%s>",
+		             dev_id, dev_name, dev_vendor,
+		             br::GetResourceTypeString(r_type));
+
 		// Keep track of OpenCL device IDs and resource paths
 		InsertDeviceID(platform_id, r_path_ptr, dev_id);
 		InsertDevicePath(platform_id, dev_id, r_path_ptr);
@@ -332,7 +347,7 @@ void OpenCLPlatformProxy::InsertDeviceID(
         ResourcePathPtr_t r_path,
         int dev_id)
 {
-	logger->Debug("InsertDeviceID: platform=%d device=%d : <%s>",
+	logger->Debug("InsertDeviceID: platform=%d device=%d -> path=<%s>",
 	              platform_id, dev_id, r_path->ToString().c_str());
 
 	auto & path_to_dev_map = device_ids[platform_id];
@@ -344,7 +359,7 @@ void OpenCLPlatformProxy::InsertDevicePath(
         int dev_id,
         ResourcePathPtr_t r_path)
 {
-	logger->Debug("InsertDevicePath: resource <%s>: platform=%d device=%d",
+	logger->Debug("InsertDevicePath: path=<%s> -> platform=%d device=%d",
 	              r_path->ToString().c_str(), platform_id, dev_id);
 
 	auto & dev_to_path_map = device_paths[platform_id];
