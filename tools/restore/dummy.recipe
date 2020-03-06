@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<BarbequeRTRM recipe_version="0.8">
+	<application priority="0">
+		<platform id="org.linux.cgroup">
+			<awms>
+				<awm id="0" name="All" value="1">
+					<resources>
+						<cpu>
+							<pe qty="50"/>
+						</cpu>
+					</resources>
+				</awm>
+			</awms>
+		</platform>
+	</application>
+</BarbequeRTRM>
+
