@@ -43,7 +43,7 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueConsole.sh"
 	RENAME bbque-console)
 
 
-#----- Deploy the BBQ Stress Test script
+#----- Deploy the BBQ Stress Test script and recipe generator
 configure_file (
 	"${PROJECT_SOURCE_DIR}/tools/test/bbqueStressTest.sh.in"
 	"${PROJECT_BINARY_DIR}/tools/test/bbqueStressTest.sh"
@@ -53,6 +53,16 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/test/bbqueStressTest.sh"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-test-stress)
+
+
+configure_file (
+	"${PROJECT_SOURCE_DIR}/tools/test/bbqueRecipeGenerator.sh.in"
+	"${PROJECT_BINARY_DIR}/tools/monitor/bbqueRecipeGenerator.sh"
+	@ONLY
+)
+install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueRecipeGenerator.sh"
+	DESTINATION ${BBQUE_PATH_BBQ}
+	RENAME bbque-recipegen)
 
 
 #----- Deploy the launcher for multiple bbque-testapp instance
@@ -198,4 +208,5 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueSystemdSetup.sh"
 	DESTINATION ${BBQUE_PATH_BBQ}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-systemd-setup)
+
 
