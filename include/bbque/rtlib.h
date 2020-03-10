@@ -1214,7 +1214,10 @@ struct RTLIB_Services {
  * RTLIB_CHANNEL_SETUP_FAILED if the library failed to setup a communication
  * channel with the Barbeque RTRM instance.
  */
-RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** services);
+RTLIB_ExitCode_t RTLIB_Init(
+	const char * name,
+	RTLIB_Services_t ** services,
+	pid_t restore_pid = 0);
 
 /**@}*/
 

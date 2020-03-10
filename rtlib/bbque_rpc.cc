@@ -349,17 +349,22 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::InitializeApplication(const char * name)
+RTLIB_ExitCode_t BbqueRPC::InitializeApplication(
+	const char * name, pid_t r_pid)
 {
 	if (rtlib_is_initialized)
 		return RTLIB_OK;
 
 	application_name = name;
 	application_pid  = gettid();
-	logger->Debug("Initializing pid=%d name=%s parent=%d",
-	              application_pid, application_name, getppid());
-	RTLIB_ExitCode_t exitCode = _Init(name);
+	restore_pid = r_pid;
+	logger->Debug("Initializing pid=%d name=%s parent=%d [restore_pid=%d]",
+	              application_pid,
+	              application_name,
+	              getppid(),
+                      restore_pid);
 
+	RTLIB_ExitCode_t exitCode = _Init(name);
 	if (exitCode != RTLIB_OK) {
 		logger->Error("Initialization FAILED");
 		return exitCode;

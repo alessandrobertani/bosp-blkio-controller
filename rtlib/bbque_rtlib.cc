@@ -282,7 +282,10 @@ static std::unique_ptr<bu::Logger> logger;
 
 #include "bbque_errors.cc"
 
-RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
+RTLIB_ExitCode_t RTLIB_Init(
+	const char * name,
+	RTLIB_Services_t ** rtlib,
+	pid_t restore_pid)
 {
 	RTLIB_ExitCode_t result;
 	(*rtlib) = NULL;
@@ -352,7 +355,7 @@ RTLIB_ExitCode_t RTLIB_Init(const char * name, RTLIB_Services_t ** rtlib)
 	}
 
 	// Initializing the RPC communication channel
-	result = rpc->InitializeApplication(name);
+	result = rpc->InitializeApplication(name, restore_pid);
 	if (result != RTLIB_OK) {
 		logger->Error("RTLIB_Init: RPC channel initialization FAILED");
 		return RTLIB_BBQUE_UNREACHABLE;

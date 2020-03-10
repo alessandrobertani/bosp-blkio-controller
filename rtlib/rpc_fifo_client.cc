@@ -329,22 +329,29 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup()
 
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(
-        const char * name)
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(const char * name)
 {
 	std::unique_lock<std::mutex> trdStatus_ul(trdStatus_mtx);
-	RTLIB_ExitCode_t result;
+
 	// Starting the communication thread
 	done = false;
 	running = false;
 	ChTrd = std::thread(&BbqueRPC_FIFO_Client::ChannelTrd, this, name);
 	trdStatus_cv.wait(trdStatus_ul);
-	// Setting up application FIFO filename
-	snprintf(app_fifo_filename, BBQUE_FIFO_NAME_LENGTH,
-	         "bbque_%05d_%s", application_pid, name);
-	// Setting up the communication channel
-	result = ChannelSetup();
 
+	// Setting up application FIFO filename
+	if (restore_pid == 0) {
+		snprintf(app_fifo_filename, BBQUE_FIFO_NAME_LENGTH,
+		         "bbque_%05d_%s", application_pid, name);
+	} else {
+		snprintf(app_fifo_filename, BBQUE_FIFO_NAME_LENGTH,
+		         "bbque_%05d_%s", restore_pid, name);
+		logger->Info("Init: restoring the application fifo [%s]",
+		             app_fifo_filename);
+	}
+
+	// Setting up the communication channel
+	RTLIB_ExitCode_t result = ChannelSetup();
 	if (result != RTLIB_OK)
 		return result;
 

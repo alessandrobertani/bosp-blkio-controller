@@ -125,7 +125,7 @@ public:
 	/**
 	 * @brief Notify the resource manager about application and setup cgroups
 	 */
-	RTLIB_ExitCode_t InitializeApplication(const char * name);
+	RTLIB_ExitCode_t InitializeApplication(const char * name, pid_t restore_pid = 0);
 
 	/**
 	 * @brief Register a new execution context
@@ -1099,6 +1099,14 @@ protected:
 	 * applications accessing its managed resources.
 	 */
 	pid_t application_pid = 0;
+
+	/**
+	 * @brief The PID of the application to restore
+	 *
+	 * This is set in case we are performing a restore of a managed
+	 * application as a child of the current new one
+	 */
+	pid_t restore_pid = 0;
 
 private:
 
