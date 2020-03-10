@@ -374,7 +374,6 @@ RTLIB_ExitCode_t BbqueRPC::InitializeApplication(
 	// Configuration phase
 	logger->Debug("Initializing libcgroup");
 	exitCode = CGroupCheckInitialization();
-
 	if (exitCode != RTLIB_OK) {
 		logger->Error("CGroup initialization FAILED");
 		return exitCode;
@@ -623,9 +622,9 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 
 	pRegisteredEXC_t exc = getRegistered(exc_handler);
 	if (! exc) {
-		logger->Error("Disabling EXC [%p] STOP "
+		logger->Error("Disabling EXC [%d] STOP "
 		              "(Error: EXC not registered)",
-		              (void *) exc_handler);
+		              application_pid);
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -634,8 +633,8 @@ RTLIB_ExitCode_t BbqueRPC::Disable(
 	logger->Debug("Disable: [%s] disable message sent", exc->name.c_str());
 
 	if (result != RTLIB_OK) {
-		logger->Error("Disabling EXC [%p:%s] FAILED (Error %d: %s)",
-		              (void *) exc_handler,
+		logger->Error("Disabling EXC [%d:%s] FAILED (Error %d: %s)",
+		              application_pid,
 		              exc->name.c_str(),
 		              result,
 		              RTLIB_ErrorStr(result));
@@ -1042,7 +1041,7 @@ void BbqueRPC::DumpStats(pRegisteredEXC_t exc, bool verbose)
 	}
 
 	if (! rtlib_configuration.profile.output.file)
-		logger->Notice("Execution statistics:\n\n");
+		logger->Debug("Execution statistics:\n\n");
 
 	if (verbose) {
 		fprintf(output_file, "Cumulative execution stats for '%s':\n",

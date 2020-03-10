@@ -1376,7 +1376,7 @@ void rtlib_ocl_init()
 	assert(logger);
 
 	// Native OpenCL calls
-	logger->Notice("OpenCL runtime: %s", TARGET_OPENCL_PATH_LIB);
+	logger->Info("OpenCL runtime: %s", TARGET_OPENCL_PATH_LIB);
 	void * handle = dlopen(TARGET_OPENCL_PATH_LIB, RTLD_LOCAL | RTLD_LAZY);
 	*(void **) (&rtlib_ocl.getPlatformIDs)			= dlsym(handle, "clGetPlatformIDs");
 	*(void **) (&rtlib_ocl.getPlatformInfo) 		= dlsym(handle, "clGetPlatformInfo");
@@ -1502,7 +1502,7 @@ void rtlib_init_devices()
 	rtlib_ocl.platforms = (cl_platform_id *)
 			      malloc(sizeof (cl_platform_id) * rtlib_ocl.num_platforms);
 	status = rtlib_ocl.getPlatformIDs(rtlib_ocl.num_platforms, rtlib_ocl.platforms, NULL);
-	logger->Notice("OCL: nr. of available platform(s): %d", rtlib_ocl.num_platforms);
+	logger->Info("OCL: nr. of available platform(s): %d", rtlib_ocl.num_platforms);
 
 	// Devices for each platform
 	rtlib_ocl.devices = (cl_device_id **) malloc(sizeof (cl_device_id *) * rtlib_ocl.num_platforms);

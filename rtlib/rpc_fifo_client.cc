@@ -359,9 +359,9 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(const char * name)
 	running = true;
 	trdStatus_cv.notify_one();
 	trdStatus_ul.unlock();
+
 	// Pairing channel with server
 	result = ChannelPair(name);
-
 	if (result != RTLIB_OK) {
 		::unlink(app_fifo_path.c_str());
 		::close(server_fifo_fd);
