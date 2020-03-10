@@ -66,6 +66,11 @@ target_link_libraries(${PROJECT_NAME}
 	pthread
 )
 
+#if (CONFIG_BBQUE_RELIABILITY)
+  target_link_libraries (${PROJECT_NAME}
+	criu)
+#endif (CONFIG_BBQUE_RELIABILITY)
+
 set_target_properties (${PROJECT_NAME} PROPERTIES
 	INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib/bbque;${CMAKE_INSTALL_PREFIX}}/lib"
 	INSTALL_RPATH_USE_LINK_PATH TRUE)

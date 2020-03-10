@@ -38,7 +38,8 @@ public:
 		std::string const & name,
 		std::string const & recipe,
 		RTLIB_Services_t  * rtlib,
-		std::string const & checkpoint_dir);
+		std::string const & checkpoint_dir,
+		uint32_t pid);
 
 	virtual	~BbqueRestoreEXC() { }
 
@@ -51,6 +52,10 @@ private:
 	RTLIB_ExitCode_t onRelease();
 
 	std::string checkpoint_dir;
+
+	uint32_t pid;
+
+	bool restored;
 
 };
 
