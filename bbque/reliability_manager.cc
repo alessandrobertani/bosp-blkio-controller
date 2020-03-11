@@ -406,7 +406,7 @@ void ReliabilityManager::Dump(app::SchedPtr_t psched)
 	auto ret = plm.Dump(psched);
 	if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
 		logger->Error("Dump: <%s> checkpoint failed", psched->StrId());
-		am.CheckEXC(psched->Pid(), true);
+		am.CheckEXC(psched->Pid(), 0, true);
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 		prm.CheckProcess(psched->Pid(), true);
 #endif
