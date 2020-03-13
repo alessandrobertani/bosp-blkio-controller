@@ -60,8 +60,8 @@
 /** SyncState Metrics (class SAMPLE) declaration */
 #define SM_SAMPLE_METRIC_SYNCSTATE(NAME, DESC)\
 	{SYNCHRONIZATION_MANAGER_NAMESPACE "." NAME, DESC, MetricsCollector::SAMPLE, \
-		bbque::app::ApplicationStatusIF::SYNC_STATE_COUNT, \
-		bbque::app::ApplicationStatusIF::syncStateStr, 0}
+		bbque::app::Schedulable::SYNC_STATE_COUNT, \
+		bbque::app::Schedulable::syncStateStr, 0}
 /** Acquire a new completion time sample for SyncState Metrics*/
 #define SM_GET_TIMING_SYNCSTATE(METRICS, INDEX, TIMER, STATE) \
 	mc.AddSample(METRICS[INDEX].mh, TIMER.getElapsedTimeMs(), STATE);
@@ -161,13 +161,13 @@ SynchronizationManager::~SynchronizationManager()
 bool
 SynchronizationManager::Reshuffling(AppPtr_t papp)
 {
-	if ((papp->SyncState() == ApplicationStatusIF::RECONF))
+	if ((papp->SyncState() == Schedulable::RECONF))
 		return !(papp->SwitchingAWM());
 	return false;
 }
 
 SynchronizationManager::ExitCode_t
-SynchronizationManager::Sync_PreChange(ApplicationStatusIF::SyncState_t syncState)
+SynchronizationManager::Sync_PreChange(Schedulable::SyncState_t syncState)
 {
 	ExitCode_t syncInProgress = NOTHING_TO_SYNC;
 	AppsUidMapIt apps_it;
@@ -315,7 +315,7 @@ void SynchronizationManager::Sync_PreChange_Check_EXC_Response(
 
 SynchronizationManager::ExitCode_t
 SynchronizationManager::Sync_SyncChange(
-        ApplicationStatusIF::SyncState_t syncState)
+        Schedulable::SyncState_t syncState)
 {
 	AppsUidMapIt apps_it;
 
@@ -445,7 +445,7 @@ void SynchronizationManager::Sync_SyncChange_Check_EXC_Response(
 }
 
 SynchronizationManager::ExitCode_t
-SynchronizationManager::Sync_DoChange(ApplicationStatusIF::SyncState_t syncState)
+SynchronizationManager::Sync_DoChange(Schedulable::SyncState_t syncState)
 {
 	AppsUidMapIt apps_it;
 
@@ -489,7 +489,7 @@ SynchronizationManager::Sync_DoChange(ApplicationStatusIF::SyncState_t syncState
 }
 
 SynchronizationManager::ExitCode_t
-SynchronizationManager::Sync_PostChange(ApplicationStatusIF::SyncState_t syncState)
+SynchronizationManager::Sync_PostChange(Schedulable::SyncState_t syncState)
 {
 	ApplicationProxy::pPostChangeRsp_t presp;
 	AppsUidMapIt apps_it;
@@ -556,7 +556,7 @@ void SynchronizationManager::SyncCommit(AppPtr_t papp)
 
 
 SynchronizationManager::ExitCode_t
-SynchronizationManager::Sync_Platform(ApplicationStatusIF::SyncState_t syncState)
+SynchronizationManager::Sync_Platform(Schedulable::SyncState_t syncState)
 {
 	ExitCode_t result;
 	bool at_least_one_success = false;
@@ -684,13 +684,13 @@ SynchronizationManager::MapResources(SchedPtr_t papp)
 
 
 SynchronizationManager::ExitCode_t
-SynchronizationManager::SyncApps(ApplicationStatusIF::SyncState_t syncState)
+SynchronizationManager::SyncApps(Schedulable::SyncState_t syncState)
 {
 	ExitCode_t result;
 
 	if (!am.HasApplications(syncState)) {
 		logger->Warn("SyncApps: no adaptive applications");
-		assert(syncState != ApplicationStatusIF::SYNC_NONE);
+		assert(syncState != Schedulable::SYNC_NONE);
 		return NOTHING_TO_SYNC;
 	}
 
@@ -760,7 +760,7 @@ SynchronizationManager::SyncApps(ApplicationStatusIF::SyncState_t syncState)
 SynchronizationManager::ExitCode_t
 SynchronizationManager::SyncSchedule()
 {
-	ApplicationStatusIF::SyncState_t syncState;
+	Schedulable::SyncState_t syncState;
 	ResourceAccounter::ExitCode_t raResult;
 	bu::Timer syncp_tmr;
 	ExitCode_t result;
@@ -787,10 +787,10 @@ SynchronizationManager::SyncSchedule()
 	// the next synchronization event.
 	logger->Debug("SyncSchedule: getting the applications queue...");
 	syncState = policy->GetApplicationsQueue(sv, true);
-	if (syncState == ApplicationStatusIF::SYNC_NONE) {
+	if (syncState == Schedulable::SYNC_NONE) {
 		logger->Info("SyncSchedule: session=%d ABORTED", sync_count);
 		// Possibly this should never happens
-		assert(syncState != ApplicationStatusIF::SYNC_NONE);
+		assert(syncState != Schedulable::SYNC_NONE);
 		return OK;
 	}
 
@@ -804,7 +804,7 @@ SynchronizationManager::SyncSchedule()
 		return ABORTED;
 	}
 
-	while (syncState != ApplicationStatusIF::SYNC_NONE) {
+	while (syncState != Schedulable::SYNC_NONE) {
 		// Synchronize the adaptive applications/EXC in order of status
 		// as returned by the policy
 		logger->Debug("SyncSchedule: adaptive applications <%s>...",

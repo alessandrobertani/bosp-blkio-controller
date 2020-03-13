@@ -24,7 +24,7 @@
 
 #define SYNCHRONIZATION_POLICY_NAMESPACE "bq.ym.sp"
 
-using bbque::app::ApplicationStatusIF;
+using bbque::app::Schedulable;
 
 namespace bbque {
     class System;
@@ -97,7 +97,7 @@ public:
 	 *
 	 * @see DoSync
 	 */
-	virtual ApplicationStatusIF::SyncState_t GetApplicationsQueue(
+	virtual Schedulable::SyncState_t GetApplicationsQueue(
 			bbque::System & system, bool restart = false) = 0;
 
 	/**

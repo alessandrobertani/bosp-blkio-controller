@@ -1760,7 +1760,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
-	assert(msg.event < ba::ApplicationStatusIF::SYNC_STATE_COUNT);
+	assert(msg.event < ba::Schedulable::SYNC_STATE_COUNT);
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
 
 	// Keep copy of the required synchronization action

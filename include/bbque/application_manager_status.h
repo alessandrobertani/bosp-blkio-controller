@@ -20,7 +20,7 @@
 
 #include "bbque/app/application.h"
 
-using bbque::app::ApplicationStatusIF;
+using bbque::app::Schedulable;
 using bbque::app::AppPid_t;
 using bbque::app::AppUid_t;
 using bbque::app::AppPrio_t;
@@ -257,7 +257,7 @@ public:
 	 * queue, or NULL if no applications are present.
 	 */
 	virtual AppPtr_t GetFirst(
-	        ApplicationStatusIF::State_t state, AppsUidMapIt & ait) = 0;
+	        Schedulable::State_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Get the next element of STATUS queue using an ILES iterator.
@@ -270,7 +270,7 @@ public:
 	 * if no applications are present.
 	 */
 	virtual AppPtr_t GetNext(
-	        ApplicationStatusIF::State_t state, AppsUidMapIt & ait) = 0;
+	        Schedulable::State_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Get the next element of SYNC queue using an ILES iterator.
@@ -283,7 +283,7 @@ public:
 	 * queue, or NULL if no applications are present.
 	 */
 	virtual AppPtr_t GetFirst(
-	        ApplicationStatusIF::SyncState_t state, AppsUidMapIt & ait) = 0;
+	        Schedulable::SyncState_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Get the next element of SYNC queue using an ILES iterator.
@@ -296,7 +296,7 @@ public:
 	 * if no applications are present.
 	 */
 	virtual AppPtr_t GetNext(
-	        ApplicationStatusIF::SyncState_t state, AppsUidMapIt & ait) = 0;
+	        Schedulable::SyncState_t state, AppsUidMapIt & ait) = 0;
 
 	/**
 	 * @brief Check if the specified PRIO queue has applications
@@ -306,12 +306,12 @@ public:
 	/**
 	 * @brief Check if the specified STATUS queue has applications
 	 */
-	virtual bool HasApplications(ApplicationStatusIF::State_t state) const = 0;
+	virtual bool HasApplications(Schedulable::State_t state) const = 0;
 
 	/**
 	 * @brief Check if the specified SYNC queue has applications
 	 */
-	virtual bool HasApplications(ApplicationStatusIF::SyncState_t state) const = 0;
+	virtual bool HasApplications(Schedulable::SyncState_t state) const = 0;
 
 	/**
 	 * @brief Check if the specified language queue has applications
@@ -332,12 +332,12 @@ public:
 	/**
 	 * @brief The number of applications in the specified STATE
 	 */
-	virtual uint16_t AppsCount(ApplicationStatusIF::State_t state) const = 0;
+	virtual uint16_t AppsCount(Schedulable::State_t state) const = 0;
 
 	/**
 	 * @brief The number of applications in the specified SYNC_STATE
 	 */
-	virtual uint16_t AppsCount(ApplicationStatusIF::SyncState_t state) const = 0;
+	virtual uint16_t AppsCount(Schedulable::SyncState_t state) const = 0;
 
 	/**
 	 * @brief The number of applications of the specified language type
@@ -352,7 +352,7 @@ public:
 	 * is currently on the specified state, or NULL if not applications
 	 * are on this state.
 	 */
-	virtual AppPtr_t HighestPrio(ApplicationStatusIF::State_t state) = 0;
+	virtual AppPtr_t HighestPrio(Schedulable::State_t state) = 0;
 
 	/**
 	 * @brief One of the highest PRIORITY applications in the the
@@ -362,7 +362,7 @@ public:
 	 * is currently on the specified state, or NULL if not applications
 	 * are on this state.
 	 */
-	virtual AppPtr_t HighestPrio(ApplicationStatusIF::SyncState_t syncState) = 0;
+	virtual AppPtr_t HighestPrio(Schedulable::SyncState_t syncState) = 0;
 
 	/**
 	 * @brief Retrieve an application descriptor (shared pointer) by PID and

@@ -531,11 +531,11 @@ AppPtr_t ApplicationManager::HighestPrio(ApplicationStatusIF::State_t state)
 	AppsUidMapIt apps_it;
 	assert(state < Application::STATE_COUNT);
 	logger->Debug("HighestPrio: looking for highest prio [%s] apps...",
-	              ApplicationStatusIF::StateStr(state));
+		Schedulable::StateStr(state));
 
 	if (!HasApplications(state)) {
 		logger->Debug("HighestPrio: no applications in [%s]",
-		              ApplicationStatusIF::StateStr(state));
+			Schedulable::StateStr(state));
 		return AppPtr_t();
 	}
 
@@ -548,9 +548,9 @@ AppPtr_t ApplicationManager::HighestPrio(ApplicationStatusIF::State_t state)
 	}
 
 	logger->Debug("HighestPrio: highest [%s] prio [%d] app [%s]",
-	              ApplicationStatusIF::StateStr(state),
-	              papp_hp->Priority(),
-	              papp_hp->StrId());
+		Schedulable::StateStr(state),
+		papp_hp->Priority(),
+		papp_hp->StrId());
 
 	return papp_hp;
 
@@ -563,11 +563,11 @@ AppPtr_t ApplicationManager::HighestPrio(
 	AppsUidMapIt apps_it;
 	assert(syncState < Application::SYNC_STATE_COUNT);
 	logger->Debug("HighestPrio: looking for highest prio [%s] apps...",
-	              ApplicationStatusIF::SyncStateStr(syncState));
+		Schedulable::SyncStateStr(syncState));
 
 	if (!HasApplications(syncState)) {
 		logger->Debug("HighestPrio: no applications in [%s]",
-		              ApplicationStatusIF::SyncStateStr(syncState));
+			Schedulable::SyncStateStr(syncState));
 		return AppPtr_t();
 	}
 
@@ -580,9 +580,9 @@ AppPtr_t ApplicationManager::HighestPrio(
 	}
 
 	logger->Debug("HighestPrio: highest [%s] prio [%d] app [%s]",
-	              ApplicationStatusIF::SyncStateStr(syncState),
-	              papp_hp->Priority(),
-	              papp_hp->StrId());
+		Schedulable::SyncStateStr(syncState),
+		papp_hp->Priority(),
+		papp_hp->StrId());
 
 	return papp_hp;
 }
@@ -977,10 +977,10 @@ void ApplicationManager::Cleanup()
 	AppsUidMapIt apps_it;
 	logger->Debug("Cleanup EXCs...");
 	// Loop on FINISHED apps to release all resources
-	AppPtr_t papp(GetFirst(ApplicationStatusIF::FINISHED, apps_it));
+	AppPtr_t papp(GetFirst(Schedulable::FINISHED, apps_it));
 	while (papp) {
 		CleanupEXC(papp);
-		papp = GetNext(ApplicationStatusIF::FINISHED, apps_it);
+		papp = GetNext(Schedulable::FINISHED, apps_it);
 	}
 
 }

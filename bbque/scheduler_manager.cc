@@ -137,7 +137,7 @@ SchedulerManager::~SchedulerManager() {
 }
 
 #define SM_COLLECT_STATS(STATE) \
-	count = am.AppsCount(ApplicationStatusIF::STATE);\
+	count = am.AppsCount(Schedulable::STATE);\
 	SM_COUNT_EVENTS(metrics, SM_SCHED_ ## STATE, count);\
 	SM_ADD_SCHED(metrics, SM_SCHED_AVG_ ## STATE, (double)count);
 
@@ -223,8 +223,8 @@ SchedulerManager::Schedule() {
 void SchedulerManager::CommitRunningApplications() {
 	// Running (AEM) applications
 	AppsUidMapIt apps_it;
-	AppPtr_t papp = am.GetFirst(ApplicationStatusIF::RUNNING, apps_it);
-	for (; papp; papp = am.GetNext(ApplicationStatusIF::RUNNING, apps_it)) {
+	AppPtr_t papp = am.GetFirst(Schedulable::RUNNING, apps_it);
+	for (; papp; papp = am.GetNext(Schedulable::RUNNING, apps_it)) {
 		am.SyncContinue(papp);
 	}
 

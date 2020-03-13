@@ -82,12 +82,12 @@ public:
 	 */
 	ba::AppCPtr_t GetFirstReady(AppsUidMapIt & ait)
 	{
-		return am.GetFirst(ba::ApplicationStatusIF::READY, ait);
+		return am.GetFirst(ba::Schedulable::State_t::READY, ait);
 	}
 
 	ba::AppCPtr_t GetNextReady(AppsUidMapIt & ait)
 	{
-		return am.GetNext(ba::ApplicationStatusIF::READY, ait);
+		return am.GetNext(ba::Schedulable::State_t::READY, ait);
 	}
 
 	/**
@@ -95,12 +95,12 @@ public:
 	 */
 	ba::AppCPtr_t GetFirstRunning(AppsUidMapIt & ait)
 	{
-		return am.GetFirst(ba::ApplicationStatusIF::RUNNING, ait);
+		return am.GetFirst(ba::Schedulable::State_t::RUNNING, ait);
 	}
 
 	ba::AppCPtr_t GetNextRunning(AppsUidMapIt & ait)
 	{
-		return am.GetNext(ba::ApplicationStatusIF::RUNNING, ait);
+		return am.GetNext(ba::Schedulable::State_t::RUNNING, ait);
 	}
 
 	/**
@@ -108,12 +108,12 @@ public:
 	 */
 	ba::AppCPtr_t GetFirstBlocked(AppsUidMapIt & ait)
 	{
-		return am.GetFirst(ba::ApplicationStatusIF::BLOCKED, ait);
+		return am.GetFirst(ba::Schedulable::SyncState_t::BLOCKED, ait);
 	}
 
 	ba::AppCPtr_t GetNextBlocked(AppsUidMapIt & ait)
 	{
-		return am.GetNext(ba::ApplicationStatusIF::BLOCKED, ait);
+		return am.GetNext(ba::Schedulable::SyncState_t::BLOCKED, ait);
 	}
 
 	/**
@@ -121,12 +121,12 @@ public:
 	 */
 	ba::AppCPtr_t GetFirstThawed(AppsUidMapIt & ait)
 	{
-		return am.GetFirst(ba::ApplicationStatusIF::THAWED, ait);
+		return am.GetFirst(ba::Schedulable::State_t::THAWED, ait);
 	}
 
 	ba::AppCPtr_t GetNextThawed(AppsUidMapIt & ait)
 	{
-		return am.GetNext(ba::ApplicationStatusIF::THAWED, ait);
+		return am.GetNext(ba::Schedulable::State_t::THAWED, ait);
 	}
 
 	/**
@@ -134,12 +134,12 @@ public:
 	 */
 	ba::AppCPtr_t GetFirstRestoring(AppsUidMapIt & ait)
 	{
-		return am.GetFirst(ba::ApplicationStatusIF::RESTORING, ait);
+		return am.GetFirst(ba::Schedulable::State_t::RESTORING, ait);
 	}
 
 	ba::AppCPtr_t GetNextRestoring(AppsUidMapIt & ait)
 	{
-		return am.GetNext(ba::ApplicationStatusIF::RESTORING, ait);
+		return am.GetNext(ba::Schedulable::State_t::RESTORING, ait);
 	}
 
 	/**
@@ -153,7 +153,7 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(ba::ApplicationStatusIF::State_t state)
+	bool HasApplications(ba::Schedulable::State_t state)
 	{
 		return am.HasApplications(state);
 	}
@@ -161,7 +161,7 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(ba::ApplicationStatusIF::SyncState_t sync_state)
+	bool HasApplications(ba::Schedulable::SyncState_t sync_state)
 	{
 		return am.HasApplications(sync_state);
 	}
@@ -177,7 +177,7 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t ApplicationsCount(ba::ApplicationStatusIF::State_t state)
+	uint16_t ApplicationsCount(ba::Schedulable::State_t state)
 	{
 		return am.AppsCount(state);
 	}
@@ -185,7 +185,7 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t ApplicationsCount(ba::ApplicationStatusIF::SyncState_t state)
+	uint16_t ApplicationsCount(ba::Schedulable::SyncState_t state)
 	{
 		return am.AppsCount(state);
 	}

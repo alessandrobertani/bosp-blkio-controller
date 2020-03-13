@@ -456,7 +456,7 @@ void ResourceManager::EvtExcStart()
 	// while still allowing for reduced rescheduling on applications
 	// startup burst.
 	// TODO: make this policy more tunable via the configuration file
-	AppPtr_t papp = am.HighestPrio(ApplicationStatusIF::READY);
+	AppPtr_t papp = am.HighestPrio(Schedulable::READY);
 	if (!papp) {
 		// In this case the application has exited before the start
 		// event has had the change to be processed

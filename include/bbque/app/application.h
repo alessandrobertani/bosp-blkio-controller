@@ -119,7 +119,7 @@ struct RuntimeProfiling_t {
  * (could be different from the one given by OS) plus a reference to the
  * recipe object, the list of enabled working modes and resource constraints.
  */
-class Application: public ApplicationConfIF
+class Application : public ApplicationStatusIF, public ApplicationConfIF
 {
 
 	friend class bbque::ApplicationManager;
@@ -134,10 +134,12 @@ public:
 	 * @param lang The application language
 	 * @param container If true, this is just an "EXC container".
 	 */
-	Application(std::string const & name,
-	            AppPid_t pid, uint8_t exc_id,
-	            RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP,
-	            bool container = false);
+	Application(
+		std::string const & name,
+		AppPid_t pid,
+		uint8_t exc_id,
+		RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP,
+		bool container = false);
 
 	/**
 	 * @brief Default destructor

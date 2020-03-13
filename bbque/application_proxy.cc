@@ -505,7 +505,7 @@ ApplicationProxy::SyncP_PreChangeSend(pcmdSn_t pcs)
 	// Send the required synchronization action
 	logger->Debug("SyncP_PreChangeSend: Command [RPC_BBQ_SYNCP_PRECHANGE] -> "
 	              "EXC [%s], Action [%d:%s]", papp->StrId(), papp->SyncState(),
-	              ApplicationStatusIF::SyncStateStr(papp->SyncState()));
+	              Schedulable::SyncStateStr(papp->SyncState()));
 
 	// Recover the communication context for this application
 	conCtxMap_ul.lock();

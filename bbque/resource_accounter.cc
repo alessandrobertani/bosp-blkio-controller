@@ -1154,8 +1154,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit()
 	ba::SchedPtr_t papp;
 
 	// Running Applications/ExC
-	papp = am.GetFirst(ApplicationStatusIF::RUNNING, apps_it);
-	for ( ; papp; papp = am.GetNext(ApplicationStatusIF::RUNNING, apps_it)) {
+	papp = am.GetFirst(Schedulable::RUNNING, apps_it);
+	for ( ; papp; papp = am.GetNext(Schedulable::RUNNING, apps_it)) {
 		logger->Info("SyncInit: [%s] current AWM: %d",
 		             papp->StrId(),
 		             papp->CurrentAWM()->Id());

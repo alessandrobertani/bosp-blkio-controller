@@ -193,28 +193,28 @@ public:
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetFirst(
-	        ApplicationStatusIF::State_t state,
+	        Schedulable::State_t state,
 	        AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetNext(
-	        ApplicationStatusIF::State_t state,
+	        Schedulable::State_t state,
 	        AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetFirst(
-	        ApplicationStatusIF::SyncState_t state,
+	        Schedulable::SyncState_t state,
 	        AppsUidMapIt & it);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
 	AppPtr_t GetNext(
-	        ApplicationStatusIF::SyncState_t state,
+	        Schedulable::SyncState_t state,
 	        AppsUidMapIt & it);
 
 	/**
@@ -225,12 +225,12 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(ApplicationStatusIF::State_t state) const;
+	bool HasApplications(Schedulable::State_t state) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	bool HasApplications(ApplicationStatusIF::SyncState_t state) const;
+	bool HasApplications(Schedulable::SyncState_t state) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -250,12 +250,12 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t AppsCount(ApplicationStatusIF::State_t state) const;
+	uint16_t AppsCount(Schedulable::State_t state) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	uint16_t AppsCount(ApplicationStatusIF::SyncState_t state) const;
+	uint16_t AppsCount(Schedulable::SyncState_t state) const;
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -265,12 +265,12 @@ public:
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t HighestPrio(ApplicationStatusIF::State_t state);
+	AppPtr_t HighestPrio(Schedulable::State_t state);
 
 	/**
 	 * @see ApplicationManagerStatusIF
 	 */
-	AppPtr_t HighestPrio(ApplicationStatusIF::SyncState_t syncState);
+	AppPtr_t HighestPrio(Schedulable::SyncState_t syncState);
 
 	/**
 	 * @see ApplicationManagerStatusIF
@@ -365,7 +365,6 @@ public:
 	 */
 	ExitCode_t NoSchedule(app::AppCPtr_t papp);
 
-
 	/**
 	 * @brief Flag the application as "to synchronize"
 	 *
@@ -376,7 +375,7 @@ public:
 	 * AM_ABORT on synchronization request errors
 	 */
 	ExitCode_t SetForSynchronization(
-	        app::AppCPtr_t papp, ApplicationStatusIF::SyncState_t next_sync);
+	        app::AppCPtr_t papp, Schedulable::SyncState_t next_sync);
 
 	/*******************************************************************************
 	 *     Synchronization functions
@@ -630,18 +629,18 @@ private:
 	 * Array grouping the applications by status (@see ScheduleFlag).
 	 * Each position points to a set of maps pointing applications
 	 */
-	AppsUidMap_t status_vec[ApplicationStatusIF::STATE_COUNT];
+	AppsUidMap_t status_vec[Schedulable::STATE_COUNT];
 
 	/**
 	 * Array of mutexes protecting the status queues.
 	 */
-	mutable std::mutex status_mtx[ApplicationStatusIF::STATE_COUNT];
+	mutable std::mutex status_mtx[Schedulable::STATE_COUNT];
 
 	/**
 	 * Array of iterator retainers for "in loop erase" support on STATUS
 	 * queues
 	 */
-	AppsUidMapItRetainer_t status_ret[ApplicationStatusIF::STATE_COUNT];
+	AppsUidMapItRetainer_t status_ret[Schedulable::STATE_COUNT];
 
 	/**
 	 * Array grouping the applications by programming language (@see
@@ -669,18 +668,18 @@ private:
 	 * correposnding scheduled status. This view on applicaitons could be
 	 * exploited by the synchronization module to update applications.
 	 */
-	AppsUidMap_t sync_vec[ApplicationStatusIF::SYNC_STATE_COUNT];
+	AppsUidMap_t sync_vec[Schedulable::SYNC_STATE_COUNT];
 
 	/**
 	 * Array of mutexes protecting the synchronization queues.
 	 */
-	mutable std::mutex sync_mtx[ApplicationStatusIF::SYNC_STATE_COUNT];
+	mutable std::mutex sync_mtx[Schedulable::SYNC_STATE_COUNT];
 
 	/**
 	 * Array of iterator retainers for "in loop erase" support on SYNC
 	 * queues
 	 */
-	AppsUidMapItRetainer_t sync_ret[ApplicationStatusIF::SYNC_STATE_COUNT];
+	AppsUidMapItRetainer_t sync_ret[Schedulable::SYNC_STATE_COUNT];
 
 	/**
 	 * @brief EXC cleaner deferrable
@@ -744,8 +743,8 @@ private:
 	 * @param next next application status
 	 */
 	ExitCode_t UpdateStatusMaps(AppPtr_t papp,
-	                            ApplicationStatusIF::State_t prev,
-	                            ApplicationStatusIF::State_t next);
+	                            Schedulable::State_t prev,
+	                            Schedulable::State_t next);
 
 	/**
 	 * @brief Release a synchronization request for the specified application
@@ -753,7 +752,7 @@ private:
 	 * @param papp the application to release
 	 * @param state the synchronization state to remove
 	 */
-	void RemoveFromSyncMap(AppPtr_t papp, ApplicationStatusIF::SyncState_t state);
+	void RemoveFromSyncMap(AppPtr_t papp, Schedulable::SyncState_t state);
 
 	/**
 	 * @brief Release any synchronization request for the specified
@@ -769,7 +768,7 @@ private:
 	 * @param papp the application to synchronize
 	 * @param state the synchronization state to add
 	 */
-	void AddToSyncMap(AppPtr_t papp, ApplicationStatusIF::SyncState_t state);
+	void AddToSyncMap(AppPtr_t papp, Schedulable::SyncState_t state);
 
 	/**
 	 * @brief Add the configured synchronization request for the specified

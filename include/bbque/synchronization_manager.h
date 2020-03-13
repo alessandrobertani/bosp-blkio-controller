@@ -39,7 +39,6 @@
 namespace bu = bbque::utils;
 
 using bbque::plugins::SynchronizationPolicyIF;
-
 using bbque::utils::Timer;
 using bbque::utils::MetricsCollector;
 
@@ -161,12 +160,12 @@ private:
 	/**
 	 * @brief Synchronize the specified EXCs
 	 */
-	ExitCode_t SyncApps(ApplicationStatusIF::SyncState_t syncState);
+	ExitCode_t SyncApps(Schedulable::SyncState_t syncState);
 
 	/**
 	 * @brief Synchronize platform resources for the specified EXCs
 	 */
-	ExitCode_t Sync_Platform(ApplicationStatusIF::SyncState_t syncState);
+	ExitCode_t Sync_Platform(Schedulable::SyncState_t syncState);
 
 	/**
 	 *@brief Actual invocation of platform proxy resource mapping functions
@@ -176,22 +175,22 @@ private:
 	/**
 	 * @brief Notify a Pre-Change to the specified EXCs
 	 */
-	ExitCode_t Sync_PreChange(ApplicationStatusIF::SyncState_t syncState);
+	ExitCode_t Sync_PreChange(Schedulable::SyncState_t syncState);
 
 	/**
 	 * @brief Notify a Sync-Change to the specified EXCs
 	 */
-	ExitCode_t Sync_SyncChange(ApplicationStatusIF::SyncState_t syncState);
+	ExitCode_t Sync_SyncChange(Schedulable::SyncState_t syncState);
 
 	/**
 	 * @brief Notify a Do-Change to the specified EXCs
 	 */
-	ExitCode_t Sync_DoChange(ApplicationStatusIF::SyncState_t syncState);
+	ExitCode_t Sync_DoChange(Schedulable::SyncState_t syncState);
 
 	/**
 	 * @brief Notify a Post-Change to the specified EXCs
 	 */
-	ExitCode_t Sync_PostChange(ApplicationStatusIF::SyncState_t syncState);
+	ExitCode_t Sync_PostChange(Schedulable::SyncState_t syncState);
 
 	/**
 	 * @brief Perform the synchronized resource acquisition

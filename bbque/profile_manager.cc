@@ -103,7 +103,7 @@ ProfileManager::ProfileScheduleClass(uint16_t prio) {
 			//		prio, papp->StrId(), papp->Value());
 
 			// Stats are computed just on RUNNING applications
-			if (papp->State() == ApplicationStatusIF::RUNNING) {
+			if (papp->State() == Schedulable::RUNNING) {
 				++running_count;
 
 				//logger->Debug("Prio[%d], adding [%s] to stats, value [%.4f]",

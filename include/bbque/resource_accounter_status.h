@@ -44,8 +44,8 @@ namespace br = bbque::res;
 
 namespace app
 {
-class ApplicationStatusIF;
-typedef std::shared_ptr<ApplicationStatusIF> AppSPtr_t;
+class Schedulable;
+typedef std::shared_ptr<Schedulable> SchedPtr_t;
 }
 namespace ba = bbque::app;
 
