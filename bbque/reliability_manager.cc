@@ -423,35 +423,57 @@ void ReliabilityManager::Dump(app::SchedPtr_t psched)
 #endif
 }
 
-
 void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
 {
-	AppUid_t uid = app::Application::Uid(pid, 0);
-	app::SchedPtr_t psched = am.GetApplication(uid);
-	if (psched) {
-		logger->Debug("Restore: trying to restore a "
-		              "running application: <%s>",
-		              psched->StrId());
+	// Retrieve info about the application type
+	std::string app_type_filename(BBQUE_CHECKPOINT_APPINFO_PATH "/");
+	app_type_filename += std::to_string(pid) + "_" + exe_name + "/type";
+	std::ifstream type_inf(app_type_filename, std::ifstream::in);
+	if (!type_inf.is_open()) {
+		logger->Error("Restoring: missing info file %s",
+			app_type_filename.c_str());
 		return;
 	}
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	else  {
-		psched = prm.GetProcess(pid);
+
+	std::string app_type;
+	type_inf >> app_type;
+
+	if (app_type.compare("ADAPTIVE") == 0) {
+		AppUid_t uid = app::Application::Uid(pid, 0);
+		app::SchedPtr_t psched = am.GetApplication(uid);
 		if (psched) {
-			logger->Warn("Restore: trying to restore a "
-			             "running process: <%s>",
-			             psched->StrId());
-			return;
+			if (psched->Active()) {
+				logger->Debug("Restore: trying to restore a "
+					"running application: <%s>",
+					psched->StrId());
+				return;
+			}
+			logger->Notice("Restore: ADAPTIVE application");
+
+			am.DestroyEXC(pid);
 		}
 	}
-
-	// TODO: Need code to handle ADAPTIVE applications also
-	prm.NotifyStart(exe_name, pid, app::Schedulable::RESTORING);
-
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	else if (app_type.compare("PROCESS") == 0) {
+		app::SchedPtr_t psched = prm.GetProcess(pid);
+		if (psched) {
+			logger->Warn("Restore: trying to restore a "
+				"running process: <%s>",
+				psched->StrId());
+			return;
+		}
+		logger->Notice("Restore: PROCESS application");
+		prm.NotifyStart(exe_name, pid, app::Schedulable::RESTORING);
+	}
 #endif
+	else {
+		logger->Error("Restore: unknown application type [%s]",
+			app_type.c_str());
+		return;
+	}
 
 	logger->Debug("Restore: [pid=%d name=%s] restore sequence started",
-	              pid, exe_name.c_str());
+		pid, exe_name.c_str());
 }
 
 
