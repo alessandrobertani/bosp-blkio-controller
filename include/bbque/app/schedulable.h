@@ -341,6 +341,10 @@ public:
 	 */
 	virtual bool Blocking() const;
 
+	/**
+	 * @brief Check if this EXC is being BLOCKED
+	 */
+	virtual bool Restoring() const;
 
 	/**
 	 * @brief Get the current working mode
@@ -567,6 +571,7 @@ protected:
 
 	virtual bool _Blocking() const;
 
+	virtual bool _Restoring() const;
 	virtual State_t _State() const;
 
 	virtual State_t _PreSyncState() const;

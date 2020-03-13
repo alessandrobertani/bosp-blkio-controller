@@ -265,6 +265,17 @@ bool Schedulable::Blocking() const
 	return _Blocking();
 }
 
+bool Schedulable::_Restoring() const
+{
+	return (schedule.state == RESTORING);
+}
+
+bool Schedulable::Restoring() const
+{
+	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
+	return _Restoring();
+}
+
 AwmPtr_t const & Schedulable::_CurrentAWM() const
 {
 	return schedule.awm;
