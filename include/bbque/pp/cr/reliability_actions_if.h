@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019  Politecnico di Milano
+ * Copyright (C) 2020  Politecnico di Milano
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <string>
+#include <boost/filesystem.hpp>
 
 #include "bbque/app/schedulable.h"
 
@@ -39,7 +40,8 @@ class ReliabilityActionsIF
 {
 public:
 
-	enum class ExitCode_t {
+	enum class ExitCode_t
+	{
 		OK,
 		ERROR_PROCESS_ID,
 		ERROR_TASK_ID,
@@ -49,9 +51,22 @@ public:
 		ERROR_UNKNOWN
 	};
 
-	ReliabilityActionsIF(std::string const & ipd): image_prefix_dir(ipd) { }
+	ReliabilityActionsIF() :
+	    image_prefix_dir(BBQUE_CHECKPOINT_IMAGE_PATH),
+	    freezer_prefix_dir(BBQUE_FREEZER_PATH)
+	{
+		if (!boost::filesystem::exists(image_prefix_dir)) {
+			boost::filesystem::create_directories(image_prefix_dir);
+		}
 
-	virtual ~ReliabilityActionsIF() { };
+		if (!boost::filesystem::exists(freezer_prefix_dir)) {
+			boost::filesystem::create_directory(freezer_prefix_dir);
+		}
+	}
+
+	virtual ~ReliabilityActionsIF()
+	{
+	};
 
 	/**
 	 * @brief Perform the checkpoint (dump) of an application/process/task

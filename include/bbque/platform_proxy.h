@@ -47,7 +47,7 @@ class PlatformProxy: public ReliabilityActionsIF
 
 public:
 
-	PlatformProxy(): ReliabilityActionsIF("/tmp") { }
+	PlatformProxy(): ReliabilityActionsIF() { }
 
 	virtual ~PlatformProxy() {}
 
