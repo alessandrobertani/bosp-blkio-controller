@@ -249,6 +249,14 @@ public:
 		return type;
 	}
 
+	/**
+	 * @brief The type of schedulable object in string format
+	 * @return "ADAPTIVE" or "PROCESS"
+	 */
+	virtual std::string GetTypeStr() const
+	{
+		return typeStr[type];
+	}
 
 	/**
 	 * @brief Get the schedule state
@@ -275,6 +283,8 @@ public:
 	 * @brief Verbose synchronization state names
 	 */
 	static char const *syncStateStr[SYNC_STATE_COUNT + 1];
+
+	static std::map<Schedulable::Type, std::string> typeStr;
 
 	/**
 	 * @brief String of the given state
@@ -340,7 +350,7 @@ public:
 
 	/**
 	 * @brief Get next working mode to switch in when the application is
-	 * re-scheduld
+	 * re-scheduled
 	 * @return A shared pointer to working mode descriptor (optimizer
 	 * interface)
 	 */
@@ -354,7 +364,7 @@ public:
 	virtual bool SwitchingAWM() const noexcept;
 
 	/**
-	 * @brief Number of schedulations
+	 * @brief Number of schedulings
 	 */
 	virtual uint64_t ScheduleCount() const noexcept;
 
@@ -478,8 +488,15 @@ protected:
 #endif
 
 #ifdef CONFIG_BBQUE_RELIABILITY
+
 	accumulator_set<double, stats<tag::sum, tag::min, tag::max,
 	                tag::mean, tag::variance>> checkpoint_latencies;
+
+	/**
+	 * Directory to store basic information about applications/EXCs, useful
+	 * in case of restore
+	 */
+	std::string checkpoint_info_dir;
 #endif
 
 	/** A string id with information for logging */

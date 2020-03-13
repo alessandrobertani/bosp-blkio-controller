@@ -46,6 +46,10 @@ char const *Schedulable::syncStateStr[] = {
 	"DISABLED"
 };
 
+std::map<Schedulable::Type, std::string> Schedulable::typeStr = {
+	{ Schedulable::Type::ADAPTIVE, "ADAPTIVE"},
+	{ Schedulable::Type::PROCESS, "PROCESS"}
+};
 
 std::set<Schedulable::State_t> Schedulable::pending_states = {
 	Schedulable::READY,
