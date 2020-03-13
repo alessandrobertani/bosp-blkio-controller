@@ -15,10 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fstream>
+
 #include "bbque/app/schedulable.h"
 #include "bbque/app/working_mode.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
+
+#include <boost/filesystem.hpp>
 
 namespace bbque
 {
@@ -58,6 +62,32 @@ std::set<Schedulable::State_t> Schedulable::pending_states = {
 	Schedulable::RESTORING
 };
 
+Schedulable::Schedulable(
+	std::string const & _name,
+	AppPid_t _pid,
+	Schedulable::Type _type) :
+	name(_name), pid(_pid), type(_type)
+{
+#ifdef CONFIG_BBQUE_RELIABILITY
+
+	checkpoint_info_dir = BBQUE_CHECKPOINT_APPINFO_PATH "/";
+	checkpoint_info_dir += std::to_string(pid) + "_" + name;
+
+	try {
+		if (!boost::filesystem::exists(checkpoint_info_dir)) {
+			boost::filesystem::create_directory(checkpoint_info_dir);
+			std::ofstream info_outf(
+				checkpoint_info_dir + "/type",
+				std::ofstream::out);
+			info_outf << GetTypeStr() << std::endl;
+			info_outf.close();
+		}
+	}
+	catch (std::exception &ex) {
+
+	}
+#endif
+}
 
 /*******************************************************************************
  *  EXC State and SyncState Management

@@ -63,17 +63,15 @@ bool AwmIdLesser(const AwmPtr_t & wm1, const AwmPtr_t & wm2)
 }
 
 Application::Application(std::string const & _name,
-                         AppPid_t _pid,
-                         uint8_t _exc_id,
-                         RTLIB_ProgrammingLanguage_t lang,
-                         bool container):
+	AppPid_t _pid,
+	uint8_t _exc_id,
+	RTLIB_ProgrammingLanguage_t lang,
+	bool container) :
+	ApplicationStatusIF(_name, _pid, Schedulable::Type::ADAPTIVE),
 	exc_id(_exc_id),
 	language(lang),
 	container(container)
 {
-	name = _name;
-	pid  = _pid;
-	type = Schedulable::Type::ADAPTIVE;
 
 	// Init the working modes vector
 	awms.recipe_vect.resize(MAX_NUM_AWM);

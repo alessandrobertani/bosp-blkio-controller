@@ -33,8 +33,8 @@ namespace app {
 class ApplicationConfIF;
 class Application;
 class WorkingMode;
+
 typedef std::shared_ptr<Application> AppPtr_t;
-//typedef std::shared_ptr<ApplicationConfIF> AppCPtr_t;
 typedef AppPtr_t AppCPtr_t;
 
 /**
@@ -44,7 +44,7 @@ typedef AppPtr_t AppCPtr_t;
  * This defines the interfaces for updating runtime information of the
  * application as priority, scheduled status and next working mode
  */
-class ApplicationConfIF: public ApplicationStatusIF {
+class ApplicationConfIF {
 
 public:
 

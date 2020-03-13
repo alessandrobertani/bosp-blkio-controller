@@ -29,14 +29,14 @@ namespace app
 {
 
 Process::Process(
-        std::string const & _name,
-        AppPid_t _pid, AppPrio_t _prio,
-        State_t _state, SyncState_t _sync)
+		 std::string const & _name,
+		 AppPid_t _pid,
+		 AppPrio_t _prio,
+		 State_t _state,
+		 SyncState_t _sync) :
+	Schedulable(_name, _pid, Schedulable::Type::PROCESS)
 {
-	name = _name;
-	pid = _pid;
 	priority = _prio;
-	type = Schedulable::Type::PROCESS;
 	schedule.state = _state;
 	schedule.syncState = _sync;
 

@@ -190,6 +190,8 @@ public:
 	}
 #endif
 
+	Schedulable(std::string const & name, AppPid_t pid, Schedulable::Type type);
+
 	/**
 	 * @brief Get the name of the application
 	 * @return The name string
@@ -572,6 +574,7 @@ protected:
 	virtual bool _Blocking() const;
 
 	virtual bool _Restoring() const;
+
 	virtual State_t _State() const;
 
 	virtual State_t _PreSyncState() const;

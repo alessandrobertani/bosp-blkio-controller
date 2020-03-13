@@ -52,7 +52,7 @@ typedef std::list<AwmPtr_t> AwmPtrList_t;
  * name, priority, current  working mode and scheduled state, next working
  * mode and scheduled state, and the list of all the active working modes
  */
-class ApplicationStatusIF: public bbque::app::Schedulable
+class ApplicationStatusIF: public app::Schedulable
 {
 
 public:
@@ -65,6 +65,12 @@ public:
 	        RU_STAT_AVG,
 	        RU_STAT_MAX
 	};
+
+	ApplicationStatusIF(
+		std::string const & name,
+		AppPid_t pid,
+		Schedulable::Type type):
+	 Schedulable(name, pid, type) { }
 
 	/**
 	 * @brief Get the ID of this Execution Context
