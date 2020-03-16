@@ -18,10 +18,13 @@
 #ifndef BBQUE_CHECKPOINT_RESTORE_H_
 #define BBQUE_CHECKPOINT_RESTORE_H_
 
+
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <boost/filesystem.hpp>
 
+#include "bbque/config.h"
 #include "bbque/app/schedulable.h"
 
 namespace bbque
@@ -55,6 +58,11 @@ public:
 	    image_prefix_dir(BBQUE_CHECKPOINT_IMAGE_PATH),
 	    freezer_prefix_dir(BBQUE_FREEZER_PATH)
 	{
+#ifdef CONFIG_BBQUE_RELIABILITY
+
+		bbque_assert(strlen(BBQUE_CHECKPOINT_IMAGE_PATH) > 0);
+		bbque_assert(strlen(BBQUE_FREEZER_PATH) > 0);
+
 		if (!boost::filesystem::exists(image_prefix_dir)) {
 			boost::filesystem::create_directories(image_prefix_dir);
 		}
@@ -62,6 +70,7 @@ public:
 		if (!boost::filesystem::exists(freezer_prefix_dir)) {
 			boost::filesystem::create_directory(freezer_prefix_dir);
 		}
+#endif
 	}
 
 	virtual ~ReliabilityActionsIF()
