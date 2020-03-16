@@ -47,7 +47,9 @@ char const *Schedulable::syncStateStr[] = {
 	"R-MIGRATED",
 	"MIGRATED",
 	"BLOCKED",
-	"DISABLED"
+	"DISABLED",
+
+	"SYNC_NONE"
 };
 
 std::map<Schedulable::Type, std::string> Schedulable::typeStr = {
