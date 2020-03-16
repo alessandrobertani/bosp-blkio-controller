@@ -220,7 +220,7 @@ void BbqueRPC_FIFO_Client::ChannelTrd(const char * name)
 
 	// Setup the RTLib UID
 	SetChannelThreadID(gettid(), name);
-	logger->Debug("channel thread [PID: %d] CREATED", channel_thread_pid);
+	logger->Debug("ChannelTrd [PID: %d] CREATED", channel_thread_pid);
 	// Notifying the thread has beed started
 	trdStatus_cv.notify_one();
 
@@ -228,12 +228,10 @@ void BbqueRPC_FIFO_Client::ChannelTrd(const char * name)
 	if (! running)
 		trdStatus_cv.wait(trdStatus_ul);
 
-	logger->Debug("channel thread [PID: %d] START", channel_thread_pid);
-
+	logger->Debug("ChannelTrd [PID: %d] START", channel_thread_pid);
 	while (! done)
 		ChannelFetch();
-
-	logger->Debug("channel thread [PID: %d] END", channel_thread_pid);
+	logger->Debug("ChannelTrd [PID: %d] END", channel_thread_pid);
 }
 
 #define WAIT_RPC_RESP \
@@ -267,63 +265,69 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char * name)
 		}
 	};
 	::strncpy(rf_APP_PAIR.rpc_fifo, app_fifo_filename, BBQUE_FIFO_NAME_LENGTH);
-	::strncpy(rf_APP_PAIR.pyl.app_name, name, RTLIB_APP_NAME_LENGTH);
-	logger->Debug("Pairing FIFO channels [app: %s, pid: %d]", name,
-	              application_pid);
+	::strncpy(rf_APP_PAIR.pyl.app_name, application_name, RTLIB_APP_NAME_LENGTH);
+	logger->Debug("ChannelPair: pairing FIFO channels [app_name: %s, app_fifo: %s]",
+	              rf_APP_PAIR.pyl.app_name,
+	              rf_APP_PAIR.rpc_fifo);
 	// Sending RPC Request
 	RPC_FIFO_SEND(APP_PAIR);
-	logger->Debug("Waiting BBQUE response...");
+	logger->Debug("ChannelPair: waiting for daemon response...");
 	WAIT_RPC_RESP;
+	logger->Debug("ChannelPair: daemon response: %d", chResp.result);
 	return (RTLIB_ExitCode_t) chResp.result;
 }
 
 RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelSetup()
 {
 	int error;
-	logger->Debug("Initializing channel");
-	// Opening server FIFO
-	logger->Debug("Opening bbque fifo [%s]...", bbque_fifo_path.c_str());
-	server_fifo_fd = ::open(bbque_fifo_path.c_str(), O_WRONLY | O_NONBLOCK);
+	logger->Debug("ChannelSetup: initialization...");
 
+	// Opening server FIFO
+	logger->Debug("ChannelSetup: opening daemon FIFO [%s]...", bbque_fifo_path.c_str());
+	server_fifo_fd = ::open(bbque_fifo_path.c_str(), O_WRONLY | O_NONBLOCK);
 	if (server_fifo_fd < 0) {
-		logger->Error("FAILED opening bbque fifo [%s] (Error %d: %s)",
+		logger->Error("ChannelSetup: opening daemon FIFO [%s] failed (error %d: %s)",
 		              bbque_fifo_path.c_str(), errno, strerror(errno));
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
+	logger->Debug("ChannelSetup: daemon FIFO open");
 
-	// Setting up application FIFO complete path
+	// Setting up application FIFO complete path and
+	// creating the client side pipe
 	app_fifo_path += app_fifo_filename;
-	logger->Debug("Creating [%s]...", app_fifo_path.c_str());
-	// Creating the client side pipe
+	logger->Debug("ChannelSetup: creating application FIFO [%s]...", app_fifo_path.c_str());
 	error = ::mkfifo(app_fifo_path.c_str(), 0644);
-
 	if (error) {
-		logger->Error("FAILED creating application FIFO [%s]",
+		logger->Error("ChannelSetup: creating application FIFO [%s] failed",
 		              app_fifo_path.c_str());
 		::close(server_fifo_fd);
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
+	logger->Debug("ChannelSetup: application FIFO created");
 
-	logger->Debug("Opening R/W...");
 	// Opening the client side pipe
 	// NOTE: this is opened R/W to keep it opened even if server
 	// should disconnect
+	logger->Debug("ChannelSetup: opening application FIFO (R/W)...");
 	client_fifo_fd = ::open(app_fifo_path.c_str(), O_RDWR);
-
 	if (client_fifo_fd < 0) {
-		logger->Error("FAILED opening application FIFO [%s]",
+		logger->Error("ChannelSetup: opening application FIFO [%s] failed",
 		              app_fifo_path.c_str());
 		::unlink(app_fifo_path.c_str());
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
+	logger->Debug("ChannelSetup: application FIFO open");
 
 	// Ensuring the FIFO is R/W to everyone
 	if (fchmod(client_fifo_fd, S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH)) {
 		logger->Error("FAILED setting permissions on RPC FIFO [%s] (Error %d: %s)",
+	logger->Debug("ChannelSetup: setting application FIFO permissions [%d]...",
+	               client_fifo_perm);
 		              app_fifo_path.c_str(), errno, strerror(errno));
 		::unlink(app_fifo_path.c_str());
 		return RTLIB_BBQUE_CHANNEL_SETUP_FAILED;
 	}
+	logger->Debug("ChannelSetup: FIFO permissions updated");
 
 	return RTLIB_OK;
 
@@ -334,6 +338,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(const char * name)
 	std::unique_lock<std::mutex> trdStatus_ul(trdStatus_mtx);
 
 	// Starting the communication thread
+	logger->Debug("_Init: spawning channel thread...");
 	done = false;
 	running = false;
 	ChTrd = std::thread(&BbqueRPC_FIFO_Client::ChannelTrd, this, name);
@@ -349,6 +354,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(const char * name)
 		logger->Info("Init: restoring the application fifo [%s]",
 		             app_fifo_filename);
 	}
+	logger->Info("_Init: application fifo = %s", app_fifo_filename);
 
 	// Setting up the communication channel
 	RTLIB_ExitCode_t result = ChannelSetup();
@@ -356,12 +362,13 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Init(const char * name)
 		return result;
 
 	// Start the reception thread
+	logger->Debug("_Init: starting channel thread...");
 	running = true;
 	trdStatus_cv.notify_one();
 	trdStatus_ul.unlock();
 
 	// Pairing channel with server
-	result = ChannelPair(name);
+	result = ChannelPair(application_name);
 	if (result != RTLIB_OK) {
 		::unlink(app_fifo_path.c_str());
 		::close(server_fifo_fd);
@@ -401,14 +408,14 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Register(pRegisteredEXC_t prec)
 	strncpy(rf_EXC_REGISTER.pyl.recipe, prec->parameters.recipe,
 	        RTLIB_EXC_NAME_LENGTH - 1);
 	rf_EXC_REGISTER.pyl.lang = prec->parameters.language;
-	logger->Debug("Registering EXC [%d:%d:%s:%d]...",
+	logger->Debug("_Register: EXC [%d:%d:%s:%d]...",
 	              rf_EXC_REGISTER.pyl.hdr.app_pid,
 	              rf_EXC_REGISTER.pyl.hdr.exc_id,
 	              rf_EXC_REGISTER.pyl.exc_name,
 	              rf_EXC_REGISTER.pyl.lang);
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_REGISTER);
-	logger->Debug("Waiting BBQUE response...");
+	logger->Debug("_Register: waiting for daemon response...");
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t) chResp.result;
 }
@@ -434,13 +441,13 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Unregister(pRegisteredEXC_t prec)
 	};
 	::strncpy(rf_EXC_UNREGISTER.pyl.exc_name, prec->name.c_str(),
 	          RTLIB_EXC_NAME_LENGTH);
-	logger->Debug("Unregistering EXC [%d:%d:%s]...",
+	logger->Debug("_Unregister: EXC [%d:%d:%s]...",
 	              rf_EXC_UNREGISTER.pyl.hdr.app_pid,
 	              rf_EXC_UNREGISTER.pyl.hdr.exc_id,
 	              rf_EXC_UNREGISTER.pyl.exc_name);
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_UNREGISTER);
-	logger->Debug("Waiting BBQUE response...");
+	logger->Debug("_Unregister: waiting for daemon response....");
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t) chResp.result;
 }
@@ -463,12 +470,12 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Enable(pRegisteredEXC_t prec)
 			},
 		}
 	};
-	logger->Debug("Enabling EXC [%d:%d]...",
+	logger->Debug("_Enable: EXC [%d:%d]...",
 	              rf_EXC_START.pyl.hdr.app_pid,
 	              rf_EXC_START.pyl.hdr.exc_id);
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_START);
-	logger->Debug("Waiting BBQUE response...");
+	logger->Debug("_Enable: waiting for daemon response...");
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t) chResp.result;
 }
@@ -491,12 +498,12 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Disable(pRegisteredEXC_t prec)
 			},
 		}
 	};
-	logger->Debug("Disabling EXC [%d:%d]...",
+	logger->Debug("_Disable: EXC [%d:%d]...",
 	              rf_EXC_STOP.pyl.hdr.app_pid,
 	              rf_EXC_STOP.pyl.hdr.exc_id);
 	// Sending RPC Request
 	RPC_FIFO_SEND(EXC_STOP);
-	logger->Debug("Waiting BBQUE response...");
+	logger->Debug("_Disable: waiting for daemon response...");
 	WAIT_RPC_RESP;
 	return (RTLIB_ExitCode_t) chResp.result;
 }
@@ -667,8 +674,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPreChangeResp(
 			RTLIB_OK
 		}
 	};
-	logger->Debug("PreChange response EXC [%d:%d] "
-	              "latency [%d]...",
+	logger->Debug("_SyncpPreChangeResp: EXC [%d:%d] latency [%d]...",
 	              rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.hdr.app_pid,
 	              rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.hdr.exc_id,
 	              rf_BBQ_SYNCP_PRECHANGE_RESP.pyl.syncLatency);

@@ -397,7 +397,7 @@ ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
 	// Copy the RPC message into the FIFO msg
 	::memcpy(&(fifo_msg->pyl), msg, count);
 
-	logger->Debug("FIFO RPC: TX [typ: %d, sze: %d] "
+	logger->Debug("FIFO RPC: TX [type: %d, size: %d] "
 	              "using app channel [%d:%s]...",
 	              msg->typ, count,
 	              ppd->app_fifo_fd,
@@ -409,7 +409,7 @@ ssize_t FifoRPC::SendMessage(plugin_data_t & pd, rpc_msg_ptr_t msg,
 	fifo_msg->hdr.rpc_msg_type = msg->typ;
 	error = ::write(ppd->app_fifo_fd, fifo_msg, fifo_msg->hdr.fifo_msg_size);
 	if (error == -1) {
-		logger->Error("FIFO RPC: send massage (header) FAILED (Error %d: %s)",
+		logger->Error("FIFO RPC: send message (header) FAILED (Error %d: %s)",
 		              errno, strerror(errno));
 		return -errno;
 	}

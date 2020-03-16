@@ -358,9 +358,11 @@ RTLIB_ExitCode_t BbqueRPC::InitializeApplication(
 	application_name = name;
 	application_pid  = gettid();
 	restore_pid = r_pid;
-	logger->Debug("Initializing pid=%d name=%s parent=%d [restore_pid=%d]",
+
+	logger->Debug("Initialize: pid=%d name=%s tid=%d, ppid=%d [restore_pid=%d]",
 	              application_pid,
 	              application_name,
+	              gettid(),
 	              getppid(),
                       restore_pid);
 
@@ -372,7 +374,7 @@ RTLIB_ExitCode_t BbqueRPC::InitializeApplication(
 
 	// Initialize CGroup support. Note Per-APP cgroups will be mounted during
 	// Configuration phase
-	logger->Debug("Initializing libcgroup");
+	logger->Debug("Initialize: libcgroup...");
 	exitCode = CGroupCheckInitialization();
 	if (exitCode != RTLIB_OK) {
 		logger->Error("CGroup initialization FAILED");
@@ -380,7 +382,7 @@ RTLIB_ExitCode_t BbqueRPC::InitializeApplication(
 	}
 
 	rtlib_is_initialized = true;
-	logger->Debug("Initialization DONE");
+	logger->Debug("Initialize: DONE");
 	return RTLIB_OK;
 }
 
@@ -549,7 +551,7 @@ void BbqueRPC::Unregister(
 void BbqueRPC::UnregisterAll()
 {
 	RTLIB_ExitCode_t result;
-	logger->Debug("UnregisterAll: unregistering execution contexts...");
+	logger->Info("UnregisterAll: unregistering execution contexts...");
 
 	// Checking for library initialization
 	if (! rtlib_is_initialized) {

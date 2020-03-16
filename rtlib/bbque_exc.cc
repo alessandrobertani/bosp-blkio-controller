@@ -64,11 +64,11 @@ BbqueEXC::BbqueEXC(
 
 	// Get a Logger module
 	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
-	logger->Info("Initializing a new EXC [%s]...", exc_name.c_str());
+
 	// Register to the resource manager
+	logger->Info("Initializing a new EXC [%s]...", exc_name.c_str());
 	assert(rtlib->Register);
 	exc_handler = rtlib->Register(exc_name.c_str(), &exc_parameters);
-
 	if (! exc_handler) {
 		logger->Error("Registering EXC [%s] FAILED", exc_name.c_str());
 		assert(exc_handler);
@@ -79,9 +79,9 @@ BbqueEXC::BbqueEXC(
 	exc_status.is_registered = true;
 	// Keep track of our UID
 	exc_unique_id = rtlib->Utils.GetUniqueID(exc_handler);
+
 	// Set up control groups
 	assert(rtlib->SetupCGroups);
-
 	if (rtlib->SetupCGroups(exc_handler) != RTLIB_OK)
 		logger->Error("No CGroup support!");
 
