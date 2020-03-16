@@ -1,3 +1,17 @@
+
+
+config BBQUE_RTLIB_APP_NAME_LENGTH
+  int "Application Name Length"
+  default 32
+  ---help---
+  The length of the string representing the name of the application
+
+################################################################################
+# RPC Channel configuration
+################################################################################
+
+comment "RPC Configuration"
+
 choice
   prompt "RPC Channel"
 
@@ -12,10 +26,19 @@ choice
     Use the Google Protocol Buffers and FIFO based RPC channel
 endchoice
 
+config BBQUE_RPC_TIMEOUT
+  int "RPC Timeout"
+  default 5000
+  ---help---
+  The amount of time (in milliseconds) after which a not responding application
+  must be considered disabled.
+
 
 ################################################################################
 # Bindings
 ################################################################################
+
+comment "Language wrappers"
 
 menu "Bindings"
   source "barbeque/rtlib/bindings/Kconfig"
@@ -23,30 +46,21 @@ endmenu # Bindings Configuration
 
 
 ################################################################################
+# Profiling support
+################################################################################
 
-config BBQUE_RPC_TIMEOUT
-  int "RPC Channel Timeout"
-  default 5000
-  ---help---
-  The amount of time (in seconds) after which a not responding application
-  must be considered disabled.
+#config BBQUE_RTLIB_MONITORS
+#  bool "Monitor library (AS-RTM)"
+#  default n
+#  ---help---
+#  Monitor library (also called ARGO). It consists of a framework to manage the
+#  reconfiguration space of an application including several paramenters and
+#  a wide range of possible values.
 
-config BBQUE_RTLIB_APP_NAME_LENGTH
-  int "Application Name Length"
-  default 32
-  ---help---
-  The length of the string representing the name of the application
-
-config BBQUE_RTLIB_MONITORS
-  bool "Monitor library (AS-RTM)"
-  default n
-  ---help---
-  Monitor library (also called ARGO). It consists of a framework to manage the
-  reconfiguration space of an application including several paramenters and
-  a wide range of possible values.
+comment "Profiling Support"
 
 config BBQUE_RTLIB_PERF_SUPPORT
-  bool "Performance Counters Profiling Support"
+  bool "Performance Counters Profiling"
   depends on TARGET_LINUX
   default y
   ---help---
@@ -74,6 +88,29 @@ config BBQUE_RTLIB_CGROUPS_SUPPORT
   or using CGroups for run-time resources management, such as some Android
   devices.
 
+
+menu "Run-time Profiling Configuration"
+
+config BBQUE_RTLIB_RTPROF_REARM_TIME_MS
+  int "Profile forwarding rearm time [ms]"
+  default 1000
+  ---help---
+  Each time the Runtime Library forwards a runtime profile to the BarbequeRTRM,
+  the forwarding is inhibited to avoid high forwarding rates. By changing
+  this option, the inhibition time can be changed. Note that the value is
+  expressed in milliseconds.
+
+config BBQUE_RTLIB_RTPROF_WAIT_FOR_SYNC_MS
+  int "Profile forwarding synchronization timeout [ms]"
+  default 5000
+  ---help---
+  Each time the Runtime Library forwards a runtime profile to the BarbequeRTRM,
+  the forwarding is inhibited until the BarbequeRTRM modifies the resource allocation.
+  If the BarbequeRTRM does not change the allocation for a certain period of time,
+  the Runtime Library become once again able to forward runtime profiles.
+
+endmenu # Performance
+
 config BBQUE_RTLIB_UNMANAGED_SUPPORT
   bool "Unmanaged Applications Support"
   depends on TARGET_LINUX
@@ -96,32 +133,11 @@ config BBQUE_RTLIB_UNMANAGED_SUPPORT
 
   Say NO to this option if unsure.
 
-menu "Performance API Configuration"
-
-config BBQUE_RTLIB_RTPROF_REARM_TIME_MS
-  int "Runtime Profiles Forwarding Rearm Time [ms]"
-  default 1000
-  ---help---
-  Each time the Runtime Library forwards a runtime profile to the BarbequeRTRM,
-  the forwarding is inhibited to avoid high forwarding rates. By changing
-  this option, the inhibition time can be changed. Note that the value is
-  expressed in milliseconds.
-
-config BBQUE_RTLIB_RTPROF_WAIT_FOR_SYNC_MS
-  int "Runtime Profiles Forwarding Wait For Sync Time [ms]"
-  default 5000
-  ---help---
-  Each time the Runtime Library forwards a runtime profile to the BarbequeRTRM,
-  the forwarding is inhibited until the BarbequeRTRM modifies the resource allocation.
-  If the BarbequeRTRM does not change the allocation for a certain period of time,
-  the Runtime Library become once again able to forward runtime profiles.
-
-endmenu # Performance
 
 comment "Advanced Options"
 
 config BBQUE_YM_SYNC_FORCE
-  bool "Synchronization Point forcing"
+  bool "Synchronization point forcing"
   default n
   ---help---
   Enable the Sync Point forcing via Synchronization Manager and RTLib.
@@ -146,7 +162,7 @@ config BBQUE_YM_SYNC_FORCE
   If unsure, select N
 
 config BBQUE_YP_SASB_ASYNC
-  bool "Parallel Re-configurations"
+  bool "Parallel reconfigurations"
   default n if TARGET_ANDROID
   default y
   ---help---
