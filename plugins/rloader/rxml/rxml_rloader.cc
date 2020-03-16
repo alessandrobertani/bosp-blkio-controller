@@ -149,7 +149,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 
 	// Recipe object
 	recipe_ptr = _recipe;
-	logger->Info("Loading recipe <%s>...", _recipe_name.c_str());
+	logger->Info("Loading recipe with name=[%s]...", _recipe_name.c_str());
 
 	try {
 		// Plugin needs a logger
@@ -162,6 +162,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(
 		try {
 			// Load the recipe parsing an XML file
 			std::string path(recipe_dir + "/" + _recipe_name + ".recipe");
+			logger->Info("Loading recipe <%s>...", path.c_str());
 			std::ifstream xml_file(path);
 			std::stringstream buffer;
 			buffer << xml_file.rdbuf();
