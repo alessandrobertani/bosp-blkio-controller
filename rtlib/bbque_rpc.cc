@@ -795,7 +795,7 @@ RTLIB_ExitCode_t BbqueRPC::CGroupCommitAllocation(pRegisteredEXC_t exc)
 
 
 	// CFS_PERIOD: the period over which cpu bandwidth. limit is enforced
-	uint32_t cycletime_mean_us = 1000u * exc->cycletime_analyser_system.GetMean();
+	uint32_t cycletime_mean_us = 1000u * exc->cycletime_stats_system.GetMean();
 	//if (cycletime_mean_us == 0 || cycletime_mean_us > MAX_ALLOWED_CFS_PERIOD)
 	cycletime_mean_us = DEFAULT_CFS_PERIOD;
 
@@ -1109,8 +1109,9 @@ void BbqueRPC::_SyncTimeEstimation(pRegisteredEXC_t exc)
 	double bbque_cycletime_ms =
 	        user_cycletime_ms - exc->cps_enforcing_sleep_time_ms;
 	exc->cps_enforcing_sleep_time_ms = 0;
-	logger->Debug("Last cycle time %10.3f[ms] (%10.3f without sleeps) for EXC "
-	              "[%s:%02hu]", user_cycletime_ms, bbque_cycletime_ms,
+	logger->Debug("Cycle time: %10.3f[ms] (%10.3f without sleeps) for EXC "
+	              "[%s:%02hu]",
+	              user_cycletime_ms, bbque_cycletime_ms,
 	              exc->name.c_str(), exc->id);
 
 	// Update running counters
@@ -1123,8 +1124,8 @@ void BbqueRPC::_SyncTimeEstimation(pRegisteredEXC_t exc)
 	exc->cycles_count += 1;
 
 	// Push sample into bbque CPS estimator
-	exc->cycletime_analyser_system.InsertValue(bbque_cycletime_ms);
-	exc->cycletime_analyser_user.InsertValue(user_cycletime_ms);
+	exc->cycletime_stats_system.InsertValue(bbque_cycletime_ms);
+	exc->cycletime_stats_user.InsertValue(user_cycletime_ms);
 
 	// TIMER: Re-sart RUNNING
 	exc->execution_timer.start();
@@ -1173,39 +1174,59 @@ RTLIB_ExitCode_t BbqueRPC::UpdateStatistics(pRegisteredEXC_t exc)
 	return RTLIB_OK;
 }
 
+
+
 RTLIB_ExitCode_t BbqueRPC::UpdateCPUBandwidthStats(pRegisteredEXC_t exc)
 {
-	exc->cpu_usage_info.current_time = times(&exc->cpu_usage_info.time_sample);
-	clock_t elapsed_time = exc->cpu_usage_info.current_time
-	                       - exc->cpu_usage_info.previous_time;
+	// Get process times (ticks, system, user CPU times)
+	exc->cpu_usage_info.curr_time = times(&exc->cpu_usage_info.time_sample);
+
+	logger->Debug("UpdateCPUBandwidthStats: "
+	             "TKS: prev=%d curr=%d "
+	             "SYS: prev=%d curr=%d "
+	             "USR: prev=%d curr=%d ",
+	             exc->cpu_usage_info.prev_time, exc->cpu_usage_info.curr_time,
+	             exc->cpu_usage_info.prev_tms_stime, exc->cpu_usage_info.time_sample.tms_stime,
+	             exc->cpu_usage_info.prev_tms_utime, exc->cpu_usage_info.time_sample.tms_utime
+	);
+
+	clock_t elapsed_time = exc->cpu_usage_info.curr_time
+	                       - exc->cpu_usage_info.prev_time;
 	clock_t system_time = exc->cpu_usage_info.time_sample.tms_stime
-	                      - exc->cpu_usage_info.previous_tms_stime;
+	                      - exc->cpu_usage_info.prev_tms_stime;
 	clock_t user_time = exc->cpu_usage_info.time_sample.tms_utime
-	                    - exc->cpu_usage_info.previous_tms_utime;
+	                    - exc->cpu_usage_info.prev_tms_utime;
 
-	if (elapsed_time <= 0 || system_time < 0 || user_time < 0)
+	logger->Debug("UpdateCPUBandwidthStats: ticks:%d sys:%d usr:%d",
+	             elapsed_time, system_time, user_time);
+	if (elapsed_time <= RT_CPU_TICKS_PERIOD_LEN || system_time < 0 || user_time < 0) {
+		logger->Debug("UpdateCPUBandwidthStats: waiting for more ticks...");
 		return RTLIB_ERROR;
+	}
 
+	// Update CPU usage
 	double cpu_usage = 100.0 * (system_time + user_time) / elapsed_time;
-	exc->cpu_usage_analyser.InsertValue(cpu_usage);
-	logger->Debug("Measured CPU Usage: %f, average: %f",
-	              cpu_usage, exc->cpu_usage_analyser.GetMean());
-	exc->cpu_usage_info.previous_time = exc->cpu_usage_info.current_time;
-	exc->cpu_usage_info.previous_tms_stime =
+	exc->cpu_usage_stats.InsertValue(cpu_usage);
+	logger->Debug("UpdateCPUBandwidthStats: curr_usage=%.2f, avg_usage=%.2f",
+	              cpu_usage, exc->cpu_usage_stats.GetMean());
+
+	// Set previous time samples
+	exc->cpu_usage_info.prev_time = exc->cpu_usage_info.curr_time;
+	exc->cpu_usage_info.prev_tms_stime =
 	        exc->cpu_usage_info.time_sample.tms_stime;
-	exc->cpu_usage_info.previous_tms_utime =
+	exc->cpu_usage_info.prev_tms_utime =
 	        exc->cpu_usage_info.time_sample.tms_utime;
 	return RTLIB_OK;
 }
 
 void BbqueRPC::InitCPUBandwidthStats(pRegisteredEXC_t exc)
 {
-	//exc->cpu_usage_info.current_time = times(&exc->cpu_usage_info.time_sample);
-	//exc->cpu_usage_info.previous_time = exc->cpu_usage_info.current_time;
-	exc->cpu_usage_info.previous_time = times(&exc->cpu_usage_info.time_sample);
-	exc->cpu_usage_info.previous_tms_stime =
+	//exc->cpu_usage_info.curr_time = times(&exc->cpu_usage_info.time_sample);
+	//exc->cpu_usage_info.prev_time = exc->cpu_usage_info.curr_time;
+	exc->cpu_usage_info.prev_time = times(&exc->cpu_usage_info.time_sample);
+	exc->cpu_usage_info.prev_tms_stime =
 	        exc->cpu_usage_info.time_sample.tms_stime;
-	exc->cpu_usage_info.previous_tms_utime =
+	exc->cpu_usage_info.prev_tms_utime =
 	        exc->cpu_usage_info.time_sample.tms_utime;
 }
 
@@ -1229,13 +1250,14 @@ void BbqueRPC::ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler)
 	assert(isRegistered(exc) == true);
 
 	logger->Debug("SetCPSGoal: Resetting cycle time history");
-	exc->last_cycletime_ms = exc->cycletime_analyser_user.GetMean();
-	exc->cycletime_analyser_user.Reset();
-	exc->cycletime_analyser_system.Reset();
+	exc->last_cycletime_ms = exc->cycletime_stats_user.GetMean();
+	exc->cycletime_stats_user.Reset();
+	exc->cycletime_stats_system.Reset();
 
 	logger->Debug("SetCPSGoal: Resetting CPU quota history");
+	memset(&exc->cpu_usage_info, 0, sizeof(CpuUsageStats));
 	exc->cpu_usage_info.reset_timestamp = true;
-	exc->cpu_usage_analyser.Reset();
+	exc->cpu_usage_stats.Reset();
 
 	exc->waiting_sync_timeout_ms = 0;
 	exc->is_waiting_for_sync = false;
@@ -1768,7 +1790,6 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 	// Keep copy of the required synchronization action
 	exc->event = (RTLIB_ExitCode_t) (RTLIB_EXC_GWM_START + msg.event);
 	result = SyncP_PreChangeNotify(exc);
-	logger->Debug("SyncP_PreChangeNotify: ");
 
 	// Set the new required AWM (if not being blocked)
 	if (exc->event != RTLIB_EXC_GWM_BLOCKED) {
@@ -1789,6 +1810,8 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 			tmp->ocl_device_id   = systems[id].ocl_device_id;
 #endif // CONFIG_TARGET_OPENCL
 			exc->resource_assignment[id] = tmp;
+			logger->Debug("SyncP_PreChangeNotify: assigned resources from system %d",
+			              id);
 		}
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
@@ -1924,6 +1947,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
 	uint32_t syncLatency = 0;
 	if (! isAwmWaiting(exc) && exc->current_awm_stats) {
 		syncLatency = GetSyncLatency(exc);
+		logger->Debug("SyncP_PreChangeNotify: synchronization latency updated");
 	}
 
 	exc_u_lock.unlock();
@@ -2101,7 +2125,6 @@ RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
 
 	// Calling the low-level enable function
 	result = _Clear(exc);
-
 	if (result != RTLIB_OK) {
 		logger->Error("Clear constraints for EXC [%p:%s] FAILED (Error %d: %s)",
 		              (void *) exc_handler,
@@ -2114,78 +2137,88 @@ RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
+
+RTLIB_ExitCode_t BbqueRPC::UpdateRuntimeProfile(
         const RTLIB_EXCHandler_t exc_handler)
 {
 	// Get the execution context ///////////////////////////////////////////////
-	pRegisteredEXC_t exc;
 	assert(exc_handler);
 
-	exc = getRegistered(exc_handler);
-	if (! exc) {
-		logger->Error("[%p] RTP forward FAILED (EXC not registered)",
-		              (void *) exc_handler);
+	pRegisteredEXC_t exc = getRegistered(exc_handler);
+	if (!exc) {
+		logger->Error("UpdateRuntimeProfile: forward FAILED (EXC not registered)");
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
-	// Init ggap info
-	float goal_gap = 0.0f;
-	exc->runtime_profiling.cpu_goal_gap = 0.0f;
+	// Compute Goal Gap ////////////////////////////////////////////////////
+	float goal_gap = ComputeGoalGap(exc);
 
-	// Check SKIP conditions ///////////////////////////////////////////////
+#ifndef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+	// If cgroup handling happens at global resource manager level,
+	// just set the goal gap. It will be forwarded to bbque and used
+	// to change allocation
+	exc->runtime_profiling.cpu_goal_gap = 100.0f * goal_gap;
+#else
+	UpdateDistributedAllocation(exc_handler, goal_gap);
+#endif
+
+	return RTLIB_OK;
+}
+
+
+float BbqueRPC::ComputeGoalGap(pRegisteredEXC_t exc)
+{
+	float goal_gap = 0.0f;
 
 	// Allocation is not changed if there are not enough samples to compute
 	// meaningful statistics
-	float cycletime_ic99 = exc->cycletime_analyser_system.GetConfidenceInterval99();
-	if (exc->cycletime_analyser_system.GetWindowSize() == 0 || cycletime_ic99 == 0) {
-		logger->Debug("UpdateAllocation: No samples to analyse. SKIPPING.");
-		return RTLIB_OK;
+	float cycletime_ic99 = exc->cycletime_stats_system.GetConfidenceInterval99();
+	if (exc->cycletime_stats_system.GetWindowSize() == 0 || cycletime_ic99 == 0) {
+		logger->Debug("ComputeGoalGap: no cycle time samples. Skipping...");
+		return 0.0f;
 	}
 
-	// Compute Goal Gap ////////////////////////////////////////////////////
 	if (exc->cps_goal_min + exc->cps_goal_max > 0.0f && ! exc->explicit_ggap_assertion) {
-		// Milliseconds per cycle
-		float avg_cycletime_ms = exc->cycletime_analyser_system.GetMean();
+		float avg_cycletime_ms = exc->cycletime_stats_system.GetMean();
 		float min_cycletime_ms = avg_cycletime_ms - cycletime_ic99;
 		float max_cycletime_ms = avg_cycletime_ms + cycletime_ic99;
-
 		if (avg_cycletime_ms == 0.0f) {
-			logger->Warn("Cycle time computation not available. Skipping.");
-			return RTLIB_OK;
+			logger->Warn("ComputeGoalGap: cycle time not available. Skipping...");
+			return 0.0f;
 		}
+		logger->Debug("ComputeGoalGap: [CTime] avg=%.2f min=%.2f max=%.2f [ms]",
+		              avg_cycletime_ms,
+		              min_cycletime_ms,
+		              max_cycletime_ms);
 
 		float cps_avg = 1000.0f / avg_cycletime_ms;
 		float cps_min = 1000.0f / max_cycletime_ms;
 		float cps_max = 1000.0f / min_cycletime_ms;
 
-		float target_cps;
-		float current_cps;
 		bool  bad_allocation = false;
+		float target_cps;
+		float current_cps = cps_avg;
 
 		if (exc->cps_goal_min > 0.0f && exc->cps_goal_max == 0.0f) {
-			// There isn't a max CPS goal
-			target_cps = exc->cps_goal_min;
-			current_cps = cps_min;
+			target_cps     = exc->cps_goal_min;
 			bad_allocation = current_cps < target_cps;
 		} else if (exc->cps_goal_min == 0) {
-			// There isn't a min CPS goal
-			target_cps = exc->cps_goal_max;
-			current_cps = cps_max;
+			target_cps     = exc->cps_goal_max;
 			bad_allocation = current_cps > target_cps;
 		} else {
-			target_cps =
-			        0.5f * (exc->cps_goal_min + exc->cps_goal_max);
-			current_cps = cps_avg;
+			target_cps  = 0.5f * (exc->cps_goal_min + exc->cps_goal_max);
 			bad_allocation =
 			        (current_cps < exc->cps_goal_min) ||
 			        (current_cps > exc->cps_goal_max);
 		}
 
+		logger->Debug("ComputeGoalGap: [CPS] targ=%.2f curr=%.2f",
+		             target_cps, current_cps);
+
 		if (bad_allocation) {
 			// Goal gap [%] = (real performance - ideal performance) / ideal performance
 			goal_gap = (current_cps - target_cps) / target_cps;
-			logger->Debug("UpdateAllocation: goal gap prev is %f",
-			              100.0f * goal_gap);
+			logger->Debug("ComputeGoalGap: [GAP] curr=%.2f", 100.0f * goal_gap);
 #ifndef CONFIG_TARGET_ANDROID
 			// Constraining gap to avoid harsh allocation changes:
 			// Never request less than half the budget
@@ -2193,31 +2226,32 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 #endif
 		}
 
-		logger->Debug("Performance goal gap is %f", 100.0f * goal_gap);
-
 	} else if (exc->explicit_ggap_assertion) {
 		goal_gap = exc->explicit_ggap_value / 100.0f;
 		exc->explicit_ggap_assertion = false;
 		exc->explicit_ggap_value = 0.0;
-		logger->Debug("Performance goal gap (EXPLICIT) is %f",
-		              100.0f * goal_gap);
-	} else
-		return RTLIB_OK;
+		logger->Debug("ComputeGoalGap: performance goal gap set EXPLICIT)");
+	}
 
-#ifndef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
-	// If CGroup handling happens at global resource manager level,
-	// Just set the goal gap. It willb e forwarded to bbque and used
-	// to change allocation.
-	exc->runtime_profiling.cpu_goal_gap = 100.0f * goal_gap;
-#else
+	logger->Debug("ComputeGoalGap: performance gap is %f", 100.0f * goal_gap);
+	return goal_gap;
+}
+
+
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+
+RTLIB_ExitCode_t BbqueRPC::UpdateDistributedAllocation(
+	pRegisteredEXC_t exc,
+	float goal_gap)
+{
 	// Real CPU usage according to the statistical analysis
-	float avg_cpu_usage = exc->cpu_usage_analyser.GetMean();
+	float avg_cpu_usage = exc->cpu_usage_stats.GetMean();
 	float ideal_cpu_usage = avg_cpu_usage / (1.0f + goal_gap);
 
 	// Use Goal Gap to change Allocation ///////////////////////////////////
 	if (goal_gap != 0.0f) {
 		if (ideal_cpu_usage == 0.0f) {
-			logger->Debug("CPU quota computation not available. Skipping.");
+			logger->Warn("CPU quota computation not available. Skipping.");
 			return RTLIB_OK;
 		}
 
@@ -2247,21 +2281,22 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 	}
 #ifndef CONFIG_TARGET_ANDROID
 	// Check that I have enough samples for CPU stats computing
-	if (exc->cpu_usage_analyser.GetWindowSize() < 10) {
-		logger->Debug("Not enough samples to compute CPU usage stats.");
+	if (exc->cpu_usage_stats.GetWindowSize() < 10) {
+		logger->Warn("Not enough samples to compute CPU usage stats.");
 		return RTLIB_OK;
 	}
 #endif
 	// Set Runtime Profile Forwarding flag if saturated ////////////////////
 	// Reset the flag
 	exc->runtime_profiling.rtp_forward = false;
+
 	// CPU usage for the next cycle will be less than this value with 90% probability
 	float cpu_usage_90 = ideal_cpu_usage +
-	                     exc->cpu_usage_analyser.GetConfidenceInterval90();
+	                     exc->cpu_usage_stats.GetConfidenceInterval90();
+
 	// CPU usage for the next cycle will be less than this value with 99% probability
 	float cpu_usage_99 = ideal_cpu_usage +
-	                     exc->cpu_usage_analyser.GetConfidenceInterval99();
-
+	                     exc->cpu_usage_stats.GetConfidenceInterval99();
 
 	// Maximum CPU usage as decreed by the BarbequeRTRM
 	float cpu_usage_budget = 100.0f * exc->cg_budget.cpu_budget_shared;
@@ -2285,80 +2320,75 @@ RTLIB_ExitCode_t BbqueRPC::UpdateAllocation(
 	              exc->runtime_profiling.cpu_goal_gap);
 
 	// Constraining gap to avoid harsh allocation changes:
-	// Never request less than half the budget
+	// Never require less than half the budget
 	exc->runtime_profiling.cpu_goal_gap =
 	        std::max(-33.3f, exc->runtime_profiling.cpu_goal_gap);
-#endif
-
-	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(
-        const RTLIB_EXCHandler_t exc_handler)
-{
-	// Get the execution context ///////////////////////////////////////////////
-	pRegisteredEXC_t exc;
-	assert(exc_handler);
+#endif
 
-	exc = getRegistered(exc_handler);
+
+RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(const RTLIB_EXCHandler_t exc_handler)
+{
+	assert(exc_handler);
+	pRegisteredEXC_t exc = getRegistered(exc_handler);
 	if (! exc) {
-		logger->Error("[%p] RTP forward FAILED (EXC not registered)",
-		              (void *) exc_handler);
+		logger->Fatal("ForwardRuntimeProfile: FAILED (EXC not registered)");
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
-	// Check SKIP conditions ///////////////////////////////////////////////////
-
-	// Ggap computing is inhibited for some ms when the application is
-	// assigned a new set of resources
-	int ms_from_last_allocation = exc->cycletime_analyser_user.GetSum();
+	// Forward is inhibited for some ms when the application is assigned a
+	// new set of resources
+	int ms_from_last_allocation = exc->cycletime_stats_user.GetSum();
 	if (ms_from_last_allocation <
 	    rtlib_configuration.runtime_profiling.rt_profile_rearm_time_ms
 	    && exc->is_waiting_for_sync) {
-		logger->Info("RTP forward SKIPPED (inhibited for %d more ms)",
+		logger->Debug("ForwardRuntimeProfile: SKIPPED (inhibited for %d more ms)",
 		             rtlib_configuration.runtime_profiling.rt_profile_rearm_time_ms -
 		             ms_from_last_allocation);
 		return RTLIB_OK;
 	}
 
+	// Forward is inhibited for some ms after a profiling has been forwarded yet
 	exc->is_waiting_for_sync = false;
-
-	// Forward is inhibited for some ms after a RTP has been forwarded.
-	exc->waiting_sync_timeout_ms -= exc->cycletime_analyser_user.GetLastValue();
-
+	exc->waiting_sync_timeout_ms -= exc->cycletime_stats_user.GetLastValue();
 #ifndef CONFIG_TARGET_ANDROID
 	if (exc->waiting_sync_timeout_ms > 0) {
-		logger->Info("RTP forward SKIPPED (waiting sync for %d more ms)",
+		logger->Debug("ForwardRuntimeProfile: SKIPPED (waiting sync for %d more ms)",
 		             exc->waiting_sync_timeout_ms);
 		return RTLIB_OK;
 	}
 #endif
-
-	// Real CPU usage according to the statistical analysis
-#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
-	float cpu_usage = 100.0f * exc->cg_budget.cpu_budget_shared;
-#else
-	float cpu_usage = 100.0f *  exc->resource_assignment[0]->cpu_bandwidth / 100.0f;
-#endif
-	float goal_gap = exc->runtime_profiling.cpu_goal_gap;
-	float cycle_time_avg_ms = exc->cycletime_analyser_system.GetMean() +
-	                          exc->cycletime_analyser_system.GetConfidenceInterval99();
-
 	exc->waiting_sync_timeout_ms =
 	        rtlib_configuration.runtime_profiling.rt_profile_wait_for_sync_ms;
 	exc->is_waiting_for_sync = true;
 
-	logger->Debug("[%p:%s] Profile notification : {Gap: %.2f, CPU: "
-	              "%.2f, CTime: %.2f ms}", (void *) exc_handler, exc->name.c_str(),
-	              goal_gap, cpu_usage, cycle_time_avg_ms);
-	// Forward the RTP
-	RTLIB_ExitCode_t result =
-	        _RTNotify(exc, std::round(goal_gap), std::round(cpu_usage),
-	                  std::round(cycle_time_avg_ms));
+	// Get the profling values
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+	float cpu_usage = 100.0f * exc->cg_budget.cpu_budget_shared;
+#else
+	float cpu_usage = exc->cpu_usage_stats.GetMean();
+#endif
+	float goal_gap = exc->runtime_profiling.cpu_goal_gap;
+	float cycle_time_avg_ms = exc->cycletime_stats_system.GetMean() +
+	                          exc->cycletime_stats_system.GetConfidenceInterval99();
 
+	logger->Notice("ForwardRuntimeProfile: [%s] "
+	              "{GAP: %.2f, CPU: %.2f (round=%.0f), Cycle-time: %.2f ms}",
+	              exc->name.c_str(),
+	              goal_gap,
+	              cpu_usage, std::round(cpu_usage),
+	              cycle_time_avg_ms);
+
+	// Send the runtime profile to the resource manager
+	RTLIB_ExitCode_t result =
+	        _RTNotify(exc,
+	                  std::round(goal_gap),
+	                  std::round(cpu_usage),
+	                  std::round(cycle_time_avg_ms));
 	if (result != RTLIB_OK) {
-		logger->Error("[%p:%s] Profile notification FAILED (Error %d: %s)",
-		              (void *) exc_handler,
+		logger->Error("ForwardRuntimeProfile: [%s] "
+		              "FAILED to send (Error %d: %s)",
 		              exc->name.c_str(),
 		              result,
 		              RTLIB_ErrorStr(result));
@@ -2377,9 +2407,9 @@ RTLIB_ExitCode_t BbqueRPC::SetExplicitGoalGap(
 
 	exc = getRegistered(exc_handler);
 	if (! exc) {
-		logger->Error("Set Goal-Gap for EXC [%p] "
+		logger->Error("Set Goal-Gap for EXC [%s] "
 		              "(Error: EXC not registered)",
-		              (void *) exc_handler);
+		              exc->name.c_str());
 		return RTLIB_EXC_NOT_REGISTERED;
 	}
 
@@ -3202,13 +3232,12 @@ float BbqueRPC::GetCPS(
 	assert(isRegistered(exc) == true);
 
 	// If cycle was reset, return CPS up to last forward window
-	if (exc->cycletime_analyser_user.GetMean() == 0.0)
+	if (exc->cycletime_stats_user.GetMean() == 0.0)
 		return (exc->last_cycletime_ms == 0.0) ?
 		       0.0 : 1000.0 / exc->last_cycletime_ms;
 
 	// Get the current measured CPS
-	ctime = exc->cycletime_analyser_user.GetMean();
-
+	ctime = exc->cycletime_stats_user.GetMean();
 	if (ctime != 0)
 		cps = 1000.0 / ctime;
 
@@ -3457,6 +3486,9 @@ void BbqueRPC::NotifyPostConfigure(
 		logger->Debug("First cycle: applying all resource budget.");
 		CGroupCommitAllocation(exc);
 	}
+
+	logger->Debug("Pre-Run: Starting computing CPU quota");
+	InitCPUBandwidthStats(exc);
 }
 
 void BbqueRPC::NotifyPreRun(
@@ -3494,8 +3526,7 @@ void BbqueRPC::NotifyPreRun(
 		}
 	}
 
-	logger->Debug("Pre-Run: Starting computing CPU quota");
-	InitCPUBandwidthStats(exc);
+
 }
 
 void BbqueRPC::NotifyPostRun(
@@ -3532,10 +3563,9 @@ void BbqueRPC::NotifyPostRun(
 		}
 	}
 
-	logger->Debug("Post-Run: Stop computing CPU quota");
-
+	logger->Debug("Post-Run: update CPU usage information");
 	if (UpdateCPUBandwidthStats(exc) != RTLIB_OK)
-		logger->Debug("PostRun: could not compute current CPU bandwidth");
+		logger->Debug("PostRun: CPU bandwidth info not available");
 
 #ifdef CONFIG_TARGET_OPENCL
 
@@ -3582,24 +3612,22 @@ void BbqueRPC::NotifyPostMonitor(RTLIB_EXCHandler_t exc_handler)
 	UpdateMonitorStatistics(exc);
 
 	// CPS Enforcing
-	if (exc->cycle_time_enforced_ms != 0.0f)
+	if (exc->cycle_time_enforced_ms != 0.0f) {
+		logger->Debug("NotifyPostMonitor: forcing CPS...");
 		ForceCPS(exc);
+	}
 
 	// Stop here and return if UNMANAGED mode is on
 	if (rtlib_configuration.unmanaged.enabled)
 		return;
 
-	// Compute the ideal resource allocation for the application,
+	// Update runtime profiling data and compute the ideal CPU allocation
 	// given its history
-	UpdateAllocation(exc_handler);
+	logger->Debug("NotifyPostMonitor: update runtime profiling...");
+	UpdateRuntimeProfile(exc_handler);
 
-	// Is there a performance goal gap?
-	if (abs(exc->runtime_profiling.cpu_goal_gap) > 1.0f) {
-		logger->Debug("NotifyPostMonitor: goal gap forwarding (=%f)",
-		              exc->runtime_profiling.cpu_goal_gap);
-		ForwardRuntimeProfile(exc_handler);
-	} else
-		logger->Debug("NotifyPostMonitor: no goal gap forwarding");
+	// Send the runtime profiling data to the resource manager
+	ForwardRuntimeProfile(exc_handler);
 }
 
 

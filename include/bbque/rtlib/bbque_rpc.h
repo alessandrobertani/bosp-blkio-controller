@@ -60,6 +60,7 @@
 #define MODULE_NAMESPACE "rpc"
 
 #define US_IN_A_SECOND 1e6
+#define RT_CPU_TICKS_PERIOD_LEN 5
 
 using namespace boost::accumulators;
 namespace bu = bbque::utils;
@@ -196,7 +197,9 @@ public:
 	 * @param exc_handler
 	 * @return
 	 */
-	RTLIB_ExitCode_t UpdateAllocation(const RTLIB_EXCHandler_t exc_handler);
+	RTLIB_ExitCode_t UpdateRuntimeProfile(const RTLIB_EXCHandler_t exc_handler);
+
+
 
 	/**
 	 * @brief
@@ -484,7 +487,7 @@ protected:
 	struct CpuUsageStats {
 		bool reset_timestamp = true;
 		struct tms time_sample;
-		clock_t previous_time, previous_tms_stime, previous_tms_utime, current_time;
+		clock_t prev_time, prev_tms_stime, prev_tms_utime, curr_time;
 	};
 
 	typedef std::shared_ptr<PerfEventStats_t> pPerfEventStats_t;
@@ -710,10 +713,10 @@ protected:
 
 		// Moving Statistics for cycle times (user-side):
 		// 		onRun + onMonitor + ForceCPS sleep
-		bu::StatsAnalysis cycletime_analyser_user;
+		bu::StatsAnalysis cycletime_stats_user;
 		// Moving Statistics for cycle times (bbque-side):
 		// 		onRun + onMonitor
-		bu::StatsAnalysis cycletime_analyser_system;
+		bu::StatsAnalysis cycletime_stats_system;
 		double last_cycletime_ms = 0.0;
 
 		// Applications can explicitely ask for a runtime profile
@@ -728,14 +731,14 @@ protected:
 
 		/** Cycle of the last goal-gap assertion */
 		CpuUsageStats cpu_usage_info;
-		bu::StatsAnalysis cpu_usage_analyser;
+		bu::StatsAnalysis cpu_usage_stats;
 
 		RegisteredExecutionContext(const char * _name, uint8_t id) :
 			name(_name), id(id)
 		{
-			//cycletime_analyser_system.EnablePhaseDetection();
-			//cycletime_analyser_user.EnablePhaseDetection();
-			//cpu_usage_analyser.EnablePhaseDetection();
+			//cycletime_stats_system.EnablePhaseDetection();
+			//cycletime_stats_user.EnablePhaseDetection();
+			//cpu_usage_stats.EnablePhaseDetection();
 		}
 
 		~RegisteredExecutionContext()
@@ -987,6 +990,7 @@ protected:
 	        uint32_t exc_time,
 	        uint32_t mem_time) = 0;
 
+
 	/***********************************************************************
 	 * Synchronization Protocol Messages
 	 **********************************************************************/
@@ -1159,23 +1163,39 @@ private:
 	RTLIB_ExitCode_t UpdateStatistics(pRegisteredEXC_t exc);
 
 	/**
-	 * @brief
-	 * @param exc
+	 * @brief Initialize the CPU usage profiling data
+	 * @param exc the current execution context
+	 */
+	void InitCPUBandwidthStats(pRegisteredEXC_t exc);
+
+	/**
+	 * @brief Update the CPU usage profiling data
+	 * @param exc the current execution context
 	 * @return
 	 */
 	RTLIB_ExitCode_t UpdateCPUBandwidthStats(pRegisteredEXC_t exc);
 
 	/**
-	 * @brief
-	 * @param exc
-	 */
-	void InitCPUBandwidthStats(pRegisteredEXC_t exc);
-
-	/**
 	 * @brief Update statistics about onMonitor execution for the currently
-	 * selected awm
+	 * selected AWM
 	 */
 	RTLIB_ExitCode_t UpdateMonitorStatistics(pRegisteredEXC_t exc);
+
+	/**
+	 * @brief Compute the goal gap for the runtime profiling
+	 */
+	float ComputeGoalGap(pRegisteredEXC_t exc);
+
+#ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
+
+	/**
+	 * @brief Update the CPU quota allocation according to
+	 * the runtime profiling
+	 */
+	RTLIB_ExitCode_t UpdateDistributedAllocation(
+		pRegisteredEXC_t exc,
+		float goal_gap);
+#endif
 
 	/**
 	 * @brief Log the header for statistics collection
