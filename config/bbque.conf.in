@@ -28,7 +28,7 @@
 # Resource Manager Options
 ################################################################################
 [ResourceManager]
-#opt_interval = 0
+opt_interval = 4000
 
 ################################################################################
 # Binding Manager Options
@@ -133,9 +133,9 @@ rootCategory = ${BBQUE_LOG_LEVEL}, raFile
 # the rootCategory
 ###
 #category.bq =  	  INFO
-category.bq.ap = 	  INFO
+#category.bq.ap = 	  INFO
 category.bq.app = 	  NOTICE
-category.bq.am =	  NOTICE
+#category.bq.am =	  NOTICE
 category.bq.awm =	  NOTICE
 category.bq.cm =	  INFO
 category.bq.df = 	  NOTICE
@@ -145,6 +145,7 @@ category.bq.lm =	  INFO
 category.bq.mc =	  ERROR
 category.bq.om =	  NOTICE
 category.bq.pl =	  INFO
+#category.bq.plm =	  INFO
 category.bq.pm =	  INFO
 #category.bq.pp = 	  INFO
 category.bq.pp.linux_ps = INFO
@@ -155,12 +156,12 @@ category.bq.ri = 	  NOTICE
 category.bq.rb = 	  NOTICE
 category.bq.re = 	  NOTICE
 category.bq.rl = 	  NOTICE
-#category.bq.rm = 	  INFO
+category.bq.rm = 	  INFO
 category.bq.rp = 	  NOTICE
 category.bq.rt = 	  NOTICE
 category.bq.rbind =	  NOTICE
-category.bq.rpc.fif = 	  NOTICE
-category.bq.rpc.prx = 	  NOTICE
+#category.bq.rpc.fif = 	  NOTICE
+#category.bq.rpc.prx = 	  NOTICE
 #category.bq.sm = 	  INFO
 #category.bq.sp = 	  NOTICE
 #category.bq.ym = 	  INFO
