@@ -475,7 +475,7 @@ CPUPowerManager::GetTemperature(ResourcePathPtr_t const & rp,
 				uint32_t & celsius)
 {
 	PMResult result;
-	celsius = 0;
+
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 
@@ -489,16 +489,17 @@ CPUPowerManager::GetTemperature(ResourcePathPtr_t const & rp,
 	// Mean over multiple CPU cores
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ResourcePtrList_t procs_list(ra.GetResources(rp));
+
+	uint32_t temp_cumulate = 0;
 	uint32_t temp_per_core = 0;
-	uint32_t num_cores     = 1;
 	for (auto & proc_ptr : procs_list) {
 		result = GetTemperaturePerCore(proc_ptr->ID(), temp_per_core);
 		if (result == PMResult::OK) {
-			celsius += temp_per_core;
-			++num_cores;
+			temp_cumulate += temp_per_core;
 		}
 	}
-	celsius = celsius / num_cores;
+
+	celsius = temp_cumulate / procs_list.size();
 
 	return PMResult::OK;
 }
