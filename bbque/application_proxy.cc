@@ -121,8 +121,7 @@ void ApplicationProxy::EnqueueHandler(pcmdSn_t pcs)
 		return;
 	}
 
-	cmdSnMap.insert(std::pair<pid_t, pcmdSn_t>(pcs->pid, pcs));
-
+	cmdSnMap.emplace(pcs->pid, pcs);
 	logger->Debug("EnqueueHandler: enqueue command session [%05d] for [%s], "
 		"[qcount: %d]", pcs->pid, pcs->papp->StrId(), cmdSnMap.size());
 
@@ -1527,7 +1526,7 @@ void ApplicationProxy::RpcAppPair(prqsSn_t prqs)
 	}
 
 	// Setting up a new communication context
-	pcon = pconCtx_t(new conCtx_t);
+	pcon = std::make_shared<conCtx_t>();
 	assert(pcon);
 	if (!pcon) {
 		logger->Error("RpcAppPair: Setup RPC channel [pid: %d, name: %s] "
@@ -1557,8 +1556,7 @@ void ApplicationProxy::RpcAppPair(prqsSn_t prqs)
 
 	// Backup communication context for further messages
 	conCtxMap_ul.lock();
-	conCtxMap.insert(std::pair<pid_t, pconCtx_t>(
-						pcon->app_pid, pcon));
+	conCtxMap.emplace(pcon->app_pid, pcon);
 	conCtxMap_ul.unlock();
 
 	// Sending ACK response to application
@@ -1705,9 +1703,7 @@ void ApplicationProxy::ProcessRequest(pchMsg_t & pmsg)
 	logger->Debug("ProcessRequest: enqueuing new request...");
 
 	// Add a new threaded command executor
-	snCtxMap.insert(std::pair<uint8_t, psnCtx_t>(
-	                        pmsg->typ, prqsSn));
-
+	snCtxMap.emplace(pmsg->typ, prqsSn);
 }
 
 void ApplicationProxy::Task()
