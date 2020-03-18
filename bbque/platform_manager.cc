@@ -467,9 +467,11 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 {
-	logger->Info("ActuatePowerManagement: setting the configuration...");
 
-#ifdef CONFIG_BBQUE_PM
+#ifndef CONFIG_BBQUE_PM
+	logger->Debug("ActuatePowerManagement: power management not enabled");
+#else
+	logger->Debug("ActuatePowerManagement: setting the configuration...");
 
 	// Apply the power management configuration to each pending resource
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -477,7 +479,6 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 	while ((resource = ra.DequeueResourceToPowerManage()) != nullptr) {
 		ActuatePowerManagement(resource);
 	}
-#endif
 
 	// Perform resource management actions not related to (local) managed
 	// resources
@@ -499,8 +500,10 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 		return PLATFORM_PWR_SETTING_ERROR;
 	}
 #endif
+	logger->Debug("ActuatePowerManagement: configuration applied");
 
-	logger->Info("ActuatePowerManagement: configuration applied");
+#endif // CONFIG_BBQUE_PM
+
 	return PLATFORM_OK;
 }
 
