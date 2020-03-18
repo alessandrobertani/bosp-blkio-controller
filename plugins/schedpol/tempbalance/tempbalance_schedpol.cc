@@ -135,12 +135,14 @@ uint64_t TempBalanceSchedPol::ComputeResourceQuota(
 		resource_slot_size);
 
 	uint64_t assigned_quota =
-	        (sys->ApplicationLowestPriority() - papp->Priority() + 1)
-	        * resource_slot_size;
-	logger->Info("Assign: [%s] amount of <%s> assigned = %4d",
-	             papp->StrId(),
-	             resource_path_str.c_str(),
-	             assigned_quota);
+		(sys->ApplicationLowestPriority() - papp->Priority() + 1)
+		* resource_slot_size;
+
+	logger->Info("Assign: [%s] prio=%d amount of <%s> assigned = %4d",
+		papp->StrId(),
+		papp->Priority(),
+		resource_path_str.c_str(),
+		assigned_quota);
 
 	return assigned_quota;
 }
@@ -188,26 +190,39 @@ TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 
 SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::BindWorkingModesAndSched()
 {
-	bbque::res::ResourcePtrList_t::const_iterator iter = proc_elements.begin();
+	bbque::res::ResourcePtrList_t::const_iterator proc_it = proc_elements.begin();
 	auto proc_path = ra.GetPath("sys.cpu.pe");
 
 	for (auto & sched_entity : entities) {
-		logger->Info("Bind: [%s] binding and scheduling...",
+		logger->Info("BindWorkingModesAndSched: [%s] starting...",
 			sched_entity->papp->StrId());
+
 		uint64_t req_amount = sched_entity->pawm->RequestedAmount(proc_path);
 		size_t num_procs = req_amount > 100 ? ceil(float(req_amount) / 100.0) : 1;
-		logger->Debug("Bind: [%s] <sys.cpu.pe>=%d => num_procs=%d",
+		logger->Debug("BindWorkingModesAndSched: [%s] "
+			"<sys.cpu.pe>=%d => num_procs=%d",
 			sched_entity->papp->StrId(), req_amount, num_procs);
 
 		auto proc_mask =
 			bbque::res::ResourceBinder::GetMaskInRange(
-								proc_elements, iter, num_procs);
-		logger->Debug("Bind: [%s] <sys.cpu.pe> mask = %s",
-			sched_entity->papp->StrId(), proc_mask.ToString().c_str());
+								proc_elements,
+								proc_it,
+								num_procs);
+		logger->Debug("BindWorkingModesAndSched: [%s] "
+			"<sys.cpu.pe> mask = %s",
+			sched_entity->papp->StrId(),
+			proc_mask.ToString().c_str());
 
-		if ((req_amount % 100 == 0) || ((*iter)->Available() == 0)) {
-			logger->Debug("Bind: increment the iterator");
-			iter++;
+		auto pe_ptr = *proc_it;
+		logger->Debug("BindWorkingModesAndSched: [%s] "
+			"current pe = <%s>",
+			sched_entity->papp->StrId(),
+			pe_ptr->Path()->ToString().c_str());
+
+		if ((proc_it != proc_elements.end()) &&
+		((req_amount % 100 == 0) || (pe_ptr->Available() == 0))) {
+			logger->Debug("BindWorkingModesAndSched: next pe...");
+			proc_it++;
 		}
 
 		sched_entity->bind_refn =
