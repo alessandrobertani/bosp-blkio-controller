@@ -232,6 +232,18 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 		return SCHED_ERROR;
 	}
 
+	// Print the run-time profiling info if running
+	if (papp->Running()) {
+		auto prof = papp->GetRuntimeProfile();
+		logger->Info("AssignWorkingMode: [%s] "
+			"cpu_usage=%d c_time=%d, ggap=%d [valid=%d]",
+			papp->StrId(),
+			prof.cpu_usage,
+			prof.ctime_ms,
+			prof.ggap_percent,
+			prof.is_valid);
+	}
+
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
