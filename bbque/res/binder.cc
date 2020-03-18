@@ -352,9 +352,9 @@ ResourceBitset ResourceBinder::GetMaskInRange(
 }
 
 ResourceBitset ResourceBinder::GetMaskInRange(
-        ResourcePtrList_t const & resources_list,
-        ResourcePtrList_t::const_iterator & iter,
-        size_t _count)
+					      ResourcePtrList_t const & resources_list,
+					      ResourcePtrList_t::const_iterator iter,
+					      size_t _count)
 {
 	ResourceBitset r_mask;
 	std::unique_ptr<bu::Logger> logger = bu::Logger::GetLogger(MODULE_NAMESPACE);

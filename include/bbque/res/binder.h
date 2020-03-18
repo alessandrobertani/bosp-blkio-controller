@@ -173,7 +173,7 @@ public:
 
 	static ResourceBitset GetMaskInRange(
 			ResourcePtrList_t const & resources_list,
-			ResourcePtrList_t::const_iterator & iter,
+			ResourcePtrList_t::const_iterator iter,
 			size_t _count);
 
 	/**
