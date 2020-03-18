@@ -88,8 +88,7 @@ TempBalanceSchedPol::~TempBalanceSchedPol()
 SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::_Init()
 {
 	// Keep track of all the available CPU processing elements (cores)
-	if (proc_elements.empty())
-		proc_elements = sys->GetResources("sys.cpu.pe");
+	proc_elements = sys->GetResources("sys.cpu.pe");
 
 #ifdef CONFIG_BBQUE_PM_CPU
 	// Sort processing elements (by temperature)
