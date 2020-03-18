@@ -24,10 +24,8 @@
 
 #include <boost/filesystem.hpp>
 
-namespace bbque
-{
-namespace app
-{
+namespace bbque {
+namespace app {
 
 
 char const *Schedulable::stateStr[] = {
@@ -101,37 +99,38 @@ void Schedulable::SetSyncState(SyncState_t sync)
 	schedule.syncState = sync;
 }
 
-
 Schedulable::ExitCode_t Schedulable::SetState(State_t next_state, SyncState_t next_sync)
 {
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
-	// Switching to a sychronization state
+
+	// Switching to a synchronization state
 	if (next_state == SYNC) {
 		assert(next_sync != SYNC_NONE);
 		if (next_sync == SYNC_NONE)
 			return APP_SYNC_NOT_EXP;
-		schedule.preSyncState = _State();         // Previous pre-synchronization state
-		SetSyncState(next_sync);                  // Update synchronization state
-		schedule.state = Schedulable::SYNC;       // Update state
+		schedule.preSyncState = _State(); // Previous pre-synchronization state
+		SetSyncState(next_sync); // Update synchronization state
+		schedule.state = Schedulable::SYNC; // Update state
 		return APP_SUCCESS;
 	}
-	// Switching to a stable state
+		// Switching to a stable state
 	else {
 		assert(next_sync == SYNC_NONE);
 		if (next_sync != SYNC_NONE)
 			return APP_SYNC_NOT_EXP;
-		schedule.preSyncState = schedule.state;   // Previous pre-synchronization state
-		schedule.state = next_state;              // Updating state
-		SetSyncState(SYNC_NONE);                  // Update synchronization state
+		schedule.preSyncState = schedule.state; // Previous pre-synchronization state
+		schedule.state = next_state; // Updating state
+		SetSyncState(SYNC_NONE); // Update synchronization state
 	}
 
 	// Update current and next working mode: SYNC case
 	if ((next_sync == DISABLED)
-	    || (next_sync == BLOCKED)
-	    || (next_state == READY)) {
+		|| (next_sync == BLOCKED)
+		|| (next_state == READY)) {
 		schedule.awm.reset();
 		schedule.next_awm.reset();
-	} else if (next_state == RUNNING) {
+	}
+	else if (next_state == RUNNING) {
 		schedule.awm = schedule.next_awm;
 		schedule.awm->IncSchedulingCount();
 		++schedule.count;
@@ -140,7 +139,6 @@ Schedulable::ExitCode_t Schedulable::SetState(State_t next_state, SyncState_t ne
 
 	return APP_SUCCESS;
 }
-
 
 Schedulable::State_t Schedulable::_State() const
 {
@@ -184,13 +182,13 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 
 	// Changing assigned resources: RECONF|MIGREC|MIGRATE
 	if ((schedule.awm->Id() != next_awm->Id()) &&
-	    (schedule.awm->BindingSet(br::ResourceType::CPU) !=
-	     next_awm->BindingSet(br::ResourceType::CPU))) {
+		(schedule.awm->BindingSet(br::ResourceType::CPU) !=
+		next_awm->BindingSet(br::ResourceType::CPU))) {
 		return MIGREC;
 	}
 
 	if ((schedule.awm->Id() == next_awm->Id()) &&
-	    (schedule.awm->BindingChanged(br::ResourceType::CPU))) {
+		(schedule.awm->BindingChanged(br::ResourceType::CPU))) {
 		return MIGRATE;
 	}
 
@@ -198,7 +196,7 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 		return RECONF;
 	}
 
-	// Check for inter-cluster resources re-assignement
+	// Check for inter-cluster resources re-assignment
 	if (Reshuffling(next_awm)) {
 		return RECONF;
 	}
@@ -244,7 +242,7 @@ bool Schedulable::Finished() const
 bool Schedulable::_Active() const
 {
 	return ((schedule.state == READY) ||
-	        (schedule.state == RUNNING));
+		(schedule.state == RUNNING));
 }
 
 bool Schedulable::Active() const
@@ -353,7 +351,7 @@ uint64_t Schedulable::ScheduleCount() const noexcept
 
 bool Schedulable::Reshuffling(AwmPtr_t const & next_awm) const
 {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	auto pumc = schedule.awm->GetResourceBinding();
 	auto puma = next_awm->GetResourceBinding();

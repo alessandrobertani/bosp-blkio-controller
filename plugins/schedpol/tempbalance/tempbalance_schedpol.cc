@@ -39,10 +39,8 @@ using namespace std::placeholders;
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque
-{
-namespace plugins
-{
+namespace bbque {
+namespace plugins {
 
 // :::::::::::::::::::::: Static plugin interface ::::::::::::::::::::::::::::
 
@@ -66,28 +64,26 @@ char const * TempBalanceSchedPol::Name()
 	return SCHEDULER_POLICY_NAME;
 }
 
-TempBalanceSchedPol::TempBalanceSchedPol():
-	cm(ConfigurationManager::GetInstance()),
-	ra(ResourceAccounter::GetInstance())
+TempBalanceSchedPol::TempBalanceSchedPol() :
+    cm(ConfigurationManager::GetInstance()),
+    ra(ResourceAccounter::GetInstance())
 {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 
 	if (logger)
 		logger->Info("tempbalance: Built a new dynamic object[%p]",
-		             this);
+			this);
 	else
 		fprintf(stderr,
-		        FI("tempbalance: Built new dynamic object [%p]\n"),
-		        (void *)this);
+			FI("tempbalance: Built new dynamic object [%p]\n"),
+			(void *)this);
 }
-
 
 TempBalanceSchedPol::~TempBalanceSchedPol()
 {
 	entities.clear();
 }
-
 
 SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::_Init()
 {
@@ -116,8 +112,8 @@ void TempBalanceSchedPol::SortProcessingElements()
 	proc_elements.sort(bbque::res::CompareTemperature);
 	for (auto & pe : proc_elements)
 		logger->Debug("<%s> : %.0f C",
-		              pe->Path()->ToString().c_str(),
-		              pe->GetPowerInfo(PowerManager::InfoType::TEMPERATURE));
+			pe->Path()->ToString().c_str(),
+			pe->GetPowerInfo(PowerManager::InfoType::TEMPERATURE));
 
 	uint32_t temp_mean;
 	PowerManager & pm(PowerManager::GetInstance());
@@ -127,17 +123,18 @@ void TempBalanceSchedPol::SortProcessingElements()
 
 #endif // CONFIG_BBQUE_PM_CPU
 
-
 uint64_t TempBalanceSchedPol::ComputeResourceQuota(
-        std::string resource_path_str, bbque::app::AppCPtr_t papp) const
+						   std::string resource_path_str,
+						   bbque::app::AppCPtr_t papp) const
 {
 	// Amount of processing resources to assign
 	uint64_t total_quota = sys->ResourceTotal(resource_path_str);
 	uint64_t resource_slot_size = total_quota / nr_slots;
 	logger->Debug("Assign: <%s> total = %lu slot_size=%d",
-	              resource_path_str.c_str(),
-	              total_quota,
-	              resource_slot_size);
+		resource_path_str.c_str(),
+		total_quota,
+		resource_slot_size);
+
 	uint64_t assigned_quota =
 	        (sys->ApplicationLowestPriority() - papp->Priority() + 1)
 	        * resource_slot_size;
@@ -166,7 +163,7 @@ TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	auto pawm = papp->CurrentAWM();
 	if (pawm == nullptr)
 		pawm = std::make_shared<ba::WorkingMode>(
-		               papp->WorkingModes().size(), "Run-time", 1, papp);
+		papp->WorkingModes().size(), "Run-time", 1, papp);
 
 	// Processing element quota
 	std::string resource_path_str("sys.cpu.pe");
@@ -178,18 +175,17 @@ TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 
 	// Assign...
 	pawm->AddResourceRequest(resource_path_str,
-	                         assigned_quota,
-	                         br::ResourceAssignment::Policy::BALANCED);
+				assigned_quota,
+				br::ResourceAssignment::Policy::BALANCED);
 	logger->Debug("Assign: [%s] added resource request [#%d]",
-	              papp->StrId(), pawm->NumberOfResourceRequests());
+		papp->StrId(), pawm->NumberOfResourceRequests());
 
-	// Enqueue scheduling entity
+	// Queue scheduling entity
 	auto sched_entity = std::make_shared<SchedEntity_t>(papp, pawm, R_ID_ANY, 0);
 	entities.push_back(sched_entity);
 
 	return SCHED_OK;
 }
-
 
 SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::BindWorkingModesAndSched()
 {
@@ -198,17 +194,17 @@ SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::BindWorkingModesAndSched()
 
 	for (auto & sched_entity : entities) {
 		logger->Info("Bind: [%s] binding and scheduling...",
-		             sched_entity->papp->StrId());
+			sched_entity->papp->StrId());
 		uint64_t req_amount = sched_entity->pawm->RequestedAmount(proc_path);
 		size_t num_procs = req_amount > 100 ? ceil(float(req_amount) / 100.0) : 1;
 		logger->Debug("Bind: [%s] <sys.cpu.pe>=%d => num_procs=%d",
-		              sched_entity->papp->StrId(), req_amount, num_procs);
+			sched_entity->papp->StrId(), req_amount, num_procs);
 
 		auto proc_mask =
-		        bbque::res::ResourceBinder::GetMaskInRange(
-		                proc_elements, iter, num_procs);
+			bbque::res::ResourceBinder::GetMaskInRange(
+								proc_elements, iter, num_procs);
 		logger->Debug("Bind: [%s] <sys.cpu.pe> mask = %s",
-		              sched_entity->papp->StrId(), proc_mask.ToString().c_str());
+			sched_entity->papp->StrId(), proc_mask.ToString().c_str());
 
 		if ((req_amount % 100 == 0) || ((*iter)->Available() == 0)) {
 			logger->Debug("Bind: increment the iterator");
@@ -216,22 +212,21 @@ SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::BindWorkingModesAndSched()
 		}
 
 		sched_entity->bind_refn =
-		        sched_entity->pawm->BindResource(proc_path, proc_mask);
+			sched_entity->pawm->BindResource(proc_path, proc_mask);
 
 		ApplicationManager & am(ApplicationManager::GetInstance());
 		am.ScheduleRequest(
-		        sched_entity->papp, sched_entity->pawm,
-		        sched_status_view, sched_entity->bind_refn);
+				sched_entity->papp, sched_entity->pawm,
+				sched_status_view, sched_entity->bind_refn);
 	}
 
 	return SCHED_OK;
 }
 
-
 SchedulerPolicyIF::ExitCode_t
 TempBalanceSchedPol::Schedule(
-        System & system,
-        RViewToken_t & status_view)
+			      System & system,
+			      RViewToken_t & status_view)
 {
 	// Class providing query functions for applications and resources
 	sys = &system;

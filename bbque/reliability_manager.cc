@@ -21,8 +21,7 @@
 #undef MODULE_NAMESPACE
 #define MODULE_NAMESPACE "bq.lm"
 
-namespace bbque
-{
+namespace bbque {
 
 ReliabilityManager & ReliabilityManager::GetInstance()
 {
@@ -30,7 +29,7 @@ ReliabilityManager & ReliabilityManager::GetInstance()
 	return instance;
 }
 
-ReliabilityManager::ReliabilityManager():
+ReliabilityManager::ReliabilityManager() :
 	cm(CommandManager::GetInstance()),
 	ra(ResourceAccounter::GetInstance()),
 	am(ApplicationManager::GetInstance()),
@@ -44,40 +43,39 @@ ReliabilityManager::ReliabilityManager():
 	// Notify the degradation of a resource
 #define CMD_NOTIFY_DEGRADATION "notify_degradation"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_NOTIFY_DEGRADATION,
-	                   static_cast<CommandHandler*>(this),
-	                   "Performance degradation affecting the resource "
-	                   "[percentage]");
+			static_cast<CommandHandler*> (this),
+			"Performance degradation affecting the resource "
+			"[percentage]");
 
 #define CMD_SIMULATE_FAULT "simulate_fault"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_SIMULATE_FAULT,
-	                   static_cast<CommandHandler*>(this),
-	                   "Simulate the occurrence of a resource fault");
+			static_cast<CommandHandler*> (this),
+			"Simulate the occurrence of a resource fault");
 
 #define CMD_FREEZE "freeze"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_FREEZE,
-	                   static_cast<CommandHandler*>(this),
-	                   "Freeze a managed application or process");
+			static_cast<CommandHandler*> (this),
+			"Freeze a managed application or process");
 
 #define CMD_THAW "thaw"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_THAW,
-	                   static_cast<CommandHandler*>(this),
-	                   "Thaw a managed application or process");
+			static_cast<CommandHandler*> (this),
+			"Thaw a managed application or process");
 
 #define CMD_CHECKPOINT "checkpoint"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_CHECKPOINT,
-	                   static_cast<CommandHandler*>(this),
-	                   "Checkpoint of a managed application or process");
+			static_cast<CommandHandler*> (this),
+			"Checkpoint of a managed application or process");
 
 #define CMD_RESTORE "restore"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_RESTORE,
-	                   static_cast<CommandHandler*>(this),
-	                   "Restore a managed application or process");
+			static_cast<CommandHandler*> (this),
+			"Restore a managed application or process");
 
 	// HW monitoring thread
 	Worker::Setup(BBQUE_MODULE_NAME("lm.hwmon"), MODULE_NAMESPACE);
 	Worker::Start();
 }
-
 
 ReliabilityManager::~ReliabilityManager()
 {
@@ -90,8 +88,8 @@ void ReliabilityManager::Task()
 	// Periodic checkpointing
 	chk_timer.start();
 	chk_thread = std::thread(
-	                     &ReliabilityManager::PeriodicCheckpointTask,
-	                     this);
+				&ReliabilityManager::PeriodicCheckpointTask,
+				this);
 #endif
 	while (!done) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -109,7 +107,7 @@ void ReliabilityManager::Task()
 void ReliabilityManager::PeriodicCheckpointTask()
 {
 	logger->Debug("PeriodicCheckpointTask: thread launched [tid=%d]",
-	              gettid());
+		gettid());
 
 	while (!done) {
 		// Now
@@ -134,11 +132,11 @@ void ReliabilityManager::PeriodicCheckpointTask()
 		auto end_sec = chk_timer.getTimestampMs();
 		auto elapsed_sec = end_sec - start_sec;
 		logger->Debug("PeriodicCheckpoint: task perfomed in %.f ms",
-		              elapsed_sec);
+			elapsed_sec);
 
 		unsigned int next_chk_in = std::max<unsigned int>(
-		                                   chk_period_len - elapsed_sec,
-		                                   BBQUE_MIN_CHECKPOINT_PERIOD_MS);
+								chk_period_len - elapsed_sec,
+								BBQUE_MIN_CHECKPOINT_PERIOD_MS);
 		// Wake me up later
 		logger->Debug("PeriodicCheckpoint: see you in %d ms", next_chk_in);
 		std::this_thread::sleep_for(std::chrono::milliseconds(next_chk_in));
@@ -151,15 +149,14 @@ void ReliabilityManager::PeriodicCheckpointTask()
 
 #endif
 
-
 void ReliabilityManager::NotifyFaultDetection(res::ResourcePtr_t rsrc)
 {
 	// Freeze involved applications or processes
 	br::AppUsageQtyMap_t apps;
 	rsrc->Applications(apps);
 	logger->Debug("NotifyFaultDetection: <%s> used by <%d> applications",
-	              rsrc->Path()->ToString().c_str(),
-	              apps.size());
+		rsrc->Path()->ToString().c_str(),
+		apps.size());
 
 	ba::SchedPtr_t psched;
 	for (auto app_entry : apps) {
@@ -169,26 +166,26 @@ void ReliabilityManager::NotifyFaultDetection(res::ResourcePtr_t rsrc)
 		if (!psched) {
 			psched = prm.GetProcess(app_entry.first);
 			logger->Debug("NotifyFaultDetection: <%s> is a process",
-			              psched->StrId());
+				psched->StrId());
 		}
 #endif
 		if (!psched) {
 			logger->Warn("NotifyFaultDetection: UID=<%d>"
-			             ": no application or process",
-			             app_entry.first);
+				": no application or process",
+				app_entry.first);
 			continue;
 		}
 
 		logger->Debug("NotifyFaultDetection: <%s> => freeze <%s>",
-		              rsrc->Path()->ToString().c_str(),
-		              psched->StrId());
+			rsrc->Path()->ToString().c_str(),
+			psched->StrId());
 
 		auto ret = plm.Freeze(psched);
 		if (ret != ReliabilityActionsIF::ExitCode_t::OK) {
 			logger->Error("NotifyFaultDetection: <%s> => <%s> "
-			              "platform failure while freezing",
-			              rsrc->Path()->ToString().c_str(),
-			              psched->StrId());
+				"platform failure while freezing",
+				rsrc->Path()->ToString().c_str(),
+				psched->StrId());
 			continue;
 		}
 		logger->Info("NotifyFaultDetection: <%s> => <%s> successfully frozen");
@@ -196,14 +193,13 @@ void ReliabilityManager::NotifyFaultDetection(res::ResourcePtr_t rsrc)
 
 	// Set offline faulty resources
 	logger->Debug("NotifyFaultDetection: <%s> to switch off",
-	              rsrc->Path()->ToString().c_str());
+		rsrc->Path()->ToString().c_str());
 	ra.SetOffline(rsrc->Path());
 
 	// Trigger policy execution by notifying a "platform" event
 	ResourceManager & rm = ResourceManager::GetInstance();
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
 }
-
 
 /************************************************************************
  *                   COMMANDS HANDLING                                  *
@@ -212,18 +208,18 @@ void ReliabilityManager::NotifyFaultDetection(res::ResourcePtr_t rsrc)
 int ReliabilityManager::CommandsCb(int argc, char * argv[])
 {
 	uint8_t cmd_offset = ::strlen(MODULE_NAMESPACE) + 1;
-	char * cmd_id  = argv[0] + cmd_offset;
+	char * cmd_id = argv[0] + cmd_offset;
 	logger->Info("CommandsCb: processing command [%s]", cmd_id);
 
 	// Set the degradation value of the given resources
 	if (!strncmp(CMD_NOTIFY_DEGRADATION, cmd_id, strlen(CMD_NOTIFY_DEGRADATION))) {
 		if (!(argc % 2)) {
 			logger->Error("'%s.%s' expecting {resource path, value} pairs.",
-			              MODULE_NAMESPACE, CMD_NOTIFY_DEGRADATION);
+				MODULE_NAMESPACE, CMD_NOTIFY_DEGRADATION);
 			logger->Error("Example: '%s.%s <resource_path> "
-			              "(e.g., sys0.cpu0.pe0)"
-			              " <degradation_percentage> (e.g. 10) ...'",
-			              MODULE_NAMESPACE, CMD_NOTIFY_DEGRADATION);
+				"(e.g., sys0.cpu0.pe0)"
+				" <degradation_percentage> (e.g. 10) ...'",
+				MODULE_NAMESPACE, CMD_NOTIFY_DEGRADATION);
 			return 1;
 		}
 		return ResourceDegradationHandler(argc, argv);
@@ -233,10 +229,10 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 	if (!strncmp(CMD_SIMULATE_FAULT, cmd_id, strlen(CMD_SIMULATE_FAULT))) {
 		if (argc < 2) {
 			logger->Error("'%s.%s' expecting {resource path} .",
-			              MODULE_NAMESPACE, CMD_SIMULATE_FAULT);
+				MODULE_NAMESPACE, CMD_SIMULATE_FAULT);
 			logger->Error("Example: '%s.%s <r1>"
-			              "(e.g., sys0.cpu0.pe0 ...)",
-			              MODULE_NAMESPACE, CMD_SIMULATE_FAULT);
+				"(e.g., sys0.cpu0.pe0 ...)",
+				MODULE_NAMESPACE, CMD_SIMULATE_FAULT);
 			return 2;
 		}
 		SimulateFault(argv[1]);
@@ -246,9 +242,9 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 	if (!strncmp(CMD_FREEZE, cmd_id, strlen(CMD_FREEZE))) {
 		if (argc < 2) {
 			logger->Error("'%s.%s' expecting process id.",
-			              MODULE_NAMESPACE, CMD_FREEZE);
+				MODULE_NAMESPACE, CMD_FREEZE);
 			logger->Error("Example: '%s.%s 12319",
-			              MODULE_NAMESPACE, CMD_FREEZE);
+				MODULE_NAMESPACE, CMD_FREEZE);
 			return 3;
 		}
 		Freeze(std::stoi(argv[1]));
@@ -259,9 +255,9 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 	if (!strncmp(CMD_THAW, cmd_id, strlen(CMD_THAW))) {
 		if (argc < 2) {
 			logger->Error("'%s.%s' expecting process id.",
-			              MODULE_NAMESPACE, CMD_THAW);
+				MODULE_NAMESPACE, CMD_THAW);
 			logger->Error("Example: '%s.%s 12319",
-			              MODULE_NAMESPACE, CMD_THAW);
+				MODULE_NAMESPACE, CMD_THAW);
 			return 3;
 		}
 		Thaw(std::stoi(argv[1]));
@@ -271,9 +267,9 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 	if (!strncmp(CMD_CHECKPOINT, cmd_id, strlen(CMD_CHECKPOINT))) {
 		if (argc < 2) {
 			logger->Error("'%s.%s' expecting process id.",
-			              MODULE_NAMESPACE, CMD_CHECKPOINT);
+				MODULE_NAMESPACE, CMD_CHECKPOINT);
 			logger->Error("Example: '%s.%s 8823",
-			              MODULE_NAMESPACE, CMD_CHECKPOINT);
+				MODULE_NAMESPACE, CMD_CHECKPOINT);
 			return 5;
 		}
 		Dump(std::stoi(argv[1]));
@@ -283,9 +279,9 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 	if (!strncmp(CMD_RESTORE, cmd_id, strlen(CMD_RESTORE))) {
 		if (argc < 3) {
 			logger->Error("'%s.%s' expecting process id and executable name",
-			              MODULE_NAMESPACE, CMD_RESTORE);
+				MODULE_NAMESPACE, CMD_RESTORE);
 			logger->Error("Example: '%s.%s 8823 myprogram",
-			              MODULE_NAMESPACE, CMD_RESTORE);
+				MODULE_NAMESPACE, CMD_RESTORE);
 			return 5;
 		}
 		Restore(std::stoi(argv[1]), argv[2]);
@@ -297,22 +293,20 @@ int ReliabilityManager::CommandsCb(int argc, char * argv[])
 	return 0;
 }
 
-
 void ReliabilityManager::SimulateFault(std::string const & resource_path)
 {
 	auto resource_list = ra.GetResources(resource_path);
 	if (resource_list.empty()) {
 		logger->Error("SimulateFault: <%s> not a valid resource",
-		              resource_path.c_str());
+			resource_path.c_str());
 	}
 
-	for (auto & rsrc : resource_list)  {
+	for (auto & rsrc : resource_list) {
 		logger->Notice("SimulateFault: fault on <%s>",
-		               rsrc->Path()->ToString().c_str());
+			rsrc->Path()->ToString().c_str());
 		NotifyFaultDetection(rsrc);
 	}
 }
-
 
 void ReliabilityManager::Freeze(app::AppPid_t pid)
 {
@@ -320,14 +314,14 @@ void ReliabilityManager::Freeze(app::AppPid_t pid)
 	app::SchedPtr_t psched = am.GetApplication(uid);
 	if (psched) {
 		logger->Debug("Freeze: moving application <%s> into freezer...",
-		              psched->StrId());
+			psched->StrId());
 	}
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	else  {
+	else {
 		psched = prm.GetProcess(pid);
 		if (psched)
 			logger->Debug("Freeze: moving process <%s> into freezer",
-			              psched->StrId());
+				psched->StrId());
 	}
 #endif
 
@@ -338,7 +332,6 @@ void ReliabilityManager::Freeze(app::AppPid_t pid)
 	plm.Freeze(psched);
 	logger->Debug("Freeze: is <%s> frozen for you?", psched->StrId());
 }
-
 
 void ReliabilityManager::Thaw(app::AppPid_t pid)
 {
@@ -369,7 +362,6 @@ void ReliabilityManager::Thaw(app::AppPid_t pid)
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
 }
 
-
 void ReliabilityManager::Dump(app::AppPid_t pid)
 {
 	app::SchedPtr_t psched;
@@ -377,26 +369,25 @@ void ReliabilityManager::Dump(app::AppPid_t pid)
 	psched = am.GetApplication(uid);
 	if (psched) {
 		logger->Debug("Dump: <%s> application checkpoint...",
-		              psched->StrId());
+			psched->StrId());
 	}
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	else {
 		psched = prm.GetProcess(pid);
 		if (psched)
 			logger->Debug("Dump: <%s> process checkpoint...",
-			              psched->StrId());
+				psched->StrId());
 	}
 #endif
 
 	if (!psched) {
 		logger->Warn("Dump: pid=<%d> no application or process "
-		             "to checkpoint", pid);
+			"to checkpoint", pid);
 		return;
 	}
 
 	Dump(psched);
 }
-
 
 void ReliabilityManager::Dump(app::SchedPtr_t psched)
 {
@@ -417,9 +408,9 @@ void ReliabilityManager::Dump(app::SchedPtr_t psched)
 	double _end = chk_timer.getTimestampMs();
 	psched->UpdateCheckpointLatency(_end - _start);
 	logger->Debug("Dump: <%s> checkpointed in %.f ms [mean = %.f ms]",
-	              psched->StrId(),
-	              _end - _start,
-	              psched->GetCheckpointLatencyMean());
+		psched->StrId(),
+		_end - _start,
+		psched->GetCheckpointLatencyMean());
 #endif
 }
 
@@ -476,7 +467,6 @@ void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
 		pid, exe_name.c_str());
 }
 
-
 int ReliabilityManager::ResourceDegradationHandler(int argc, char * argv[])
 {
 	int j = 1;
@@ -487,22 +477,23 @@ int ReliabilityManager::ResourceDegradationHandler(int argc, char * argv[])
 		auto rsrc(ra.GetResource(argv[j]));
 		if (rsrc == nullptr) {
 			logger->Error("Resource degradation: "
-			              " <%s> not a valid resource",
-			              argv[j]);
+				" <%s> not a valid resource",
+				argv[j]);
 			continue;
 		}
 
 		if (IsNumber(argv[j + 1])) {
 			rsrc->UpdateDegradationPerc(atoi(argv[j + 1]));
 			logger->Warn("Resource degradation: "
-			             "<%s> = %2d%% [mean=%.2f]",
-			             argv[j],
-			             rsrc->CurrentDegradationPerc(),
-			             rsrc->MeanDegradationPerc());
-		} else {
+				"<%s> = %2d%% [mean=%.2f]",
+				argv[j],
+				rsrc->CurrentDegradationPerc(),
+				rsrc->MeanDegradationPerc());
+		}
+		else {
 			logger->Error("Resource degradation: "
-			              "<%s> not a valid value",
-			              argv[j + 1]);
+				"<%s> not a valid value",
+				argv[j + 1]);
 		}
 	}
 

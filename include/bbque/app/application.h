@@ -58,7 +58,7 @@ class Resource;
 class ResourcePath;
 class ResourceConstraint;
 class ResourceAssignment;
-using ResourcePathPtr_t = std::shared_ptr<ResourcePath> ;
+using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
 using ResourceAssignmentPtr_t = std::shared_ptr<ResourceAssignment>;
 using ResourceAssignmentMap_t = std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath>>;
 using ResourceAssignmentMapPtr_t = std::shared_ptr<ResourceAssignmentMap_t>;
@@ -79,7 +79,8 @@ typedef std::pair<br::ResourcePathPtr_t, ConstrPtr_t> ConstrPair_t;
 /**
  * @brief Collect the runtime profiling data from the RTLib
  */
-struct RuntimeProfiling_t {
+struct RuntimeProfiling_t
+{
 	bool is_valid = false;
 
 	/** The current Goal-Gap value, must be in [-100,100] */
@@ -87,7 +88,8 @@ struct RuntimeProfiling_t {
 	int ggap_percent_prev = 0;
 	int ggap_percent_prediction = 0;
 
-	struct {
+	struct
+	{
 		int upper_cpu = -1;
 		int upper_gap = -1;
 		int upper_age = -1;
@@ -98,7 +100,7 @@ struct RuntimeProfiling_t {
 
 	/** The current CPU Usage of an application. It should be received as a
 	 * feedback from the rtlib. */
-	int cpu_usage      = 0;
+	int cpu_usage = 0;
 	int cpu_usage_prev = 0;
 
 	/** Cycle time */
@@ -121,7 +123,6 @@ struct RuntimeProfiling_t {
  */
 class Application : public ApplicationStatusIF, public ApplicationConfIF
 {
-
 	friend class bbque::ApplicationManager;
 
 public:
@@ -149,14 +150,16 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	uint8_t ExcId() const noexcept {
+	uint8_t ExcId() const noexcept
+	{
 		return exc_id;
 	}
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	RTLIB_ProgrammingLanguage_t Language() const noexcept {
+	RTLIB_ProgrammingLanguage_t Language() const noexcept
+	{
 		return language;
 	}
 
@@ -169,14 +172,16 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	float Value() const noexcept {
+	float Value() const noexcept
+	{
 		return schedule.value;
 	}
 
 	/**
 	 * @see ApplicationConfIF
 	 */
-	void SetValue(float sched_metrics) noexcept {
+	void SetValue(float sched_metrics) noexcept
+	{
 		schedule.value = sched_metrics;
 	}
 
@@ -185,7 +190,10 @@ public:
 	 * stored in a specific object
 	 * @return A shared pointer to the recipe object
 	 */
-	RecipePtr_t GetRecipe() noexcept { return recipe; }
+	RecipePtr_t GetRecipe() noexcept
+	{
+		return recipe;
+	}
 
 	/**
 	 * @brief Set the current recipe used by the application.
@@ -215,41 +223,49 @@ public:
 	 * @papp Shared pointer to the current Application (provided by the
 	 * Application Manager)
 	 */
-	void ReloadWorkingModes(AppPtr_t & papp) {
+	void ReloadWorkingModes(AppPtr_t & papp)
+	{
 		return InitWorkingModes(papp);
 	}
 
-
-
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	bool IsContainer() const noexcept {
+	bool IsContainer() const noexcept
+	{
 		return container;
 	}
 
+	/**
+	 * @see ApplicationStatusIF
+	 */
+	AwmPtrList_t const & WorkingModes() noexcept
+	{
+		return awms.enabled_list;
+	}
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	AwmPtrList_t const & WorkingModes() noexcept { return awms.enabled_list; }
+	AwmPtr_t const & LowValueAWM() noexcept
+	{
+		return awms.enabled_list.front();
+	}
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	AwmPtr_t const & LowValueAWM() noexcept { return awms.enabled_list.front(); }
-
-	/**
-	 * @see ApplicationStatusIF
-	 */
-	AwmPtr_t const & HighValueAWM() noexcept { return awms.enabled_list.back(); }
+	AwmPtr_t const & HighValueAWM() noexcept
+	{
+		return awms.enabled_list.back();
+	}
 
 	/**
 	 * @see ApplicationStatusIF
 	 */
 	uint64_t GetResourceRequestStat(
-	        std::string const & rsrc_path,
-	        ResourceUsageStatType_t ru_stat);
+					std::string const & rsrc_path,
+					ApplicationStatusIF::ResourceUsageStatType_t ru_stat);
 
 
 
@@ -339,7 +355,8 @@ public:
 	 *
 	 * @return true is the AWM is no more valid, false otherwise.
 	 */
-	bool CurrentAWMNotValid() const noexcept {
+	bool CurrentAWMNotValid() const noexcept
+	{
 		return awms.curr_inv;
 	}
 
@@ -360,7 +377,8 @@ public:
 	 * @param mark_acknowledged
 	 * @return A data structure of type RuntimeProfiling_t
 	 */
-	RuntimeProfiling_t GetRuntimeProfile(bool mark_acknowledged = false) {
+	RuntimeProfiling_t GetRuntimeProfile(bool mark_acknowledged = false)
+	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		if (mark_acknowledged)
 			rt_prof.is_valid = false;
@@ -372,7 +390,8 @@ public:
 	 *
 	 * @param rt_profile The structure containing the profiling data
 	 */
-	void SetRuntimeProfile(struct RuntimeProfiling_t rt_profile) {
+	void SetRuntimeProfile(struct RuntimeProfiling_t rt_profile)
+	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		rt_prof = rt_profile;
 	}
@@ -383,11 +402,12 @@ public:
 	 * @param cpu_usage_prediction The expected amount of CPU usage
 	 * @param goal_gap_prediction The expected goal gap
 	 */
-	void SetAllocationInfo(int cpu_usage_prediction, int goal_gap_prediction = 0) {
+	void SetAllocationInfo(int cpu_usage_prediction, int goal_gap_prediction = 0)
+	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		rt_prof.cpu_usage_prediction_old = rt_prof.cpu_usage_prediction;
-		rt_prof.cpu_usage_prediction     = cpu_usage_prediction;
-		rt_prof.ggap_percent_prediction  = goal_gap_prediction;
+		rt_prof.cpu_usage_prediction = cpu_usage_prediction;
+		rt_prof.ggap_percent_prediction = goal_gap_prediction;
 	}
 
 	// -------------------------- Task-graph management ------------------------------------- //
@@ -402,7 +422,8 @@ public:
 	/**
 	 * @brief Return the current task-graph description
 	 */
-	std::shared_ptr<TaskGraph> GetTaskGraph() {
+	std::shared_ptr<TaskGraph> GetTaskGraph()
+	{
 		return task_graph;
 	}
 
@@ -413,7 +434,8 @@ public:
 	 * @param write_through If set to true (default) update also the file or memory
 	 * region storing the copy shared with the RTLib
 	 */
-	void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through = true) {
+	void SetTaskGraph(std::shared_ptr<TaskGraph> tg, bool write_through = true)
+	{
 		task_graph = tg;
 		if (write_through) UpdateTaskGraph();
 	}
@@ -426,24 +448,26 @@ public:
 	/**
 	 * @brief Clear the task-graph description (it optionally forces a reload)
 	 */
-	void ClearTaskGraph() {
+	void ClearTaskGraph()
+	{
 		task_graph = nullptr;
 	}
-
 
 	/**
 	 * @brief Performance requirements of a task
 	 * @param task_id Task identification number
 	 * @return A reference to TaskRequirements stored in the recipe object
 	 */
-	const TaskRequirements & GetTaskRequirements(uint32_t task_id) {
+	const TaskRequirements & GetTaskRequirements(uint32_t task_id)
+	{
 		return recipe->GetTaskRequirements(task_id);
 	};
 
 	/**
 	 * @brief Return the current partition
 	 */
-	std::shared_ptr<Partition> GetPartition() {
+	std::shared_ptr<Partition> GetPartition()
+	{
 		return assigned_partition;
 	}
 
@@ -452,7 +476,8 @@ public:
 	 * @note Typically used by the scheduling policy for resource mapping purpose
 	 * @param partition the allocated partition object
 	 */
-	void SetPartition(std::shared_ptr<Partition> partition) {
+	void SetPartition(std::shared_ptr<Partition> partition)
+	{
 		assigned_partition = partition;
 	}
 
@@ -522,21 +547,15 @@ private:
 	 * Store the information needed to support the management of the
 	 * application working modes.
 	 */
-	struct WorkingModesInfo {
-		/** Vector of all the working modes */
-		AwmPtrVect_t recipe_vect;
-		/** List of pointers to enabled working modes */
-		AwmPtrList_t enabled_list;
-		/** A bitset to keep track of the enabled working modes */
-		std::bitset<MAX_NUM_AWM> enabled_bset;
-		/** Lower bound AWM ID*/
-		uint8_t low_id;
-		/** Upper bound AWM ID*/
-		uint8_t upp_id;
-		/** The number of working modes - 1*/
-		uint8_t max_id;
-		/** Current AWM invalidated by a constraint assertion */
-		bool curr_inv;
+	struct WorkingModesInfo
+	{
+		AwmPtrVect_t recipe_vect;  // All the working modes
+		AwmPtrList_t enabled_list; // Enabled working modes
+		std::bitset<MAX_NUM_AWM> enabled_bset; // Enabled AWM bitset
+		uint8_t low_id;         // Lower AWM ID
+		uint8_t upp_id;         // Upper AWM ID
+		uint8_t max_id;         // Max ID value
+		bool curr_inv;          // Current AWM invalidated by constraint
 	} awms;
 
 	/**
@@ -575,8 +594,10 @@ private:
 	 * @return APP_SUCCESS if success, APP_RSRC_NOT_FOUND if the resource
 	 * specified does not exist.
 	 */
-	ExitCode_t SetResourceConstraint(br::ResourcePathPtr_t r_path,
-	                                 br::ResourceConstraint::BoundType_t b_type, uint64_t value);
+	ExitCode_t SetResourceConstraint(
+					br::ResourcePathPtr_t r_path,
+					br::ResourceConstraint::BoundType_t b_type,
+					uint64_t value);
 
 	/**
 	 * @brief Remove a constraint upon a specific resource.
@@ -589,8 +610,9 @@ private:
 	 * @return APP_SUCCESS if success, APP_CONS_NOT_FOUND if cannot be found
 	 * a previous constraint on the resource
 	 */
-	ExitCode_t ClearResourceConstraint(br::ResourcePathPtr_t r_path,
-	                                   br::ResourceConstraint::BoundType_t b_type);
+	ExitCode_t ClearResourceConstraint(
+					br::ResourcePathPtr_t r_path,
+					br::ResourceConstraint::BoundType_t b_type);
 
 
 	/**

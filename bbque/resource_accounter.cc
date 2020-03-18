@@ -50,8 +50,7 @@ namespace br = bbque::res;
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque
-{
+namespace bbque {
 
 ResourceAccounter & ResourceAccounter::GetInstance()
 {
@@ -84,8 +83,8 @@ ResourceAccounter::ResourceAccounter() :
 	// Register set quota command
 #define CMD_SET_TOTAL "set_total"
 	cm.RegisterCommand(RESOURCE_ACCOUNTER_NAMESPACE "." CMD_SET_TOTAL,
-	                   static_cast<CommandHandler*>(this),
-	                   "Set a new amount of resource that can be allocated");
+		static_cast<CommandHandler*>(this),
+		"Set a new amount of resource that can be allocated");
 }
 
 ResourceAccounter::~ResourceAccounter()
@@ -135,7 +134,7 @@ void ResourceAccounter::WaitForPlatformReady()
  ************************************************************************/
 
 void ResourceAccounter::PrintStatus(
-        br::RViewToken_t status_view, bool verbose) const
+	br::RViewToken_t status_view, bool verbose) const
 {
 	// Print the head of the report table
 	if (verbose) {
@@ -143,13 +142,14 @@ void ResourceAccounter::PrintStatus(
 		logger->Notice(RA_DIV1);
 		logger->Notice(RA_HEAD);
 		logger->Notice(RA_DIV2);
-	} else {
+	}
+	else {
 		DB(
-		        logger->Debug("Report on state view: %ld", status_view);
-		        logger->Debug(RA_DIV1);
-		        logger->Debug(RA_HEAD);
-		        logger->Debug(RA_DIV2);
-		);
+			logger->Debug("Report on state view: %ld", status_view);
+			logger->Debug(RA_DIV1);
+			logger->Debug(RA_HEAD);
+			logger->Debug(RA_DIV2);
+			);
 	}
 
 	// For each resource get the used amount
@@ -166,23 +166,23 @@ void ResourceAccounter::PrintStatus(
 		// Resource info string
 		std::stringstream resource_ss;
 		resource_ss << "| " << std::left << std::setw(27)
-		            << resource_ptr->Path()->ToString() << " "
-		            << online << " | "
-		            << std::setw(3)
-		            << resource_ptr->Model().substr(0, 3).c_str();
+			<< resource_ptr->Path()->ToString() << " "
+			<< online << " | "
+			<< std::setw(3)
+			<< resource_ptr->Model().substr(0, 3).c_str();
 		// Used
 		resource_ss << " | "  << std::setw(9) << std::right
-		            << bu::GetValueUnitStr(
-		                    resource_ptr->Used(status_view), show_percent).c_str();
+			<< bu::GetValueUnitStr(
+			resource_ptr->Used(status_view), show_percent).c_str();
 		// Unreserved
 		resource_ss << " | " << std::setw(9) << std::right
-		            << bu::GetValueUnitStr(
-		                    resource_ptr->Unreserved(), show_percent).c_str();
+			<< bu::GetValueUnitStr(
+			resource_ptr->Unreserved(), show_percent).c_str();
 		// Total
 		resource_ss << " | " << std::setw(9) << std::right
-		            << bu::GetValueUnitStr(
-		                    resource_ptr->Total(), show_percent).c_str()
-		            << " | ";
+			<< bu::GetValueUnitStr(
+			resource_ptr->Total(), show_percent).c_str()
+			<< " | ";
 
 		PRINT_NOTICE_IF_VERBOSE(verbose, resource_ss.str().c_str());
 
@@ -195,10 +195,10 @@ void ResourceAccounter::PrintStatus(
 }
 
 void ResourceAccounter::PrintApplicationInfo(
-        br::ResourcePtr_t resource_ptr,
-        bool percent,
-        br::RViewToken_t status_view,
-        bool verbose) const
+	br::ResourcePtr_t resource_ptr,
+	bool percent,
+	br::RViewToken_t status_view,
+	bool verbose) const
 {
 	if (resource_ptr == nullptr) {
 		logger->Warn("Null resource descriptor passed");
@@ -233,40 +233,39 @@ void ResourceAccounter::PrintApplicationInfo(
 		// Skip finished applications
 		if (papp->State() == Application::FINISHED) {
 			logger->Debug("[pid=%d, uid=%d, state=%s] skipped",
-			              papp->Pid(), app_uid,
-			              Application::StateStr(papp->State()));
+				papp->Pid(), app_uid,
+				Application::StateStr(papp->State()));
 			continue;
 		}
 
 		// Warning: unfinished application without AWM...
 		if (!papp->CurrentAWM()) {
 			logger->Warn("[pid=%d, uid=%d, state=%s] no working mode",
-			             papp->Pid(), app_uid,
-			             Application::StateStr(papp->State()));
+				papp->Pid(), app_uid,
+				Application::StateStr(papp->State()));
 			continue;
 		}
 
 #define RA_PROGRESS_BAR_LEN 21
 		char prog_bar[RA_PROGRESS_BAR_LEN];
 		utils::SchedLog::BuildProgressBar(
-		        app_usage, resource_ptr->Total(), prog_bar,
-		        RA_PROGRESS_BAR_LEN, '|');
+			app_usage, resource_ptr->Total(), prog_bar,
+			RA_PROGRESS_BAR_LEN, '|');
 
 		// Build the row with the application info
 		std::stringstream info_ss;
 		info_ss << "| > "
-		        << std::setw(15) << papp->StrId() << ","
-		        << "pr:" << std::setw(2) << papp->Priority() << ","
-		        << "wm:" << std::setw(2) << papp->CurrentAWM()->Id() << " | "
-		        << std::setw(6) << std::setfill(' ') << " | "
-		        << std::setw(9) << bu::GetValueUnitStr(app_usage, percent).c_str() << " | "
-		        << std::setw(RA_PROGRESS_BAR_LEN) << prog_bar << " |";
+			<< std::setw(15) << papp->StrId() << ","
+			<< "pr:" << std::setw(2) << papp->Priority() << ","
+			<< "wm:" << std::setw(2) << papp->CurrentAWM()->Id() << " | "
+			<< std::setw(6) << std::setfill(' ') << " | "
+			<< std::setw(9) << bu::GetValueUnitStr(app_usage, percent).c_str() << " | "
+			<< std::setw(RA_PROGRESS_BAR_LEN) << prog_bar << " |";
 		PRINT_NOTICE_IF_VERBOSE(verbose, info_ss.str().c_str());
 	}
 	// Print a separator line
 	PRINT_NOTICE_IF_VERBOSE(verbose, RA_DIV2);
 }
-
 
 void ResourceAccounter::PrintCountPerType() const
 {
@@ -280,7 +279,6 @@ void ResourceAccounter::PrintCountPerType() const
 	}
 	logger->Debug("======================");
 }
-
 
 /************************************************************************
  *             RESOURCE DESCRIPTORS ACCESS                              *
@@ -297,16 +295,15 @@ br::ResourcePtr_t ResourceAccounter::GetResource(std::string const & strpath)
 }
 
 br::ResourcePtr_t ResourceAccounter::GetResource(
-        ResourcePathPtr_t resource_path_ptr) const
+	ResourcePathPtr_t resource_path_ptr) const
 {
 	br::ResourcePtrList_t matchings(
-	        resources.find_list(
-	                *resource_path_ptr, RT_MATCH_FIRST | RT_MATCH_MIXED));
+		resources.find_list(
+		*resource_path_ptr, RT_MATCH_FIRST | RT_MATCH_MIXED));
 	if (matchings.empty())
 		return nullptr;
 	return matchings.front();
 }
-
 
 br::ResourcePtrList_t ResourceAccounter::GetResources(std::string const & strpath)
 {
@@ -317,18 +314,17 @@ br::ResourcePtrList_t ResourceAccounter::GetResources(std::string const & strpat
 }
 
 br::ResourcePtrList_t ResourceAccounter::GetResources(
-        ResourcePathPtr_t resource_path_ptr) const
+	ResourcePathPtr_t resource_path_ptr) const
 {
 	// If the path is a template find all the resources matching the
 	// template. Otherwise perform a "mixed path" based search.
 	if (resource_path_ptr->IsTemplate()) {
 		logger->Debug("GetResources: path <%s> is a template",
-		              resource_path_ptr->ToString().c_str());
+			resource_path_ptr->ToString().c_str());
 		return resources.find_list(*(resource_path_ptr.get()), RT_MATCH_TYPE);
 	}
 	return resources.find_list(*resource_path_ptr, RT_MATCH_MIXED);
 }
-
 
 bool ResourceAccounter::ExistResource(std::string const & strpath)
 {
@@ -341,7 +337,7 @@ bool ResourceAccounter::ExistResource(ResourcePathPtr_t resource_path_ptr) const
 	if (!resource_path_ptr)
 		return false;
 	br::ResourcePtrList_t matchings(
-	        resources.find_list(*resource_path_ptr, RT_MATCH_TYPE | RT_MATCH_FIRST));
+		resources.find_list(*resource_path_ptr, RT_MATCH_TYPE | RT_MATCH_FIRST));
 	return !matchings.empty();
 }
 
@@ -351,25 +347,25 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath)
 	if (rp_it == r_paths.end()) {
 		// Create a new resource path object
 		logger->Debug("GetPath: no resource path object for <%s>",
-		              strpath.c_str());
+			strpath.c_str());
 		auto new_path = std::make_shared<br::ResourcePath>(strpath);
 		if (new_path == nullptr) {
 			logger->Error("GetPath: <%s> is a not valid path",
-			              strpath.c_str());
+				strpath.c_str());
 			return nullptr;
 		}
 		// ...it must actually refer to a registered resource
 		if (ExistResource(new_path)) {
 			r_paths.emplace(strpath, new_path);
 			logger->Debug("GetPath: resource path object for <%s> added",
-			              strpath.c_str());
+				strpath.c_str());
 			return new_path;
-		} else
+		}
+		else
 			return nullptr;
 	}
 	return (*rp_it).second;
 }
-
 
 /************************************************************************
  *                   QUERY METHODS                                      *
@@ -382,7 +378,7 @@ uint64_t ResourceAccounter::Total(std::string const & path)
 }
 
 uint64_t ResourceAccounter::Total(
-        br::ResourcePtrList_t & resources_list) const
+	br::ResourcePtrList_t & resources_list) const
 {
 	if (resources_list.empty())
 		return 0;
@@ -390,25 +386,24 @@ uint64_t ResourceAccounter::Total(
 }
 
 uint64_t ResourceAccounter::Total(
-        ResourcePathPtr_t resource_path_ptr,
-        PathClass_t rpc) const
+	ResourcePathPtr_t resource_path_ptr,
+	PathClass_t rpc) const
 {
 	br::ResourcePtrList_t matchings(GetList(resource_path_ptr, rpc));
 	return QueryStatus(matchings, RA_TOTAL, 0);
 }
 
-
 uint64_t ResourceAccounter::Used(
-        std::string const & path,
-        br::RViewToken_t status_view)
+	std::string const & path,
+	br::RViewToken_t status_view)
 {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_USED, status_view);
 }
 
 uint64_t ResourceAccounter::Used(
-        br::ResourcePtrList_t & resources_list,
-        br::RViewToken_t status_view) const
+	br::ResourcePtrList_t & resources_list,
+	br::RViewToken_t status_view) const
 {
 	if (resources_list.empty())
 		return 0;
@@ -416,28 +411,27 @@ uint64_t ResourceAccounter::Used(
 }
 
 uint64_t ResourceAccounter::Used(
-        ResourcePathPtr_t resource_path_ptr,
-        PathClass_t rpc,
-        br::RViewToken_t status_view) const
+	ResourcePathPtr_t resource_path_ptr,
+	PathClass_t rpc,
+	br::RViewToken_t status_view) const
 {
 	br::ResourcePtrList_t matchings(GetList(resource_path_ptr, rpc));
 	return QueryStatus(matchings, RA_USED, status_view);
 }
 
-
 uint64_t ResourceAccounter::UsedBy(
-        std::string const & path,
-        ba::SchedPtr_t papp,
-        br::RViewToken_t status_view)
+	std::string const & path,
+	ba::SchedPtr_t papp,
+	br::RViewToken_t status_view)
 {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_USED_BY, status_view, papp);
 }
 
 uint64_t ResourceAccounter::UsedBy(
-        br::ResourcePtrList_t & resources_list,
-        ba::SchedPtr_t papp,
-        br::RViewToken_t status_view) const
+	br::ResourcePtrList_t & resources_list,
+	ba::SchedPtr_t papp,
+	br::RViewToken_t status_view) const
 {
 	if (resources_list.empty())
 		return 0;
@@ -445,29 +439,28 @@ uint64_t ResourceAccounter::UsedBy(
 }
 
 uint64_t ResourceAccounter::UsedBy(
-        ResourcePathPtr_t resource_path_ptr,
-        ba::SchedPtr_t papp,
-        PathClass_t rpc,
-        br::RViewToken_t status_view) const
+	ResourcePathPtr_t resource_path_ptr,
+	ba::SchedPtr_t papp,
+	PathClass_t rpc,
+	br::RViewToken_t status_view) const
 {
 	br::ResourcePtrList_t matchings(GetList(resource_path_ptr, rpc));
 	return QueryStatus(matchings, RA_USED_BY, status_view, papp);
 }
 
-
 uint64_t ResourceAccounter::Available(
-        std::string const & path,
-        br::RViewToken_t status_view,
-        ba::SchedPtr_t papp)
+	std::string const & path,
+	br::RViewToken_t status_view,
+	ba::SchedPtr_t papp)
 {
 	br::ResourcePtrList_t matchings(GetResources(path));
 	return QueryStatus(matchings, RA_AVAIL, status_view, papp);
 }
 
 uint64_t ResourceAccounter::Available(
-        br::ResourcePtrList_t & resources_list,
-        br::RViewToken_t status_view,
-        ba::SchedPtr_t papp) const
+	br::ResourcePtrList_t & resources_list,
+	br::RViewToken_t status_view,
+	ba::SchedPtr_t papp) const
 {
 	if (resources_list.empty())
 		return 0;
@@ -475,10 +468,10 @@ uint64_t ResourceAccounter::Available(
 }
 
 uint64_t ResourceAccounter::Available(
-        ResourcePathPtr_t resource_path_ptr,
-        PathClass_t rpc,
-        br::RViewToken_t status_view,
-        ba::SchedPtr_t papp) const
+	ResourcePathPtr_t resource_path_ptr,
+	PathClass_t rpc,
+	br::RViewToken_t status_view,
+	ba::SchedPtr_t papp) const
 {
 	br::ResourcePtrList_t matchings(GetList(resource_path_ptr, rpc));
 	return QueryStatus(matchings, RA_AVAIL, status_view, papp);
@@ -491,7 +484,7 @@ uint64_t ResourceAccounter::Unreserved(std::string const & path)
 }
 
 uint64_t ResourceAccounter::Unreserved(
-        br::ResourcePtrList_t & resources_list) const
+	br::ResourcePtrList_t & resources_list) const
 {
 	if (resources_list.empty())
 		return 0;
@@ -499,15 +492,14 @@ uint64_t ResourceAccounter::Unreserved(
 }
 
 uint64_t ResourceAccounter::Unreserved(
-        ResourcePathPtr_t resource_path_ptr) const
+	ResourcePathPtr_t resource_path_ptr) const
 {
 	br::ResourcePtrList_t matchings(GetList(resource_path_ptr, MIXED));
 	return QueryStatus(matchings, RA_UNRESERVED, 0);
 }
 
-
 uint16_t ResourceAccounter::Count(
-        ResourcePathPtr_t resource_path_ptr) const
+	ResourcePathPtr_t resource_path_ptr) const
 {
 	br::ResourcePtrList_t matchings(GetResources(resource_path_ptr));
 	return matchings.size();
@@ -521,29 +513,27 @@ uint16_t ResourceAccounter::CountPerType(br::ResourceType type) const
 	return it->second.size();
 }
 
-
 br::ResourcePtrList_t ResourceAccounter::GetList(
-        ResourcePathPtr_t resource_path_ptr,
-        PathClass_t rpc) const
+	ResourcePathPtr_t resource_path_ptr,
+	PathClass_t rpc) const
 {
 	if (rpc == UNDEFINED)
 		return GetResources(resource_path_ptr);
 	return resources.find_list(*resource_path_ptr, RTFlags(rpc));
 }
 
-
 uint64_t ResourceAccounter::QueryStatus(
-        br::ResourcePtrList_t const & resources_list,
-        QueryOption_t _att,
-        br::RViewToken_t status_view,
-        ba::SchedPtr_t papp) const
+	br::ResourcePtrList_t const & resources_list,
+	QueryOption_t _att,
+	br::RViewToken_t status_view,
+	ba::SchedPtr_t papp) const
 {
 	uint64_t value = 0;
 
 	// For all the descriptors in the list add the quantity of resource in the
 	// specified state (available, used, total)
 	for (br::ResourcePtr_t const & rsrc : resources_list) {
-		switch(_att) {
+		switch (_att) {
 		case RA_AVAIL:
 			value += rsrc->Available(papp, status_view);
 			break;
@@ -565,12 +555,12 @@ uint64_t ResourceAccounter::QueryStatus(
 }
 
 uint64_t ResourceAccounter::GetAssignedAmount(
-        br::ResourceAssignmentMapPtr_t const & assign_map,
-        ba::SchedPtr_t papp,
-        br::RViewToken_t status_view,
-        br::ResourceType r_type,
-        br::ResourceType r_scope_type,
-        BBQUE_RID_TYPE r_scope_id)
+	br::ResourceAssignmentMapPtr_t const & assign_map,
+	ba::SchedPtr_t papp,
+	br::RViewToken_t status_view,
+	br::ResourceType r_type,
+	br::ResourceType r_scope_type,
+	BBQUE_RID_TYPE r_scope_id)
 {
 	if (assign_map == nullptr) {
 		logger->Error("GetAssignedAmount: null pointer map");
@@ -583,21 +573,21 @@ uint64_t ResourceAccounter::GetAssignedAmount(
 		br::ResourcePathPtr_t const & resource_path_ptr(r_entry.first);
 		br::ResourceAssignmentPtr_t const & r_assign(r_entry.second);
 		logger->Debug("GetAssignedAmount: type:<%-3s> scope:<%-3s>",
-		              br::GetResourceTypeString(r_type),
-		              br::GetResourceTypeString(r_scope_type));
+			br::GetResourceTypeString(r_type),
+			br::GetResourceTypeString(r_scope_type));
 
 		// Scope resource type
 		if ((r_scope_type != br::ResourceType::UNDEFINED)
-		    && (resource_path_ptr->GetIdentifier(r_scope_type) == nullptr))
+			&& (resource_path_ptr->GetIdentifier(r_scope_type) == nullptr))
 			continue;
 
 		// Iterate over the bound resources
 		for (auto const & rsrc : r_assign->GetResourcesList()) {
 			logger->Debug("GetAssignedAmount: path:<%s>",
-			              rsrc->Path()->ToString().c_str());
+				rsrc->Path()->ToString().c_str());
 			// Scope resource ID
 			if ((r_scope_id >= 0) &&
-			    (r_scope_id != rsrc->Path()->GetID(r_scope_type)))
+				(r_scope_id != rsrc->Path()->GetID(r_scope_type)))
 				continue;
 			// Resource type
 			if (rsrc->Path()->Type() != r_type)
@@ -606,30 +596,30 @@ uint64_t ResourceAccounter::GetAssignedAmount(
 		}
 	}
 	logger->Debug("GetAssignedAmount: EXC:[%s] R:<%-3s> U:%" PRIu64 "",
-	              papp->StrId(), br::GetResourceTypeString(r_type), amount);
+		papp->StrId(), br::GetResourceTypeString(r_type), amount);
 	return amount;
 }
 
 uint64_t ResourceAccounter::GetAssignedAmount(
-        br::ResourceAssignmentMap_t const & assign_map,
-        br::ResourceType r_type,
-        br::ResourceType r_scope_type,
-        BBQUE_RID_TYPE r_scope_id) const
+	br::ResourceAssignmentMap_t const & assign_map,
+	br::ResourceType r_type,
+	br::ResourceType r_scope_type,
+	BBQUE_RID_TYPE r_scope_id) const
 {
 	uint64_t amount = 0;
 	for (auto & ru_entry : assign_map) {
 		br::ResourcePathPtr_t const & resource_path_ptr(ru_entry.first);
 		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
 		logger->Debug("GetAssignedAmount: type:<%-3s> scope:<%-3s>",
-		              br::GetResourceTypeString(r_type),
-		              br::GetResourceTypeString(r_scope_type));
+			br::GetResourceTypeString(r_type),
+			br::GetResourceTypeString(r_scope_type));
 		// Scope resource type
 		if ((r_scope_type != br::ResourceType::UNDEFINED)
-		    && (resource_path_ptr->GetIdentifier(r_scope_type) == nullptr))
+			&& (resource_path_ptr->GetIdentifier(r_scope_type) == nullptr))
 			continue;
 		// Scope resource ID
 		if ((r_scope_id >= 0)
-		    && (r_scope_id != resource_path_ptr->GetID(r_scope_type)))
+			&& (r_scope_id != resource_path_ptr->GetID(r_scope_type)))
 			continue;
 		// Resource type
 		if (resource_path_ptr->Type() != r_type)
@@ -639,11 +629,10 @@ uint64_t ResourceAccounter::GetAssignedAmount(
 	return amount;
 }
 
-
 ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
-        br::ResourceAssignmentMapPtr_t const & assign_map,
-        br::RViewToken_t status_view,
-        ba::SchedPtr_t papp) const
+	br::ResourceAssignmentMapPtr_t const & assign_map,
+	br::RViewToken_t status_view,
+	ba::SchedPtr_t papp) const
 {
 	uint64_t avail = 0;
 
@@ -653,16 +642,16 @@ ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
 
 		logger->Debug("CheckAvailability: <%s> mapped to %d resources",
-		              rsrc_path->ToString().c_str(), r_assign->GetResourcesList().size());
+			rsrc_path->ToString().c_str(), r_assign->GetResourcesList().size());
 
 		// Query the availability of the resources in the list
 		avail = QueryStatus(r_assign->GetResourcesList(), RA_AVAIL, status_view, papp);
 		if (avail < r_assign->GetAmount()) {
 			logger->Debug("CheckAvailability: <%s> exceeding request"
-			              "[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "] ",
-			              rsrc_path->ToString().c_str(),
-			              r_assign->GetAmount(), avail,
-			              QueryStatus(r_assign->GetResourcesList(), RA_TOTAL));
+				"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "] ",
+				rsrc_path->ToString().c_str(),
+				r_assign->GetAmount(), avail,
+				QueryStatus(r_assign->GetResourcesList(), RA_TOTAL));
 			return RA_ERR_USAGE_EXC;
 		}
 	}
@@ -671,8 +660,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::CheckAvailability(
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::GetAppAssignmentsByView(
-        br::RViewToken_t status_view,
-        AppAssignmentsMapPtr_t & apps_assign)
+	br::RViewToken_t status_view,
+	AppAssignmentsMapPtr_t & apps_assign)
 {
 	// Get the map of all the Apps/EXCs resource assignments
 	// (default system resource state view)
@@ -686,8 +675,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::GetAppAssignmentsByView(
 	auto view_it = assign_per_views.find(status_view);
 	if (view_it == assign_per_views.end()) {
 		logger->Error("GetAppAssignmentsByView:"
-		              "Cannot find the resource state view referenced by %d",
-		              status_view);
+			"Cannot find the resource state view referenced by %d",
+			status_view);
 		return RA_ERR_MISS_VIEW;
 	}
 
@@ -706,15 +695,15 @@ br::ResourcePath const & ResourceAccounter::GetPrefixPath() const
 }
 
 br::ResourcePtr_t ResourceAccounter::RegisterResource(
-        std::string const & strpath,
-        std::string const & units,
-        uint64_t amount)
+	std::string const & strpath,
+	std::string const & units,
+	uint64_t amount)
 {
 	// Build a resource path object (from the string)
 	auto resource_path_ptr = std::make_shared<br::ResourcePath>(strpath);
 	if (!resource_path_ptr) {
 		logger->Fatal("Register R<%s>: Invalid resource path",
-		              strpath.c_str());
+			strpath.c_str());
 		return nullptr;
 	}
 
@@ -722,14 +711,14 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 	auto resource_ptr(resources.insert(*(resource_path_ptr.get())));
 	if (!resource_ptr) {
 		logger->Crit("Register R<%s>: "
-		             "Unable to allocate a new resource descriptor",
-		             strpath.c_str());
+			"Unable to allocate a new resource descriptor",
+			strpath.c_str());
 		return nullptr;
 	}
 	resource_ptr->SetTotal(br::ConvertValue(amount, units));
 	resource_ptr->SetPath(resource_path_ptr);
 	logger->Debug("Register R<%s>: total = %llu %s",
-	              strpath.c_str(), resource_ptr->Total(), units.c_str());
+		strpath.c_str(), resource_ptr->Total(), units.c_str());
 
 	// Insert the path in the paths set
 	resource_set.emplace(resource_ptr);
@@ -741,7 +730,8 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 		if (r_ids_per_type.find(id->Type()) == r_ids_per_type.end()) {
 			std::set<BBQUE_RID_TYPE> ids = { id->ID() };
 			r_ids_per_type.emplace(id->Type(), ids);
-		} else
+		}
+		else
 			r_ids_per_type[id->Type()].insert(id->ID());
 	}
 
@@ -749,9 +739,9 @@ br::ResourcePtr_t ResourceAccounter::RegisterResource(
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
-        std::string const & _path,
-        std::string const & _units,
-        uint64_t _amount)
+	std::string const & _path,
+	std::string const & _units,
+	uint64_t _amount)
 {
 	uint64_t availability;
 	uint64_t reserved;
@@ -760,8 +750,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	auto resource_path_ptr(GetPath(_path));
 	if (resource_path_ptr == nullptr) {
 		logger->Fatal("Updating resource FAILED "
-		              "(Error: path [%s] does not reference a specific resource",
-		              _path.c_str());
+			"(Error: path [%s] does not reference a specific resource",
+			_path.c_str());
 		return RA_ERR_INVALID_PATH;
 	}
 
@@ -769,8 +759,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	auto resource_ptr(GetResource(resource_path_ptr));
 	if (resource_ptr == nullptr) {
 		logger->Fatal("Updating resource FAILED "
-		              "(Error: resource [%s] not found",
-		              resource_path_ptr->ToString().c_str());
+			"(Error: resource [%s] not found",
+			resource_path_ptr->ToString().c_str());
 		return RA_ERR_NOT_REGISTERED;
 	}
 
@@ -787,8 +777,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	availability = br::ConvertValue(_amount, _units);
 	if (resource_ptr->Total() < availability) {
 		logger->Error("Updating resource FAILED "
-		              "(Error: availability [%d] exceeding registered amount [%d]",
-		              availability, resource_ptr->Total());
+			"(Error: availability [%d] exceeding registered amount [%d]",
+			availability, resource_ptr->Total());
 		SetState(State::READY);
 		return RA_ERR_OVERFLOW;
 	}
@@ -804,20 +794,19 @@ ResourceAccounter::ExitCode_t ResourceAccounter::UpdateResource(
 	return RA_SUCCESS;
 }
 
-
 ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
-        ResourcePathPtr_t resource_path_ptr,
-        uint64_t amount)
+	ResourcePathPtr_t resource_path_ptr,
+	uint64_t amount)
 {
 	br::Resource::ExitCode_t rresult;
 	auto const & resources_list(resources.find_list(*resource_path_ptr, RT_MATCH_MIXED));
 	logger->Info("Reserving [%" PRIu64 "] for [%s] resources...",
-	             amount, resource_path_ptr->ToString().c_str());
+		amount, resource_path_ptr->ToString().c_str());
 
 	if (resources_list.empty()) {
 		logger->Error("Resource reservation FAILED "
-		              "(Error: resource [%s] not matching)",
-		              resource_path_ptr->ToString().c_str());
+			"(Error: resource [%s] not matching)",
+			resource_path_ptr->ToString().c_str());
 		return RA_FAILED;
 	}
 
@@ -825,7 +814,7 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 		rresult = r->Reserve(amount);
 		if (rresult != br::Resource::RS_SUCCESS) {
 			logger->Warn("Reservation: Exceeding value [%" PRIu64 "] for [%s]",
-			             amount, resource_path_ptr->ToString().c_str());
+				amount, resource_path_ptr->ToString().c_str());
 			return RA_FAILED;
 		}
 	}
@@ -834,48 +823,47 @@ ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
 }
 
 ResourceAccounter::ExitCode_t  ResourceAccounter::ReserveResources(
-        std::string const & path,
-        uint64_t amount)
+	std::string const & path,
+	uint64_t amount)
 {
 	auto resource_path_ptr(GetPath(path));
 	logger->Info("Reserve: built %d from %s",
-	             resource_path_ptr.get(), path.c_str());
+		resource_path_ptr.get(), path.c_str());
 
 	if (resource_path_ptr == nullptr) {
 		logger->Fatal("Reserve resource FAILED "
-		              "(Error: path [%s] does not reference a specific resource.",
-		              path.c_str());
+			"(Error: path [%s] does not reference a specific resource.",
+			path.c_str());
 		return RA_ERR_INVALID_PATH;
 	}
 
 	return ReserveResources(resource_path_ptr, amount);
 }
 
-
 ResourceAccounter::ExitCode_t ResourceAccounter::SetOffline(
-        std::string const & path)
+	std::string const & path)
 {
 	auto resource_path_ptr = GetPath(path);
 	return SetOffline(resource_path_ptr);
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SetOffline(
-        br::ResourcePathPtr_t path)
+	br::ResourcePathPtr_t path)
 {
 	logger->Info("SetOffline: <%s> -> (virtual) offline...",
-	             path->ToString().c_str());
+		path->ToString().c_str());
 
 	auto resources_list(GetResources(path));
 	if (resources_list.empty()) {
 		logger->Error("SetOffline: <%s> error: no matchings",
-		              path->ToString().c_str());
+			path->ToString().c_str());
 		return RA_FAILED;
 	}
 
 	for (auto & resource_ptr : resources_list) {
 		resource_ptr->SetOffline();
 		logger->Debug("SetOffline: <%s> -> (virtual) offline",
-		              resource_ptr->Path()->ToString().c_str());
+			resource_ptr->Path()->ToString().c_str());
 #ifdef CONFIG_BBQUE_PM
 		resources_to_power_manage[resource_ptr->Path()] = resource_ptr;
 #endif
@@ -885,28 +873,28 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SetOffline(
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SetOnline(
-        std::string const & path)
+	std::string const & path)
 {
 	auto resource_path_ptr = GetPath(path);
 	return SetOnline(resource_path_ptr);
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SetOnline(
-        br::ResourcePathPtr_t path)
+	br::ResourcePathPtr_t path)
 {
 	logger->Info("SetOnline: <%s> -> online...", path->ToString().c_str());
 
 	auto resources_list(GetResources(path));
 	if (resources_list.empty()) {
 		logger->Error("SetOnline: <%s> error: no matchings",
-		              path->ToString().c_str());
+			path->ToString().c_str());
 		return RA_FAILED;
 	}
 
 	for (auto & resource_ptr : resources_list) {
 		resource_ptr->SetOnline();
 		logger->Debug("SetOnline: <%s> -> online",
-		              resource_ptr->Path()->ToString().c_str());
+			resource_ptr->Path()->ToString().c_str());
 #ifdef CONFIG_BBQUE_PM
 		resources_to_power_on[resource_ptr->Path()] = resource_ptr;
 #endif
@@ -924,18 +912,18 @@ bool ResourceAccounter::IsOffline(std::string const & path)
 bool ResourceAccounter::IsOffline(ResourcePathPtr_t path) const
 {
 	logger->Debug("IsOffline: <%s> check virtual offline status...",
-	              path->ToString().c_str());
+		path->ToString().c_str());
 	auto resources_list(GetResources(path));
 	if (resources_list.empty()) {
 		logger->Error("IsOffline: <%s> error: no matchings",
-		              path->ToString().c_str());
+			path->ToString().c_str());
 		return true;
 	}
 
 	for (auto & resource_ptr : resources_list) {
 		if (!resource_ptr->IsOffline()) {
 			logger->Debug("IsOffline: <%s> is online",
-			              resource_ptr->Path()->ToString().c_str());
+				resource_ptr->Path()->ToString().c_str());
 			return false;
 		}
 	}
@@ -954,18 +942,18 @@ br::ResourcePtr_t ResourceAccounter::DequeueResourceToPowerManage()
 	auto resource_ptr = it->second;
 	resources_to_power_manage.erase(it);
 	logger->Debug("DequeueResourceToPowerManage: <%> removed",
-	              resource_ptr->Path()->ToString().c_str());
+		resource_ptr->Path()->ToString().c_str());
 	return resource_ptr;
 }
 
 void ResourceAccounter::EnqueueResourceToPowerManage(
-        br::ResourcePtr_t resource_ptr,
-        br::Resource::PowerSettings config)
+	br::ResourcePtr_t resource_ptr,
+	br::Resource::PowerSettings config)
 {
 	resource_ptr->SetPowerSettings(config);
 	resources_to_power_manage[resource_ptr->Path()] = resource_ptr;
 	logger->Debug("EnqueueResourceToPowerManage: <%> added",
-	              resource_ptr->Path()->ToString().c_str());
+		resource_ptr->Path()->ToString().c_str());
 }
 
 bool ResourceAccounter::AnyResourceToPowerManage()
@@ -979,31 +967,32 @@ void ResourceAccounter::RestoreResourcesToPowerOn()
 
 	for (auto & resource_pair : resources_to_power_on) {
 		logger->Debug("RestoreResourcesToPowerOn: <%> -> ONLINE",
-		              resource_pair.first->ToString().c_str());
+			resource_pair.first->ToString().c_str());
 		pm.SetOn(resource_pair.first);
 	}
 
 	resources_to_power_on.clear();
 }
 
-#endif // CONFIG_BBQUE_PM
 
+
+#endif // CONFIG_BBQUE_PM
 
 /************************************************************************
  *                   STATE VIEWS MANAGEMENT                             *
  ************************************************************************/
 
 ResourceAccounter::ExitCode_t ResourceAccounter::GetView(
-        std::string const & req_path,
-        br::RViewToken_t & token)
+	std::string const & req_path,
+	br::RViewToken_t & token)
 {
 	WaitForPlatformReady();
 	return _GetView(req_path, token);
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::_GetView(
-        std::string const & req_path,
-        br::RViewToken_t & token)
+	std::string const & req_path,
+	br::RViewToken_t & token)
 {
 	// Null-string check
 	if (req_path.empty()) {
@@ -1030,7 +1019,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::PutView(br::RViewToken_t status
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::_PutView(
-        br::RViewToken_t status_view)
+	br::RViewToken_t status_view)
 {
 	// Do nothing if the token references the system state view
 	if (status_view == sys_view_token) {
@@ -1056,8 +1045,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::_PutView(
 
 	logger->Debug("PutView: [%ld] cleared view", status_view);
 	logger->Debug("PutView: [%ld] currently managed {resource sets = %ld, "
-	              " assign_map = %d}",
-	              status_view, rsrc_per_views.size(), assign_per_views.erase(status_view));
+		" assign_map = %d}",
+		status_view, rsrc_per_views.size(), assign_per_views.erase(status_view));
 
 	return RA_SUCCESS;
 }
@@ -1075,7 +1064,7 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view)
 	// Do nothing if the token references the system state view
 	if (status_view == sys_view_token) {
 		logger->Debug("SetView: [%ld] is the system state view yet!",
-		              status_view);
+			status_view);
 		return sys_view_token;
 	}
 
@@ -1098,8 +1087,8 @@ br::RViewToken_t ResourceAccounter::_SetView(br::RViewToken_t status_view)
 
 	logger->Info("SetView: [%ld] is the new system state view.", sys_view_token);
 	logger->Debug("SetView: [%ld] currently managed {resource sets = %ld,"
-	              " assign_map = %d}",
-	              sys_view_token, rsrc_per_views.size(), assign_per_views.erase(status_view));
+		" assign_map = %d}",
+		sys_view_token, rsrc_per_views.size(), assign_per_views.erase(status_view));
 	return sys_view_token;
 }
 
@@ -1113,7 +1102,6 @@ void ResourceAccounter::SetScheduledView(br::RViewToken_t svt)
 	if (old_svt != sys_view_token)
 		_PutView(old_svt);
 }
-
 
 /************************************************************************
  *                   SYNCHRONIZATION SUPPORT                            *
@@ -1133,24 +1121,25 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncStart()
 	++sync_ssn.count;
 	snprintf(tk_path, TOKEN_PATH_MAX_LEN, "%s%d", SYNC_RVIEW_PATH, sync_ssn.count);
 	logger->Debug("SyncMode [%d]: requiring resource state view for %s",
-	              sync_ssn.count, tk_path);
+		sync_ssn.count, tk_path);
 
 	// Get a resource state view for the synchronization
 	result = _GetView(tk_path, sync_ssn.view);
 	if (result != RA_SUCCESS) {
 		logger->Fatal("SyncMode [%d]: cannot get a resource state view",
-		              sync_ssn.count);
+			sync_ssn.count);
 		SyncAbort();
 		return RA_ERR_SYNC_VIEW;
 	}
 	logger->Debug("SyncMode [%d]: resource state view token = %ld",
-	              sync_ssn.count, sync_ssn.view);
+		sync_ssn.count, sync_ssn.view);
 
 	// Init the view with the resource accounting of running applications
 	return SyncInit();
 }
 
 // NOTE this method should be called while holding the sync session mutex
+
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit()
 {
 	ResourceAccounter::ExitCode_t result;
@@ -1161,17 +1150,17 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit()
 	papp = am.GetFirst(Schedulable::RUNNING, apps_it);
 	for ( ; papp; papp = am.GetNext(Schedulable::RUNNING, apps_it)) {
 		logger->Info("SyncInit: [%s] current AWM: %d",
-		             papp->StrId(),
-		             papp->CurrentAWM()->Id());
+			papp->StrId(),
+			papp->CurrentAWM()->Id());
 
 		// Re-acquire the resources (these should not have a "Next AWM"!)
 		result = _BookResources(
-		                 papp, papp->CurrentAWM()->GetResourceBinding(),
-		                 sync_ssn.view);
+			papp, papp->CurrentAWM()->GetResourceBinding(),
+			sync_ssn.view);
 		if (result != RA_SUCCESS) {
 			logger->Fatal("SyncInit [%d]: resource booking failed for %s."
-			              " Aborting sync session...",
-			              sync_ssn.count, papp->StrId());
+				" Aborting sync session...",
+				sync_ssn.count, papp->StrId());
 			SyncAbort();
 			return RA_ERR_SYNC_INIT;
 		}
@@ -1182,7 +1171,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncInit()
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
-        ba::SchedPtr_t const & papp)
+	ba::SchedPtr_t const & papp)
 {
 	ResourceAccounter::ExitCode_t result = RA_SUCCESS;
 
@@ -1195,25 +1184,25 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 	// Check next AWM
 	if (!papp->NextAWM()) {
 		logger->Fatal("SyncMode [%d]: [%s] missing the next AWM",
-		              sync_ssn.count, papp->StrId());
+			sync_ssn.count, papp->StrId());
 		SyncAbort();
 		return RA_ERR_MISS_AWM;
 	}
 
 	// Acquire resources
 	br::ResourceAssignmentMapPtr_t const & assign_map(
-	        papp->NextAWM()->GetResourceBinding());
+		papp->NextAWM()->GetResourceBinding());
 	result = _BookResources(papp, assign_map, sync_ssn.view);
 	if (result != RA_SUCCESS) {
 		logger->Fatal("SyncMode [%d]: [%s] resource booking failed",
-		              sync_ssn.count, papp->StrId());
+			sync_ssn.count, papp->StrId());
 		SyncAbort();
 		return result;
 	}
 
 	// Update AWM binding info (resource bitsets)
 	logger->Debug("SyncMode [%d]: [%s] updating binding information",
-	              sync_ssn.count, papp->StrId());
+		sync_ssn.count, papp->StrId());
 	papp->NextAWM()->UpdateBindingInfo(sync_ssn.view);
 	return result;
 }
@@ -1221,7 +1210,7 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncAcquireResources(
 void ResourceAccounter::SyncAbort()
 {
 	logger->Debug("SyncAbort [%d]: aborting synchronization...",
-	              sync_ssn.count);
+		sync_ssn.count);
 	_PutView(sync_ssn.view);
 	SyncFinalize();
 	logger->Error("SyncMode [%d]: session aborted", sync_ssn.count);
@@ -1241,8 +1230,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::SyncCommit()
 	view = _SetView(sync_ssn.view);
 	if (view != sync_ssn.view) {
 		logger->Fatal("SyncCommit [%d]: "
-		              "unable to set the new system resource state view",
-		              sync_ssn.count);
+			"unable to set the new system resource state view",
+			sync_ssn.count);
 		SyncAbort();
 		return RA_ERR_SYNC_VIEW;
 	}
@@ -1282,17 +1271,17 @@ void ResourceAccounter::SyncWait()
  ************************************************************************/
 
 ResourceAccounter::ExitCode_t ResourceAccounter::_BookResources(
-        ba::SchedPtr_t papp,
-        br::ResourceAssignmentMapPtr_t const & assign_map,
-        br::RViewToken_t status_view)
+	ba::SchedPtr_t papp,
+	br::ResourceAssignmentMapPtr_t const & assign_map,
+	br::RViewToken_t status_view)
 {
 	return IncBookingCounts(assign_map, papp, status_view);
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::BookResources(
-        ba::SchedPtr_t papp,
-        br::ResourceAssignmentMapPtr_t const & assign_map,
-        br::RViewToken_t status_view)
+	ba::SchedPtr_t papp,
+	br::ResourceAssignmentMapPtr_t const & assign_map,
+	br::RViewToken_t status_view)
 {
 	logger->Debug("Booking: assigning resources to [%s]", papp->StrId());
 
@@ -1325,8 +1314,8 @@ ResourceAccounter::ExitCode_t ResourceAccounter::BookResources(
 }
 
 void ResourceAccounter::ReleaseResources(
-        ba::SchedPtr_t papp,
-        br::RViewToken_t status_view)
+	ba::SchedPtr_t papp,
+	br::RViewToken_t status_view)
 {
 	std::unique_lock<std::mutex> sync_ul(status_mtx);
 	if (!papp) {
@@ -1349,8 +1338,8 @@ void ResourceAccounter::ReleaseResources(
 }
 
 void ResourceAccounter::_ReleaseResources(
-        ba::SchedPtr_t papp,
-        br::RViewToken_t status_view)
+	ba::SchedPtr_t papp,
+	br::RViewToken_t status_view)
 {
 	// Get the map of applications resource assignments related to the state view
 	// referenced by 'status_view'
@@ -1373,23 +1362,22 @@ void ResourceAccounter::_ReleaseResources(
 	logger->Debug("Release: [%s] resource release terminated", papp->StrId());
 }
 
-
 ResourceAccounter::ExitCode_t
 ResourceAccounter::IncBookingCounts(
-        br::ResourceAssignmentMapPtr_t const & assign_map,
-        ba::SchedPtr_t const & papp,
-        br::RViewToken_t status_view)
+	br::ResourceAssignmentMapPtr_t const & assign_map,
+	ba::SchedPtr_t const & papp,
+	br::RViewToken_t status_view)
 {
 	ResourceAccounter::ExitCode_t result;
 	logger->Debug("IncBooking: getting the assigned amount from view [%ld]...",
-	              status_view);
+		status_view);
 
 	// Get the set of resources referenced in the view
 	auto rsrc_view(rsrc_per_views.find(status_view));
 	assert(rsrc_view != rsrc_per_views.end());
 	if (rsrc_view == rsrc_per_views.end()) {
 		logger->Fatal("IncBooking: invalid resource state view token [%ld]",
-		              status_view);
+			status_view);
 		return RA_ERR_MISS_VIEW;
 	}
 	auto & rsrc_set(rsrc_view->second);
@@ -1399,7 +1387,7 @@ ResourceAccounter::IncBookingCounts(
 	AppAssignmentsMapPtr_t apps_assign;
 	if (GetAppAssignmentsByView(status_view, apps_assign) == RA_ERR_MISS_VIEW) {
 		logger->Fatal("IncBooking: no applications using resource in state view "
-		              "[%ld]", status_view);
+			"[%ld]", status_view);
 		return RA_ERR_MISS_APP;
 	}
 
@@ -1407,7 +1395,7 @@ ResourceAccounter::IncBookingCounts(
 	auto app_assign_map_it(apps_assign->find(papp->Uid()));
 	if (app_assign_map_it != apps_assign->end()) {
 		logger->Warn("IncBooking: [%s] currently using a resource set yet",
-		             papp->StrId());
+			papp->StrId());
 		return RA_ERR_APP_USAGES;
 	}
 
@@ -1416,49 +1404,49 @@ ResourceAccounter::IncBookingCounts(
 		br::ResourcePathPtr_t const & rsrc_path(ru_entry.first);
 		br::ResourceAssignmentPtr_t & r_assign(ru_entry.second);
 		logger->Debug("IncBooking: [%s] requires resource <%s>: % " PRIu64 " ",
-		              papp->StrId(),
-		              rsrc_path->ToString().c_str(), r_assign->GetAmount());
+			papp->StrId(),
+			rsrc_path->ToString().c_str(), r_assign->GetAmount());
 
 		// Do booking for the current resource request
 		result = DoResourceBooking(papp, r_assign, status_view, rsrc_set);
 		if (result != RA_SUCCESS)  {
 			logger->Crit("IncBooking: [%s] unexpected fail! <%s> "
-			             "[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "]",
-			             papp->StrId(),
-			             rsrc_path->ToString().c_str(),
-			             r_assign->GetAmount(),
-			             Available(rsrc_path, MIXED, status_view, papp),
-			             Total(rsrc_path, MIXED));
+				"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "]",
+				papp->StrId(),
+				rsrc_path->ToString().c_str(),
+				r_assign->GetAmount(),
+				Available(rsrc_path, MIXED, status_view, papp),
+				Total(rsrc_path, MIXED));
 		}
 
 		assert(result == RA_SUCCESS);
 		logger->Debug("IncBooking: [%s] R<%s> SUCCESS "
-		              "[U:%" PRIu64 " | A:%" PRIu64 " | T:%" PRIu64 "]"
-		              " view=[%ld]",
-		              papp->StrId(),
-		              rsrc_path->ToString().c_str(), r_assign->GetAmount(),
-		              Available(rsrc_path, MIXED, status_view, papp),
-		              Total(rsrc_path, MIXED), status_view);
+			"[U:%" PRIu64 " | A:%" PRIu64 " | T:%" PRIu64 "]"
+			" view=[%ld]",
+			papp->StrId(),
+			rsrc_path->ToString().c_str(), r_assign->GetAmount(),
+			Available(rsrc_path, MIXED, status_view, papp),
+			Total(rsrc_path, MIXED), status_view);
 	}
 
 	apps_assign->emplace(papp->Uid(), assign_map);
 	logger->Debug("IncBooking: [%s] now holds %d resource(s) - view=[%ld]",
-	              papp->StrId(), assign_map->size(), status_view);
+		papp->StrId(), assign_map->size(), status_view);
 
 	return RA_SUCCESS;
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
-        ba::SchedPtr_t const & papp,
-        br::ResourceAssignmentPtr_t & r_assign,
-        br::RViewToken_t status_view,
-        ResourceSetPtr_t & rsrc_set)
+	ba::SchedPtr_t const & papp,
+	br::ResourceAssignmentPtr_t & r_assign,
+	br::RViewToken_t status_view,
+	ResourceSetPtr_t & rsrc_set)
 {
 	// Amount of resource to book and list of resource descriptors
 	auto requested = r_assign->GetAmount();
 	size_t num_left_resources = r_assign->GetResourcesList().size();
 	logger->Debug("DoResourceBooking: amount % " PRIu64 " to be spread over %d resources",
-	              requested, num_left_resources);
+		requested, num_left_resources);
 	auto alloc_amount_per_resource = 0;
 
 	br::ResourceAssignment::Policy alloc_policy = r_assign->GetPolicy();
@@ -1485,22 +1473,22 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 
 		// Scheduling: allocate required resource among its bindings
 		SchedResourceBooking(
-		        papp, resource, status_view, requested,
-		        alloc_amount_per_resource);
+			papp, resource, status_view, requested,
+			alloc_amount_per_resource);
 
 		--num_left_resources;
 
 		logger->Debug("DoResourceBooking: <%s> requested=%d num_left=%d",
-		              resource->Path()->ToString().c_str(),
-		              requested,
-		              num_left_resources);
+			resource->Path()->ToString().c_str(),
+			requested,
+			num_left_resources);
 	}
 
 	// The availability of resources mismatches the one checked in the
 	// scheduling phase. This should never happen!
 	if (requested != 0 && alloc_policy == br::ResourceAssignment::Policy::BALANCED) {
 		logger->Crit("DoResourceBooking: resource assignment mismatch in view=[%ld]."
-		             " Left=%d", status_view, requested);
+			" Left=%d", status_view, requested);
 		assert(requested != 0);
 		return RA_ERR_USAGE_EXC;
 	}
@@ -1509,14 +1497,14 @@ ResourceAccounter::ExitCode_t ResourceAccounter::DoResourceBooking(
 }
 
 bool ResourceAccounter::IsReshuffling(
-        br::ResourceAssignmentMapPtr_t const & current_map,
-        br::ResourceAssignmentMapPtr_t const & next_map)
+	br::ResourceAssignmentMapPtr_t const & current_map,
+	br::ResourceAssignmentMapPtr_t const & next_map)
 {
 	auto curr_it = current_map->begin();
 	auto next_it = next_map->begin();
 
 	for (; (curr_it != current_map->end()) && (next_it != next_map->end());
-	     ++curr_it, ++next_it) {
+		++curr_it, ++next_it) {
 		auto curr_assign = (*curr_it).second;
 		auto next_assign = (*next_it).second;
 
@@ -1530,29 +1518,29 @@ bool ResourceAccounter::IsReshuffling(
 }
 
 void ResourceAccounter::SchedResourceBooking(
-        ba::SchedPtr_t const & papp,
-        br::ResourcePtr_t & rsrc,
-        br::RViewToken_t status_view,
-        uint64_t & requested,
-        uint64_t alloc_amount_per_resource)
+	ba::SchedPtr_t const & papp,
+	br::ResourcePtr_t & rsrc,
+	br::RViewToken_t status_view,
+	uint64_t & requested,
+	uint64_t alloc_amount_per_resource)
 {
 	// Check the available amount in the current resource binding
 	uint64_t available = rsrc->Available(papp, status_view);
 	logger->Debug("SchedResourceBooking: [%s] request for <%s> [view=%ld] ",
-	              papp->StrId(),
-	              rsrc->Path()->ToString().c_str(),
-	              status_view);
+		papp->StrId(),
+		rsrc->Path()->ToString().c_str(),
+		status_view);
 
 	logger->Debug("SchedResourceBooking: [%s] request for <%s> "
-	              "requested=%d alloca=%d available=%d",
-	              papp->StrId(),
-	              rsrc->Path()->ToString().c_str(),
-	              requested,
-	              alloc_amount_per_resource,
-	              available);
+		"requested=%d alloca=%d available=%d",
+		papp->StrId(),
+		rsrc->Path()->ToString().c_str(),
+		requested,
+		alloc_amount_per_resource,
+		available);
 
 	if ((alloc_amount_per_resource > 0) &&
-	    (alloc_amount_per_resource <= available))
+		(alloc_amount_per_resource <= available))
 		requested -= rsrc->Acquire(papp, alloc_amount_per_resource, status_view);
 	else if (requested < available)
 		requested -= rsrc->Acquire(papp, requested, status_view);
@@ -1561,15 +1549,15 @@ void ResourceAccounter::SchedResourceBooking(
 }
 
 void ResourceAccounter::SyncResourceBooking(
-        ba::SchedPtr_t const & papp,
-        br::ResourcePtr_t & rsrc,
-        uint64_t & requested)
+	ba::SchedPtr_t const & papp,
+	br::ResourcePtr_t & rsrc,
+	uint64_t & requested)
 {
 	// Skip the resource binding if the not assigned by the scheduler
 	uint64_t sched_usage = rsrc->UsedBy(papp, sch_view_token);
 	if (sched_usage == 0) {
 		logger->Debug("SyncResourceBooking: [%s] no assignment of <%s>",
-		              papp->StrId(), rsrc->Name().c_str());
+			papp->StrId(), rsrc->Name().c_str());
 		return;
 	}
 
@@ -1577,17 +1565,17 @@ void ResourceAccounter::SyncResourceBooking(
 	// scheduler
 	requested -= rsrc->Acquire(papp, sched_usage, sync_ssn.view);
 	logger->Debug("SyncResourceBooking: [%s] acquires %s (%d left) in view=[%ld]",
-	              papp->StrId(), rsrc->Name().c_str(), requested, sch_view_token);
+		papp->StrId(), rsrc->Name().c_str(), requested, sch_view_token);
 }
 
 void ResourceAccounter::DecBookingCounts(
-        br::ResourceAssignmentMapPtr_t const & assign_map,
-        ba::SchedPtr_t const & papp,
-        br::RViewToken_t status_view)
+	br::ResourceAssignmentMapPtr_t const & assign_map,
+	ba::SchedPtr_t const & papp,
+	br::RViewToken_t status_view)
 {
 	ExitCode_t ra_result;
 	logger->Debug("DecCount: [%s] holds %d resources in view=[%ld]",
-	              papp->StrId(), assign_map->size(), status_view);
+		papp->StrId(), assign_map->size(), status_view);
 
 	// Get the set of resources referenced in the view
 	ResourceViewsMap_t::iterator rsrc_view(rsrc_per_views.find(status_view));
@@ -1606,16 +1594,16 @@ void ResourceAccounter::DecBookingCounts(
 		if (ra_result == RA_ERR_MISS_VIEW)
 			return;
 		logger->Debug("DecCount: [%s] has freed {%s} of %" PRIu64 "",
-		              papp->StrId(), rsrc_path->ToString().c_str(),
-		              r_assign->GetAmount());
+			papp->StrId(), rsrc_path->ToString().c_str(),
+			r_assign->GetAmount());
 	}
 }
 
 ResourceAccounter::ExitCode_t ResourceAccounter::UndoResourceBooking(
-        ba::SchedPtr_t const & papp,
-        br::ResourceAssignmentPtr_t & r_assign,
-        br::RViewToken_t status_view,
-        ResourceSetPtr_t & rsrc_set)
+	ba::SchedPtr_t const & papp,
+	br::ResourceAssignmentPtr_t & r_assign,
+	br::RViewToken_t status_view,
+	ResourceSetPtr_t & rsrc_set)
 {
 	// Keep track of the amount of resource freed
 	uint64_t usage_freed = 0;
@@ -1653,7 +1641,7 @@ int ResourceAccounter::CommandsCb(int argc, char *argv[])
 		if (argc != 3) {
 			logger->Error("'%s' expecting 2 parameters.", CMD_SET_TOTAL);
 			logger->Error("Ex: 'bq.ra.%s <resource_path> (e.g., sys0.cpu0.pe0)"
-			              " <new_total_value> (e.g. 90)'", CMD_SET_TOTAL);
+				" <new_total_value> (e.g. 90)'", CMD_SET_TOTAL);
 			return 1;
 		}
 		return SetResourceTotalHandler(argv[1], argv[2]);
@@ -1671,12 +1659,12 @@ int ResourceAccounter::SetResourceTotalHandler(char * r_path, char * value)
 	ExitCode_t ra_result = UpdateResource(r_path, "", amount);
 	if (ra_result != RA_SUCCESS) {
 		logger->Error("SetResourceTotalHandler: "
-		              "cannot set quota %" PRIu64 " to [%s]", amount, r_path);
+			"cannot set quota %" PRIu64 " to [%s]", amount, r_path);
 		return 2;
 	}
 
 	logger->Info("SetResourceTotalHandler: "
-	             "set quota %" PRIu64 " to [%s]", amount, r_path);
+		"set quota %" PRIu64 " to [%s]", amount, r_path);
 	PrintStatus(0, true);
 
 	return 0;

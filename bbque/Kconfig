@@ -147,6 +147,7 @@ menu "Distributed Systems"
   endchoice
 
   source "barbeque/plugins/agent_proxy/Kconfig"
+
   source "barbeque/mpi/Kconfig"
 
 endmenu # Distributed Systems

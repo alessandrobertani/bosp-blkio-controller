@@ -39,25 +39,22 @@ using namespace boost::accumulators;
 
 #define SCHEDULABLE_ID_MAX_LEN  16
 
-namespace bbque
-{
-namespace app
-{
+namespace bbque {
+namespace app {
 
-typedef uint32_t AppPid_t;  /** Application identifier type */
+typedef uint32_t AppPid_t; /** Application identifier type */
 typedef uint16_t AppPrio_t; /** Application priority type */
 
 // Forward declarations
 class WorkingMode;
 class Schedulable;
-using AwmPtr_t   = std::shared_ptr<WorkingMode>;
+using AwmPtr_t = std::shared_ptr<WorkingMode>;
 using SchedPtr_t = std::shared_ptr<Schedulable>;
 
-
-class Schedulable: public utils::ExtraDataContainer
+class Schedulable : public utils::ExtraDataContainer
 {
-
 public:
+
 	/**
 	 * @enum ExitCode_t
 	 * @brief Error codes returned by methods
@@ -86,7 +83,8 @@ public:
 	 *
 	 * This is the set of possible state an application could be.
 	 */
-	typedef enum State {
+	typedef enum State
+	{
 		NEW = 0, 	/** Registered within Barbeque but currently disabled */
 		READY,      	/** Registered within Barbeque and waiting to start */
 		SYNC,     	/** (Re-)scheduled but not reconfigured yet */
@@ -108,7 +106,8 @@ public:
 	 * are required, the SYNC_NONE (alias SYNC_STATE_COUNT) is assigned to
 	 * the schedulable entity.
 	 */
-	typedef enum SyncState {
+	typedef enum SyncState
+	{
 		// NOTE These values should be reported to match (in number and order)
 		//      those defined by the RTLIB::RTLIB_ExitCode.
 		STARTING = 0, 	/** The application is entering the system */
@@ -125,9 +124,10 @@ public:
 	 * @enum Type
 	 * @brief The type of schedulable object
 	 */
-	enum class Type {
+	enum class Type
+	{
 		ADAPTIVE, /// Adaptive Execution Model integrated
-		PROCESS   /// Not integrated generic process
+		PROCESS /// Not integrated generic process
 	};
 
 
@@ -141,7 +141,8 @@ public:
 	 * information: the state (@see State_t), and the working mode
 	 * choosed by the scheduler/optimizer module.
 	 */
-	struct SchedulingInfo_t {
+	struct SchedulingInfo_t
+	{
 		mutable std::recursive_mutex mtx; /** The mutex to serialize access to scheduling info */
 		State_t state;            /** The current scheduled state */
 		State_t preSyncState;     /** The state before a sync has been required */
@@ -162,22 +163,24 @@ public:
 		bool operator!=(SchedulingInfo_t const &other) const
 		{
 			return ((this->state != other.state) ||
-			        (this->preSyncState != other.preSyncState) ||
-			        (this->syncState != other.syncState) ||
-			        (this->awm != other.awm));
+				(this->preSyncState != other.preSyncState) ||
+				(this->syncState != other.syncState) ||
+				(this->awm != other.awm));
 		};
 	};
 
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
-	struct CGroupSetupData_t {
+
+	struct CGroupSetupData_t
+	{
 		unsigned long cpu_ids;
 		unsigned long cpus_ids_isolation;
 		unsigned long mem_ids;
 	};
 
 	void SetCGroupSetupData(
-	        unsigned long cpu_ids, unsigned long mem_ids,
-	        unsigned long cpu_ids_isolation)
+				unsigned long cpu_ids, unsigned long mem_ids,
+				unsigned long cpu_ids_isolation)
 	{
 		cgroup_data.cpu_ids = cpu_ids;
 		cgroup_data.cpus_ids_isolation = cpu_ids_isolation;
@@ -237,7 +240,7 @@ public:
 	 * @brief Get the priority associated to
 	 * @return The priority value
 	 */
-	virtual	AppPrio_t Priority() const noexcept
+	virtual AppPrio_t Priority() const noexcept
 	{
 		return priority;
 	}
@@ -389,7 +392,6 @@ public:
 	 */
 	virtual bool Reshuffling(AwmPtr_t const & next_awm) const;
 
-
 	/** @brief Set a remote application
 	 *
 	 * Mark the application as remote or local
@@ -496,7 +498,7 @@ protected:
 #ifdef CONFIG_BBQUE_RELIABILITY
 
 	accumulator_set<double, stats<tag::sum, tag::min, tag::max,
-	                tag::mean, tag::variance>> checkpoint_latencies;
+	tag::mean, tag::variance>> checkpoint_latencies;
 
 	/**
 	 * Directory to store basic information about applications/EXCs, useful
@@ -565,7 +567,7 @@ protected:
 
 	virtual bool _Active() const;
 
-	virtual  bool _Running() const;
+	virtual bool _Running() const;
 
 	virtual bool _Synching() const;
 

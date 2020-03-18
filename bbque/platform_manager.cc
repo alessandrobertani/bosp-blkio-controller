@@ -25,8 +25,7 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/resource_manager.h"
 
-namespace bbque
-{
+namespace bbque {
 
 PlatformManager::PlatformManager()
 {
@@ -36,12 +35,13 @@ PlatformManager::PlatformManager()
 
 	try {
 		this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(
-		                    new pp::LocalPlatformProxy());
+								new pp::LocalPlatformProxy());
 #ifdef CONFIG_BBQUE_DIST_MODE
 		this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(
-		                    new pp::RemotePlatformProxy());
+								new pp::RemotePlatformProxy());
 #endif
-	} catch(const std::runtime_error & r) {
+	}
+	catch (const std::runtime_error & r) {
 		logger->Fatal("Unable to setup some PlatformProxy: %s", r.what());
 		return;
 	}
@@ -49,14 +49,13 @@ PlatformManager::PlatformManager()
 	// Register a command dispatcher to handle CGroups reconfiguration
 	CommandManager & cm = CommandManager::GetInstance();
 	cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh",
-	                   static_cast<CommandHandler *>(this),
-	                   "Refresh CGroups resources description");
+		static_cast<CommandHandler *> (this),
+		"Refresh CGroups resources description");
 
 	Worker::Setup(BBQUE_MODULE_NAME("plm"), PLATFORM_MANAGER_NAMESPACE);
 }
 
-PlatformManager::~PlatformManager()
-{
+PlatformManager::~PlatformManager() {
 	// Nothing to do
 }
 
@@ -66,14 +65,14 @@ PlatformManager & PlatformManager::GetInstance()
 	return plm;
 }
 
-
 PlatformManager::ExitCode_t PlatformManager::LoadPlatformConfig()
 {
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
 	try {
 		(void) this->GetPlatformDescription();
-	} catch(const std::runtime_error & err) {
+	}
+	catch (const std::runtime_error & err) {
 		logger->Error("%s", err.what());
 		return PLATFORM_DATA_PARSING_ERROR;
 	}
@@ -141,7 +140,8 @@ const char * PlatformManager::GetPlatformID(int16_t system_id) const
 	if (system_id == -1) {
 		// The local one
 		return lpp->GetPlatformID();
-	} else {
+	}
+	else {
 		const auto systems = this->GetPlatformDescription().GetSystemsAll();
 		if (systems.at(system_id).IsLocal()) {
 			return lpp->GetPlatformID();
@@ -183,7 +183,8 @@ const char * PlatformManager::GetHardwareID(int16_t system_id) const
 	if (system_id == -1) {
 		// The local one
 		return lpp->GetHardwareID();
-	} else {
+	}
+	else {
 		const auto systems = this->GetPlatformDescription().GetSystemsAll();
 		if (systems.at(system_id).IsLocal()) {
 			return lpp->GetHardwareID();
@@ -258,7 +259,7 @@ void PlatformManager::UpdateLocalSystemId()
 		if (sys_pair.second.IsLocal()) {
 			local_system_id = sys_pair.second.GetId();
 			logger->Debug("UpdateLocalSystemId: local system id = %d",
-			              local_system_id);
+				local_system_id);
 			return;
 		}
 	}
@@ -280,7 +281,7 @@ PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 	ExitCode_t ec;
 	if (papp->ScheduleCount() == 0) {
 		logger->Warn("Release: [%s] not scheduled yet: nothing to release",
-		             papp->StrId());
+			papp->StrId());
 		return PLATFORM_OK;
 	}
 
@@ -288,8 +289,8 @@ PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 		ec = lpp->Release(papp);
 		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to release LOCAL data of application [%s:%d]"
-			              "(error code: %i)",
-			              papp->Name().c_str(), papp->Pid(), ec);
+				"(error code: %i)",
+				papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
 
@@ -302,8 +303,8 @@ PlatformManager::ExitCode_t PlatformManager::Release(SchedPtr_t papp)
 		ec = rpp->Release(papp);
 		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to release REMOTE data of application [%s:%d]"
-			              "(error code: %i)",
-			              papp->Name().c_str(), papp->Pid(), ec);
+				"(error code: %i)",
+				papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
 
@@ -320,7 +321,7 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 	ExitCode_t ec;
 	if (papp->ScheduleCount() == 0) {
 		logger->Warn("ReclaimResources: [%s] not scheduled yet: nothing to reclaim",
-		             papp->StrId());
+			papp->StrId());
 		return PLATFORM_OK;
 	}
 
@@ -328,8 +329,8 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 		ec = lpp->ReclaimResources(papp);
 		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to ReclaimResources LOCAL of application [%s:%d]"
-			              "(error code: %i)",
-			              papp->Name().c_str(), papp->Pid(), ec);
+				"(error code: %i)",
+				papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
 	}
@@ -339,8 +340,8 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 		ec = rpp->ReclaimResources(papp);
 		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("Failed to ReclaimResources REMOTE of application [%s:%d]"
-			              "(error code: %i)",
-			              papp->Name().c_str(), papp->Pid(), ec);
+				"(error code: %i)",
+				papp->Name().c_str(), papp->Pid(), ec);
 			return ec;
 		}
 	}
@@ -350,13 +351,13 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 }
 
 PlatformManager::ExitCode_t PlatformManager::MapResources(
-        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
+	SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
 {
 	ExitCode_t ec;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	RViewToken_t rvt = ra.GetScheduledView();
 	logger->Debug("MapResources: [%s] resource assignment from view [%d]",
-	              papp->StrId(), rvt);
+		papp->StrId(), rvt);
 
 	// We have to know if the application is local or remote or both.
 	// NOTE: the application is considered local/remote at the start
@@ -372,9 +373,9 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 	// Get the set of assigned (bound) Systems
 	br::ResourceBitset systems(br::ResourceBinder::GetMask(
-	                                   pres, br::ResourceType::SYSTEM));
+		pres, br::ResourceType::SYSTEM));
 	logger->Debug("MapResources: [%s] resource assignment from %d system(s)",
-	              papp->StrId(), systems.Count());
+		papp->StrId(), systems.Count());
 
 	bool is_local  = false;
 
@@ -392,7 +393,8 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 			if (sys.IsLocal()) {
 				is_local  = true;
 				logger->Debug("MapResources: system id=%d is local", i);
-			} else {
+			}
+			else {
 				is_remote = true;
 				logger->Debug("MapResources: system id=%d is remote", i);
 			}
@@ -406,31 +408,33 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 #endif
 
 	// If first time scheduled locally, we have to setup it
-	if(is_local != papp->IsLocal()) {
+	if (is_local != papp->IsLocal()) {
 		logger->Debug("MapResources: [%s] is local, call LPP Setup",
-		              papp->StrId());
+			papp->StrId());
 
 		ec = lpp->Setup(papp);
 		if (ec == PLATFORM_OK) {
 			papp->SetLocal(true);
-		} else {
+		}
+		else {
 			logger->Error("MapResources: [%s] FAILED to setup locally "
-			              "(error code: %d)", papp->StrId(), ec);
+				"(error code: %d)", papp->StrId(), ec);
 			return ec;
 		}
 	}
 
 #ifdef CONFIG_BBQUE_DIST_MODE
-	if(is_remote != papp->IsRemote()) {
+	if (is_remote != papp->IsRemote()) {
 		logger->Debug("MapResources: [%s] is remote, call RPP Setup",
-		              papp->StrId());
+			papp->StrId());
 
 		ec = rpp->Setup(papp);
 		if (ec == PLATFORM_OK) {
 			papp->SetRemote(true);
-		} else {
+		}
+		else {
 			logger->Error("MapResources: [%s] FAILED to setup remotely "
-			              "(error code: %d)", papp->StrId(), ec);
+				"(error code: %d)", papp->StrId(), ec);
 			return ec;
 		}
 	}
@@ -438,10 +442,11 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 	// At this time we can actually map the resources
 	if (papp->IsLocal()) {
-		ec = lpp->MapResources(papp, pres, excl);;
+		ec = lpp->MapResources(papp, pres, excl);
+		;
 		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("MapResources: [%s] failed local mapping"
-			              "(error code: %i)", papp->StrId(), ec);
+				"(error code: %i)", papp->StrId(), ec);
 			return ec;
 		}
 	}
@@ -451,7 +456,7 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 		ec = rpp->MapResources(papp, pres, excl);
 		if (BBQUE_UNLIKELY(ec != PLATFORM_OK)) {
 			logger->Error("MapResources: [%s] failed remote mapping"
-			              "(error code: %i)", papp->StrId(), ec);
+				"(error code: %i)", papp->StrId(), ec);
 			return ec;
 		}
 	}
@@ -459,7 +464,6 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 	return PLATFORM_OK;
 }
-
 
 PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 {
@@ -480,7 +484,7 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 	ExitCode_t ec = lpp->ActuatePowerManagement();
 	if (ec != PLATFORM_OK) {
 		logger->Error("ActuatePowerManagement: failed while setting"
-		              " local power management");
+			" local power management");
 		return PLATFORM_PWR_SETTING_ERROR;
 	}
 
@@ -491,7 +495,7 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 	ec = rpp->ActuatePowerManagement();
 	if (ec != PLATFORM_OK) {
 		logger->Error("ActuatePowerManagement: failed while setting"
-		              " remote power management");
+			" remote power management");
 		return PLATFORM_PWR_SETTING_ERROR;
 	}
 #endif
@@ -500,43 +504,42 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 	return PLATFORM_OK;
 }
 
-
 PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement(
-        bbque::res::ResourcePtr_t resource)
+	bbque::res::ResourcePtr_t resource)
 {
 	ExitCode_t ec;
 	logger->Info("ActuatePowerManagement: processing <%s>...",
-	             resource->Path()->ToString().c_str());
+		resource->Path()->ToString().c_str());
 
 	if (resource->Path()->GetID(bbque::res::ResourceType::SYSTEM) == local_system_id) {
 
 		ec = lpp->ActuatePowerManagement(resource);
 		if (ec != PLATFORM_OK) {
 			logger->Error("ActuatePowerManagement: failed while setting"
-			              " local power settings for <%s>",
-			              resource->Path()->ToString().c_str());
+				" local power settings for <%s>",
+				resource->Path()->ToString().c_str());
 			return PLATFORM_PWR_SETTING_ERROR;
 		}
-	} else {
+	}
+	else {
 		logger->Debug("ActuatePowerManagement: <%> not a local resource",
-		              resource->Path()->ToString().c_str());
+			resource->Path()->ToString().c_str());
 #ifdef CONFIG_BBQUE_DIST_MODE
 
 		ec = rpp->ActuatePowerManagement(resource);
 		if (ec != PLATFORM_OK) {
 			logger->Error("ActuatePowerManagement: failed while setting"
-			              " remote power settings for <%s>",
-			              resource->Path()->ToString().c_str());
+				" remote power settings for <%s>",
+				resource->Path()->ToString().c_str());
 			return PLATFORM_PWR_SETTING_ERROR;
 		}
 #endif
 	}
 
 	logger->Debug("ActuatePowerManagement: <%s> configured",
-	              resource->Path()->ToString().c_str());
+		resource->Path()->ToString().c_str());
 	return PLATFORM_OK;
 }
-
 
 void PlatformManager::Exit()
 {
@@ -547,9 +550,8 @@ void PlatformManager::Exit()
 	logger->Notice("Exit: platform supports terminated");
 }
 
-
 bool PlatformManager::IsHighPerformance(
-        bbque::res::ResourcePathPtr_t const & path) const
+	bbque::res::ResourcePathPtr_t const & path) const
 {
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	return lpp->IsHighPerformance(path);
@@ -562,11 +564,11 @@ bool PlatformManager::IsHighPerformance(
 int PlatformManager::CommandsCb(int argc, char * argv[])
 {
 	uint8_t cmd_offset = ::strlen(PLATFORM_MANAGER_NAMESPACE) + 1;
-	(void)argc;
-	(void)argv;
+	(void) argc;
+	(void) argv;
 
 	// Notify all the PlatformProxy to refresh the platform description
-	switch(argv[0][cmd_offset]) {
+	switch (argv[0][cmd_offset]) {
 	case 'r': // refresh
 		this->Refresh();
 		break;
@@ -577,7 +579,6 @@ int PlatformManager::CommandsCb(int argc, char * argv[])
 	return 0;
 }
 
-
 ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 {
 	ReliabilityActionsIF::ExitCode_t ec;
@@ -586,7 +587,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 		ec = lpp->Dump(psched);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Dump: [%s] failed local checkpoint dump"
-			              "(error code: %i)", psched->StrId(), ec);
+				"(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
@@ -596,7 +597,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 		ec = rpp->Dump(psched);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Dump: [%s] failed remote checkpoint dump"
-			              "(error code: %i)", psched->StrId(), ec);
+				"(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
@@ -604,19 +605,18 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-
 ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(
-        uint32_t pid, std::string exec_name, int remote_sys_id)
+	uint32_t pid, std::string exec_name, int remote_sys_id)
 {
 	ReliabilityActionsIF::ExitCode_t ec;
 
 	if (remote_sys_id < 0) {
 		logger->Debug("Restore: [pid=%d name=%s] on local system",
-		              pid, exec_name.c_str());
+			pid, exec_name.c_str());
 		ec = lpp->Restore(pid, exec_name);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Restore: [pid=%d] failed local restore"
-			              "(error code: %i)", pid, ec);
+				"(error code: %i)", pid, ec);
 			return ec;
 		}
 	}
@@ -624,18 +624,17 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(
 #ifdef CONFIG_BBQUE_DIST_MODE
 	if ((remote_sys_id >= 0) && (remote_sys_id != local_system_id)) {
 		logger->Debug("Restore: [pid=%d name=%s] on system id=%d",
-		              pid, name.c_str(), remote_sys_id);
+			pid, name.c_str(), remote_sys_id);
 		ec = rpp->Restore(psched, exec_name, remote_sys_id);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Restore: [%s] failed remote restore"
-			              "(error code: %i)", psched->StrId(), ec);
+				"(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
 #endif
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
-
 
 ReliabilityActionsIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 {
@@ -645,7 +644,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 		ec = lpp->Freeze(psched);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Freeze: [%s] failed local freezing"
-			              "(error code: %i)", psched->StrId(), ec);
+				"(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
@@ -655,7 +654,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 		ec = rpp->Freeze(psched);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Freeze: [%s] failed remote freezing"
-			              "(error code: %i)", psched->StrId(), ec);
+				"(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
@@ -686,7 +685,6 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Freeze(app::SchedPtr_t psched)
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-
 ReliabilityActionsIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 {
 	ReliabilityActionsIF::ExitCode_t ec;
@@ -695,7 +693,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 		ec = lpp->Thaw(psched);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Thaw: [%s] failed local thawning"
-			              "(error code: %i)", psched->StrId(), ec);
+				"(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}
@@ -705,7 +703,7 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Thaw(app::SchedPtr_t psched)
 		ec = rpp->Thaw(psched);
 		if (BBQUE_UNLIKELY(ec != ReliabilityActionsIF::ExitCode_t::OK)) {
 			logger->Error("Thaw: [%s] failed remote thawing"
-			              "(error code: %i)", psched->StrId(), ec);
+				"(error code: %i)", psched->StrId(), ec);
 			return ec;
 		}
 	}

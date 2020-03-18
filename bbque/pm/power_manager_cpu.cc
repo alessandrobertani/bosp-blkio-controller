@@ -51,11 +51,10 @@
 namespace po = boost::program_options;
 namespace bu = bbque::utils;
 
-namespace bbque
-{
+namespace bbque {
 
-CPUPowerManager::CPUPowerManager():
-	prefix_sys_cpu(BBQUE_LINUX_SYS_CPU_PREFIX)
+CPUPowerManager::CPUPowerManager() :
+    prefix_sys_cpu(BBQUE_LINUX_SYS_CPU_PREFIX)
 {
 	ConfigurationManager & cfm(ConfigurationManager::GetInstance());
 
@@ -68,16 +67,16 @@ CPUPowerManager::CPUPowerManager():
 	po::variables_map opts_vm;
 	po::options_description opts_desc("PowerManager socket options");
 	opts_desc.add_options()(
-	        "PowerManager.temp.sockets",
-	        po::value<std::string>(&prefix_coretemp)->default_value(
-	                BBQUE_LINUX_SYS_CPU_THERMAL),
-	        "The directory exporting thermal status information");
+		"PowerManager.temp.sockets",
+		po::value<std::string>(&prefix_coretemp)->default_value(
+									BBQUE_LINUX_SYS_CPU_THERMAL),
+		"The directory exporting thermal status information");
 	cfm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	std::list<std::string> tsensor_dirs;
 	bu::SplitString(prefix_coretemp, tsensor_dirs, ":");
 	logger->Info("CPUPowerManager: CPU sockets found = %d",
-	             tsensor_dirs.size());
+		tsensor_dirs.size());
 
 #ifndef CONFIG_TARGET_ODROID_XU
 	for (auto & ts_dir : tsensor_dirs) {
@@ -104,10 +103,11 @@ CPUPowerManager::~CPUPowerManager()
 {
 	for (auto pe_id_info : online_restore) {
 		logger->Info("Restoring PE %d online status: %d",
-		             pe_id_info.first, pe_id_info.second);
-		if(pe_id_info.second) {
+			pe_id_info.first, pe_id_info.second);
+		if (pe_id_info.second) {
 			SetOn(pe_id_info.first);
-		} else {
+		}
+		else {
 			SetOff(pe_id_info.first);
 		}
 	}
@@ -116,15 +116,15 @@ CPUPowerManager::~CPUPowerManager()
 		if (core_freqs[pe_id_info.first]->empty())
 			continue;
 		logger->Info("Restoring PE %d cpufreq bound: [%u - %u] kHz",
-		             pe_id_info.first,
-		             core_freqs[pe_id_info.first]->front(),
-		             core_freqs[pe_id_info.first]->back());
+			pe_id_info.first,
+			core_freqs[pe_id_info.first]->front(),
+			core_freqs[pe_id_info.first]->back());
 		SetClockFrequencyBoundaries(pe_id_info.first,
-		                            core_freqs[pe_id_info.first]->front(),
-		                            core_freqs[pe_id_info.first]->back());
+					core_freqs[pe_id_info.first]->front(),
+					core_freqs[pe_id_info.first]->back());
 
 		logger->Info("Restoring PE %d cpufreq governor: %s",
-		             pe_id_info.first, pe_id_info.second.c_str());
+			pe_id_info.first, pe_id_info.second.c_str());
 		SetClockFrequencyGovernor(pe_id_info.first, pe_id_info.second);
 	}
 
@@ -136,7 +136,6 @@ CPUPowerManager::~CPUPowerManager()
 	core_online.clear();
 	online_restore.clear();
 }
-
 
 void CPUPowerManager::InitCoreIdMapping()
 {
@@ -160,16 +159,16 @@ void CPUPowerManager::InitCoreIdMapping()
 	//-------------------------------------------------------------------------
 
 	std::string core_av_filepath(
-	        BBQUE_LINUX_SYS_CORE_PREFIX + std::string("/present"));
+				BBQUE_LINUX_SYS_CORE_PREFIX + std::string("/present"));
 
 	// Taking the min and max pe_id available
 	std::string core_id_range;
 	result = bu::IoFs::ReadValueFrom(core_av_filepath, core_id_range);
 	logger->Info("InitCoreIdMapping: core id range: %s",
-	             core_id_range.c_str());
+		core_id_range.c_str());
 	if (result != bu::IoFs::OK) {
 		logger->Error("InitCoreIdMapping: failed while reading %s",
-		              core_av_filepath.c_str());
+			core_av_filepath.c_str());
 		return;
 	}
 
@@ -194,64 +193,64 @@ void CPUPowerManager::InitCoreIdMapping()
 		std::vector<int> siblings(2);
 		if (core_online[pe_id]) {
 			std::string core_sibl_filepath(
-			        BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			        "/topology/core_siblings_list");
+						BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+						"/topology/core_siblings_list");
 			logger->Debug("InitCoreIdMapping: reading... %s",
-			              core_sibl_filepath.c_str());
+				core_sibl_filepath.c_str());
 
 			// Taking the min and max pe_id available
 			std::string core_siblings_range;
 			result = bu::IoFs::ReadValueFrom(
-			                 core_sibl_filepath, core_siblings_range);
+							core_sibl_filepath, core_siblings_range);
 			logger->Debug("InitCoreIdMapping: core %d siblings: %s ",
-			              pe_id, core_siblings_range.c_str());
+				pe_id, core_siblings_range.c_str());
 			if (result != bu::IoFs::OK) {
 				logger->Error("InitCoreIdMapping: failed while reading %s",
-				              core_sibl_filepath.c_str());
+					core_sibl_filepath.c_str());
 				break;
 			}
 
 			i = 0;
 			while (core_siblings_range.size() > 1) {
 				std::string curr_core_id(
-				        br::ResourcePathUtils::SplitAndPop(
-				                core_siblings_range, "-"));
+							br::ResourcePathUtils::SplitAndPop(
+											core_siblings_range, "-"));
 				siblings[i] = std::stoi(curr_core_id);
 				logger->Debug("InitCoreIdMapping: pe_id=<%d>"
-				              " sibling bound[%d]=%d",
-				              pe_id, i, siblings[i]);
+					" sibling bound[%d]=%d",
+					pe_id, i, siblings[i]);
 				i++;
 			}
 
 			std::string core_id_filepath(
-			        BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-			        "/topology/core_id");
+						BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+						"/topology/core_id");
 			logger->Debug("InitCoreIdMapping: reading... %s",
-			              core_id_filepath.c_str());
+				core_id_filepath.c_str());
 
 			// Processing element id <-> (physical) CPU id
 			result = bu::IoFs::ReadIntValueFrom<int>(
-			                 core_id_filepath, cpu_id);
+				core_id_filepath, cpu_id);
 			logger->Debug("InitCoreIdMapping: cpu id=%d", cpu_id);
 			if (result != bu::IoFs::OK) {
 				logger->Error("InitCoreIdMapping: failed while reading %s",
-				              core_id_filepath.c_str());
+					core_id_filepath.c_str());
 				break;
 			}
 
 			phy_core_ids[pe_id] = cpu_id;
 			logger->Debug("InitCoreIdMapping: pe_id=%d -> "
-			              "physical cpu id=%d",
-			              pe_id, cpu_id);
+				"physical cpu id=%d",
+				pe_id, cpu_id);
 		}
 #endif
 		// Available frequencies per core
-		core_freqs[pe_id] = std::make_shared<std::vector<uint32_t>>();
+		core_freqs[pe_id] = std::make_shared<std::vector < uint32_t >> ();
 		_GetAvailableFrequencies(pe_id, core_freqs[pe_id]);
 		if (!core_freqs[pe_id]->empty()) {
 			logger->Info("InitCoreIdMapping: <sys.cpu%d.pe%d>: "
-			             "%d available frequencies",
-			             cpu_id, pe_id, core_freqs[pe_id]->size());
+				"%d available frequencies",
+				cpu_id, pe_id, core_freqs[pe_id]->size());
 		}
 
 		std::string scaling_curr_governor;
@@ -262,7 +261,6 @@ void CPUPowerManager::InitCoreIdMapping()
 	}
 }
 
-
 void CPUPowerManager::InitTemperatureSensors(std::string const & prefix_coretemp)
 {
 	int cpu_id = 0;
@@ -272,8 +270,8 @@ void CPUPowerManager::InitTemperatureSensors(std::string const & prefix_coretemp
 
 	for ( ; result == bu::IoFs::OK; sensor_id += TEMP_SENSOR_STEP_ID) {
 		std::string therm_file(
-		        prefix_coretemp + std::to_string(sensor_id) +
-		        "_label");
+				prefix_coretemp + std::to_string(sensor_id) +
+				"_label");
 
 		logger->Debug("Thermal sensors @[%s]", therm_file.c_str());
 		result = bu::IoFs::ReadValueFrom(therm_file, str_value, 8);
@@ -289,36 +287,36 @@ void CPUPowerManager::InitTemperatureSensors(std::string const & prefix_coretemp
 
 		cpu_id = std::stoi(core_label.substr(5));
 		core_therms[cpu_id] = std::make_shared<std::string>(
-		                              prefix_coretemp + std::to_string(sensor_id) +
-		                              "_input");
+			prefix_coretemp + std::to_string(sensor_id) +
+			"_input");
 		logger->Info("Thermal sensors for CPU %d @[%s]",
-		             cpu_id, core_therms[cpu_id]->c_str());
+			cpu_id, core_therms[cpu_id]->c_str());
 	}
 }
-
 
 void CPUPowerManager::InitFrequencyGovernors()
 {
 	bu::IoFs::ExitCode_t result;
 	std::string govs;
 	std::string cpufreq_path(prefix_sys_cpu +
-	                         "0/cpufreq/scaling_available_governors");
+				"0/cpufreq/scaling_available_governors");
 	result = bu::IoFs::ReadValueFrom(cpufreq_path, govs);
 	if (result != bu::IoFs::OK) {
 		logger->Error("InitFrequencyGovernors: error reading: %s",
-		              cpufreq_path.c_str());
+			cpufreq_path.c_str());
 		return;
 	}
 
 	logger->Info("InitFrequencyGovernors: ");
 	while (govs.size() > 1)
 		cpufreq_governors.push_back(
-		        br::ResourcePathUtils::SplitAndPop(govs, " "));
+					br::ResourcePathUtils::SplitAndPop(govs, " "));
 	for (std::string & g : cpufreq_governors)
 		logger->Info("---> %s", g.c_str());
 }
 
-PowerManager::PMResult CPUPowerManager::InitCPUFreq()
+PowerManager::PMResult
+CPUPowerManager::InitCPUFreq()
 {
 	PowerManager::PMResult result;
 
@@ -326,22 +324,22 @@ PowerManager::PMResult CPUPowerManager::InitCPUFreq()
 		if (core_freqs[pe_id_info.first]->empty())
 			continue;
 		logger->Notice("InitCPUFreq: <pe%d> cpufreq range: [%u - %u] KHz",
-		               pe_id_info.first,
-		               core_freqs[pe_id_info.first]->front(),
-		               core_freqs[pe_id_info.first]->back());
+			pe_id_info.first,
+			core_freqs[pe_id_info.first]->front(),
+			core_freqs[pe_id_info.first]->back());
 		result = SetClockFrequencyBoundaries(pe_id_info.first,
-		                                     core_freqs[pe_id_info.first]->front(),
-		                                     core_freqs[pe_id_info.first]->back());
-		if(result != PowerManager::PMResult::OK)
+						core_freqs[pe_id_info.first]->front(),
+						core_freqs[pe_id_info.first]->back());
+		if (result != PowerManager::PMResult::OK)
 			return result;
 
 		logger->Notice("InitCPUFreq: <pe%d> cpufreq governor: userspace",
-		               pe_id_info.first);
+			pe_id_info.first);
 		result = SetClockFrequencyGovernor(pe_id_info.first, "userspace");
 
-		if(result != PowerManager::PMResult::OK) {
+		if (result != PowerManager::PMResult::OK) {
 			logger->Error("InitCPUFreq: <pe%d> cannot set "
-			              "'userspace' governor ", pe_id_info.first);
+				"'userspace' governor ", pe_id_info.first);
 			return result;
 		}
 	}
@@ -349,14 +347,13 @@ PowerManager::PMResult CPUPowerManager::InitCPUFreq()
 	return PowerManager::PMResult::OK;
 }
 
-
 /**********************************************************************
  * Load                                                               *
  **********************************************************************/
 
-CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
-        CPUPowerManager::LoadInfo * info,
-        BBQUE_RID_TYPE cpu_core_id) const
+CPUPowerManager::ExitStatus
+CPUPowerManager::GetLoadInfo(CPUPowerManager::LoadInfo * info,
+			     BBQUE_RID_TYPE cpu_core_id) const
 {
 	// Information about kernel activity is available in the /proc/stat
 	// file. All the values are aggregated since the system first booted.
@@ -370,8 +367,8 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 	// 	cpun x y z w ...
 	// Check the Linux documentation to find information about those values
 	boost::regex cpu_info_stats("cpu" + std::to_string(cpu_core_id) +
-	                            " (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+)" +
-	                            " (\\d+) (\\d+) (\\d+) (\\d+)");
+				" (\\d+) (\\d+) (\\d+) (\\d+) (\\d+) (\\d+)" +
+				" (\\d+) (\\d+) (\\d+) (\\d+)");
 
 	// Parsing the /proc/stat file to find the correct line
 	bool found = false;
@@ -394,9 +391,9 @@ CPUPowerManager::ExitStatus CPUPowerManager::GetLoadInfo(
 	return CPUPowerManager::ExitStatus::OK;
 }
 
-PowerManager::PMResult CPUPowerManager::GetLoad(
-        ResourcePathPtr_t const & rp,
-        uint32_t & perc)
+PowerManager::PMResult
+CPUPowerManager::GetLoad(ResourcePathPtr_t const & rp,
+			 uint32_t & perc)
 {
 	PMResult result;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -407,7 +404,8 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 	if (pe_id >= 0) {
 		result = GetLoadCPU(pe_id, perc);
 		if (result != PMResult::OK) return result;
-	} else {
+	}
+	else {
 		// Multiple CPU cores (e.g., "cpu2.pe")
 		uint32_t pe_load = 0;
 		perc = 0;
@@ -426,10 +424,9 @@ PowerManager::PMResult CPUPowerManager::GetLoad(
 	return PowerManager::PMResult::OK;
 }
 
-
-PowerManager::PMResult CPUPowerManager::GetLoadCPU(
-        BBQUE_RID_TYPE cpu_core_id,
-        uint32_t & load) const
+PowerManager::PMResult
+CPUPowerManager::GetLoadCPU(BBQUE_RID_TYPE cpu_core_id,
+			    uint32_t & load) const
 {
 	CPUPowerManager::ExitStatus result;
 	CPUPowerManager::LoadInfo start_info, end_info;
@@ -456,8 +453,8 @@ PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 
 		// Usage is computed as 1 - idle_time[%]
 		float usage =
-		        100 - (100 * (float)(end_info.idle - start_info.idle) /
-		               (float)(end_info.total - start_info.total));
+			100 - (100 * (float)(end_info.idle - start_info.idle) /
+			(float)(end_info.total - start_info.total));
 		// If the usage is very low and LOAD_SAMPLING_INTERVAL_SECONDS
 		// is very little, the usage could become negative, because
 		// both the computing and the contents of /proc/stat are not
@@ -469,14 +466,13 @@ PowerManager::PMResult CPUPowerManager::GetLoadCPU(
 	return PowerManager::PMResult::OK;
 }
 
-
 /**********************************************************************
  * Temperature                                                        *
  **********************************************************************/
 
-PowerManager::PMResult CPUPowerManager::GetTemperature(
-        ResourcePathPtr_t const & rp,
-        uint32_t & celsius)
+PowerManager::PMResult
+CPUPowerManager::GetTemperature(ResourcePathPtr_t const & rp,
+				uint32_t & celsius)
 {
 	PMResult result;
 	celsius = 0;
@@ -486,7 +482,7 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	// Single CPU core (PE)
 	if (pe_id >= 0) {
 		logger->Debug("GetTemperature: <%s> references to a single core",
-		              rp->ToString().c_str());
+			rp->ToString().c_str());
 		return GetTemperaturePerCore(pe_id, celsius);
 	}
 
@@ -507,7 +503,6 @@ PowerManager::PMResult CPUPowerManager::GetTemperature(
 	return PMResult::OK;
 }
 
-
 PowerManager::PMResult
 CPUPowerManager::GetTemperaturePerCore(int pe_id, uint32_t & celsius)
 {
@@ -523,7 +518,7 @@ CPUPowerManager::GetTemperaturePerCore(int pe_id, uint32_t & celsius)
 	}
 
 	io_result = bu::IoFs::ReadIntValueFrom<uint32_t>(
-	                    core_therms[phy_core_id]->c_str(), celsius);
+		core_therms[phy_core_id]->c_str(), celsius);
 	if (io_result != bu::IoFs::OK) {
 		logger->Error("GetTemperature: cannot read <pe%d> temperature", pe_id);
 		return PMResult::ERR_SENSORS_ERROR;
@@ -533,99 +528,97 @@ CPUPowerManager::GetTemperaturePerCore(int pe_id, uint32_t & celsius)
 	return PMResult::OK;
 }
 
-
-
 /**********************************************************************
  * Clock frequency management                                         *
  **********************************************************************/
 
-PowerManager::PMResult CPUPowerManager::GetClockFrequency(
-        ResourcePathPtr_t const & rp,
-        uint32_t & khz)
+PowerManager::PMResult
+CPUPowerManager::GetClockFrequency(ResourcePathPtr_t const & rp,
+				   uint32_t & khz)
 {
 	bu::IoFs::ExitCode_t result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 	if (pe_id < 0) {
 		logger->Warn("<%s> does not reference a valid processing element",
-		             rp->ToString().c_str());
+			rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
 	// Getting the frequency value
 	result = bu::IoFs::ReadIntValueFrom<uint32_t>(
-	                 BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-	                 "/cpufreq/scaling_cur_freq",
-	                 khz);
+		BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+		"/cpufreq/scaling_cur_freq",
+		khz);
 	if (result != bu::IoFs::OK) {
 		logger->Warn("Cannot read current frequency for %s",
-		             rp->ToString().c_str());
+			rp->ToString().c_str());
 		return PMResult::ERR_SENSORS_ERROR;
 	}
 
 	return PowerManager::PMResult::OK;
 }
 
-
-PowerManager::PMResult CPUPowerManager::SetClockFrequency(
-        ResourcePathPtr_t const & rp, uint32_t khz)
+PowerManager::PMResult
+CPUPowerManager::SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz)
 {
 	bu::IoFs::ExitCode_t result;
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 	if (pe_id < 0) {
 		logger->Warn("<%s> does not reference a valid processing element",
-		             rp->ToString().c_str());
+			rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
 	logger->Debug("SetClockFrequency: <%s> (cpu%d) set to %d KHz",
-	              rp->ToString().c_str(), pe_id, khz);
+		rp->ToString().c_str(), pe_id, khz);
 
 	result = bu::IoFs::WriteValueTo<uint32_t>(
-	                 BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-	                 "/cpufreq/scaling_setspeed", khz);
+		BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+		"/cpufreq/scaling_setspeed", khz);
 	if (result != bu::IoFs::ExitCode_t::OK)
 		return PMResult::ERR_SENSORS_ERROR;
 
 	return PMResult::OK;
 }
 
-PowerManager::PMResult CPUPowerManager::SetClockFrequency(
-        ResourcePathPtr_t const & rp,
-        uint32_t khz_min,
-        uint32_t khz_max)
+PowerManager::PMResult
+CPUPowerManager::SetClockFrequency(ResourcePathPtr_t const & rp,
+				   uint32_t khz_min,
+				   uint32_t khz_max)
 {
 
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 	if (pe_id < 0) {
 		logger->Warn("<%s> does not reference a valid processing element",
-		             rp->ToString().c_str());
+			rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
 	logger->Error("SetClockFrequency: <%s> (cpu%d) set to range [%d, %d] KHz",
-	              rp->ToString().c_str(), pe_id, khz_min, khz_max);
+		rp->ToString().c_str(), pe_id, khz_min, khz_max);
 
 
 	return SetClockFrequencyBoundaries(pe_id, khz_min, khz_max);
 }
 
-
-PowerManager::PMResult CPUPowerManager::SetClockFrequencyBoundaries(
-        int pe_id, uint32_t khz_min, uint32_t khz_max)
+PowerManager::PMResult
+CPUPowerManager::SetClockFrequencyBoundaries(int pe_id,
+					     uint32_t khz_min,
+					     uint32_t khz_max)
 {
 	uint32_t cur_khz_max, cur_khz_min;
 
 	bu::IoFs::ExitCode_t result;
 	if (pe_id < 0) {
 		logger->Warn("Frequency setting not available for PE %d",
-		             pe_id);
+			pe_id);
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
-	if(khz_min > khz_max) {
+	if (khz_min > khz_max) {
 		uint32_t khz_tmp = khz_max;
 		khz_max = khz_min;
 		khz_min = khz_tmp;
@@ -633,31 +626,32 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyBoundaries(
 
 	GetClockFrequencyInfo(pe_id, cur_khz_min, cur_khz_max);
 
-	if(khz_min > cur_khz_max) {
+	if (khz_min > cur_khz_max) {
 		logger->Warn("Frequency setting [%d,%d]", khz_min, khz_max);
 		result = bu::IoFs::WriteValueTo<uint32_t>(
-		                 BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-		                 "/cpufreq/scaling_max_freq", khz_max);
+			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			"/cpufreq/scaling_max_freq", khz_max);
 		if (result != bu::IoFs::ExitCode_t::OK)
 			return PMResult::ERR_SENSORS_ERROR;
 
 		result = bu::IoFs::WriteValueTo<uint32_t>(
-		                 BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-		                 "/cpufreq/scaling_min_freq", khz_min);
+			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			"/cpufreq/scaling_min_freq", khz_min);
 		if (result != bu::IoFs::ExitCode_t::OK)
 			return PMResult::ERR_SENSORS_ERROR;
 
-	} else {
+	}
+	else {
 
 		result = bu::IoFs::WriteValueTo<uint32_t>(
-		                 BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-		                 "/cpufreq/scaling_min_freq", khz_min);
+			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			"/cpufreq/scaling_min_freq", khz_min);
 		if (result != bu::IoFs::ExitCode_t::OK)
 			return PMResult::ERR_SENSORS_ERROR;
 
 		result = bu::IoFs::WriteValueTo<uint32_t>(
-		                 BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-		                 "/cpufreq/scaling_max_freq", khz_max);
+			BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
+			"/cpufreq/scaling_max_freq", khz_max);
 		if (result != bu::IoFs::ExitCode_t::OK)
 			return PMResult::ERR_SENSORS_ERROR;
 
@@ -666,34 +660,33 @@ PowerManager::PMResult CPUPowerManager::SetClockFrequencyBoundaries(
 	return PMResult::OK;
 }
 
-
-PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
-        int pe_id,
-        uint32_t & khz_min,
-        uint32_t & khz_max)
+PowerManager::PMResult
+CPUPowerManager::GetClockFrequencyInfo(int pe_id,
+				       uint32_t & khz_min,
+				       uint32_t & khz_max)
 {
 
 	// Max and min frequency values
 	auto edges = std::minmax_element(
-	                     core_freqs[pe_id]->begin(), core_freqs[pe_id]->end());
+					core_freqs[pe_id]->begin(), core_freqs[pe_id]->end());
 	khz_min  = core_freqs[pe_id]->at(edges.first  - core_freqs[pe_id]->begin());
 	khz_max  = core_freqs[pe_id]->at(edges.second - core_freqs[pe_id]->begin());
 
 	return PMResult::OK;
 }
 
-PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
-        br::ResourcePathPtr_t const & rp,
-        uint32_t & khz_min,
-        uint32_t & khz_max,
-        uint32_t & khz_step)
+PowerManager::PMResult
+CPUPowerManager::GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
+				       uint32_t & khz_min,
+				       uint32_t & khz_max,
+				       uint32_t & khz_step)
 {
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 
 	if (pe_id < 0) {
 		logger->Warn("<%s> does not reference a valid processing element",
-		             rp->ToString().c_str());
+			rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
@@ -703,9 +696,9 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequencyInfo(
 	return GetClockFrequencyInfo(pe_id, khz_min, khz_max);
 }
 
-PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
-        ResourcePathPtr_t const & rp,
-        std::vector<uint32_t> & freqs)
+PowerManager::PMResult
+CPUPowerManager::GetAvailableFrequencies(ResourcePathPtr_t const & rp,
+					 std::vector<uint32_t> & freqs)
 {
 	// Extracting the selected CPU from the resource path. -1 if error
 	int pe_id = rp->GetID(br::ResourceType::PROC_ELEMENT);
@@ -716,7 +709,7 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 	// Extracting available frequencies
 	if (core_freqs[pe_id] == nullptr) {
 		logger->Warn("GetAvailableFrequencies: <pe=%d> frequencies list missing",
-		             pe_id);
+			pe_id);
 		return PowerManager::PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 	freqs = *(core_freqs[pe_id]);
@@ -724,14 +717,13 @@ PowerManager::PMResult CPUPowerManager::GetAvailableFrequencies(
 	return PowerManager::PMResult::OK;
 }
 
-
-void CPUPowerManager::_GetAvailableFrequencies(
-        int pe_id,
-        std::shared_ptr<std::vector<uint32_t>> cpu_freqs)
+void
+CPUPowerManager::_GetAvailableFrequencies(int pe_id,
+					  std::shared_ptr<std::vector<uint32_t>> cpu_freqs)
 {
 	bu::IoFs::ExitCode_t result;
 	std::string sysfs_path(BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
-	                       "/cpufreq/scaling_available_frequencies");
+			"/cpufreq/scaling_available_frequencies");
 
 	// Extracting available frequencies string
 	std::string cpu_available_freqs;
@@ -739,59 +731,59 @@ void CPUPowerManager::_GetAvailableFrequencies(
 	logger->Debug("%s: { %s }", sysfs_path.c_str(), cpu_available_freqs.c_str());
 	if (result != bu::IoFs::OK) {
 		logger->Warn("GetAvailableFrequencies: <pe=%d> frequency list not available",
-		             pe_id);
+			pe_id);
 		return;
 	}
 
 	logger->Debug("GetAvailableFrequencies: <pe=%d> { %s }",
-	              pe_id, cpu_available_freqs.c_str());
+		pe_id, cpu_available_freqs.c_str());
 
 	// Fill the vector with the integer frequency values
 	std::list<uint32_t> cpu_freqs_unsrt;
 	while (cpu_available_freqs.size() > 1) {
 		std::string freq(
-		        br::ResourcePathUtils::SplitAndPop(cpu_available_freqs, " "));
+				br::ResourcePathUtils::SplitAndPop(cpu_available_freqs, " "));
 		try {
 			uint32_t freq_value = std::stoi(freq);
 			cpu_freqs_unsrt.push_back(freq_value);
-		} catch (std::invalid_argument & ia) {}
+		}
+		catch (std::invalid_argument & ia) {
+		}
 	}
 
 	// Sort the list of frequency in ascending order
 	cpu_freqs_unsrt.sort();
-	for(auto f : cpu_freqs_unsrt)
+	for (auto f : cpu_freqs_unsrt)
 		cpu_freqs->push_back(f);
 }
-
-
 
 /**********************************************************************
  * Clock frequency governors                                          *
  **********************************************************************/
 
-PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
-        br::ResourcePathPtr_t const & rp,
-        std::string & governor)
+PowerManager::PMResult
+CPUPowerManager::GetClockFrequencyGovernor(br::ResourcePathPtr_t const & rp,
+					   std::string & governor)
 {
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 	if (pe_id < 0) {
 		logger->Warn("<%s> does not reference a valid processing element",
-		             rp->ToString().c_str());
+			rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
 	return GetClockFrequencyGovernor(pe_id, governor);
 }
 
-PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
-        int pe_id,
-        std::string & governor)
+PowerManager::PMResult
+CPUPowerManager::GetClockFrequencyGovernor(int pe_id,
+					   std::string & governor)
 {
 	bu::IoFs::ExitCode_t result;
 	char gov[12];
 	std::string cpufreq_path(prefix_sys_cpu + std::to_string(pe_id) +
-	                         "/cpufreq/scaling_governor");
+				"/cpufreq/scaling_governor");
 
 	result = bu::IoFs::ReadValueFrom(cpufreq_path, gov, 12);
 	if (result != bu::IoFs::ExitCode_t::OK)
@@ -802,36 +794,36 @@ PowerManager::PMResult CPUPowerManager::GetClockFrequencyGovernor(
 
 }
 
-PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
-        br::ResourcePathPtr_t const & rp,
-        std::string const & governor)
+PowerManager::PMResult
+CPUPowerManager::SetClockFrequencyGovernor(br::ResourcePathPtr_t const & rp,
+					   std::string const & governor)
 {
 	int pe_id;
 	GET_PROC_ELEMENT_ID(rp, pe_id);
 	if (pe_id < 0) {
 		logger->Warn("<%s> does not reference a valid processing element",
-		             rp->ToString().c_str());
+			rp->ToString().c_str());
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
 	return SetClockFrequencyGovernor(pe_id, governor);
 }
 
-PowerManager::PMResult CPUPowerManager::SetClockFrequencyGovernor(
-        int pe_id,
-        std::string const & governor)
+PowerManager::PMResult
+CPUPowerManager::SetClockFrequencyGovernor(int pe_id,
+					   std::string const & governor)
 {
 
 	bu::IoFs::ExitCode_t result;
 
 	std::string cpufreq_path(prefix_sys_cpu + std::to_string(pe_id) +
-	                         "/cpufreq/scaling_governor");
+				"/cpufreq/scaling_governor");
 	result = bu::IoFs::WriteValueTo<std::string>(cpufreq_path, governor);
 	if (result != bu::IoFs::ExitCode_t::OK)
 		return PowerManager::PMResult::ERR_RSRC_INVALID_PATH;
 
 	logger->Debug("SetGovernor: '%s' > %s",
-	              governor.c_str(), cpufreq_path.c_str());
+		governor.c_str(), cpufreq_path.c_str());
 	return PowerManager::PMResult::OK;
 }
 
@@ -847,7 +839,7 @@ PowerManager::PMResult CPUPowerManager::SetOn(int pe_id)
 {
 	bu::IoFs::ExitCode_t result;
 	std::string online_path(prefix_sys_cpu + std::to_string(pe_id) +
-	                        "/online");
+				"/online");
 
 	result = bu::IoFs::WriteValueTo<int>(online_path, 1);
 	if (result != bu::IoFs::ExitCode_t::OK)
@@ -872,7 +864,7 @@ PowerManager::PMResult CPUPowerManager::SetOff(int pe_id)
 {
 	bu::IoFs::ExitCode_t result;
 	std::string online_path(prefix_sys_cpu + std::to_string(pe_id) +
-	                        "/online");
+				"/online");
 
 	result = bu::IoFs::WriteValueTo<int>(online_path, 0);
 	if (result != bu::IoFs::ExitCode_t::OK)
@@ -899,7 +891,7 @@ bool CPUPowerManager::IsOn(int pe_id) const
 	int online;
 
 	std::string online_path(prefix_sys_cpu + std::to_string(pe_id) +
-	                        "/online");
+				"/online");
 
 	result = bu::IoFs::ReadIntValueFrom<int>(online_path, online);
 	if (result != bu::IoFs::ExitCode_t::OK)
@@ -913,8 +905,9 @@ bool CPUPowerManager::IsOn(int pe_id) const
  * Performance states                                                 *
  **********************************************************************/
 
-PowerManager::PMResult CPUPowerManager::GetPerformanceState(
-        br::ResourcePathPtr_t const & rp, uint32_t &value)
+PowerManager::PMResult
+CPUPowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp,
+				     uint32_t &value)
 {
 	PowerManager::PMResult result;
 
@@ -933,17 +926,19 @@ PowerManager::PMResult CPUPowerManager::GetPerformanceState(
 		if (f == curr_freq) {
 			value = curr_state;
 			break;
-		} else
+		}
+		else
 			curr_state++;
 	}
 
 	logger->Debug("<%s> current performance state: %d",
-	              rp->ToString().c_str(), value);
+		rp->ToString().c_str(), value);
 	return PMResult::OK;
 }
 
-PowerManager::PMResult CPUPowerManager::GetPerformanceStatesCount(
-        br::ResourcePathPtr_t const & rp, uint32_t & count)
+PowerManager::PMResult
+CPUPowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
+					   uint32_t & count)
 {
 	PowerManager::PMResult result;
 	std::vector<uint32_t> freqs;
@@ -956,8 +951,9 @@ PowerManager::PMResult CPUPowerManager::GetPerformanceStatesCount(
 	return PMResult::OK;
 }
 
-PowerManager::PMResult CPUPowerManager::SetPerformanceState(
-        br::ResourcePathPtr_t const & rp, uint32_t value)
+PowerManager::PMResult
+CPUPowerManager::SetPerformanceState(br::ResourcePathPtr_t const & rp,
+				     uint32_t value)
 {
 	PowerManager::PMResult result;
 	std::vector<uint32_t> freqs;
@@ -968,7 +964,7 @@ PowerManager::PMResult CPUPowerManager::SetPerformanceState(
 
 	if (value >= freqs.size()) {
 		logger->Error("<%s> unsupported performance state value: %d",
-		              rp->ToString().c_str(), value);
+			rp->ToString().c_str(), value);
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 
@@ -977,7 +973,7 @@ PowerManager::PMResult CPUPowerManager::SetPerformanceState(
 		return result;
 
 	logger->Info("<%s> performance state set: %d:%d",
-	             rp->ToString().c_str(), value, freqs[value]);
+		rp->ToString().c_str(), value, freqs[value]);
 
 	return PMResult::OK;
 }

@@ -23,7 +23,7 @@
 #include "bbque/utils/logging/logger.h"
 
 namespace bbque {
-// Forward declaration
+
 class ProcessManager;
 
 namespace app {
@@ -33,21 +33,22 @@ namespace app {
  * @brief This class is defined to instantiate descriptors of generic
  * processors (i.e. not AEM-integrated applications)
  */
-class Process: public Schedulable {
-
-friend class bbque::ProcessManager;
+class Process : public Schedulable
+{
+	friend class bbque::ProcessManager;
 
 public:
-
 
 	/**
 	 * @struct SchedRequest_t
 	 * @brief The set of resources required to schedule the process
 	 */
-	class ScheduleRequest {
+	class ScheduleRequest
+	{
 	public:
-		ScheduleRequest():
-			cpu_cores(0), acc_cores(0), memory_mb(0) {}
+
+		ScheduleRequest() :
+		    cpu_cores(0), acc_cores(0), memory_mb(0) { }
 		uint32_t cpu_cores;
 		uint32_t acc_cores;
 		uint32_t memory_mb;
@@ -61,21 +62,22 @@ public:
 	 * @param _prio the priority (optional)
 	 */
 	Process(std::string const & _name,
-		AppPid_t _pid, AppPrio_t _prio=0,
-		Schedulable::State_t _state=READY,
-		Schedulable::SyncState_t _sync=SYNC_NONE);
+		AppPid_t _pid,
+		AppPrio_t _prio = 0,
+		Schedulable::State_t _state = READY,
+		Schedulable::SyncState_t _sync = SYNC_NONE);
 
 	/**
 	 * @brief Destructor
 	 */
 	virtual ~Process() { }
 
-
 	/**
 	 * @brief Set the scheduling request of resources
 	 * @param sched_req a ScheduleRequest_t object
 	 */
-	inline void SetScheduleRequestInfo(ScheduleRequestPtr_t sched_req) {
+	void SetScheduleRequestInfo(ScheduleRequestPtr_t sched_req)
+	{
 		this->sched_req = sched_req;
 	}
 
@@ -83,7 +85,8 @@ public:
 	 * @brief Get the scheduling request of resources
 	 * @param sched_req a ScheduleRequest_t object
 	 */
-	inline ScheduleRequestPtr_t const & GetScheduleRequestInfo() {
+	ScheduleRequestPtr_t const & GetScheduleRequestInfo()
+	{
 		return this->sched_req;
 	}
 

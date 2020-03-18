@@ -25,7 +25,6 @@
 #include "bbque/utils/utility.h"
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 
 #ifdef CONFIG_BBQUE_RELIABILITY
 #include <criu/criu.h>
@@ -68,25 +67,25 @@
 
 #endif
 
-#define BBQUE_LINUXPP_PLATFORM_ID		"org.linux.cgroup"
+#define BBQUE_LINUXPP_PLATFORM_ID "org.linux.cgroup"
 
-#define BBQUE_LINUXPP_SILOS 			BBQUE_LINUXPP_CGROUP"/silos"
+#define BBQUE_LINUXPP_SILOS    BBQUE_LINUXPP_CGROUP"/silos"
 
-#define BBQUE_LINUXPP_CPUS_PARAM 		"cpuset.cpus"
-#define BBQUE_LINUXPP_CPUP_PARAM 		"cpu.cfs_period_us"
-#define BBQUE_LINUXPP_CPUQ_PARAM 		"cpu.cfs_quota_us"
-#define BBQUE_LINUXPP_MEMN_PARAM 		"cpuset.mems"
-#define BBQUE_LINUXPP_MEMB_PARAM 		"memory.limit_in_bytes"
-#define BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM 	"cpuset.cpu_exclusive"
-#define BBQUE_LINUXPP_MEM_EXCLUSIVE_PARAM 	"cpuset.mem_exclusive"
-#define BBQUE_LINUXPP_PROCS_PARAM		"cgroup.procs"
-#define BBQUE_LINUXPP_NETCLS_PARAM 		"net_cls.classid"
+#define BBQUE_LINUXPP_CPUS_PARAM           "cpuset.cpus"
+#define BBQUE_LINUXPP_CPUP_PARAM           "cpu.cfs_period_us"
+#define BBQUE_LINUXPP_CPUQ_PARAM           "cpu.cfs_quota_us"
+#define BBQUE_LINUXPP_MEMN_PARAM           "cpuset.mems"
+#define BBQUE_LINUXPP_MEMB_PARAM           "memory.limit_in_bytes"
+#define BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM  "cpuset.cpu_exclusive"
+#define BBQUE_LINUXPP_MEM_EXCLUSIVE_PARAM  "cpuset.mem_exclusive"
+#define BBQUE_LINUXPP_PROCS_PARAM          "cgroup.procs"
+#define BBQUE_LINUXPP_NETCLS_PARAM         "net_cls.classid"
 
-#define BBQUE_LINUXPP_SYS_MEMINFO		"/proc/meminfo"
+#define BBQUE_LINUXPP_SYS_MEMINFO "/proc/meminfo"
 
 // The default CFS bandwidth period [us]
-#define BBQUE_LINUXPP_CPUP_DEFAULT		100000
-#define BBQUE_LINUXPP_CPUP_MAX			1000000
+#define BBQUE_LINUXPP_CPUP_DEFAULT  100000
+#define BBQUE_LINUXPP_CPUP_MAX      1000000
 
 // Checking for kernel version requirements
 
@@ -104,10 +103,8 @@ namespace br = bbque::res;
 namespace po = boost::program_options;
 
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 LinuxPlatformProxy * LinuxPlatformProxy::GetInstance()
 {
@@ -117,13 +114,12 @@ LinuxPlatformProxy * LinuxPlatformProxy::GetInstance()
 	return instance;
 }
 
-
 LinuxPlatformProxy::LinuxPlatformProxy() :
-	controller("cpuset"),
-	refreshMode(false)
+    controller("cpuset"),
+    refreshMode(false)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	,
-	proc_listener(ProcessListener::GetInstance())
+    ,
+    proc_listener(ProcessListener::GetInstance())
 #endif
 {
 	//---------- Get a logger module
@@ -138,7 +134,7 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 		// We have to throw the exception: without cgroups the object should not
 		// be created!
 		throw new std::runtime_error("Unable to construct LinuxPlatformProxy, "
-		                             "InitCGroups() failed.");
+					"InitCGroups() failed.");
 	}
 
 #ifdef CONFIG_BBQUE_RELIABILITY
@@ -200,8 +196,8 @@ void LinuxPlatformProxy::InitCoresType()
 
 void LinuxPlatformProxy::InitReliabilitySupport()
 {
-//	char criu_exec_path[] = BBQUE_CRIU_BINARY_PATH);
-//	char criu_serv_addr[] = BBQUE_PATH_VAR;
+	//	char criu_exec_path[] = BBQUE_CRIU_BINARY_PATH);
+	//	char criu_serv_addr[] = BBQUE_PATH_VAR;
 
 	// Checkpoint image path
 	image_prefix_dir += "/linux";
@@ -211,10 +207,10 @@ void LinuxPlatformProxy::InitReliabilitySupport()
 	if (!boost::filesystem::exists(image_prefix_dir)) {
 		if (boost::filesystem::create_directories(image_prefix_dir))
 			logger->Debug("Reliability: "
-			"checkpoint images directory created");
+				"checkpoint images directory created");
 		else
 			logger->Error("Reliability: "
-			"checkpoint images directory not created");
+				"checkpoint images directory not created");
 	}
 
 	// Freezer initialization
@@ -234,14 +230,15 @@ void LinuxPlatformProxy::InitReliabilitySupport()
 		logger->Info("Reliability: CRIU successfully initialized");
 		//	criu_set_service_address(BBQUE_PATH_VAR);
 		logger->Info("Reliability: CRIU service address = [%s]",
-		             BBQUE_PATH_VAR);
+			BBQUE_PATH_VAR);
 
 		criu_set_service_binary(BBQUE_CRIU_BINARY_PATH);
 		logger->Info("Reliability: CRIU service binary = [%s]",
-		             BBQUE_CRIU_BINARY_PATH);
-	} else {
+			BBQUE_CRIU_BINARY_PATH);
+	}
+	else {
 		logger->Error("Reliability: CRIU initialization failed [ret=%d]",
-		              c_ret);
+			c_ret);
 	}
 }
 #endif // CONFIG_BBQUE_RELIABILITY
@@ -251,37 +248,36 @@ void LinuxPlatformProxy::InitReliabilitySupport()
 
 void LinuxPlatformProxy::InitNetworkManagement()
 {
-	bbque_assert ( 0 == rtnl_open(&network_info.rth_1, 0) );
-	bbque_assert ( 0 == rtnl_open(&network_info.rth_2, 0) );
-	memset(&network_info.kernel_addr, 0, sizeof(network_info.kernel_addr));
+	bbque_assert(0 == rtnl_open(&network_info.rth_1, 0));
+	bbque_assert(0 == rtnl_open(&network_info.rth_2, 0));
+	memset(&network_info.kernel_addr, 0, sizeof (network_info.kernel_addr));
 	network_info.kernel_addr.nl_family = AF_NETLINK;
 	logger->Debug("NetworkManagement: sockets to kernel initialized.");
 }
 
-
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeQDisk(int if_index)
 {
-	char  k[16];
+	char k[16];
 	NetworkKernelRequest_t req;
 
-	memset(&req, 0, sizeof(req));
-	memset(&k, 0, sizeof(k));
+	memset(&req, 0, sizeof (req));
+	memset(&k, 0, sizeof (k));
 
-	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct tcmsg));
+	req.n.nlmsg_len = NLMSG_LENGTH(sizeof (struct tcmsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_EXCL | NLM_F_CREATE;
 	req.n.nlmsg_type = RTM_NEWQDISC;
 	req.t.tcm_family = AF_UNSPEC;
 	req.t.tcm_parent = TC_H_ROOT;
 	req.t.tcm_handle = Q_HANDLE;
 
-	strncpy(k, "htb", sizeof(k) - 1);
-	addattr_l(&req.n, sizeof(req), TCA_KIND, k, strlen(k) + 1);
+	strncpy(k, "htb", sizeof (k) - 1);
+	addattr_l(&req.n, sizeof (req), TCA_KIND, k, strlen(k) + 1);
 	HTBParseOpt(&req.n);
 
 	req.t.tcm_ifindex = if_index;
 
 	int err = rtnl_talk(&network_info.kernel_addr, &network_info.rth_2,
-	                    &req.n, 0, 0, NULL, NULL, NULL);
+			&req.n, 0, 0, NULL, NULL, NULL);
 	if (err < 0) {
 		if (EEXIST == errno) {
 			// That's good, someone else added the QDisk
@@ -289,7 +285,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeQDisk(int if_index)
 		}
 
 		logger->Error("MakeQDisk: Kernel communication failed "
-		              "[%d] (%s).", errno, strerror(errno));
+			"[%d] (%s).", errno, strerror(errno));
 		return PLATFORM_GENERIC_ERROR;
 	}
 
@@ -302,11 +298,11 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeCLS(int if_index)
 	char k[16];
 	NetworkKernelRequest_t req;
 
-	memset(&req, 0, sizeof(req));
-	memset(k, 0, sizeof(k));
-	memset(&req, 0, sizeof(req));
+	memset(&req, 0, sizeof (req));
+	memset(k, 0, sizeof (k));
+	memset(&req, 0, sizeof (req));
 
-	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct tcmsg));
+	req.n.nlmsg_len = NLMSG_LENGTH(sizeof (struct tcmsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST | (NLM_F_REPLACE | NLM_F_CREATE);
 	req.n.nlmsg_type = RTM_NEWTFILTER;
 	req.t.tcm_family = AF_UNSPEC;
@@ -315,13 +311,13 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeCLS(int if_index)
 	req.t.tcm_parent = Q_HANDLE;
 
 	//proto & prio
-	uint32_t protocol = 8;  // 8 = ETH_P_IP
+	uint32_t protocol = 8; // 8 = ETH_P_IP
 	uint32_t prio = 10;
 	req.t.tcm_info = TC_H_MAKE(prio << 16, protocol);
 
 	// &kind
-	strncpy(k, "cgroup", sizeof(k) - 1);
-	addattr_l(&req.n, sizeof(req), TCA_KIND, k, strlen(k) + 1);
+	strncpy(k, "cgroup", sizeof (k) - 1);
+	addattr_l(&req.n, sizeof (req), TCA_KIND, k, strlen(k) + 1);
 	CGParseOpt(F_HANDLE, &req.n);
 
 	// if index
@@ -329,7 +325,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeCLS(int if_index)
 
 	//try to talk
 	int err = rtnl_talk(&network_info.kernel_addr, &network_info.rth_2,
-	                    &req.n, 0, 0, NULL, NULL, NULL);
+			&req.n, 0, 0, NULL, NULL, NULL);
 	if (BBQUE_UNLIKELY(err < 0)) {
 		if (EEXIST == errno) {
 			// That's good, someone else added the QDisk
@@ -337,7 +333,7 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeCLS(int if_index)
 		}
 
 		logger->Error("MakeCLS: Kernel communication failed "
-		              "[%d] (%s).", errno, strerror(errno));
+			"[%d] (%s).", errno, strerror(errno));
 		return PLATFORM_GENERIC_ERROR;
 	}
 	return PLATFORM_OK;
@@ -352,21 +348,21 @@ LinuxPlatformProxy::CGParseOpt(long handle, struct nlmsghdr *n)
 	void * p2;
 	t->tcm_handle = handle;
 
-	tail = (struct rtattr*)(((void*)n) + NLMSG_ALIGN(n->nlmsg_len));
+	tail = (struct rtattr*) (((void*) n) + NLMSG_ALIGN(n->nlmsg_len));
 	addattr_l(n, MAX_MSG, TCA_OPTIONS, NULL, 0);
 
 	p1 = n;
 	p2 = tail;
-	tail->rta_len = ((char *)p1) - ((char *)p2) + n->nlmsg_len;
+	tail->rta_len = ((char *) p1) - ((char *) p2) + n->nlmsg_len;
 	return PLATFORM_OK;
 }
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::HTBParseOpt(struct nlmsghdr *n)
 {
-	struct tc_htb_glob opt;   //in pkt_sched.h
+	struct tc_htb_glob opt; //in pkt_sched.h
 	struct rtattr *tail;
-	memset(&opt, 0, sizeof(opt));
+	memset(&opt, 0, sizeof (opt));
 	opt.rate2quantum = 10;
 	opt.version = 3;
 
@@ -374,11 +370,10 @@ LinuxPlatformProxy::HTBParseOpt(struct nlmsghdr *n)
 
 	tail = NLMSG_TAIL(n);
 	addattr_l(n, 1024, TCA_OPTIONS, NULL, 0);
-	addattr_l(n, 2024, TCA_HTB_INIT, &opt, NLMSG_ALIGN(sizeof(opt)));
+	addattr_l(n, 2024, TCA_HTB_INIT, &opt, NLMSG_ALIGN(sizeof (opt)));
 	tail->rta_len = (char *) NLMSG_TAIL(n) - (char *) tail;
 	return PLATFORM_OK;
 }
-
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::HTBParseClassOpt(unsigned rate, struct nlmsghdr *n)
@@ -388,7 +383,7 @@ LinuxPlatformProxy::HTBParseClassOpt(unsigned rate, struct nlmsghdr *n)
 	unsigned short overhead = 0;
 	struct rtattr *tail;
 
-	memset(&opt, 0, sizeof(opt));
+	memset(&opt, 0, sizeof (opt));
 
 	//*rate = (bps * s->scale) / 8.; //empirically determined
 	//{ "KBps",	8000. },
@@ -404,7 +399,7 @@ LinuxPlatformProxy::HTBParseClassOpt(unsigned rate, struct nlmsghdr *n)
 
 	tail = NLMSG_TAIL(n);
 	addattr_l(n, 1024, TCA_OPTIONS, NULL, 0);
-	addattr_l(n, 2024, TCA_HTB_PARMS, &opt, sizeof(opt));
+	addattr_l(n, 2024, TCA_HTB_PARMS, &opt, sizeof (opt));
 	tail->rta_len = (char *) NLMSG_TAIL(n) - (char *) tail;
 	return PLATFORM_OK;
 }
@@ -412,26 +407,24 @@ LinuxPlatformProxy::HTBParseClassOpt(unsigned rate, struct nlmsghdr *n)
 #endif
 
 bool LinuxPlatformProxy::IsHighPerformance(
-        bbque::res::ResourcePathPtr_t const & path) const
+					   bbque::res::ResourcePathPtr_t const & path) const
 {
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 
 	BBQUE_RID_TYPE core_id =
-	        path->GetID(bbque::res::ResourceType::PROC_ELEMENT);
+		path->GetID(bbque::res::ResourceType::PROC_ELEMENT);
 	if (core_id >= 0 && core_id <= BBQUE_TARGET_CPU_CORES_NUM) {
 		logger->Debug("IsHighPerformance: <%s> = %d",
-		              path->ToString().c_str(), high_perf_cores[core_id]);
+			path->ToString().c_str(), high_perf_cores[core_id]);
 		return high_perf_cores[core_id];
 	}
 	logger->Error("IsHighPerformance: cannot find process element ID in <%s>",
-	              path->ToString().c_str());
+		path->ToString().c_str());
 #else
 	(void) path;
 #endif
 	return false;
 }
-
-
 
 const char* LinuxPlatformProxy::GetPlatformID(int16_t system_id) const noexcept
 {
@@ -442,7 +435,7 @@ const char* LinuxPlatformProxy::GetPlatformID(int16_t system_id) const noexcept
 const char* LinuxPlatformProxy::GetHardwareID(int16_t system_id) const noexcept
 {
 	(void) system_id;
-	return BBQUE_TARGET_HARDWARE_ID;    // Defined in bbque.conf
+	return BBQUE_TARGET_HARDWARE_ID; // Defined in bbque.conf
 }
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexcept
@@ -451,13 +444,13 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexce
 	CGroupDataPtr_t pcgd;
 
 	RLinuxBindingsPtr_t prlb = std::make_shared<RLinuxBindings_t>(
-	                                   MaxCpusCount, MaxMemsCount);
+		MaxCpusCount, MaxMemsCount);
 
 	// Setup a new CGroup data for this application
 	result = GetCGroupData(papp, pcgd);
 	if (BBQUE_UNLIKELY(result != PLATFORM_OK)) {
 		logger->Error("Setup: [%s] CGroup initialization FAILED "
-		              "(Error: CGroupData setup)", papp->StrId());
+			"(Error: CGroupData setup)", papp->StrId());
 		return result;
 	}
 
@@ -468,28 +461,27 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexce
 	result = this->ReclaimResources(papp);
 	if (BBQUE_UNLIKELY(result != PLATFORM_OK)) {
 		logger->Error("Setup: [%s] CGroup initialization FAILED "
-		              "(Error: failed moving app into silos)", papp->StrId());
+			"(Error: failed moving app into silos)", papp->StrId());
 		return result;
 	}
 
 	return result;
 }
 
-
 void LinuxPlatformProxy::LoadConfiguration() noexcept
 {
 	po::options_description opts_desc("Linux Platform Proxy Options");
 	opts_desc.add_options()
-	(MODULE_CONFIG ".cfs_bandwidth.margin_pct",
-	 po::value<int> (&cfs_margin_pct)->default_value(0),
-	 "The safety margin [%] to add for CFS bandwidth enforcement");
+		(MODULE_CONFIG ".cfs_bandwidth.margin_pct",
+		po::value<int> (&cfs_margin_pct)->default_value(0),
+		"The safety margin [%] to add for CFS bandwidth enforcement");
 	opts_desc.add_options()
-	(MODULE_CONFIG ".cfs_bandwidth.threshold_pct",
-	 po::value<int> (&cfs_threshold_pct)->default_value(100),
-	 "The threshold [%] under which we enable CFS bandwidth enforcement");
+		(MODULE_CONFIG ".cfs_bandwidth.threshold_pct",
+		po::value<int> (&cfs_threshold_pct)->default_value(100),
+		"The threshold [%] under which we enable CFS bandwidth enforcement");
 	po::variables_map opts_vm;
 	ConfigurationManager::GetInstance().
-	ParseConfigurationFile(opts_desc, opts_vm);
+		ParseConfigurationFile(opts_desc, opts_vm);
 
 	// Range check
 	cfs_margin_pct = std::min(std::max(cfs_margin_pct, 0), 100);
@@ -500,9 +492,8 @@ void LinuxPlatformProxy::LoadConfiguration() noexcept
 		cfs_threshold_pct = 100 - cfs_margin_pct;
 
 	logger->Info("LoadConfiguration: CFS bandwidth control, margin %d, threshold: %d",
-	             cfs_margin_pct, cfs_threshold_pct);
+		cfs_margin_pct, cfs_threshold_pct);
 }
-
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::Release(SchedPtr_t papp)
@@ -528,17 +519,17 @@ LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept
 
 	// Move this app into "silos" CGroup
 	cgroup_set_value_uint64(psilos->pc_cpuset,
-	                        BBQUE_LINUXPP_PROCS_PARAM,
-	                        papp->Pid());
+				BBQUE_LINUXPP_PROCS_PARAM,
+				papp->Pid());
 
 	// Configure the CGroup based on resource bindings
 	logger->Info("ReclaimResources: [%s] => SILOS[%s]",
-	             papp->StrId(), psilos->cgpath);
+		papp->StrId(), psilos->cgpath);
 	error = cgroup_modify_cgroup(psilos->pcg);
 	if (BBQUE_UNLIKELY(error)) {
 		logger->Error("ReclaimResources: CGroup resource reclaiming FAILED "
-		              "(Error: libcgroup, kernel cgroup update "
-		              "[%d: %s]", errno, strerror(errno));
+			"(Error: libcgroup, kernel cgroup update "
+			"[%d: %s]", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -546,7 +537,6 @@ LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept
 
 	return PLATFORM_OK;
 }
-
 
 void LinuxPlatformProxy::Exit()
 {
@@ -557,29 +547,28 @@ void LinuxPlatformProxy::Exit()
 	if (boost::filesystem::exists(image_prefix_dir)) {
 		if (boost::filesystem::remove_all(image_prefix_dir))
 			logger->Info("Reliability: "
-			             "image directory [%s] removed",
-			             image_prefix_dir.c_str());
+				"image directory [%s] removed",
+				image_prefix_dir.c_str());
 		else
 			logger->Error("Reliability: "
-			              "cannot remove image directory [%s]",
-			              image_prefix_dir.c_str());
+				"cannot remove image directory [%s]",
+				image_prefix_dir.c_str());
 	}
 	// Remove freezer directory
 	if (boost::filesystem::exists(freezer_prefix_dir)) {
 		if (!boost::filesystem::remove_all(freezer_prefix_dir))
 			logger->Info("Reliability: "
-			             "freezer directory [%s] removed",
-			             freezer_prefix_dir.c_str());
+				"freezer directory [%s] removed",
+				freezer_prefix_dir.c_str());
 		else
 			logger->Error("Reliability: "
-			              "cannot remove freezer directory [%s]",
-			              freezer_prefix_dir.c_str());
+				"cannot remove freezer directory [%s]",
+				freezer_prefix_dir.c_str());
 	}
 #endif
 
 	logger->Info("Exit: LinuxPP terminated");
 }
-
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept
@@ -600,7 +589,7 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 
 	// Get the set of assigned (bound) computing nodes (e.g., CPUs)
 	br::ResourceBitset nodes(
-	        br::ResourceBinder::GetMask(pres, br::ResourceType::CPU));
+				br::ResourceBinder::GetMask(pres, br::ResourceType::CPU));
 	BBQUE_RID_TYPE node_id = nodes.FirstSet();
 	if (BBQUE_UNLIKELY(node_id < 0)) {
 		// No resources for LinuxPP
@@ -610,7 +599,7 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 
 	// Map resources for each node (e.g., CPU)
 	RLinuxBindingsPtr_t prlb = std::make_shared<RLinuxBindings_t>
-	                           (MaxCpusCount, MaxMemsCount);
+		(MaxCpusCount, MaxMemsCount);
 	for (; node_id <= nodes.LastSet(); ++node_id) {
 		logger->Debug("MapResources: CGroup resource mapping node [%d]", node_id);
 		if (!nodes.Test(node_id)) continue;
@@ -634,7 +623,7 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 	result = SetCGNetworkBandwidth(papp, pcgd, pres, prlb);
 	if (PLATFORM_OK != result) {
 		logger->Warn("MapResources: unable to enforce Network Bandwidth [%d],"
-		             " ignoring...", result);
+			" ignoring...", result);
 	}
 
 #endif
@@ -644,31 +633,31 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 	logger->Debug("MapResources: Distributed actuation: retrieving masks and ranking");
 
 	br::ResourceBitset proc_elements =
-	        br::ResourceBinder::GetMask(
-	                pres,
-	                br::ResourceType::PROC_ELEMENT,
-	                br::ResourceType::CPU,
-	                R_ID_ANY,
-	                papp, rvt);
+		br::ResourceBinder::GetMask(
+					pres,
+					br::ResourceType::PROC_ELEMENT,
+					br::ResourceType::CPU,
+					R_ID_ANY,
+					papp, rvt);
 
 	br::ResourceBitset mem_nodes =
-	        br::ResourceBinder::GetMask(
-	                pres,
-	                br::ResourceType::MEMORY,
-	                br::ResourceType::CPU,
-	                R_ID_ANY,
-	                papp, rvt);
+		br::ResourceBinder::GetMask(
+					pres,
+					br::ResourceType::MEMORY,
+					br::ResourceType::CPU,
+					R_ID_ANY,
+					papp, rvt);
 
 	// Processing elements that have been allocated exclusively
 	br::ResourceBitset proc_elements_exclusive = proc_elements;
 	proc_elements_exclusive.Reset();
 
 	for (BBQUE_RID_TYPE pe_id = proc_elements.FirstSet();
-	     pe_id <= proc_elements.LastSet();
-	     pe_id++) {
+	pe_id <= proc_elements.LastSet();
+	pe_id++) {
 
 		// Skip if this processing element is not allocated to this app
-		if (! proc_elements.Test(pe_id))
+		if (!proc_elements.Test(pe_id))
 			continue;
 
 		// Getting a reference to the resource status
@@ -676,20 +665,20 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 		br::ResourcePtr_t resource = *(ra.GetResources(path).begin());
 
 		// If allocation is exclusive, set the bit
-		if(resource->ApplicationsCount(rvt) == 1)
+		if (resource->ApplicationsCount(rvt) == 1)
 			proc_elements_exclusive.Set(pe_id);
 
 	}
 
 	logger->Debug("MapResources: [%d] pes %s (isolated %s), mems %s",
-	              papp->Pid(),
-	              proc_elements.ToString().c_str(),
-	              proc_elements_exclusive.ToString().c_str(),
-	              mem_nodes.ToString().c_str());
+		papp->Pid(),
+		proc_elements.ToString().c_str(),
+		proc_elements_exclusive.ToString().c_str(),
+		mem_nodes.ToString().c_str());
 	papp->SetCGroupSetupData(
-	        proc_elements.ToULong(),
-	        mem_nodes.ToULong(),
-	        proc_elements_exclusive.ToULong());
+				proc_elements.ToULong(),
+				mem_nodes.ToULong(),
+				proc_elements_exclusive.ToULong());
 #endif // CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 
 	return PLATFORM_OK;
@@ -697,10 +686,11 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 
 
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
+
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
-                ResourceAssignmentMapPtr_t pres,
-                RLinuxBindingsPtr_t prlb)
+					  ResourceAssignmentMapPtr_t pres,
+					  RLinuxBindingsPtr_t prlb)
 {
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();
 	std::stringstream sstream_PID;
@@ -715,20 +705,20 @@ LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
 	// handle and will be the same for all classes. The minor handle number is
 	// the procces PID
 	sstream_PID << std::hex << papp->Pid();
-	std::string PID( "0x10" + sstream_PID.str() );
+	std::string PID("0x10" + sstream_PID.str());
 
 	cgroup_add_value_string(pcgd->pc_net_cls,
-	                        BBQUE_LINUXPP_NETCLS_PARAM, PID.c_str());
+				BBQUE_LINUXPP_NETCLS_PARAM, PID.c_str());
 	res = cgroup_modify_cgroup(pcgd->pcg);
 	if (res) {
 		logger->Error("SetCGNetworkBandwidth: CGroup NET_CLS resource mapping FAILED "
-		              "(Error: libcgroup, kernel cgroup update "
-		              "[%d: %s])", errno, strerror(errno));
+			"(Error: libcgroup, kernel cgroup update "
+			"[%d: %s])", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
 	br::ResourceBitset net_ifs(
-	        br::ResourceBinder::GetMask(pres, br::ResourceType::NETWORK_IF));
+				br::ResourceBinder::GetMask(pres, br::ResourceType::NETWORK_IF));
 	auto interface_id = net_ifs.FirstSet();
 	if (interface_id < 0) {
 		logger->Error("SetCGNetworkBandwidth: Missing binding to network interfaces");
@@ -737,16 +727,16 @@ LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
 
 	for (; interface_id <= net_ifs.LastSet(); ++interface_id) {
 		logger->Debug("SetCGNetworkBandwidth: CGroup resource mapping interface [%d]",
-		              interface_id);
+			interface_id);
 		if (!net_ifs.Test(interface_id)) continue;
 
 		logger->Debug("SetCGNetworkBandwidth: CLASS handle %d, bandwith %d, interface : %d",
-		              papp->Pid(), prlb->amount_net_bw, interface_id);
+			papp->Pid(), prlb->amount_net_bw, interface_id);
 
 		int64_t assigned_net_bw = prlb->amount_net_bw;
 		if (assigned_net_bw < 0) {
 			assigned_net_bw = ra.Total("sys0.net" +
-			                           std::to_string(interface_id));
+						std::to_string(interface_id));
 		}
 		MakeNetClass(papp->Pid(), assigned_net_bw, interface_id);
 	}
@@ -758,12 +748,12 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::MakeNetClass(AppPid_t handle, unsigned rate, int if_index)
 {
 	NetworkKernelRequest_t req;
-	char  k[16];
+	char k[16];
 
-	memset(&req, 0, sizeof(req));
-	memset(k, 0, sizeof(k));
+	memset(&req, 0, sizeof (req));
+	memset(k, 0, sizeof (k));
 
-	req.n.nlmsg_len = NLMSG_LENGTH(sizeof(struct tcmsg));
+	req.n.nlmsg_len = NLMSG_LENGTH(sizeof (struct tcmsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_EXCL | NLM_F_CREATE;
 	req.n.nlmsg_type = RTM_NEWTCLASS;
 	req.t.tcm_family = AF_UNSPEC;
@@ -771,14 +761,14 @@ LinuxPlatformProxy::MakeNetClass(AppPid_t handle, unsigned rate, int if_index)
 	req.t.tcm_handle = handle;
 	req.t.tcm_parent = Q_HANDLE;
 
-	strncpy(k, "htb", sizeof(k) - 1);
-	addattr_l(&req.n, sizeof(req), TCA_KIND, k, strlen(k) + 1);
+	strncpy(k, "htb", sizeof (k) - 1);
+	addattr_l(&req.n, sizeof (req), TCA_KIND, k, strlen(k) + 1);
 	HTBParseClassOpt(rate, &req.n);
 
 	req.t.tcm_ifindex = if_index;
 
 	if (rtnl_talk(&network_info.kernel_addr, &network_info.rth_1, &req.n, 0,
-	              0, NULL, NULL, NULL) < 0) {
+		0, NULL, NULL, NULL) < 0) {
 		return PLATFORM_GENERIC_ERROR;
 	}
 
@@ -789,33 +779,33 @@ LinuxPlatformProxy::MakeNetClass(AppPid_t handle, unsigned rate, int if_index)
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::GetResourceMapping(
-        SchedPtr_t papp,
-        ResourceAssignmentMapPtr_t assign_map,
-        RLinuxBindingsPtr_t prlb,
-        BBQUE_RID_TYPE node_id,
-        br::RViewToken_t rvt) noexcept
+				       SchedPtr_t papp,
+				       ResourceAssignmentMapPtr_t assign_map,
+				       RLinuxBindingsPtr_t prlb,
+				       BBQUE_RID_TYPE node_id,
+				       br::RViewToken_t rvt) noexcept
 {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 	// CPU core set
 	br::ResourceBitset core_ids(
-	        br::ResourceBinder::GetMask(assign_map,
-	                                    br::ResourceType::PROC_ELEMENT,
-	                                    br::ResourceType::CPU, node_id, papp, rvt));
+				br::ResourceBinder::GetMask(assign_map,
+							br::ResourceType::PROC_ELEMENT,
+							br::ResourceType::CPU, node_id, papp, rvt));
 	if (strlen(prlb->cpus) > 0)
 		strcat(prlb->cpus, ",");
-	strncat(prlb->cpus, + core_ids.ToStringCG().c_str(), 3 * MaxCpusCount);
+	strncat(prlb->cpus, +core_ids.ToStringCG().c_str(), 3 * MaxCpusCount);
 	logger->Debug("GetResourceMapping: cpu[%d] cores: { %s }", node_id, prlb->cpus);
 
 	// Memory nodes
 	br::ResourceBitset mem_ids(
-	        br::ResourceBinder::GetMask(
-	                assign_map,
-	                br::ResourceType::PROC_ELEMENT,
-	                br::ResourceType::MEMORY,
-	                node_id,
-	                papp,
-	                rvt));
+				br::ResourceBinder::GetMask(
+							assign_map,
+							br::ResourceType::PROC_ELEMENT,
+							br::ResourceType::MEMORY,
+							node_id,
+							papp,
+							rvt));
 	if (mem_ids.Count() == 0)
 		strncpy(prlb->mems, memory_ids_all.c_str(), memory_ids_all.length());
 	else
@@ -825,8 +815,8 @@ LinuxPlatformProxy::GetResourceMapping(
 	// CPU quota
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	prlb->amount_cpus += ra.GetAssignedAmount(
-	                             assign_map, papp, rvt,
-	                             br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
+						assign_map, papp, rvt,
+						br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
 #else
 	prlb->amount_cpus = -1;
 #endif
@@ -835,7 +825,7 @@ LinuxPlatformProxy::GetResourceMapping(
 	// Memory amount
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	uint64_t memb = ra.GetAssignedAmount(
-	                        assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
+					assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;
 #else
@@ -846,18 +836,17 @@ LinuxPlatformProxy::GetResourceMapping(
 	// Network bandwidth
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 	uint64_t netb = ra.GetAssignedAmount(
-	                        assign_map, papp, rvt, br::ResourceType::NETWORK_IF, br::ResourceType::SYSTEM);
+					assign_map, papp, rvt, br::ResourceType::NETWORK_IF, br::ResourceType::SYSTEM);
 	if (netb > 0)
 		prlb->amount_net_bw = netb;
 #else
 	prlb->amount_net_bw = -1;
 #endif
 	logger->Debug("GetResourceMapping: cpu[%d] network bandwidth: { %lld }",
-	              node_id, prlb->amount_net_bw);
+		node_id, prlb->amount_net_bw);
 
 	return PLATFORM_OK;
 }
-
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Refresh() noexcept
 {
@@ -873,7 +862,6 @@ LinuxPlatformProxy::LoadPlatformData() noexcept
 	return this->ScanPlatformDescription();
 }
 
-
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::ScanPlatformDescription() noexcept
 {
@@ -881,7 +869,8 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 
 	try {
 		pd = &this->GetPlatformDescription();
-	} catch(const std::runtime_error& e) {
+	}
+	catch (const std::runtime_error& e) {
 		UNUSED(e);
 		logger->Fatal("ScanPlatformDescription: PlatformDescription object missing");
 		return PLATFORM_LOADING_FAILED;
@@ -893,7 +882,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 		auto sys = sys_entry.second;
 
 		logger->Debug("ScanPlatformDescription: [%s@%s] CPUs...",
-		              sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+			sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu, sys.IsLocal());
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
@@ -903,22 +892,22 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 		}
 
 		logger->Debug("ScanPlatformDescription: [%s@%s] Memories...",
-		              sys.GetHostname().c_str(),
-		              sys.GetNetAddress().c_str());
+			sys.GetHostname().c_str(),
+			sys.GetNetAddress().c_str());
 		for (const auto mem : sys.GetMemoriesAll()) {
 			ExitCode_t result = this->RegisterMEM(*mem, sys.IsLocal());
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
 				logger->Fatal("ScanPlatformDescription: MEM %d "
-				              "registration failed",
-				              mem->GetId());
+					"registration failed",
+					mem->GetId());
 				return result;
 			}
 
 			if (sys.IsLocal()) {
 				logger->Debug("ScanPlatformDescription: [%s@%s] "
-				              "is LOCAL",
-				              sys.GetHostname().c_str(),
-				              sys.GetNetAddress().c_str());
+					"is LOCAL",
+					sys.GetHostname().c_str(),
+					sys.GetNetAddress().c_str());
 
 				this->memory_ids_all += std::to_string(mem->GetId()) + ',';
 			}
@@ -927,23 +916,23 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 			ExitCode_t result = this->RegisterNET(*net, sys.IsLocal());
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
 				logger->Error("ScanPlatformDescription: network "
-				              "interface %d (%s) registration failed [%d]",
-				              net->GetId(),
-				              net->GetName().c_str(),
-				              result);
+					"interface %d (%s) registration failed [%d]",
+					net->GetId(),
+					net->GetName().c_str(),
+					result);
 				return result;
 			}
 		}
 
 		logger->Debug("ScanPlatformDescription: [%s@%s] IO storages...",
-		              sys.GetHostname().c_str(),
-		              sys.GetNetAddress().c_str());
+			sys.GetHostname().c_str(),
+			sys.GetNetAddress().c_str());
 		for (const auto storage : sys.GetStoragesAll()) {
 			ExitCode_t result = this->RegisterIODev(*storage, sys.IsLocal());
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
 				logger->Fatal("ScanPlatformDescription: STORAGE %d "
-				              "registration failed",
-				              storage->GetId());
+					"registration failed",
+					storage->GetId());
 				return result;
 			}
 
@@ -955,16 +944,15 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 	if (!this->memory_ids_all.empty())
 		this->memory_ids_all.pop_back();
 	logger->Debug("ScanPlatformDescription: Memory nodes = {%s}",
-	              memory_ids_all.c_str());
+		memory_ids_all.c_str());
 
 	return PLATFORM_OK;
 }
 
-
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterCPU(
-        const PlatformDescription::CPU &cpu,
-        bool is_local) noexcept
+				const PlatformDescription::CPU &cpu,
+				bool is_local) noexcept
 {
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -972,18 +960,19 @@ LinuxPlatformProxy::RegisterCPU(
 	for (const auto pe : cpu.GetProcessingElementsAll()) {
 		auto pe_type = pe.GetPartitionType();
 		if ((PlatformDescription::MDEV == pe_type)
-		    || (PlatformDescription::SHARED == pe_type)) {
+		|| (PlatformDescription::SHARED == pe_type)) {
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
 			logger->Debug("RegisterCPU: <%s>: total=%d", resource_path.c_str(), share);
 
 			if (refreshMode) {
 				ra.UpdateResource(resource_path, "", share);
-			} else {
+			}
+			else {
 				ra.RegisterResource(resource_path, "", share);
 				if (is_local)
 					InitPowerInfo(resource_path.c_str(),
-					              pe.GetId());
+						pe.GetId());
 			}
 		}
 	}
@@ -993,8 +982,8 @@ LinuxPlatformProxy::RegisterCPU(
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterMEM(
-        const PlatformDescription::Memory &mem,
-        bool is_local) noexcept
+				const PlatformDescription::Memory &mem,
+				bool is_local) noexcept
 {
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -1006,7 +995,8 @@ LinuxPlatformProxy::RegisterMEM(
 
 	if (refreshMode) {
 		ra.UpdateResource(resource_path, "", q_bytes);
-	} else {
+	}
+	else {
 		ra.RegisterResource(resource_path, "", q_bytes);
 	}
 	logger->Debug("RegisterMEM: Registration of <%s> successfully performed", resource_path.c_str());
@@ -1016,8 +1006,8 @@ LinuxPlatformProxy::RegisterMEM(
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterNET(
-        const PlatformDescription::NetworkIF &net,
-        bool is_local) noexcept
+				const PlatformDescription::NetworkIF &net,
+				bool is_local) noexcept
 {
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -1025,20 +1015,22 @@ LinuxPlatformProxy::RegisterNET(
 
 	std::string resource_path = net.GetPath();
 	logger->Debug("RegisterNET: Registration of netif %d <%s>",
-	              net.GetId(), net.GetName().c_str());
+		net.GetId(), net.GetName().c_str());
 
 	uint64_t bw;
 	try {
 		bw = GetNetIFBandwidth(net.GetName());
-	} catch(std::runtime_error &e) {
+	}
+	catch (std::runtime_error &e) {
 		logger->Error("RegisterNET: Unable to get the Bandwidth of %s: %s",
-		              net.GetName().c_str(), e.what());
+			net.GetName().c_str(), e.what());
 		return PLATFORM_GENERIC_ERROR;
 	}
 
 	if (refreshMode) {
 		ra.UpdateResource(resource_path, "", bw);
-	} else {
+	}
+	else {
 		ra.RegisterResource(resource_path, "", bw);
 	}
 
@@ -1047,15 +1039,15 @@ LinuxPlatformProxy::RegisterNET(
 
 	int interface_idx = if_nametoindex(net.GetName().c_str());
 	logger->Debug("RegisterNET: netif %d (%s) has the kernel index %d", net.GetId(),
-	              net.GetName().c_str(), interface_idx);
+		net.GetName().c_str(), interface_idx);
 	if (PLATFORM_OK != MakeQDisk(interface_idx)) {
 		logger->Error("RegisterNET: MakeQDisk FAILED on device #%d (%s)",
-		              net.GetId(), net.GetName().c_str());
+			net.GetId(), net.GetName().c_str());
 		return PLATFORM_GENERIC_ERROR;
 	}
 	if (PLATFORM_OK != MakeCLS(interface_idx)) {
 		logger->Error("RegisterNET: MakeCLS FAILED on device #%d (%s)",
-		              net.GetId(), net.GetName().c_str());
+			net.GetId(), net.GetName().c_str());
 		return PLATFORM_GENERIC_ERROR;
 	}
 #endif
@@ -1063,19 +1055,18 @@ LinuxPlatformProxy::RegisterNET(
 	return PLATFORM_OK;
 }
 
-
 uint64_t LinuxPlatformProxy::GetNetIFBandwidth(const std::string &ifname) const
 {
 	int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
-	if ( !sock ) {
+	if (!sock) {
 		throw std::runtime_error("Unable to create socket");
 	}
 
 	struct ifreq ifr;
 	struct ethtool_cmd edata;
 
-	strncpy(ifr.ifr_name, ifname.c_str(), sizeof(ifr.ifr_name));
-	ifr.ifr_data = (caddr_t)&edata;
+	strncpy(ifr.ifr_name, ifname.c_str(), sizeof (ifr.ifr_name));
+	ifr.ifr_data = (caddr_t) & edata;
 	edata.cmd = ETHTOOL_GSET;
 
 	int err = ioctl(sock, SIOCETHTOOL, &ifr);
@@ -1084,13 +1075,13 @@ uint64_t LinuxPlatformProxy::GetNetIFBandwidth(const std::string &ifname) const
 		return 0;
 	}
 
-	return ((uint64_t)edata.speed) * 1000000ULL;
+	return ((uint64_t) edata.speed) * 1000000ULL;
 }
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::RegisterIODev(
-        const PlatformDescription::IO &io_dev,
-        bool is_local) noexcept
+				  const PlatformDescription::IO &io_dev,
+				  bool is_local) noexcept
 {
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -1102,7 +1093,8 @@ LinuxPlatformProxy::RegisterIODev(
 
 	if (refreshMode) {
 		ra.UpdateResource(resource_path, "", q_bytes);
-	} else {
+	}
+	else {
 		ra.RegisterResource(resource_path, "", q_bytes);
 	}
 	logger->Debug("RegisterIODev: Registration of <%s> successfully performed", resource_path.c_str());
@@ -1110,21 +1102,20 @@ LinuxPlatformProxy::RegisterIODev(
 	return PLATFORM_OK;
 }
 
-
 void LinuxPlatformProxy::InitPowerInfo(
-        const char * resourcePath,
-        BBQUE_RID_TYPE core_id)
+				       const char * resourcePath,
+				       BBQUE_RID_TYPE core_id)
 {
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	br::ResourcePtr_t rsrc(ra.GetResource(resourcePath));
 	if (high_perf_cores[core_id])
 		rsrc->SetModel("ARM Cortex A15");
 	else
 		rsrc->SetModel("ARM Cortex A7");
 	logger->Info("InitPowerInfo: [%s] CPU model = %s",
-	             rsrc->Path()->ToString().c_str(), rsrc->Model().c_str());
+		rsrc->Path()->ToString().c_str(), rsrc->Model().c_str());
 #else
 	(void) resourcePath;
 	(void) core_id;
@@ -1151,18 +1142,18 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::InitCGroups() noexcept
 	cg_result = cgroup_init();
 	if (BBQUE_UNLIKELY(cg_result)) {
 		logger->Error("InitCGroups: CGroup Library initializaton FAILED! "
-		              "(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
+			"(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
 		return PLATFORM_INIT_FAILED;
 	}
 
 	cg_result = cgroup_get_subsys_mount_point(controller, &mount_path);
 	if (BBQUE_UNLIKELY(cg_result)) {
 		logger->Error("InitCGroups: CGroup Library mountpoint lookup FAILED! "
-		              "(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
+			"(Error: %d - %s)", cg_result, cgroup_strerror(cg_result));
 		return PLATFORM_GENERIC_ERROR;
 	}
 	logger->Info("InitCGroups: controller [%s] mounted at [%s]",
-	             controller, mount_path);
+		controller, mount_path);
 
 
 	// TODO: check that the "bbq" cgroup already existis
@@ -1187,7 +1178,7 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept
 {
 	RLinuxBindingsPtr_t prlb(new RLinuxBindings_t(
-	                                 MaxCpusCount, MaxMemsCount));
+						MaxCpusCount, MaxMemsCount));
 	ExitCode_t result;
 	int error;
 
@@ -1212,8 +1203,8 @@ LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept
 	error = cgroup_modify_cgroup(pcgd->pcg);
 	if (BBQUE_UNLIKELY(error)) {
 		logger->Error("BuildSilosCG: CGroup resource mapping FAILED "
-		              "(Error: libcgroup, kernel cgroup update "
-		              "[%d: %s]", errno, strerror(errno));
+			"(Error: libcgroup, kernel cgroup update "
+			"[%d: %s]", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1230,7 +1221,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	pcgd->pcg = cgroup_new_cgroup(pcgd->cgpath);
 	if (BBQUE_UNLIKELY(!pcgd->pcg)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		              "(Error: libcgroup, \"cgroup\" creation)");
+			"(Error: libcgroup, \"cgroup\" creation)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1238,8 +1229,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	pcgd->pc_cpuset = cgroup_add_controller(pcgd->pcg, "cpuset");
 	if (BBQUE_UNLIKELY(!pcgd->pc_cpuset)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		              "(Error: libcgroup, [cpuset] \"controller\" "
-		              "creation failed)");
+			"(Error: libcgroup, [cpuset] \"controller\" "
+			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1248,8 +1239,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	pcgd->pc_memory = cgroup_add_controller(pcgd->pcg, "memory");
 	if (BBQUE_UNLIKELY(!pcgd->pc_memory)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		              "(Error: libcgroup, [memory] \"controller\" "
-		              "creation failed)");
+			"(Error: libcgroup, [memory] \"controller\" "
+			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 #endif
@@ -1259,8 +1250,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	pcgd->pc_cpu = cgroup_add_controller(pcgd->pcg, "cpu");
 	if (BBQUE_UNLIKELY(!pcgd->pc_cpu)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		              "(Error: libcgroup, [cpu] \"controller\" "
-		              "creation failed)");
+			"(Error: libcgroup, [cpu] \"controller\" "
+			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1271,8 +1262,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	pcgd->pc_net_cls = cgroup_add_controller(pcgd->pcg, "net_cls");
 	if (!pcgd->pc_net_cls) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		              "(Error: libcgroup, [net_cls] \"controller\" "
-		              "creation failed)");
+			"(Error: libcgroup, [net_cls] \"controller\" "
+			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
 #endif
@@ -1284,8 +1275,8 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	int result = cgroup_create_cgroup(pcgd->pcg, 0);
 	if (BBQUE_UNLIKELY(result && errno)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
-		              "(Error: libcgroup, kernel cgroup creation "
-		              "[%d: %s]", errno, strerror(errno));
+			"(Error: libcgroup, kernel cgroup creation "
+			"[%d: %s]", errno, strerror(errno));
 		cgroup_delete_cgroup(pcgd->pcg, 1); // As suggested by doc
 		return PLATFORM_MAPPING_FAILED;
 	}
@@ -1297,7 +1288,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	assert(temp_cg != NULL);
 	if (BBQUE_UNLIKELY(0 != cgroup_get_cgroup(temp_cg))) {
 		logger->Error("BuildCGroup: Cannot re-open CGroup [%s], continuing with cpu quota"
-		              "disabled", pcgd->cgpath);
+			"disabled", pcgd->cgpath);
 		pcgd->cfs_quota_available = false;
 		return PLATFORM_OK;
 	}
@@ -1305,7 +1296,7 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	struct cgroup_controller *temp_cgc = cgroup_get_controller(temp_cg, "cpu");
 	for (int i = 0; i < cgroup_get_value_name_count(temp_cgc); i++) {
 		const char* cg_c_name = cgroup_get_value_name(temp_cgc, i);
-		if ( 0 == strcmp(cg_c_name, "cpu.cfs_quota_us") ) {
+		if (0 == strcmp(cg_c_name, "cpu.cfs_quota_us")) {
 			pcgd->cfs_quota_available = true;
 			return PLATFORM_OK;
 		}
@@ -1322,13 +1313,13 @@ LinuxPlatformProxy::GetCGroupData(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexce
 	ExitCode_t result;
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	logger->Warn("Distributed cgroup actuation: cgroup will be written by "
-	             "the EXC itself.");
+		"the EXC itself.");
 	return PLATFORM_OK;
 #endif
 	// Loop-up for application control group data
 	pcgd = std::static_pointer_cast<CGroupData_t>(
-	               papp->GetPluginData(LINUX_PP_NAMESPACE, "cgroup")
-	       );
+		papp->GetPluginData(LINUX_PP_NAMESPACE, "cgroup")
+		);
 	if (pcgd)
 		return PLATFORM_OK;
 
@@ -1347,14 +1338,14 @@ LinuxPlatformProxy::GetCGroupData(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexce
 
 LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::SetupCGroup(
-        CGroupDataPtr_t & pcgd,
-        RLinuxBindingsPtr_t prlb,
-        bool excl,
-        bool move) noexcept
+				CGroupDataPtr_t & pcgd,
+				RLinuxBindingsPtr_t prlb,
+				bool excl,
+				bool move) noexcept
 {
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	logger->Warn("SetupCGroup: Distributed cgroup actuation: cgroup will be setup by "
-	             "the EXC itself.");
+		"the EXC itself.");
 	return PLATFORM_OK;
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
@@ -1369,7 +1360,7 @@ LinuxPlatformProxy::SetupCGroup(
 	// Setting CPUs as EXCLUSIVE if required
 	if (excl) {
 		cgroup_set_value_string(pcgd->pc_cpuset,
-		                        BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM, "1");
+					BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM, "1");
 	}
 #else
 	excl = false;
@@ -1377,24 +1368,25 @@ LinuxPlatformProxy::SetupCGroup(
 
 	// Set the assigned CPUs
 	cgroup_set_value_string(
-	        pcgd->pc_cpuset,
-	        BBQUE_LINUXPP_CPUS_PARAM,
-	        prlb->cpus ? prlb->cpus : "");
+				pcgd->pc_cpuset,
+				BBQUE_LINUXPP_CPUS_PARAM,
+				prlb->cpus ? prlb->cpus : "");
 
 	// Set the assigned memory NODE (only if we have at least one CPUS)
 	if (prlb->cpus[0]) {
 		cgroup_set_value_string(
-		        pcgd->pc_cpuset,
-		        BBQUE_LINUXPP_MEMN_PARAM,
-		        prlb->mems);
+					pcgd->pc_cpuset,
+					BBQUE_LINUXPP_MEMN_PARAM,
+					prlb->mems);
 
 		logger->Debug("SetupCGroup: CPUSET for [%s]: {cpus [%c: %s], mems[%s]}",
-		              pcgd->papp->StrId(),
-		              excl ? 'E' : 'S',
-		              prlb->cpus, prlb->mems);
-	} else {
+			pcgd->papp->StrId(),
+			excl ? 'E' : 'S',
+			prlb->cpus, prlb->mems);
+	}
+	else {
 		logger->Debug("SetupCGroup: CPUSET for [%s]: {cpus [NONE], mems[NONE]}",
-		              pcgd->papp->StrId());
+			pcgd->papp->StrId());
 	}
 
 
@@ -1415,7 +1407,7 @@ LinuxPlatformProxy::SetupCGroup(
 	cgroup_set_value_string(pcgd->pc_memory, BBQUE_LINUXPP_MEMB_PARAM, quota);
 
 	logger->Debug("SetupCGroup: MEMORY for [%s]: {bytes_limit [%s]}",
-	              pcgd->papp->StrId(), quota);
+		pcgd->papp->StrId(), quota);
 #endif
 
 	/**********************************************************************
@@ -1447,29 +1439,31 @@ LinuxPlatformProxy::SetupCGroup(
 		cpus_quota += ((cpus_quota / 100) + 1) * cfs_margin_pct;
 		if ((cpus_quota % 100) > cfs_threshold_pct) {
 			logger->Warn("SetupCGroup: CFS (quota+margin) %d > %d "
-			             "threshold, enforcing disabled",
-			             cpus_quota, cfs_threshold_pct);
+				"threshold, enforcing disabled",
+				cpus_quota, cfs_threshold_pct);
 			quota_enforcing = false;
 		}
 
 		if (quota_enforcing) {
-			cpus_quota = (cfs_period_us / 100) *	prlb->amount_cpus;
+			cpus_quota = (cfs_period_us / 100) * prlb->amount_cpus;
 			cgroup_set_value_int64(
-			        pcgd->pc_cpu,
-			        BBQUE_LINUXPP_CPUQ_PARAM,
-			        cpus_quota);
+					pcgd->pc_cpu,
+					BBQUE_LINUXPP_CPUQ_PARAM,
+					cpus_quota);
 
 			logger->Debug("SetupCGroup: CPU for [%s]: {period [%s], quota [%lu]}",
-			              pcgd->papp->StrId(),
-			              cfs_c,
-			              cpus_quota);
-		} else {
+				pcgd->papp->StrId(),
+				cfs_c,
+				cpus_quota);
+		}
+		else {
 
 			logger->Debug("SetupCGroup: CPU for [%s]: {period [%s], quota [-]}",
-			              pcgd->papp->StrId(),
-			              cfs_c);
+				pcgd->papp->StrId(),
+				cfs_c);
 		}
-	} else {
+	}
+	else {
 		logger->Warn("SetupCGroup: CFS quota enforcement not supported by the kernel");
 	}
 #endif
@@ -1482,8 +1476,8 @@ LinuxPlatformProxy::SetupCGroup(
 	result = cgroup_modify_cgroup(pcgd->pcg);
 	if (BBQUE_UNLIKELY(result)) {
 		logger->Error("SetupCGroup: cgroup resource mapping FAILED "
-		              "(Error: libcgroup, kernel cgroup update "
-		              "[%d: %s])", errno, strerror(errno));
+			"(Error: libcgroup, kernel cgroup update "
+			"[%d: %s])", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1500,20 +1494,20 @@ LinuxPlatformProxy::SetupCGroup(
 	// CGroup not yet configure.
 
 	logger->Info("SetupCGroup: [%s] => {cpus [%s: %ld], mems[%s: %ld B]}",
-	             pcgd->papp->StrId(),
-	             prlb->cpus,
-	             prlb->amount_cpus,
-	             prlb->mems,
-	             prlb->amount_memb);
+		pcgd->papp->StrId(),
+		prlb->cpus,
+		prlb->amount_cpus,
+		prlb->mems,
+		prlb->amount_memb);
 	cgroup_set_value_uint64(
-	        pcgd->pc_cpuset, BBQUE_LINUXPP_PROCS_PARAM, pcgd->papp->Pid());
+				pcgd->pc_cpuset, BBQUE_LINUXPP_PROCS_PARAM, pcgd->papp->Pid());
 
 	logger->Debug("SetupCGroup: Updating cgroup [%s]", pcgd->cgpath);
 	result = cgroup_modify_cgroup(pcgd->pcg);
 	if (BBQUE_UNLIKELY(result)) {
 		logger->Error("SetupCGroup: cgroup resource mapping FAILED "
-		              "(Error: libcgroup, kernel cgroup update "
-		              "[%d: %s])", errno, strerror(errno));
+			"(Error: libcgroup, kernel cgroup update "
+			"[%d: %s])", errno, strerror(errno));
 		return PLATFORM_MAPPING_FAILED;
 	}
 
@@ -1531,17 +1525,16 @@ LinuxPlatformProxy::BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept
 
 #ifdef CONFIG_BBQUE_RELIABILITY
 
-
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 {
-	logger->Debug("Dump: [%s] checkpointing [pid=%d]... (user=%d)",
-	              psched->StrId(), psched->Pid(), getuid());
+	logger->Debug("Dump: [%s] checkpoint [pid=%d]... (user=%d)",
+		psched->StrId(), psched->Pid(), getuid());
 
 	std::string image_dir(ApplicationPath(image_prefix_dir, psched));
 	if (!boost::filesystem::exists(image_dir)) {
 		logger->Debug("Dump: [%s] creating directory [%s]",
-		              psched->StrId(), image_dir.c_str());
+			psched->StrId(), image_dir.c_str());
 		boost::filesystem::create_directory(image_dir);
 	}
 
@@ -1549,12 +1542,13 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 	int fd = open(image_dir.c_str(), O_DIRECTORY);
 	if (fd < 0) {
 		logger->Warn("Dump: [%s] image directory [%s] not accessible",
-		             psched->StrId(), image_dir.c_str());
+			psched->StrId(), image_dir.c_str());
 		perror("CRIU");
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
-	} else {
+	}
+	else {
 		logger->Debug("Dump: [%s] image directory [%s] open",
-		              psched->StrId(), image_dir.c_str());
+			psched->StrId(), image_dir.c_str());
 	}
 
 	// CRIU settings
@@ -1573,18 +1567,18 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 		break;
 	case -ECONNREFUSED:
 		logger->Error("Dump: [%s] CRIU: connection refused (%s)",
-		              psched->StrId(),
-		              strerror(c_ret));
+			psched->StrId(),
+			strerror(c_ret));
 		break;
 	case -ECOMM:
 		logger->Error("Dump: [%s] CRIU: unable to send/receive "
-		              "messages (%s)",
-		              psched->StrId(),
-		              strerror(c_ret));
+			"messages (%s)",
+			psched->StrId(),
+			strerror(c_ret));
 		break;
 	case -EBADMSG:
 		logger->Error("Dump: [%s] CRIU: unexpected response",
-		              psched->StrId());
+			psched->StrId());
 		break;
 	}
 
@@ -1596,36 +1590,36 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 
 	close(fd);
 	logger->Info("Dump: [%s] checkpoint done [image_dir=%s]",
-	             psched->StrId(), image_dir.c_str());
+		psched->StrId(), image_dir.c_str());
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
-
 
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 {
 	// Retrieve checkpoint image directory
 	std::string image_dir(image_prefix_dir
-	                      + "/" + std::to_string(pid)
-	                      + "_" + exe_name);
+			+ "/" + std::to_string(pid)
+			+ "_" + exe_name);
 
 	logger->Debug("Restore: [pid=%d] recovering checkpoint from = [%s]",
-	              pid, image_dir.c_str());
+		pid, image_dir.c_str());
 
 	if (!boost::filesystem::exists(image_dir)) {
 		logger->Debug("Restore: [pid=%d] missing directory [%s]",
-		              pid, image_dir.c_str());
+			pid, image_dir.c_str());
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
 	}
 
 	int fd = open(image_dir.c_str(), O_DIRECTORY);
 	if (fd < 0) {
 		logger->Warn("Restore: [pid=%d] image directory [%s] not accessible",
-		             pid, image_dir.c_str());
+			pid, image_dir.c_str());
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
-	} else {
+	}
+	else {
 		logger->Debug("Restore: [pid=%d] image directory [%s] open",
-		              pid, image_dir.c_str());
+			pid, image_dir.c_str());
 	}
 
 	// CRIU settings
@@ -1641,9 +1635,11 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 	int np = fork();
 	if (np != 0) {
 		logger->Debug("Restore: [pid=%d] child pid=%d", pid, np);
-	} else {
+	}
+	else {
 		prctl(PR_SET_NAME, exe_name.c_str()); // Process name = binary name
-		int c_ret = criu_restore();           // Do restore
+
+		int c_ret = criu_restore(); // Do restore
 		if (c_ret < 0) {
 			logger->Error("Restore: [pid=%d] error=%d", pid, c_ret);
 			return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
@@ -1662,17 +1658,16 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 {
 	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
 	logger->Debug("Freeze: [%s] freezer directory = [%s]",
-	              psched->StrId(), freezer_dir.c_str());
+		psched->StrId(), freezer_dir.c_str());
 
 	if (!boost::filesystem::exists(freezer_dir)) {
 		logger->Debug("Freeze: [%s] creating directory [%s]",
-		              psched->StrId(), freezer_dir.c_str());
+			psched->StrId(), freezer_dir.c_str());
 		boost::filesystem::create_directory(freezer_dir);
 	}
 
@@ -1682,7 +1677,8 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 	try {
 		tasks_ofs << psched->Pid();
 		tasks_ofs.close();
-	} catch(...) {
+	}
+	catch (...) {
 		tasks_ofs.close();
 		logger->Error("Freeze: [%s] filesystem error", psched->StrId());
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
@@ -1694,7 +1690,8 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 	try {
 		fstate_ofs << "FROZEN";
 		fstate_ofs.close();
-	} catch(...) {
+	}
+	catch (...) {
 		fstate_ofs.close();
 		logger->Error("Freeze: [%s] filesystem error", psched->StrId());
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
@@ -1703,13 +1700,12 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 {
 	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
 	logger->Debug("Thaw: [%s] freezer directory = [%s]",
-	              psched->StrId(), freezer_dir.c_str());
+		psched->StrId(), freezer_dir.c_str());
 
 	if (!boost::filesystem::exists(freezer_dir)) {
 		logger->Error("Thaw: [%s] not frozen", psched->StrId());
@@ -1721,7 +1717,8 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 	try {
 		fofs << "THAWED";
 		fofs.close();
-	} catch(...) {
+	}
+	catch (...) {
 		fofs.close();
 		logger->Error("Thaw: [%s] filesystem error", psched->StrId());
 		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
@@ -1732,17 +1729,15 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 
 #endif
 
-
-
 std::string LinuxPlatformProxy::ApplicationPath(
-        std::string const & prefix_dir,
-        app::SchedPtr_t psched) const
+						std::string const & prefix_dir,
+						app::SchedPtr_t psched) const
 {
 	return std::string(
-	               prefix_dir
-	               + "/" + std::to_string(psched->Pid())
-	               + "_" + psched->Name());
+			prefix_dir
+			+ "/" + std::to_string(psched->Pid())
+			+ "_" + psched->Name());
 }
 
-}   // namespace pp
-}   // namespace bbque
+} // namespace pp
+} // namespace bbque

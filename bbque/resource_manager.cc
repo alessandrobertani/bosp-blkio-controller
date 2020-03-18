@@ -69,8 +69,7 @@ using bp::PluginManager;
 using bu::MetricsCollector;
 using std::chrono::milliseconds;
 
-namespace bbque
-{
+namespace bbque {
 
 /* Definition of metrics used by this module */
 MetricsCollector::MetricsCollection_t
@@ -115,7 +114,6 @@ ResourceManager::metrics[RM_METRICS_COUNT] = {
 
 };
 
-
 ResourceManager & ResourceManager::GetInstance()
 {
 	static ResourceManager rtrm;
@@ -124,39 +122,39 @@ ResourceManager & ResourceManager::GetInstance()
 }
 
 ResourceManager::ResourceManager() :
-	ps(PlatformServices::GetInstance()),
-	am(ApplicationManager::GetInstance()),
-	ap(ApplicationProxy::GetInstance()),
-	um(PluginManager::GetInstance()),
-	ra(ResourceAccounter::GetInstance()),
-	bdm(BindingManager::GetInstance()),
-	mc(MetricsCollector::GetInstance()),
+    ps(PlatformServices::GetInstance()),
+    am(ApplicationManager::GetInstance()),
+    ap(ApplicationProxy::GetInstance()),
+    um(PluginManager::GetInstance()),
+    ra(ResourceAccounter::GetInstance()),
+    bdm(BindingManager::GetInstance()),
+    mc(MetricsCollector::GetInstance()),
 #ifdef CONFIG_BBQUE_RELIABILITY
-	lm(ReliabilityManager::GetInstance()),
+    lm(ReliabilityManager::GetInstance()),
 #endif
-	plm(PlatformManager::GetInstance()),
+    plm(PlatformManager::GetInstance()),
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	prm(ProcessManager::GetInstance()),
+    prm(ProcessManager::GetInstance()),
 #endif
 #ifdef CONFIG_BBQUE_PM
-	pm(PowerManager::GetInstance()),
+    pm(PowerManager::GetInstance()),
 #endif
-	cm(CommandManager::GetInstance()),
-	sm(SchedulerManager::GetInstance()),
-	ym(SynchronizationManager::GetInstance()),
+    cm(CommandManager::GetInstance()),
+    sm(SchedulerManager::GetInstance()),
+    ym(SynchronizationManager::GetInstance()),
 #ifdef CONFIG_BBQUE_DM
-	dm(DataManager::GetInstance()),
+    dm(DataManager::GetInstance()),
 #endif
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
-	om(ProfileManager::GetInstance()),
+    om(ProfileManager::GetInstance()),
 #endif
 #ifdef CONFIG_BBQUE_EM
-	em(em::EventManager::GetInstance()),
+    em(em::EventManager::GetInstance()),
 #endif
-	sys(System::GetInstance()),
-	optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)),
-	opt_interval(BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
-	plat_event(false)
+    sys(System::GetInstance()),
+    optimize_dfr("rm.opt", std::bind(&ResourceManager::Optimize, this)),
+    opt_interval(BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
+    plat_event(false)
 {
 	//---------- Setup all the module metrics
 	mc.Register(metrics, RM_METRICS_COUNT);
@@ -164,11 +162,11 @@ ResourceManager::ResourceManager() :
 	//---------- Register commands
 	CommandManager &cm = CommandManager::GetInstance();
 #define CMD_SYS_STATUS ".sys_status"
-	cm.RegisterCommand(MODULE_NAMESPACE CMD_SYS_STATUS, static_cast<CommandHandler*>(this),
-	                   "Dump the status of each registered EXC");
+	cm.RegisterCommand(MODULE_NAMESPACE CMD_SYS_STATUS, static_cast<CommandHandler*> (this),
+			"Dump the status of each registered EXC");
 #define CMD_OPT_FORCE ".opt_force"
-	cm.RegisterCommand(MODULE_NAMESPACE CMD_OPT_FORCE, static_cast<CommandHandler*>(this),
-	                   "Force a new scheduling event");
+	cm.RegisterCommand(MODULE_NAMESPACE CMD_OPT_FORCE, static_cast<CommandHandler*> (this),
+			"Force a new scheduling event");
 
 #ifdef CONFIG_BBQUE_EM
 	em::Event event(true, "rm", "", "barbeque", "__startup", 1);
@@ -189,10 +187,10 @@ ResourceManager::Setup()
 	ConfigurationManager & cm = ConfigurationManager::GetInstance();
 	po::options_description opts_desc("Resource Manager Options");
 	opts_desc.add_options()
-	("ResourceManager.opt_interval",
-	 po::value<uint32_t>(&opt_interval)->default_value(
-	         BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
-	 "The interval [ms] of activation of the periodic optimization");
+		("ResourceManager.opt_interval",
+		po::value<uint32_t>(&opt_interval)->default_value(
+								BBQUE_DEFAULT_RESOURCE_MANAGER_OPT_INTERVAL),
+		"The interval [ms] of activation of the periodic optimization");
 	po::variables_map opts_vm;
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
@@ -249,7 +247,8 @@ void ResourceManager::NotifyEvent(controlEvent_t evt)
 	if (pendingEvts_ul.try_lock()) {
 		logger->Debug("NotifyEvent: notifying %d", evt);
 		pendingEvts_cv.notify_one();
-	} else {
+	}
+	else {
 		logger->Debug("NotifyEvent: NOT notifying %d", evt);
 	}
 }
@@ -288,7 +287,7 @@ void ResourceManager::SetReady(bool value)
 	is_ready = value;
 	if (value) {
 		status_cv.notify_all();
-		logger->Notice("SetReady: optimization terminated");
+		logger->Debug("SetReady: optimization terminated");
 	}
 }
 
@@ -301,29 +300,29 @@ void ResourceManager::TerminateWorkers()
 
 	// Signal all registered Workers to terminate
 	for_each(workers_map.begin(), workers_map.end(),
-	[&, this](std::pair<std::string, Worker*> entry) {
-		logger->Debug("TerminateWorkers: Worker[%s]...",
-		              entry.first.c_str());
-		workers_ul.unlock();
-		entry.second->Terminate();
-		workers_ul.lock();
-	});
+		[&, this](std::pair<std::string, Worker*> entry) {
+			logger->Debug("TerminateWorkers: Worker[%s]...",
+				entry.first.c_str());
+			workers_ul.unlock();
+			entry.second->Terminate();
+			workers_ul.lock();
+		});
 
 	// Wait up to 30[ms] for workers to terminate
 	while (nr_active_workers > 0) {
 		for_each(workers_map.begin(), workers_map.end(),
-		[&, this](std::pair<std::string, Worker*> entry) {
-			workers_cv.wait_for(workers_ul, timeout);
-			if (!entry.second->IsRunning())
-				nr_active_workers--;
-		});
+			[&, this](std::pair<std::string, Worker*> entry) {
+				workers_cv.wait_for(workers_ul, timeout);
+				if (!entry.second->IsRunning())
+			nr_active_workers--;
+				});
 		logger->Debug("TerminateWorkers: active workers left = %d",
-		              nr_active_workers);
+			nr_active_workers);
 	}
 
 	workers_map.clear();
 	logger->Debug("TerminateWorkers: workers map is empty? %s",
-	              workers_map.empty() ? "Yes" : "No");
+		workers_map.empty() ? "Yes" : "No");
 }
 
 void ResourceManager::Optimize()
@@ -333,11 +332,12 @@ void ResourceManager::Optimize()
 	bool active_apps = true;
 
 	SetReady(false);
-	// If the optimization has been triggered by a platform event (BBQ_PLAT) the policy must be
-	// executed anyway. To the contrary, if it is an application event (BBQ_OPTS) check if
-	// there are actually active applications
+	// If the optimization has been triggered by a platform event (BBQ_PLAT)
+	// the policy must be  executed anyway. To the contrary, if it is an
+	// application event (BBQ_OPTS) check if there are actually active
+	// applications
 	if (!plat_event && !sys.HasSchedulablesToRun()) {
-		logger->Warn("Optimize: no applications or processes to schedule");
+		logger->Debug("Optimize: no applications or processes to schedule");
 		active_apps = false;
 	}
 	plat_event = false;
@@ -355,11 +355,11 @@ void ResourceManager::Optimize()
 		SchedulerManager::ExitCode_t schedResult = sm.Schedule();
 		optimization_tmr.stop();
 
-		switch(schedResult) {
+		switch (schedResult) {
 		case SchedulerManager::MISSING_POLICY:
 		case SchedulerManager::FAILED:
 			logger->Warn("Optimize: scheduling FAILED "
-			             "(Error: scheduling policy failed)");
+				"(Error: scheduling policy failed)");
 			RM_COUNT_EVENT(metrics, RM_SCHED_FAILED);
 			SetReady(true);
 			return;
@@ -373,7 +373,7 @@ void ResourceManager::Optimize()
 		}
 
 		logger->Notice("Optimize: scheduling time: %11.3f[us]",
-		               optimization_tmr.getElapsedTimeUs());
+			optimization_tmr.getElapsedTimeUs());
 		sys.PrintStatus(true);
 	}
 
@@ -387,13 +387,14 @@ void ResourceManager::Optimize()
 	if (!sys.HasSchedulables(Schedulable::SYNC)) {
 		logger->Debug("Optimize: no applications in SYNC state");
 		RM_COUNT_EVENT(metrics, RM_SCHED_EMPTY);
-	} else {
+	}
+	else {
 		// Account for a new synchronizaiton activation
 		RM_COUNT_EVENT(metrics, RM_SYNCH_TOTAL);
 		RM_GET_PERIOD(metrics, RM_SYNCH_PERIOD, period);
 		if (period)
 			logger->Notice("Optimize: scheduling period: %9.3f[us]",
-			               period);
+				period);
 
 		//--- Synchronization
 		optimization_tmr.start();
@@ -407,7 +408,7 @@ void ResourceManager::Optimize()
 
 		sys.PrintStatus(true);
 		logger->Notice("Optimize: synchronization time: %11.3f[us]",
-		               optimization_tmr.getElapsedTimeUs());
+			optimization_tmr.getElapsedTimeUs());
 	}
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
@@ -421,7 +422,7 @@ void ResourceManager::Optimize()
 	}
 	logger->Debug(LNPROE);
 	logger->Debug("Optimize: profiling time: %11.3f[us]",
-	              optimization_tmr.getElapsedTimeUs());
+		optimization_tmr.getElapsedTimeUs());
 #else
 	logger->Debug("Optimize: scheduling profiling disabled");
 #endif
@@ -512,7 +513,6 @@ void ResourceManager::EvtBbqOpts()
 	RM_GET_TIMING(metrics, RM_EVT_TIME_OPTS, rm_tmr);
 }
 
-
 void ResourceManager::EvtBbqUsr1()
 {
 	logger->Info("EvtBbqUsr1");
@@ -554,7 +554,7 @@ void ResourceManager::EvtBbqExit()
 	papp = am.GetFirst(apps_it);
 	for ( ; papp; papp = am.GetNext(apps_it)) {
 		logger->Notice("EvtBbqExit: terminating application: %s",
-		               papp->StrId());
+			papp->StrId());
 		ap.StopExecution(papp);
 		am.DisableEXC(papp, true);
 		am.DestroyEXC(papp);
@@ -587,7 +587,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[])
 
 		logger->Notice("");
 		logger->Notice("===========[ System Status ]=========="
-		               "======================================");
+			"======================================");
 		logger->Notice("");
 		sys.PrintStatus(true);
 		break;
@@ -600,7 +600,7 @@ int ResourceManager::CommandsCb(int argc, char *argv[])
 
 		logger->Notice("");
 		logger->Notice("========[ User Required Scheduling ]==="
-		               "=======================================");
+			"=======================================");
 		logger->Notice("");
 		NotifyEvent(ResourceManager::BBQ_OPTS);
 		break;
@@ -616,7 +616,6 @@ int ResourceManager::CommandsCb(int argc, char *argv[])
 
 	return 0;
 }
-
 
 void ResourceManager::ControlLoop()
 {
@@ -635,10 +634,10 @@ void ResourceManager::ControlLoop()
 	}
 
 	// Checking for pending events, starting from higer priority ones.
-	for(uint8_t evt = EVENTS_COUNT; evt; --evt) {
+	for (uint8_t evt = EVENTS_COUNT; evt; --evt) {
 
 		logger->Debug("Control Loop:: checking events [%d:%s]",
-		              evt - 1, pendingEvts[evt - 1] ? "Pending" : "None");
+			evt - 1, pendingEvts[evt - 1] ? "Pending" : "None");
 
 		// Jump not pending events
 		if (!pendingEvts[evt - 1])
@@ -652,7 +651,7 @@ void ResourceManager::ControlLoop()
 		RM_GET_PERIOD(metrics, RM_EVT_PERIOD, period);
 
 		// Dispatching events to handlers
-		switch(evt - 1) {
+		switch (evt - 1) {
 		case EXC_START:
 			logger->Debug("Event [EXC_START]");
 			EvtExcStart();
@@ -665,15 +664,16 @@ void ResourceManager::ControlLoop()
 			RM_COUNT_EVENT(metrics, RM_EVT_STOP);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_STOP, period);
 			break;
-		// Platform reconfiguration or warning conditions requiring a policy execution
 		case BBQ_PLAT:
+			// Platform reconfiguration or warning conditions
+			// requiring a policy execution
 			logger->Debug("Event [BBQ_PLAT]");
 			EvtBbqPlat();
 			RM_COUNT_EVENT(metrics, RM_EVT_PLAT);
 			RM_GET_PERIOD(metrics, RM_EVT_PERIOD_PLAT, period);
 			break;
-		// Application-driven policy execution request
 		case BBQ_OPTS:
+			// Application-driven policy execution request
 			logger->Debug("Event [BBQ_OPTS]");
 			EvtBbqOpts();
 			RM_COUNT_EVENT(metrics, RM_EVT_OPTS);

@@ -23,10 +23,8 @@
 #define MODULE_NAMESPACE "bq.pr"
 #define MODULE_CONFIG    "Process"
 
-namespace bbque
-{
-namespace app
-{
+namespace bbque {
+namespace app {
 
 Process::Process(
 		 std::string const & _name,
@@ -45,7 +43,7 @@ Process::Process(
 	// Format the application string identifier for logging purpose
 	std::stringstream pid_stream;
 	pid_stream << std::right << std::setfill('0')
-	           << std::setw(5) << std::to_string(Pid());
+		<< std::setw(5) << std::to_string(Pid());
 	str_id = pid_stream.str() + ":" + Name().substr(0, 8);
 }
 
