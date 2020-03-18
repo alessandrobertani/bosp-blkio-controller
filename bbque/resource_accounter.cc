@@ -968,6 +968,10 @@ void ResourceAccounter::EnqueueResourceToPowerManage(
 	              resource_ptr->Path()->ToString().c_str());
 }
 
+bool ResourceAccounter::AnyResourceToPowerManage()
+{
+	return !resources_to_power_manage.empty();
+}
 
 void ResourceAccounter::RestoreResourcesToPowerOn()
 {

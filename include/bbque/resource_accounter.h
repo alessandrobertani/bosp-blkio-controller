@@ -618,6 +618,14 @@ public:
 	br::ResourcePtr_t DequeueResourceToPowerManage();
 
 	/**
+	 * @brief Check if there is some resource requiring a change of
+	 * power configuration
+	 *
+	 * @return true if there are, false otherwise
+	 */
+	bool AnyResourceToPowerManage();
+
+	/**
 	 * @brief Turn on all the resources previously put offline
 	 */
 	void RestoreResourcesToPowerOn();
