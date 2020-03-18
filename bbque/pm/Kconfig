@@ -48,6 +48,7 @@ config  BBQUE_PM_CPU
 config  BBQUE_PM_NVIDIA
   bool "NVIDIA GPU(s) Power Management"
   depends on BBQUE_PM
+  depends on TARGET_NVIDIA
   depends on !TARGET_LINUX_ARM
   default n
   ---help---
