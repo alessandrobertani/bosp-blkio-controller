@@ -93,6 +93,16 @@ public:
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
+	AppPtr_t RestoreEXC(
+	        std::string const & name,
+	        AppPid_t restore_pid,
+	        uint8_t exc_id,
+	        std::string const & recipe,
+	        RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP);
+
+	/**
+	 * @see ApplicationManagerConfIF
+	 */
 	ExitCode_t DestroyEXC(AppPid_t pid);
 
 	/**
