@@ -2,19 +2,22 @@
 
 BOSP_BASE=${1:-'/opt/BOSP'}
 APP_NAME=${2:-'BbqApp'}
-APP_PATH=${3:-${BOSP_BASE}/contrib/user/${APP_NAME}}
+APP_TYPE=${3:-'cpp'}
+APP_PATH=${BOSP_BASE}/samples/${APP_TYPE}/${APP_NAME}
 
 echo
 echo '.:: BarbequeRTRM Template Application Extraction'
 echo 'Application name : ' $APP_NAME
+echo 'Application type : ' $APP_TYPE
 echo 'Destination path : ' $APP_PATH
 
 usage() {
 echo
-echo 'Usage:' $0 '<BOSP_BASE> <APP_NAME>'
+echo 'Usage:' $0 '<BOSP_BASE> <APP_NAME> <APP_TYPE>'
 echo 'Where:'
 echo ' <BOSP_BASE> - path to BOSP installation'
 echo ' <APP_NAME>  - the name of the new contrib application to initialize'
+echo ' <APP_TYPE>  - the application type (or class), e.g. cpp, opencv, opencl...'
 echo
 }
 
@@ -48,12 +51,14 @@ cd $APP_PATH
 
 # Replace Template tokens according to application name
 find . -type f | while read FILE; do
-	echo 'Extracing ['$FILE']...'
+	echo 'Extracting ['$FILE']...'
 	mv $FILE $FILE.org
 	sed \
 		-e "s/MYAPP/${APP_NAME^^}/g" \
 		-e "s/MyApp/${APP_NAME^}/g"  \
 		-e "s/myapp/${APP_NAME,,}/g" \
+		-e "s/APPTYPE/${APP_TYPE^^}/g" \
+		-e "s/apptype/${APP_TYPE,,}/g" \
 		$FILE.org > ${FILE/MyApp/$APP_NAME}
 	rm $FILE.org
 done

@@ -4,8 +4,10 @@ BOSPSH_SOURCES="@PROJECT_SOURCE_DIR@/.."
 APP_NAME=${1:-'MyApp'}
 APP_TYPE=${2:-'cpp'}
 APP_PREFIX=${3:-'samples'}
+APP_LANG=cpp
 
-LANG=(cpp opencl opencv)
+TYPE=(cpp opencl opencv)
+SUBDIR=(contrib samples)
 
 clear
 
@@ -17,50 +19,77 @@ echo
 echo -n "> Enter application name (use CamelCase, no spaces allowed) [$APP_NAME]: "
 read APP_NAME
 
-# Name error handling: CamelCase enforcement
+### Insert application name (CamelCase) ###
+
 APP_NAME="$(sed -e 's/\b[A-Za-z]/\u\0/g; s/\ //g' <<< $APP_NAME)"
 [ x$APP_NAME == x ] && APP_NAME='MyApp'
 
 echo -n "> Select application type (0: CPP, 1: OpenCL, 2: OpenCV) [default=0]: "
 read APP_TYPE_ID
 [ x$APP_TYPE_ID == x ] && APP_TYPE_ID=0
-APP_TYPE=${LANG[$APP_TYPE_ID]}
+APP_TYPE=${TYPE[$APP_TYPE_ID]}
 
-echo -n "> Select application source sub-folder ["$BOSPSH_SOURCES"/] : "
-read APP_PREFIX
-[ x$APP_PREFIX == x ] && APP_PREFIX='samples'
+#echo -n "> Select application source sub-folder (0: contrib 1:samples) [defaul=1] : "
+#read APP_PREFIX_ID
+#[ x$APP_PREFIX_ID == x ] && APP_PREFIX_ID=1
+#APP_PREFIX=${SUBDIR[$APP_PREFIX_ID]}
 
+### Create application sources directory ###
 
-APP_PATH=$BOSPSH_SOURCES"/"$APP_PREFIX"/"$APP_TYPE"/"$APP_NAME
-if [ -d $APP_PATH ]; then
-	echo -n "Creating application directory..."
-	mdkir -p $APP_PATH
-else
-	echo -n "Error: application directory already existing..."
-fi
+APP_PATH=$BOSPSH_SOURCES/$APP_PREFIX/$APP_TYPE/$APP_NAME
 
+echo "============================================================="
+echo "Application name: " $APP_NAME
+echo "Application type: " $APP_TYPE
+echo "Sub-directory: " $APP_PREFIX
+echo "Application sources path: " $APP_PATH
+echo "============================================================="
+echo
+read -p  "Proceed? (Y/n) [default=Y] : " CONTINUE
+[ x$CONTINUE == x ] && CONTINUE="Y"
+[ "$CONTINUE" != "Y" ] && echo -e "Aborting..." && exit 10
 
+###  Generate the code ###
 TEMPLATE_DIR="$BOSPSH_SOURCES/barbeque/config/templates"
-TEMPLATE_BUILDER="$TEMPLATE_DIR/bbque_template_${LANG[$APP_TYPE]}.bsx"
+TEMPLATE_BUILDER="$TEMPLATE_DIR/bbque_template_$APP_LANG.bsx"
 
 # Generate the template builder
 echo -e "> Generating the template builder..."
 cd $TEMPLATE_DIR
-./build.sh ${LANG[$APP_TYPE]}
+./build.sh $APP_LANG
 
-if ! [ $? == 0 ]; then
-	echo -e "ERROR: application sources generation failed...\n"
-	exit -1
-fi
+[ $? -ne 0 ] && echo -e "ERROR: template builder generation failed...\n" && exit 1
 
 # Move into BOSP source tree root folder
 cd $BOSPSH_SOURCES
 
 # Generate the application
 echo -e "> Generating the application template...\n"
-$TEMPLATE_BUILDER "$BOSPSH_SOURCES" $APP_NAME $APP_PATH
+$TEMPLATE_BUILDER $BOSPSH_SOURCES $APP_NAME $APP_TYPE
+[ $? -ne 0 ] && echo -e "ERROR: application sources generation failed...\n" && exit 2
 
-# Trigger a bootstrap to re-configure the building system
+### Append Kconfig line ###
+
+KCONFIG_PATH=$BOSPSH_SOURCES"/"$APP_PREFIX"/"$APP_TYPE"/Kconfig"
+SPLIT_APP_PATH=${APP_PATH/"barbeque/../"/" "/}
+IFS=" "
+read -a DIRARRAY <<< ${SPLIT_APP_PATH}
+KCONFIG_LINE=${DIRARRAY[1]:1}/Kconfig
+echo "Adding line [$KCONFIG_LINE] to:" $KCONFIG_PATH
+echo "source $KCONFIG_LINE" >> $KCONFIG_PATH
+[ $? -ne 0 ] &&	echo -e "ERROR: Kconfig update failed...\n" && exit 3
+
+### Append include statement in bosp.mk ###
+
+BOSPMK_TMPLINE=${DIRARRAY[1]:1}/bosp.mk
+BOSPMK_LINE=${BOSPMK_TMPLINE#"$APP_PREFIX/"}
+BOSPMK_FILE=$APP_PATH/../bosp.mk
+echo "Adding line [$BOSPMK_LINE] to:" $BOSPMK_FILE
+cat $BOSPMK_FILE | sed -i "/_include_dont_edit_/i -include ${BOSPMK_LINE}" $BOSPMK_FILE
+[ $? -ne 0 ] &&	echo -e "ERROR: bosp.mk update failed..." && exit 4
+
+
+### Trigger a bootstrap to re-configure the building system ###
 make bootstrap
 
 # Move into application folder
