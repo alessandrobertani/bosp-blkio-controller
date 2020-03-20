@@ -93,6 +93,11 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 	PlatformManager & plm(PlatformManager::GetInstance());
 	local_sys_id = plm.GetPlatformDescription().GetLocalSystem().GetId();
 
+	// Retrieve the list of CPU processing elements (already registered)
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	std::string pe_path("sys" + std::to_string(local_sys_id) + ".cpu.pe");
+	cpu_pes = ra.GetResources(pe_path);
+	bbque_assert(!cpu_pes.empty());
 	for (uint32_t id = 0; id < num_platforms; ++id) {
 		char platform_name[PLATFORM_NAME_MAX_LENGTH];
 		status = clGetPlatformInfo(
@@ -270,12 +275,18 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		}
 
 		std::string r_path(sys_path);
+		br::ResourcePathPtr_t r_path_ptr;
+		uint16_t unit_id = dev_id;  // BarbequeRTRM internal device id
+		uint16_t pe_id = 0;         // Processing element id
 
 		// Register devices of type GPU or ACCELERATOR (keep CPU apart)
 		switch (dev_type) {
 
 		case CL_DEVICE_TYPE_CPU:
 			r_type = br::ResourceType::CPU;
+			r_path_ptr = cpu_pes.front()->Path();
+			unit_id = r_path_ptr->GetID(br::ResourceType::CPU);
+			pe_id   = r_path_ptr->GetID(br::ResourceType::PROC_ELEMENT);
 			break;
 
 		// GPU or ACCELERATOR -> add a reference to the OpenCL platform (GROUP)
@@ -298,18 +309,18 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		}
 
 		// Resource path string
-		r_path += br::GetResourceTypeString(r_type) + std::to_string(dev_id)
-		          + std::string(".")
-		          + br::GetResourceTypeString(br::ResourceType::PROC_ELEMENT);
-		logger->Debug("RegisterDevices: r_path=<%s>", r_path.c_str());
+		r_path += br::GetResourceTypeString(r_type)
+			+ std::to_string(unit_id)
+			+ std::string(".")
+			+ br::GetResourceTypeString(br::ResourceType::PROC_ELEMENT)
+			+ std::to_string(pe_id);
 
-		br::ResourcePathPtr_t r_path_ptr;
-		ResourceAccounter &ra(ResourceAccounter::GetInstance());
+		logger->Debug("RegisterDevices: r_path=<%s>", r_path.c_str());
 
 		// No need to register CPU devices (already done in the host
 		// platform proxy)
 		if (r_type != br::ResourceType::CPU) {
-			r_path += std::string("0");
+			ResourceAccounter & ra(ResourceAccounter::GetInstance());
 			auto resource = ra.RegisterResource(r_path, "", 100);
 			resource->SetModel(dev_name);
 			r_path_ptr = resource->Path();
@@ -317,11 +328,6 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 			PowerMonitor & wm(PowerMonitor::GetInstance());
 			wm.Register(r_path_ptr);
 #endif
-		} else {
-			// Point the first core of the current CPU
-			auto cpu_pes = ra.GetResources(r_path);
-			bbque_assert(!cpu_pes.empty());
-			r_path_ptr = cpu_pes.front()->Path();
 		}
 
 		bbque_assert(r_path_ptr);

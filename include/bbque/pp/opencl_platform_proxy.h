@@ -183,6 +183,8 @@ protected:
 	/*** Local ID of the system resource */
 	uint16_t local_sys_id;
 
+	br::ResourcePtrList_t cpu_pes;
+
 	/*** Constructor */
 	OpenCLPlatformProxy();
 
