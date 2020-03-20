@@ -2192,13 +2192,9 @@ float BbqueRPC::ComputeGoalGap(pRegisteredEXC_t exc)
 			min_cycletime_ms,
 			max_cycletime_ms);
 
-		float cps_avg = 1000.0f / avg_cycletime_ms;
-		float cps_min = 1000.0f / max_cycletime_ms;
-		float cps_max = 1000.0f / min_cycletime_ms;
-
 		bool  bad_allocation = false;
 		float target_cps;
-		float current_cps = cps_avg;
+		float current_cps = 1000.0f / avg_cycletime_ms;
 
 		if (exc->cps_goal_min > 0.0f && exc->cps_goal_max == 0.0f) {
 			target_cps     = exc->cps_goal_min;
@@ -2387,9 +2383,9 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(const RTLIB_EXCHandler_t exc_ha
 	// Send the runtime profile to the resource manager
 	RTLIB_ExitCode_t result =
 		_RTNotify(exc,
-			  std::round(goal_gap),
-			  std::round(cpu_usage),
-			  std::round(cycle_time_avg_ms));
+			std::round(goal_gap),
+			std::round(cpu_usage),
+			std::round(cycle_time_avg_ms));
 	if (result != RTLIB_OK) {
 		logger->Error("ForwardRuntimeProfile: [%s] "
 			"FAILED to send (Error %d: %s)",
@@ -2544,7 +2540,7 @@ uint8_t BbqueRPC::InsertRAWPerfCounter(const char * perf_str)
 	if (! raw_events)
 		raw_events = (PerfEventAttr_t *)
 		malloc(sizeof (PerfEventAttr_t) *
-		       rtlib_configuration.profile.perf_counters.raw);
+		rtlib_configuration.profile.perf_counters.raw);
 
 	// Set the event attributes
 	raw_events[idx ++] = {PERF_TYPE_RAW, event_code_ul};
