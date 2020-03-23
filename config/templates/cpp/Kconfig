@@ -1,8 +1,8 @@
 
-config SAMPLES_MYAPP
+config SAMPLES_APPTYPE_MYAPP
   bool "MyApp"
-  select BOSP_SAMPLES_APPTYPE
   default n
+  select BOSP_SAMPLES_APPTYPE
   ---help---
   Build the MyApp application.
   
