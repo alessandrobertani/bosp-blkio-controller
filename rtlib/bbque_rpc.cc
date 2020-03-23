@@ -2224,6 +2224,15 @@ float BbqueRPC::ComputeGoalGap(pRegisteredEXC_t exc)
 			goal_gap = std::max(-0.33f, goal_gap);
 #endif
 		}
+		else {
+			logger->Debug("ComputeGoalGap: [GAP] curr=%.2f is in the "
+				"range [%.2f - %.2f]",
+				100.0f * goal_gap,
+				100.0f * exc->cps_goal_min,
+				100.0f * exc->cps_goal_max);
+
+			goal_gap = 0.0;
+		}
 
 	}
 	else if (exc->explicit_ggap_assertion) {
