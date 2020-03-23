@@ -358,7 +358,7 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 	// Thermal threshold correction
 	uint32_t new_crit_temp = crit_temp;
 	if ((sched_count > 0) &&
-	    (std::abs(budget_ptr->curr - curr_load) < BBQUE_TEMPURA_CPU_LOAD_MARGIN)) {
+	    (std::abs<int>(budget_ptr->curr - curr_load) < BBQUE_TEMPURA_CPU_LOAD_MARGIN)) {
 		new_crit_temp += (crit_temp - curr_temp);
 		logger->Debug("PowerBudget: <%s> critical temperature corrected"
 		              " to T_crit=[%3d]C",
