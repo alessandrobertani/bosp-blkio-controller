@@ -81,6 +81,8 @@ private:
 
 	std::unique_ptr<utils::Logger> logger;
 
+	std::string checkpoint_appinfo_dir = BBQUE_CHECKPOINT_APPINFO_PATH "/";
+
 
 #ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
 

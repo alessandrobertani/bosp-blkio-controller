@@ -72,6 +72,17 @@ ReliabilityManager::ReliabilityManager() :
 			static_cast<CommandHandler*> (this),
 			"Restore a managed application or process");
 
+	// Create the directory for the general checkpoint information of each
+	// integrated application
+	try {
+		if (!boost::filesystem::exists(checkpoint_appinfo_dir))
+			boost::filesystem::create_directory(checkpoint_appinfo_dir);
+	}
+	catch (std::exception & ex) {
+		logger->Error("ReliabilityManager: %s: %s",
+			ex.what(), checkpoint_appinfo_dir.c_str());
+	}
+
 	// HW monitoring thread
 	Worker::Setup(BBQUE_MODULE_NAME("lm.hwmon"), MODULE_NAMESPACE);
 	Worker::Start();
@@ -417,8 +428,10 @@ void ReliabilityManager::Dump(app::SchedPtr_t psched)
 void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
 {
 	// Retrieve info about the application type
-	std::string app_type_filename(BBQUE_CHECKPOINT_APPINFO_PATH "/");
-	app_type_filename += std::to_string(pid) + "_" + exe_name + "/type";
+	std::string app_type_filename(checkpoint_appinfo_dir);
+	//app_type_filename += std::to_string(pid) + "_" + exe_name + "/type";
+	app_type_filename = ApplicationPath(checkpoint_appinfo_dir, pid, exe_name)
+		+ "/type";
 	std::ifstream type_inf(app_type_filename, std::ifstream::in);
 	if (!type_inf.is_open()) {
 		logger->Error("Restoring: missing info file %s",
