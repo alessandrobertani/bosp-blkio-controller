@@ -17,9 +17,9 @@ include linux_platform_proxy.h!
 #include <libcgroup.h>
 
 /**
- * @brief The CGroup expected to assigne resources to BBQ
+ * @brief The cgroup expected to assign resources to the BarbequeRTRM
  *
- * Resources which are assigned to Barbeque for Run-Time Management
+ * Resources which are assigned to BarbequeRTRM for resource management
  * are expected to be define under this control group.
  * @note this CGroup should be given both "task" and "admin" permissions to
  * the UID used to run the BarbequeRTRM
@@ -27,9 +27,9 @@ include linux_platform_proxy.h!
 #define BBQUE_LINUXPP_CGROUP "user.slice"
 
 /**
- * @brief The CGroup expected to define resources clusterization
+ * @brief The cgroup expected to define resources clusterization
  *
- * Resources assigned to Barbeque can be grouped into clusters, in a NUMA
+ * Resources assigned to BarbequeRTRM can be grouped into clusters, in a NUMA
  * machine a cluster usually correspond to a "node". The BarbequeRTRM will
  * consider this clusterization when scheduling applications by trying to keep
  * each application within a single cluster.
@@ -47,10 +47,8 @@ include linux_platform_proxy.h!
 #define BBQUE_LINUXPP_FREEZER_STATE "/freezer.state"
 
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 /**
  * @brief Resource assignment bindings on a Linux machine
@@ -78,7 +76,8 @@ struct RLinuxBindings_t {
 		}
 	}
 
-	~RLinuxBindings_t() {
+	~RLinuxBindings_t()
+	{
 		delete [] cpus;
 		delete [] mems;
 		if (memb != NULL)
@@ -88,8 +87,8 @@ struct RLinuxBindings_t {
 
 using RLinuxBindingsPtr_t = std::shared_ptr<RLinuxBindings_t>;
 
-
-struct CGroupData_t : public bbque::utils::PluginData_t {
+struct CGroupData_t : public bbque::utils::PluginData_t
+{
 	bbque::app::SchedPtr_t papp; /** The controlled application */
 #define BBQUE_LINUXPP_CGROUP_PATH_MAX 128 // "user.slice/res/12345:ABCDEF:00";
 	char cgpath[BBQUE_LINUXPP_CGROUP_PATH_MAX];
@@ -98,26 +97,31 @@ struct CGroupData_t : public bbque::utils::PluginData_t {
 	struct cgroup_controller *pc_cpuset;
 	struct cgroup_controller *pc_memory;
 	struct cgroup_controller *pc_net_cls;
+	struct cgroup_controller *pc_blkio;
+
 	bool cfs_quota_available = false; /** Target system supports CFS quota management? */
 
 	CGroupData_t(bbque::app::SchedPtr_t sched_app) :
-		bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
-		papp(sched_app), pcg(NULL), pc_cpu(NULL),
-		pc_cpuset(NULL), pc_memory(NULL) {
+	    bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
+	    papp(sched_app), pcg(NULL), pc_cpu(NULL),
+	    pc_cpuset(NULL), pc_memory(NULL)
+	{
 		snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,
-		         BBQUE_LINUXPP_RESOURCES"/%s",
-		         papp->StrId());
+			BBQUE_LINUXPP_RESOURCES"/%s",
+			papp->StrId());
 	}
 
 	CGroupData_t(const char *cgp) :
-		bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
-		pcg(NULL), pc_cpu(NULL),
-		pc_cpuset(NULL), pc_memory(NULL) {
+	    bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
+	    pcg(NULL), pc_cpu(NULL),
+	    pc_cpuset(NULL), pc_memory(NULL)
+	{
 		snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,
-		         "%s", cgp);
+			"%s", cgp);
 	}
 
-	~CGroupData_t() {
+	~CGroupData_t()
+	{
 		if (pcg != NULL) {
 			// Removing kernel cgroup
 			cgroup_delete_cgroup(pcg, 1);
@@ -133,29 +137,32 @@ using CGroupDataPtr_t = std::shared_ptr<CGroupData_t>;
 
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 // TODO check this size (it seems too high)
-#define MAX_MSG 16384	// 2^14
+#define MAX_MSG 16384 // 2^14
+
 /**
  * @brief The netlink communication structure
  *	  It contains the file descriptors used in communication with the kernel
  *	  and the socket address
  */
-typedef struct NetworkInfo {
+typedef struct NetworkInfo
+{
 	struct rtnl_handle rth_1;
 	struct rtnl_handle rth_2;
 	struct sockaddr_nl kernel_addr;
 } NetworkInfo_t;
 
-typedef struct Requests {
-	struct nlmsghdr	n;
-	struct tcmsg 	t;
-	char   		buf[MAX_MSG];
+typedef struct Requests
+{
+	struct nlmsghdr n;
+	struct tcmsg t;
+	char buf[MAX_MSG];
 } NetworkKernelRequest_t;
 
 #endif // CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 
 
-}   // namespace pp
+} // namespace pp
 
-}   // namespace bbque
+} // namespace bbque
 
 #endif // LINUX_PLATFORM_PROXY_TYPES_H

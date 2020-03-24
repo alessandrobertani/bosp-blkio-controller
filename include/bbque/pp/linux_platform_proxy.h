@@ -31,10 +31,8 @@
 
 #include <bitset>
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 class LinuxPlatformProxy : public PlatformProxy
 {
@@ -86,7 +84,7 @@ public:
 	 * @brief Linux specific resource binding interface.
 	 */
 	ExitCode_t MapResources(
-	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
+				SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
 
 	/**
 	 * @brief Linux platform specific termination.
@@ -109,7 +107,7 @@ public:
 #endif
 
 private:
-//-------------------- CONSTS
+	//-------------------- CONSTS
 	/**
 	 * @brief Default MAX number of CPUs per socket
 	 */
@@ -120,7 +118,7 @@ private:
 	 */
 	const int MaxMemsCount = BBQUE_MAX_R_ID_NUM + 1;
 
-//-------------------- ATTRIBUTES
+	//-------------------- ATTRIBUTES
 	/**
 	 * @brief the control group controller
 	 *
@@ -131,8 +129,8 @@ private:
 
 	bool refreshMode;
 
-	int cfs_margin_pct    = 0;  /**< CFS bandwidth enforcement safety margin (default: 0%) */
-	int cfs_threshold_pct = 100;/**< CFS bandwidth enforcement threshold (default: 100%)   */
+	int cfs_margin_pct = 0; /**< CFS bandwidth enforcement safety margin (default: 0%) */
+	int cfs_threshold_pct = 100; /**< CFS bandwidth enforcement threshold (default: 100%)   */
 
 	std::unique_ptr<bu::Logger> logger;
 
@@ -162,7 +160,9 @@ private:
 	 * If true, indicates that the related CPU cores is an
 	 * high-performance one.
 	 */
-	std::array<bool, BBQUE_TARGET_CPU_CORES_NUM> high_perf_cores = { {false} };
+	std::array<bool, BBQUE_TARGET_CPU_CORES_NUM> high_perf_cores = {
+		{false}
+	};
 
 	void InitCoresType();
 #endif
@@ -175,8 +175,8 @@ private:
 	ExitCode_t MakeQDisk(int if_index);
 	ExitCode_t MakeCLS(int if_index);
 	ExitCode_t SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
-	                                 ResourceAssignmentMapPtr_t pres,
-	                                 RLinuxBindingsPtr_t prlb);
+					ResourceAssignmentMapPtr_t pres,
+					RLinuxBindingsPtr_t prlb);
 	ExitCode_t MakeNetClass(AppPid_t handle, unsigned rate, int if_index);
 
 	static ExitCode_t HTBParseOpt(struct nlmsghdr *n);
@@ -192,7 +192,7 @@ private:
 	ProcessListener & proc_listener;
 #endif
 
-//-------------------- METHODS
+	//-------------------- METHODS
 
 	LinuxPlatformProxy();
 
@@ -209,10 +209,10 @@ private:
 	 * @brief Resources Mapping and Assigment to Applications
 	 */
 	ExitCode_t GetResourceMapping(
-	        SchedPtr_t papp, ResourceAssignmentMapPtr_t assign_map,
-	        RLinuxBindingsPtr_t prlb,
-	        BBQUE_RID_TYPE node_id,
-	        br::RViewToken_t rvt) noexcept;
+				SchedPtr_t papp, ResourceAssignmentMapPtr_t assign_map,
+				RLinuxBindingsPtr_t prlb,
+				BBQUE_RID_TYPE node_id,
+				br::RViewToken_t rvt) noexcept;
 
 
 	ExitCode_t ScanPlatformDescription() noexcept;
@@ -236,12 +236,11 @@ private:
 	ExitCode_t BuildCGroup(CGroupDataPtr_t &pcgd) noexcept;
 	ExitCode_t GetCGroupData(ba::SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept;
 	ExitCode_t SetupCGroup(CGroupDataPtr_t &pcgd, RLinuxBindingsPtr_t prlb,
-	                       bool excl = false, bool move = true) noexcept;
+			bool excl = false, bool move = true) noexcept;
 	ExitCode_t BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept;
-
 };
 
-}   // namespace pp
-}   // namespace bbque
+} // namespace pp
+} // namespace bbque
 
 #endif // LINUX_PLATFORM_PROXY_H

@@ -1226,17 +1226,19 @@ void ApplicationProxy::RpcExcRegister(prqsSn_t prqs)
 		return;
 
 	// Registering a new Execution Context
-	logger->Info("RpcExcRegister: Registering EXC " EXC_STRID ", name [%s]",
-	             ExcStrId(pcon, pmsg_hdr->exc_id), pmsg_pyl->exc_name);
+	logger->Info("RpcExcRegister: Creating a new EXC " EXC_STRID ", name [%s]",
+		ExcStrId(pcon, pmsg_hdr->exc_id), pmsg_pyl->exc_name);
+	papp = am.CreateEXC(pmsg_pyl->exc_name,
+			pcon->app_pid,
+			pmsg_hdr->exc_id,
+			pmsg_pyl->recipe,
+			pmsg_pyl->lang);
 
-	// Register the EXC with the ApplicationManager
-	papp  = am.CreateEXC(pmsg_pyl->exc_name, pcon->app_pid,
-	                     pmsg_hdr->exc_id, pmsg_pyl->recipe, pmsg_pyl->lang);
 	if (!papp) {
 		logger->Error("RpcExcRegister: EXC " EXC_STRID ", name [%s] "
-		              "registration FAILED "
-		              "(Error: missing recipe or recipe load failure)",
-		              ExcStrId(pcon, pmsg_hdr->exc_id), pmsg_pyl->exc_name);
+			"registration FAILED "
+			"(Error: missing recipe or recipe load failure)",
+			ExcStrId(pcon, pmsg_hdr->exc_id), pmsg_pyl->exc_name);
 		RpcNAK(pcon, pmsg_hdr, bl::RPC_EXC_RESP, RTLIB_EXC_MISSING_RECIPE);
 		return;
 	}

@@ -120,6 +120,8 @@ public:
 		SYNC_STATE_COUNT /** This must alwasy be the last entry */
 	} SyncState_t;
 
+#define SYNC_NONE SYNC_STATE_COUNT
+
 	/**
 	 * @enum Type
 	 * @brief The type of schedulable object
@@ -129,9 +131,6 @@ public:
 		ADAPTIVE, /// Adaptive Execution Model integrated
 		PROCESS /// Not integrated generic process
 	};
-
-
-#define SYNC_NONE SYNC_STATE_COUNT
 
 	/**
 	 * @struct SchedulingInfo_t
@@ -487,7 +486,7 @@ protected:
 	/** Type of application (AEM-integrated or process) */
 	Type type;
 
-	/** Current scheduling informations */
+	/** Current scheduling information */
 	SchedulingInfo_t schedule;
 
 

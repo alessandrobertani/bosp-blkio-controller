@@ -33,8 +33,7 @@
 
 using namespace bbque::utils;
 
-namespace bbque
-{
+namespace bbque {
 
 /**
  * @class ReliabilityManager
@@ -42,9 +41,8 @@ namespace bbque
  * of the hardware resources and managing the checkpoint/restore
  * of the applications.
  */
-class ReliabilityManager: utils::Worker, CommandHandler
+class ReliabilityManager : utils::Worker, CommandHandler
 {
-
 public:
 
 	static ReliabilityManager & GetInstance();
@@ -157,6 +155,10 @@ private:
 	 */
 	void Dump(app::AppPid_t pid);
 
+	/**
+	 * @brief Perform the checkpoint of an application or process
+	 * @param psched pointer to Schedulable object
+	 */
 	void Dump(app::SchedPtr_t psched);
 
 	/**

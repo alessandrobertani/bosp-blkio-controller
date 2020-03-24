@@ -63,10 +63,10 @@ std::set<Schedulable::State_t> Schedulable::pending_states = {
 };
 
 Schedulable::Schedulable(
-	std::string const & _name,
-	AppPid_t _pid,
-	Schedulable::Type _type) :
-	name(_name), pid(_pid), type(_type)
+			 std::string const & _name,
+			 AppPid_t _pid,
+			 Schedulable::Type _type) :
+    name(_name), pid(_pid), type(_type)
 {
 #ifdef CONFIG_BBQUE_RELIABILITY
 
@@ -77,8 +77,8 @@ Schedulable::Schedulable(
 		if (!boost::filesystem::exists(checkpoint_info_dir)) {
 			boost::filesystem::create_directory(checkpoint_info_dir);
 			std::ofstream info_outf(
-				checkpoint_info_dir + "/type",
-				std::ofstream::out);
+						checkpoint_info_dir + "/type",
+						std::ofstream::out);
 			info_outf << GetTypeStr() << std::endl;
 			info_outf.close();
 		}
@@ -125,8 +125,8 @@ Schedulable::ExitCode_t Schedulable::SetState(State_t next_state, SyncState_t ne
 
 	// Update current and next working mode: SYNC case
 	if ((next_sync == DISABLED)
-		|| (next_sync == BLOCKED)
-		|| (next_state == READY)) {
+	|| (next_sync == BLOCKED)
+	|| (next_state == READY)) {
 		schedule.awm.reset();
 		schedule.next_awm.reset();
 	}
@@ -182,13 +182,13 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 
 	// Changing assigned resources: RECONF|MIGREC|MIGRATE
 	if ((schedule.awm->Id() != next_awm->Id()) &&
-		(schedule.awm->BindingSet(br::ResourceType::CPU) !=
-		next_awm->BindingSet(br::ResourceType::CPU))) {
+	(schedule.awm->BindingSet(br::ResourceType::CPU) !=
+	next_awm->BindingSet(br::ResourceType::CPU))) {
 		return MIGREC;
 	}
 
 	if ((schedule.awm->Id() == next_awm->Id()) &&
-		(schedule.awm->BindingChanged(br::ResourceType::CPU))) {
+	(schedule.awm->BindingChanged(br::ResourceType::CPU))) {
 		return MIGRATE;
 	}
 

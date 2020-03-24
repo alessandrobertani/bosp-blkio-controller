@@ -30,14 +30,14 @@ ReliabilityManager & ReliabilityManager::GetInstance()
 }
 
 ReliabilityManager::ReliabilityManager() :
-	cm(CommandManager::GetInstance()),
-	ra(ResourceAccounter::GetInstance()),
-	am(ApplicationManager::GetInstance()),
+    cm(CommandManager::GetInstance()),
+    ra(ResourceAccounter::GetInstance()),
+    am(ApplicationManager::GetInstance()),
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	prm(ProcessManager::GetInstance()),
+    prm(ProcessManager::GetInstance()),
 #endif
-	plm(PlatformManager::GetInstance()),
-	logger(bu::Logger::GetLogger(MODULE_NAMESPACE))
+    plm(PlatformManager::GetInstance()),
+    logger(bu::Logger::GetLogger(MODULE_NAMESPACE))
 {
 
 	// Notify the degradation of a resource
@@ -98,8 +98,7 @@ void ReliabilityManager::Task()
 #ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
 	// Periodic checkpointing
 	chk_timer.start();
-	chk_thread = std::thread(
-				&ReliabilityManager::PeriodicCheckpointTask,
+	chk_thread = std::thread(&ReliabilityManager::PeriodicCheckpointTask,
 				this);
 #endif
 	while (!done) {
@@ -146,8 +145,8 @@ void ReliabilityManager::PeriodicCheckpointTask()
 			elapsed_sec);
 
 		unsigned int next_chk_in = std::max<unsigned int>(
-								chk_period_len - elapsed_sec,
-								BBQUE_MIN_CHECKPOINT_PERIOD_MS);
+			chk_period_len - elapsed_sec,
+			BBQUE_MIN_CHECKPOINT_PERIOD_MS);
 		// Wake me up later
 		logger->Debug("PeriodicCheckpoint: see you in %d ms", next_chk_in);
 		std::this_thread::sleep_for(std::chrono::milliseconds(next_chk_in));

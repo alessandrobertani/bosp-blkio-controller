@@ -54,7 +54,7 @@
 
 // Setup default logger configuration
 #ifndef BBQUE_LOG_MODULE
-# define BBQUE_LOG_MODULE MODULE_NAMESPACE
+#define BBQUE_LOG_MODULE MODULE_NAMESPACE
 #endif
 
 #if defined(BBQUE_APP)
@@ -63,12 +63,12 @@
 //*****************************************************************************
 
 #ifndef BBQUE_LOG_UID
-# define BBQUE_LOG_UID "*****"
+#define BBQUE_LOG_UID "*****"
 #endif
 
 // Define a 'generic logger', which can be customized based on the previously
 // defined set of macros
-# define BBQUE_FMT(color, level, fmt) \
+#define BBQUE_FMT(color, level, fmt) \
 	"\033[0m%011.6f %-19.19s %c %-8.8s: " color fmt "\033[0m", \
 	bbque_tmr.getElapsedTime(), \
 	BBQUE_LOG_UID, \
@@ -76,11 +76,11 @@
 	BBQUE_LOG_MODULE
 
 // Partially specialize the 'generic logger' using different (log-level, color)
-# define FD(fmt) BBQUE_FMT(COLOR_LGRAY,  'D', fmt)
-# define FI(fmt) BBQUE_FMT(COLOR_GREEN,  'I', fmt)
-# define FN(fmt) BBQUE_FMT(COLOR_CYAN,   'N', fmt)
-# define FW(fmt) BBQUE_FMT(COLOR_YELLOW, 'W', fmt)
-# define FE(fmt) BBQUE_FMT(COLOR_RED,    'E', fmt)
+#define FD(fmt) BBQUE_FMT(COLOR_LGRAY,  'D', fmt)
+#define FI(fmt) BBQUE_FMT(COLOR_GREEN,  'I', fmt)
+#define FN(fmt) BBQUE_FMT(COLOR_CYAN,   'N', fmt)
+#define FW(fmt) BBQUE_FMT(COLOR_YELLOW, 'W', fmt)
+#define FE(fmt) BBQUE_FMT(COLOR_RED,    'E', fmt)
 
 #else
 //*****************************************************************************
@@ -89,25 +89,25 @@
 
 // Define a generic logger, which can be customized based on the previously
 // defined set of macros
-# define BBQUE_FMT(color, level, fmt) \
+#define BBQUE_FMT(color, level, fmt) \
 	"\033[0m%-23.23s - %-6.6s %-16.16s: " color fmt "\033[0m", \
 	"*****", \
 	level, \
 	BBQUE_LOG_MODULE
 
 // Partially specialize the 'generi logger' using different (log-level, color)
-# define FD(fmt) BBQUE_FMT(COLOR_LGRAY,  "DEBUG",   fmt)
-# define FI(fmt) BBQUE_FMT(COLOR_GREEN,  "INFO",    fmt)
-# define FN(fmt) BBQUE_FMT(COLOR_CYAN,   "NOTICE",  fmt)
-# define FW(fmt) BBQUE_FMT(COLOR_YELLOW, "WARNING", fmt)
-# define FE(fmt) BBQUE_FMT(COLOR_RED,    "ERROR",   fmt)
+#define FD(fmt) BBQUE_FMT(COLOR_LGRAY,  "DEBUG",   fmt)
+#define FI(fmt) BBQUE_FMT(COLOR_GREEN,  "INFO",    fmt)
+#define FN(fmt) BBQUE_FMT(COLOR_CYAN,   "NOTICE",  fmt)
+#define FW(fmt) BBQUE_FMT(COLOR_YELLOW, "WARNING", fmt)
+#define FE(fmt) BBQUE_FMT(COLOR_RED,    "ERROR",   fmt)
 
 #endif
 
 #ifdef BBQUE_DEBUG
-# define DB(x) x
+#define DB(x) x
 #else
-# define DB(x)
+#define DB(x)
 #endif
 
 /** Get the pointer to the containing structure */
@@ -134,6 +134,7 @@
 #define UNUSED(x) (void)(x);
 
 #ifndef CONFIG_TARGET_ANDROID
+
 /** Return the PID of the calling process/thread */
 inline pid_t gettid()
 {
@@ -146,7 +147,6 @@ inline pid_t gettid()
 /** The High-Resolution timer exported by either the Barbeque and the RTLib */
 extern bbque::utils::Timer bbque_tmr;
 
-
 /**
  * Comparison between shared pointer objects.
  * This is performed by forwarding the call to the operator '<' of the pointed
@@ -156,9 +156,10 @@ template<class T>
 class CompareSP
 {
 public:
-	bool operator() (
-	        const std::shared_ptr<T> & sp1,
-	        const std::shared_ptr<T> & sp2) const
+
+	bool operator()(
+			const std::shared_ptr<T> & sp1,
+			const std::shared_ptr<T> & sp2) const
 	{
 		return *sp1 < *sp2;
 	}
@@ -182,10 +183,9 @@ inline bool IsNumber(const std::string & str)
 unsigned constexpr ConstHashString(char const *input)
 {
 	return *input ?
-	       static_cast<unsigned int>(*input) + 33 * ConstHashString(input + 1) :
-	       5381;
+		static_cast<unsigned int> (*input) + 33 * ConstHashString(input + 1) :
+		5381;
 }
-
 
 inline uint32_t GetParentPid(uint32_t pid)
 {
@@ -204,13 +204,13 @@ inline uint32_t GetParentPid(uint32_t pid)
 
 	try {
 		parent_pid = std::stoi(procfs_stat);
-	} catch (std::exception const &e) {
+	}
+	catch (std::exception const &e) {
 		parent_pid = 0;
 	}
 
 	return parent_pid;
 }
-
 
 inline std::string GetParentProcessName(uint32_t pid)
 {
@@ -227,7 +227,8 @@ inline std::string GetParentProcessName(uint32_t pid)
 	do {
 		space_pos = parent_name.find_last_of(" ");
 		parent_name[space_pos] = '\0';
-	} while (space_pos != std::string::npos);
+	}
+	while (space_pos != std::string::npos);
 	return parent_name;
 }
 

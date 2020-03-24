@@ -406,8 +406,8 @@ LinuxPlatformProxy::HTBParseClassOpt(unsigned rate, struct nlmsghdr *n)
 
 #endif
 
-bool LinuxPlatformProxy::IsHighPerformance(
-					   bbque::res::ResourcePathPtr_t const & path) const
+bool
+LinuxPlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const
 {
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 
@@ -571,7 +571,9 @@ void LinuxPlatformProxy::Exit()
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept
+LinuxPlatformProxy::MapResources(SchedPtr_t papp,
+				 ResourceAssignmentMapPtr_t pres,
+				 bool excl) noexcept
 {
 	ResourceAccounter &ra = ResourceAccounter::GetInstance();
 	RViewToken_t rvt = ra.GetScheduledView();
@@ -587,11 +589,12 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 	if (BBQUE_UNLIKELY(result != PLATFORM_OK))
 		return result;
 
-	// Get the set of assigned (bound) computing nodes (e.g., CPUs)
-	br::ResourceBitset nodes(
-				br::ResourceBinder::GetMask(pres, br::ResourceType::CPU));
-	BBQUE_RID_TYPE node_id = nodes.FirstSet();
-	if (BBQUE_UNLIKELY(node_id < 0)) {
+	// Get the set of assigned (bound) CPU
+	br::ResourceBitset cpus(br::ResourceBinder::GetMask(
+							pres,
+							br::ResourceType::CPU));
+	BBQUE_RID_TYPE cpu_id = cpus.FirstSet();
+	if (BBQUE_UNLIKELY(cpu_id < 0)) {
 		// No resources for LinuxPP
 		logger->Warn("MapResources: Missing binding to nodes/CPUs");
 		return PLATFORM_OK;
@@ -600,12 +603,13 @@ LinuxPlatformProxy::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pre
 	// Map resources for each node (e.g., CPU)
 	RLinuxBindingsPtr_t prlb = std::make_shared<RLinuxBindings_t>
 		(MaxCpusCount, MaxMemsCount);
-	for (; node_id <= nodes.LastSet(); ++node_id) {
-		logger->Debug("MapResources: CGroup resource mapping node [%d]", node_id);
-		if (!nodes.Test(node_id)) continue;
+	for (; cpu_id <= cpus.LastSet(); ++cpu_id) {
+		logger->Debug("MapResources: CGroup resource mapping CPU node [%d]",
+			cpu_id);
+		if (!cpus.Test(cpu_id)) continue;
 
 		// Node resource mapping
-		result = GetResourceMapping(papp, pres, prlb, node_id, rvt);
+		result = GetResourceMapping(papp, pres, prlb, cpu_id, rvt);
 		if (BBQUE_UNLIKELY(result != PLATFORM_OK)) {
 			logger->Error("MapResources: binding parsing FAILED");
 			return PLATFORM_MAPPING_FAILED;
@@ -718,7 +722,9 @@ LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
 	}
 
 	br::ResourceBitset net_ifs(
-				br::ResourceBinder::GetMask(pres, br::ResourceType::NETWORK_IF));
+				br::ResourceBinder::GetMask(
+							pres,
+							br::ResourceType::NETWORK_IF));
 	auto interface_id = net_ifs.FirstSet();
 	if (interface_id < 0) {
 		logger->Error("SetCGNetworkBandwidth: Missing binding to network interfaces");
@@ -730,7 +736,8 @@ LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
 			interface_id);
 		if (!net_ifs.Test(interface_id)) continue;
 
-		logger->Debug("SetCGNetworkBandwidth: CLASS handle %d, bandwith %d, interface : %d",
+		logger->Debug("SetCGNetworkBandwidth: CLASS handle %d,"
+			" bandwith %d, interface : %d",
 			papp->Pid(), prlb->amount_net_bw, interface_id);
 
 		int64_t assigned_net_bw = prlb->amount_net_bw;
@@ -778,8 +785,7 @@ LinuxPlatformProxy::MakeNetClass(AppPid_t handle, unsigned rate, int if_index)
 #endif // CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::GetResourceMapping(
-				       SchedPtr_t papp,
+LinuxPlatformProxy::GetResourceMapping(SchedPtr_t papp,
 				       ResourceAssignmentMapPtr_t assign_map,
 				       RLinuxBindingsPtr_t prlb,
 				       BBQUE_RID_TYPE node_id,
@@ -791,11 +797,14 @@ LinuxPlatformProxy::GetResourceMapping(
 	br::ResourceBitset core_ids(
 				br::ResourceBinder::GetMask(assign_map,
 							br::ResourceType::PROC_ELEMENT,
-							br::ResourceType::CPU, node_id, papp, rvt));
+							br::ResourceType::CPU,
+							node_id,
+							papp, rvt));
 	if (strlen(prlb->cpus) > 0)
 		strcat(prlb->cpus, ",");
 	strncat(prlb->cpus, +core_ids.ToStringCG().c_str(), 3 * MaxCpusCount);
-	logger->Debug("GetResourceMapping: cpu[%d] cores: { %s }", node_id, prlb->cpus);
+	logger->Debug("GetResourceMapping: cpu[%d] cores: { %s }",
+		node_id, prlb->cpus);
 
 	// Memory nodes
 	br::ResourceBitset mem_ids(
@@ -804,39 +813,50 @@ LinuxPlatformProxy::GetResourceMapping(
 							br::ResourceType::PROC_ELEMENT,
 							br::ResourceType::MEMORY,
 							node_id,
-							papp,
-							rvt));
+							papp, rvt));
 	if (mem_ids.Count() == 0)
 		strncpy(prlb->mems, memory_ids_all.c_str(), memory_ids_all.length());
 	else
 		strncpy(prlb->mems, mem_ids.ToStringCG().c_str(), 3 * MaxMemsCount);
-	logger->Debug("GetResourceMapping: cpu[%d] mems : { %s }", node_id, prlb->mems);
+	logger->Debug("GetResourceMapping: cpu[%d] mems : { %s }",
+		node_id, prlb->mems);
 
 	// CPU quota
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 	prlb->amount_cpus += ra.GetAssignedAmount(
-						assign_map, papp, rvt,
-						br::ResourceType::PROC_ELEMENT, br::ResourceType::CPU, node_id);
+						assign_map,
+						papp, rvt,
+						br::ResourceType::PROC_ELEMENT,
+						br::ResourceType::CPU,
+						node_id);
 #else
 	prlb->amount_cpus = -1;
 #endif
-	logger->Debug("GetResourceMapping: cpu[%d] quota: { %d }", node_id, prlb->amount_cpus);
+	logger->Debug("GetResourceMapping: cpu[%d] quota: { %d }",
+		node_id, prlb->amount_cpus);
 
 	// Memory amount
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	uint64_t memb = ra.GetAssignedAmount(
-					assign_map, papp, rvt, br::ResourceType::MEMORY, br::ResourceType::CPU);
+					assign_map,
+					papp, rvt,
+					br::ResourceType::MEMORY,
+					br::ResourceType::CPU);
 	if (memb > 0)
 		prlb->amount_memb = memb;
 #else
 	prlb->amount_memb = -1;
 #endif
-	logger->Debug("GetResourceMapping: cpu[%d] memb: { %lld }", node_id, prlb->amount_memb);
+	logger->Debug("GetResourceMapping: cpu[%d] memb: { %lld }",
+		node_id, prlb->amount_memb);
 
 	// Network bandwidth
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 	uint64_t netb = ra.GetAssignedAmount(
-					assign_map, papp, rvt, br::ResourceType::NETWORK_IF, br::ResourceType::SYSTEM);
+					assign_map,
+					papp, rvt,
+					br::ResourceType::NETWORK_IF,
+					br::ResourceType::SYSTEM);
 	if (netb > 0)
 		prlb->amount_net_bw = netb;
 #else
@@ -950,8 +970,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterCPU(
-				const PlatformDescription::CPU &cpu,
+LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu,
 				bool is_local) noexcept
 {
 
@@ -981,8 +1000,7 @@ LinuxPlatformProxy::RegisterCPU(
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterMEM(
-				const PlatformDescription::Memory &mem,
+LinuxPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem,
 				bool is_local) noexcept
 {
 
@@ -1005,8 +1023,7 @@ LinuxPlatformProxy::RegisterMEM(
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterNET(
-				const PlatformDescription::NetworkIF &net,
+LinuxPlatformProxy::RegisterNET(const PlatformDescription::NetworkIF &net,
 				bool is_local) noexcept
 {
 
@@ -1079,8 +1096,7 @@ uint64_t LinuxPlatformProxy::GetNetIFBandwidth(const std::string &ifname) const
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::RegisterIODev(
-				  const PlatformDescription::IO &io_dev,
+LinuxPlatformProxy::RegisterIODev(const PlatformDescription::IO &io_dev,
 				  bool is_local) noexcept
 {
 
@@ -1088,22 +1104,23 @@ LinuxPlatformProxy::RegisterIODev(
 	UNUSED(is_local);
 
 	std::string resource_path = io_dev.GetPath();
-	const auto q_bytes = io_dev.GetBandwidth();
-	logger->Debug("RegisterIODev: Registration of <%s>: %lu Kb", resource_path.c_str(), q_bytes);
+	const auto bps = io_dev.GetBandwidth();
+	logger->Debug("RegisterIODev: Registration of <%s>: %lu Kb",
+		resource_path.c_str(), bps);
 
 	if (refreshMode) {
-		ra.UpdateResource(resource_path, "", q_bytes);
+		ra.UpdateResource(resource_path, "", bps);
 	}
 	else {
-		ra.RegisterResource(resource_path, "", q_bytes);
+		ra.RegisterResource(resource_path, "", bps);
 	}
-	logger->Debug("RegisterIODev: Registration of <%s> successfully performed", resource_path.c_str());
+	logger->Debug("RegisterIODev: Registration of <%s> successfully performed",
+		resource_path.c_str());
 
 	return PLATFORM_OK;
 }
 
-void LinuxPlatformProxy::InitPowerInfo(
-				       const char * resourcePath,
+void LinuxPlatformProxy::InitPowerInfo(const char * resourcePath,
 				       BBQUE_RID_TYPE core_id)
 {
 
@@ -1337,8 +1354,7 @@ LinuxPlatformProxy::GetCGroupData(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexce
 }
 
 LinuxPlatformProxy::ExitCode_t
-LinuxPlatformProxy::SetupCGroup(
-				CGroupDataPtr_t & pcgd,
+LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 				RLinuxBindingsPtr_t prlb,
 				bool excl,
 				bool move) noexcept
@@ -1367,15 +1383,13 @@ LinuxPlatformProxy::SetupCGroup(
 #endif
 
 	// Set the assigned CPUs
-	cgroup_set_value_string(
-				pcgd->pc_cpuset,
+	cgroup_set_value_string(pcgd->pc_cpuset,
 				BBQUE_LINUXPP_CPUS_PARAM,
 				prlb->cpus ? prlb->cpus : "");
 
 	// Set the assigned memory NODE (only if we have at least one CPUS)
 	if (prlb->cpus[0]) {
-		cgroup_set_value_string(
-					pcgd->pc_cpuset,
+		cgroup_set_value_string(pcgd->pc_cpuset,
 					BBQUE_LINUXPP_MEMN_PARAM,
 					prlb->mems);
 

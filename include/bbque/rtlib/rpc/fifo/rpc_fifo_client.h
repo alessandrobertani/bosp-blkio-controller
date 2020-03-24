@@ -27,10 +27,8 @@
 #include <condition_variable>
 #include <sys/epoll.h>
 
-namespace bbque
-{
-namespace rtlib
-{
+namespace bbque {
+namespace rtlib {
 
 /**
  * @class BbqueRPC_FIFO_Client
@@ -48,7 +46,6 @@ namespace rtlib
  */
 class BbqueRPC_FIFO_Client : public BbqueRPC
 {
-
 public:
 
 	BbqueRPC_FIFO_Client();
@@ -70,12 +67,12 @@ protected:
 	RTLIB_ExitCode_t _ScheduleRequest(pRegisteredEXC_t exc);
 
 	RTLIB_ExitCode_t _Set(pRegisteredEXC_t exc,
-	                      RTLIB_Constraint * constraints, uint8_t count);
+			RTLIB_Constraint * constraints, uint8_t count);
 
 	RTLIB_ExitCode_t _Clear(pRegisteredEXC_t exc);
 
 	RTLIB_ExitCode_t _RTNotify(
-	        pRegisteredEXC_t exc, int gap, int cusage, int ctime_ms);
+				pRegisteredEXC_t exc, int gap, int cusage, int ctime_ms);
 
 	void _Exit();
 
@@ -89,29 +86,29 @@ protected:
 	 ******************************************************************************/
 
 	RTLIB_ExitCode_t _GetRuntimeProfileResp(
-	        rpc_msg_token_t token,
-	        pRegisteredEXC_t exc,
-	        uint32_t exc_time,
-	        uint32_t mem_time);
+						rpc_msg_token_t token,
+						pRegisteredEXC_t exc,
+						uint32_t exc_time,
+						uint32_t mem_time);
 
 	/******************************************************************************
 	 * Synchronization Protocol Messages
 	 ******************************************************************************/
 
 	RTLIB_ExitCode_t _SyncpPreChangeResp(
-	        rpc_msg_token_t token,
-	        pRegisteredEXC_t exc,
-	        uint32_t syncLatency);
+					rpc_msg_token_t token,
+					pRegisteredEXC_t exc,
+					uint32_t syncLatency);
 
 	RTLIB_ExitCode_t _SyncpSyncChangeResp(
-	        rpc_msg_token_t token,
-	        pRegisteredEXC_t exc,
-	        RTLIB_ExitCode_t sync);
+					rpc_msg_token_t token,
+					pRegisteredEXC_t exc,
+					RTLIB_ExitCode_t sync);
 
 	RTLIB_ExitCode_t _SyncpPostChangeResp(
-	        rpc_msg_token_t token,
-	        pRegisteredEXC_t exc,
-	        RTLIB_ExitCode_t result);
+					rpc_msg_token_t token,
+					pRegisteredEXC_t exc,
+					RTLIB_ExitCode_t result);
 
 private:
 
@@ -140,25 +137,25 @@ private:
 	 *
 	 * The current implementation of the library allows to send a single
 	 * command at each time for single library instance. This is required do
-	 * properly handle responses from Barbque.
-	 * This mutex should be used to protect the chResp responce attribute,
-	 * which is always set to the last received response from Barbques.
+	 * properly handle responses from BarbequeRTRM.
+	 * This mutex should be used to protect the chResp response attribute,
+	 * which is always set to the last received response from BarbequeRTRM.
 	 *
 	 * @see chResp
 	 */
 	std::mutex chCommand_mtx;
 
 	/**
-	 * @brief Signal the reception of a response from Barbeque
+	 * @brief Signal the reception of a response from BarbequeRTRM
 	 *
-	 * Each time a new message has been received from Barbeque by the channel
+	 * Each time a new message has been received from BarbequeRTRM by the channel
 	 * fetch thread, this variable is notified. Thus, commands could wait for
-	 * a response by susepnding on it.
+	 * a response by suspending on it.
 	 */
 	std::condition_variable chResp_cv;
 
 	/**
-	 * @brief The last response reveiced by Barbeque
+	 * @brief The last response received by BarbequeRTRM
 	 *
 	 * This attribute should be always protected by the chCommand_mtx
 	 */

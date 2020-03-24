@@ -14,10 +14,8 @@
 namespace po = boost::program_options;
 
 
-namespace bbque
-{
-namespace plugins
-{
+namespace bbque {
+namespace plugins {
 
 /** Set true it means the plugin has read its options in the config file*/
 bool RXMLPlatformLoader::configured = false;
@@ -28,10 +26,7 @@ std::string RXMLPlatformLoader::platforms_dir = "";
 /** Map of options (in the Barbeque config file) for the plugin */
 po::variables_map xmlploader_opts_value;
 
-RXMLPlatformLoader::~RXMLPlatformLoader()
-{
-
-}
+RXMLPlatformLoader::~RXMLPlatformLoader() { }
 
 RXMLPlatformLoader::RXMLPlatformLoader() : initialized(false)
 {
@@ -51,7 +46,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept
 
 	if (this->initialized) {
 		logger->Warn("RXMLPlatformLoader already initialized (I will ignore"
-		             "the replicated loadPlatformInfo() call)");
+			"the replicated loadPlatformInfo() call)");
 		return PL_SUCCESS;
 	}
 
@@ -78,10 +73,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept
 		doc.parse<0>(&xmlstr[0]);   // Note: c++11 guarantees that the memory is
 		// sequentially allocated inside the string,
 		// so no problem here.
-	} catch(const rapidxml::parse_error &e) {
+	}
+	catch (const rapidxml::parse_error &e) {
 		logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
 		return PL_SYNTAX_ERROR;
-	} catch (const std::runtime_error &e) {
+	}
+	catch (const std::runtime_error &e) {
 		logger->Error("Generic error: %s.", e.what());
 		return PL_GENERIC_ERROR;
 	}
@@ -89,13 +86,17 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::loadPlatformInfo() noexcept
 	ExitCode_t error = PL_GENERIC_ERROR;
 	try {
 		error = ParseDocument();
-	} catch(const rapidxml::parse_error &e) {
+	}
+	catch (const rapidxml::parse_error &e) {
 		logger->Error("XML syntax error near %.10s: %s.", e.where<char>(), e.what());
-	} catch(const PlatformLoaderEXC &e) {
+	}
+	catch (const PlatformLoaderEXC &e) {
 		logger->Error("XML not valid: %s.", e.what());
-	} catch(const std::runtime_error &e) {
+	}
+	catch (const std::runtime_error &e) {
 		logger->Error("Generic error: %s.", e.what());
-	} catch(...) {
+	}
+	catch (...) {
 		logger->Error("Generic error.");
 	}
 
@@ -148,17 +149,16 @@ int32_t RXMLPlatformLoader::Destroy(void *plugin)
 
 bool RXMLPlatformLoader::Configure(PF_ObjectParams * params)
 {
-
 	if (configured)
 		return true;
 
 	// Declare the supported options
 	po::options_description xmlploader_opts_desc("RXML Platform Loader Options");
 	xmlploader_opts_desc.add_options()
-	(MODULE_CONFIG".platform_dir", po::value<std::string>
-	 (&platforms_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_PILS),
-	 "platform folder")
-	;
+		(MODULE_CONFIG".platform_dir", po::value<std::string>
+		(&platforms_dir)->default_value(BBQUE_PATH_PREFIX "/" BBQUE_PATH_PILS),
+		"platform folder")
+		;
 
 	// Get configuration params
 	PF_Service_ConfDataIn data_in;
@@ -172,26 +172,25 @@ bool RXMLPlatformLoader::Configure(PF_ObjectParams * params)
 	sd.response = &data_out;
 
 	int32_t response =
-	        params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
+		params->platform_services->InvokeService(PF_SERVICE_CONF_DATA, sd);
 
 	if (response != PF_SERVICE_DONE)
 		return false;
 
 	if (daemonized)
 		syslog(LOG_INFO, "Using RXMLPlatformLoader platform folder [%s]",
-		       platforms_dir.c_str());
+		platforms_dir.c_str());
 	else
 		fprintf(stdout, FI("Using RXMLPlatformLoader platform folder [%s]\n"),
-		        platforms_dir.c_str());
+			platforms_dir.c_str());
 
 	return true;
 }
 
 // =======================[ XML releated methods ]=========================
 
-
-RXMLPlatformLoader::node_ptr RXMLPlatformLoader::GetFirstChild(
-        node_ptr parent, const char * name, bool mandatory) const
+RXMLPlatformLoader::node_ptr
+RXMLPlatformLoader::GetFirstChild(node_ptr parent, const char * name, bool mandatory) const
 {
 
 	node_ptr child = parent->first_node(name, 0, true);
@@ -199,7 +198,8 @@ RXMLPlatformLoader::node_ptr RXMLPlatformLoader::GetFirstChild(
 		if (mandatory) {
 			logger->Error("Missing mandatory <%s> tag.", name);
 			throw PlatformLoaderEXC("Missing mandatory tag.");
-		} else {
+		}
+		else {
 			return nullptr;
 		}
 	}
@@ -207,17 +207,16 @@ RXMLPlatformLoader::node_ptr RXMLPlatformLoader::GetFirstChild(
 	return child;
 }
 
-
-RXMLPlatformLoader::attr_ptr RXMLPlatformLoader::GetFirstAttribute(
-        node_ptr tag, const char * name, bool mandatory) const
+RXMLPlatformLoader::attr_ptr
+RXMLPlatformLoader::GetFirstAttribute(node_ptr tag, const char * name, bool mandatory) const
 {
-
 	attr_ptr attr = tag->first_attribute(name, 0, true);
 	if (attr == nullptr) {
 		if (mandatory) {
 			logger->Error("Missing argument '%s' in <%s> tag.", name, tag->name());
 			throw PlatformLoaderEXC("Missing mandatory argument.");
-		} else {
+		}
+		else {
 			return nullptr;
 		}
 	}
@@ -225,16 +224,14 @@ RXMLPlatformLoader::attr_ptr RXMLPlatformLoader::GetFirstAttribute(
 	return attr;
 }
 
-
 RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument()
 {
-
 	node_ptr root    = this->GetFirstChild(&doc, "systems", true);
 	attr_ptr version = this->GetFirstAttribute(root, "version", true);
 
 	if (strcmp(version->value(), CURRENT_VERSION) != 0) {
 		logger->Error("Version mismatch: my version is " CURRENT_VERSION " but systems.xml"
-		              "has version %s.", version->value());
+			"has version %s.", version->value());
 		return PL_GENERIC_ERROR;
 	}
 
@@ -244,7 +241,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument()
 	bool local_found = false;
 	node_ptr include_sys = this->GetFirstChild(root, "include", true) ;
 
-	while(include_sys != NULL) {
+	while (include_sys != NULL) {
 		logger->Debug("Parsing system description from '%s'...", include_sys->value());
 
 		// Check if it is the local system
@@ -275,9 +272,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseDocument()
 	return PL_SUCCESS;
 }
 
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
-        const char* name,
-        bool is_local)
+RXMLPlatformLoader::ExitCode_t
+RXMLPlatformLoader::ParseSystemDocument(const char* name, bool is_local)
 {
 	logger->Info("Loading '%s' platform file...", name);
 
@@ -314,7 +310,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	// The address is mandatory only if the system is remote.
 	attr_ptr address  = this->GetFirstAttribute(root, "address", !is_local);
 	logger->Debug("Parsing system id=%s hostname=[%s] address=<%s>", id->value(),
-	              hostname->value(), address->value() ? address->value() : "`localhost`");
+		hostname->value(), address->value() ? address->value() : "`localhost`");
 
 	pp::PlatformDescription::System sys;
 	sys.SetId(atoi(id->value()));
@@ -323,8 +319,9 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	if (address) {
 		sys.SetNetAddress(address->value());
 		logger->Info("System %d: IP=%s",
-		             sys.GetId(), sys.GetNetAddress().c_str());
-	} else {
+			sys.GetId(), sys.GetNetAddress().c_str());
+	}
+	else {
 		logger->Warn("System %d: no IPD address provided", sys.GetId());
 	}
 	sys_count++;
@@ -364,16 +361,14 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseSystemDocument(
 	return is_local ? PL_SUCCESS : PL_SUCCESS_NO_LOCAL;
 }
 
-
-
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
-        node_ptr root,
-        pp::PlatformDescription::System & sys)
+RXMLPlatformLoader::ExitCode_t
+RXMLPlatformLoader::ParseMemories(node_ptr root,
+				  pp::PlatformDescription::System & sys)
 {
 	// Now get all the memories and save them. This should be perfomed before <cpu> and
 	// other tags, due to reference to memories inside them.
 	node_ptr memory_tag = this->GetFirstChild(root, "mem", true) ;
-	while( memory_tag != NULL ) {
+	while ( memory_tag != NULL ) {
 		pp::PlatformDescription::Memory mem;
 		attr_ptr id_attr       = this->GetFirstAttribute(memory_tag, "id",       true);
 		attr_ptr quantity_attr = this->GetFirstAttribute(memory_tag, "quantity", true);
@@ -388,10 +383,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
 			// Yes, this conversion is unsafe. However, there will not probably
 			// be over 32767 memories in one machine...
 			id = (short)std::stoi(id_attr->value());
-		} catch(const std::invalid_argument& e) {
+		}
+		catch (const std::invalid_argument& e) {
 			logger->Error("ID for <memory> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range& e) {
+		}
+		catch (const std::out_of_range& e) {
 			logger->Error("ID for <memory> is out-of-range, please change your unit.");
 			return PL_LOGIC_ERROR;
 		}
@@ -399,16 +396,18 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
 		// quantity=""
 		try {
 			quantity = std::stoi(quantity_attr->value());
-		} catch(const std::invalid_argument &e) {
+		}
+		catch (const std::invalid_argument &e) {
 			logger->Error("Quantity for <memory> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range &e) {
+		}
+		catch (const std::out_of_range &e) {
 			logger->Error("Quantity for <memory> is out-of-range, please increase your unit.");
 			return PL_LOGIC_ERROR;
 		}
 
 		// unit=""
-		switch(ConstHashString(unit_attr->value())) {
+		switch (ConstHashString(unit_attr->value())) {
 		case ConstHashString("B"):
 			exp = 0;
 			break;
@@ -441,15 +440,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseMemories(
 	return PL_SUCCESS;
 }
 
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseNetworkIFs(
-        node_ptr root,
-        pp::PlatformDescription::System & sys)
+RXMLPlatformLoader::ExitCode_t
+RXMLPlatformLoader::ParseNetworkIFs(node_ptr root, pp::PlatformDescription::System & sys)
 {
-
-
 	node_ptr netif_tag = this->GetFirstChild(root, "netif", false);
 
-	while( netif_tag != NULL ) {
+	while ( netif_tag != NULL ) {
 		attr_ptr id_attr   = this->GetFirstAttribute(netif_tag, "id",   true);
 		attr_ptr name_attr = this->GetFirstAttribute(netif_tag, "name", true);
 
@@ -461,10 +457,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseNetworkIFs(
 			// Yes, this conversion is unsafe. However, there will not probably
 			// be over 32767 memories in one machine...
 			id = (short)std::stoi(id_attr->value());
-		} catch(const std::invalid_argument& e) {
+		}
+		catch (const std::invalid_argument& e) {
 			logger->Error("ID for <netif> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range& e) {
+		}
+		catch (const std::out_of_range& e) {
 			logger->Error("ID for <netif> is out-of-range, please change your unit.");
 			return PL_LOGIC_ERROR;
 		}
@@ -480,14 +478,11 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseNetworkIFs(
 	return PL_SUCCESS;
 }
 
-
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
-        node_ptr root,
-        pp::PlatformDescription::System & sys)
+RXMLPlatformLoader::ExitCode_t
+RXMLPlatformLoader::ParseCPUs(node_ptr root, pp::PlatformDescription::System & sys)
 {
-
 	node_ptr cpu_tag = this->GetFirstChild(root, "cpu");
-	while( cpu_tag != NULL ) {
+	while ( cpu_tag != NULL ) {
 		pp::PlatformDescription::CPU cpu;
 		attr_ptr arch_attr     = this->GetFirstAttribute(cpu_tag, "arch",     true);
 		attr_ptr id_attr       = this->GetFirstAttribute(cpu_tag, "id",       true);
@@ -504,10 +499,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 			// Yes, this conversion is unsafe. However, there will not probably
 			// be over 32767 cpu in one machine...
 			id = (short)std::stoi(id_attr->value());
-		} catch(const std::invalid_argument &e) {
+		}
+		catch (const std::invalid_argument &e) {
 			logger->Error("ID for <cpu> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range &e) {
+		}
+		catch (const std::out_of_range &e) {
 			logger->Error("ID for <cpu> is out-of-range.");
 			return PL_LOGIC_ERROR;
 		}
@@ -517,10 +514,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 			// Yes, this conversion is unsafe. However, there will not probably
 			// be over 32767 cpu in one machine...
 			socket_id = (short)std::stoi(socket_id_attr->value());
-		} catch(const std::invalid_argument &e) {
+		}
+		catch (const std::invalid_argument &e) {
 			logger->Error("socket_id for <cpu> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range &e) {
+		}
+		catch (const std::out_of_range &e) {
 			logger->Error("socket_id for <cpu> is out-of-range.");
 			return PL_LOGIC_ERROR;
 		}
@@ -530,16 +529,18 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 			// Yes, this conversion is unsafe. However, there will not probably
 			// be over 32767 memories in one machine...
 			mem_id = (short)std::stoi(mem_id_attr->value());
-		} catch(const std::invalid_argument &e) {
+		}
+		catch (const std::invalid_argument &e) {
 			logger->Error("mem_id for <cpu> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range &e) {
+		}
+		catch (const std::out_of_range &e) {
 			logger->Error("mem_id for <cpu> is out-of-range.");
 			return PL_LOGIC_ERROR;
 		}
 
 		std::shared_ptr<pp::PlatformDescription::Memory>
-		curr_memory = sys.GetMemoryById(mem_id);
+			curr_memory = sys.GetMemoryById(mem_id);
 
 		if (curr_memory == nullptr) {
 			logger->Error("<cpu> with memory id %d not found in memories list.", mem_id);
@@ -575,12 +576,10 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseCPUs(
 	return PL_SUCCESS;
 }
 
-
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
-        node_ptr pe_tag,
-        pp::PlatformDescription::ProcessingElement & pe)
+RXMLPlatformLoader::ExitCode_t
+RXMLPlatformLoader::ParseProcessingElement(node_ptr pe_tag,
+					   pp::PlatformDescription::ProcessingElement & pe)
 {
-
 	attr_ptr id_attr       = this->GetFirstAttribute(pe_tag, "id",       true);
 	attr_ptr core_id_attr  = this->GetFirstAttribute(pe_tag, "core_id",  true);
 	attr_ptr share_attr    = this->GetFirstAttribute(pe_tag, "share",    true);
@@ -592,10 +591,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 	// id=""
 	try {
 		id = (short)std::stoi(id_attr->value());
-	} catch(const std::invalid_argument &e) {
+	}
+	catch (const std::invalid_argument &e) {
 		logger->Error("id for <pe> is not a valid integer.");
 		return PL_LOGIC_ERROR;
-	} catch(const std::out_of_range &e) {
+	}
+	catch (const std::out_of_range &e) {
 		logger->Error("id for <pe> is out-of-range.");
 		return PL_LOGIC_ERROR;
 	}
@@ -603,10 +604,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 	// socket_id=""
 	try {
 		core_id = (short)std::stoi(core_id_attr->value());
-	} catch(const std::invalid_argument &e) {
+	}
+	catch (const std::invalid_argument &e) {
 		logger->Error("core_id for <pe> is not a valid integer.");
 		return PL_LOGIC_ERROR;
-	} catch(const std::out_of_range &e) {
+	}
+	catch (const std::out_of_range &e) {
 		logger->Error("core_id for <pe> is out-of-range.");
 		return PL_LOGIC_ERROR;
 	}
@@ -614,10 +617,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 	// share=""
 	try {
 		share = (short)std::stoi(share_attr->value());
-	} catch(const std::invalid_argument &e) {
+	}
+	catch (const std::invalid_argument &e) {
 		logger->Error("share for <pe> is not a valid integer.");
 		return PL_LOGIC_ERROR;
-	} catch(const std::out_of_range &e) {
+	}
+	catch (const std::out_of_range &e) {
 		logger->Error("share for <pe> is out-of-range.");
 		return PL_LOGIC_ERROR;
 	}
@@ -629,8 +634,8 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 	}
 
 	// partition=""
-	if(partition_attr != nullptr) {
-		switch(ConstHashString(partition_attr->value())) {
+	if (partition_attr != nullptr) {
+		switch (ConstHashString(partition_attr->value())) {
 		case ConstHashString("shared"):
 			pe.SetPartitionType(pp::PlatformDescription::SHARED);
 			break;
@@ -638,15 +643,17 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 			pe.SetPartitionType(pp::PlatformDescription::HOST);
 			break;
 		case ConstHashString("mdev"):
-			pe.SetPartitionType(pp::PlatformDescription::MDEV);;
+			pe.SetPartitionType(pp::PlatformDescription::MDEV);
+			;
 			break;
 		default:
 			logger->Error("'%s' is not a valid value for `partition` attribute.",
-			              partition_attr->value());
+				partition_attr->value());
 			return PL_LOGIC_ERROR;
 			break;
 		}
-	} else {
+	}
+	else {
 		// If not specified the default is device-only.
 		pe.SetPartitionType(pp::PlatformDescription::MDEV);
 	}
@@ -658,13 +665,11 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseProcessingElement(
 	return PL_SUCCESS;
 }
 
-
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
-        node_ptr root,
-        pp::PlatformDescription::System & sys,
-        const char * tag_str)
+RXMLPlatformLoader::ExitCode_t
+RXMLPlatformLoader::ParseManycores(node_ptr root,
+				   pp::PlatformDescription::System & sys,
+				   const char * tag_str)
 {
-
 	node_ptr tag = this->GetFirstChild(root, tag_str) ;
 	while (tag != NULL) {
 		pp::PlatformDescription::MulticoreProcessor manycore;
@@ -679,10 +684,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 			// Yes, this conversion is unsafe. However, there will not probably
 			// be over 32767 cpu in one machine...
 			id = (short)std::stoi(id_attr->value());
-		} catch(const std::invalid_argument &e) {
+		}
+		catch (const std::invalid_argument &e) {
 			logger->Error("ID for <%s> is not a valid integer.", tag_str);
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range &e) {
+		}
+		catch (const std::out_of_range &e) {
 			logger->Error("ID for <%s> is out-of-range.", tag_str);
 			return PL_LOGIC_ERROR;
 		}
@@ -695,7 +702,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 		///   <gpu> or <acc>
 		///        <pe>
 		node_ptr pe_tag = this->GetFirstChild(tag, "pe");
-		while(pe_tag != NULL) {
+		while (pe_tag != NULL) {
 			pp::PlatformDescription::ProcessingElement pe;
 			ExitCode_t ec = ParseProcessingElement(pe_tag, pe);
 			if (ec != PL_SUCCESS)
@@ -715,13 +722,15 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseManycores(
 	return PL_SUCCESS;
 }
 
-RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
-		node_ptr root,
-		pp::PlatformDescription::System & sys) {
-	// Now get all the memories and save them. This should be perfomed before <cpu> and
+RXMLPlatformLoader::ExitCode_t
+RXMLPlatformLoader::ParseStorages(node_ptr root,
+				  pp::PlatformDescription::System & sys)
+{
+	// Now get all the memories and save them.
+	// This should be performed before <cpu> and
 	// other tags, due to reference to memories inside them.
-	node_ptr storage_tag = this->GetFirstChild(root,"storage",false) ;
-	while( storage_tag != NULL ) {
+	node_ptr storage_tag = this->GetFirstChild(root, "storage", false) ;
+	while ( storage_tag != NULL ) {
 		pp::PlatformDescription::Storage storage;
 		attr_ptr id_attr       = this->GetFirstAttribute(storage_tag, "id",       true);
 		attr_ptr quantity_attr = this->GetFirstAttribute(storage_tag, "quantity", true);
@@ -733,7 +742,7 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
 		short        id;
 		int          quantity;
 		int_fast16_t exp;
-		uint64_t 	 bandwidth;
+		uint64_t     bandwidth;
 		int_fast16_t bw_exp;
 
 		// id=""
@@ -741,10 +750,12 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
 			// Yes, this conversion is unsafe. However, there will not probably
 			// be over 32767 memories in one machine...
 			id = (short)std::stoi(id_attr->value());
-		} catch(const std::invalid_argument& e) {
+		}
+		catch (const std::invalid_argument& e) {
 			logger->Error("ID for <storage> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range& e) {
+		}
+		catch (const std::out_of_range& e) {
 			logger->Error("ID for <storage> is out-of-range, please change your unit.");
 			return PL_LOGIC_ERROR;
 		}
@@ -752,74 +763,77 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
 		// quantity=""
 		try {
 			quantity = std::stoi(quantity_attr->value());
-		} catch(const std::invalid_argument &e) {
+		}
+		catch (const std::invalid_argument &e) {
 			logger->Error("Quantity for <storage> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range &e) {
+		}
+		catch (const std::out_of_range &e) {
 			logger->Error("Quantity for <storage> is out-of-range, please increase your unit.");
 			return PL_LOGIC_ERROR;
 		}
 
 		// unit=""
-		switch(ConstHashString(unit_attr->value())) {
-			case ConstHashString("B"):
-				exp=0;
+		switch (ConstHashString(unit_attr->value())) {
+		case ConstHashString("B"):
+			exp = 0;
 			break;
-			case ConstHashString("KB"):
-				exp=10;
+		case ConstHashString("KB"):
+			exp = 10;
 			break;
-			case ConstHashString("MB"):
-				exp=20;
+		case ConstHashString("MB"):
+			exp = 20;
 			break;
-			case ConstHashString("GB"):
-				exp=20;
+		case ConstHashString("GB"):
+			exp = 20;
 			break;
-			case ConstHashString("TB"):
-				exp=40;
+		case ConstHashString("TB"):
+			exp = 40;
 			break;
-			default:
-				logger->Error("Invalid `unit` for <storage>.");
-				return PL_LOGIC_ERROR;
+		default:
+			logger->Error("Invalid `unit` for <storage>.");
+			return PL_LOGIC_ERROR;
 			break;
 		}
 
 		// bandwidth=""
 		try {
 			bandwidth = std::stoi(bw_attr->value());
-		} catch(const std::invalid_argument &e) {
+		}
+		catch (const std::invalid_argument &e) {
 			logger->Error("Bandwidth for <storage> is not a valid integer.");
 			return PL_LOGIC_ERROR;
-		} catch(const std::out_of_range &e) {
+		}
+		catch (const std::out_of_range &e) {
 			logger->Error("Bandwidth for <storage> is out-of-range, please increase your unit.");
 			return PL_LOGIC_ERROR;
 		}
 
 		// bw_unit=""
-		switch(ConstHashString(bw_unit_attr->value())) {
-			case ConstHashString("B/s"):
-				bw_exp=0;
+		switch (ConstHashString(bw_unit_attr->value())) {
+		case ConstHashString("B/s"):
+			bw_exp = 0;
 			break;
-			case ConstHashString("KB/s"):
-				bw_exp=10;
+		case ConstHashString("KB/s"):
+			bw_exp = 10;
 			break;
-			case ConstHashString("MB/s"):
-				bw_exp=20;
+		case ConstHashString("MB/s"):
+			bw_exp = 20;
 			break;
-			case ConstHashString("GB/s"):
-				bw_exp=20;
+		case ConstHashString("GB/s"):
+			bw_exp = 20;
 			break;
-			case ConstHashString("TB/s"):
-				bw_exp=40;
+		case ConstHashString("TB/s"):
+			bw_exp = 40;
 			break;
-			default:
-				logger->Error("Invalid `bw_unit` for <storage>.");
-				return PL_LOGIC_ERROR;
+		default:
+			bw_exp = 0;
 			break;
 		}
 
 		// type=""
-		if(type_attr != nullptr) {
-			switch(ConstHashString(type_attr->value())) {
+		if (type_attr != nullptr) {
+			switch (ConstHashString(type_attr->value())) {
 			case ConstHashString("hdd"):
 				storage.SetStorageType(pp::PlatformDescription::HDD);
 				break;
@@ -827,21 +841,24 @@ RXMLPlatformLoader::ExitCode_t RXMLPlatformLoader::ParseStorages(
 				storage.SetStorageType(pp::PlatformDescription::SSD);
 				break;
 			case ConstHashString("sd"):
-				storage.SetStorageType(pp::PlatformDescription::SD);;
+				storage.SetStorageType(pp::PlatformDescription::SD);
+				;
 				break;
 			case ConstHashString("flash"):
-				storage.SetStorageType(pp::PlatformDescription::FLASH);;
+				storage.SetStorageType(pp::PlatformDescription::FLASH);
+				;
 				break;
 			default:
 				logger->Error("'%s' is not a valid value for `type` attribute.",
 					type_attr->value());
 				return PL_LOGIC_ERROR;
 				break;
+			}
 		}
-	} else {
-		// If not specified the default is custom.
-		storage.SetStorageType(pp::PlatformDescription::CUSTOM);
-	}
+		else {
+			// If not specified the default is custom.
+			storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+		}
 
 
 		storage.SetPrefix(sys.GetPath());
