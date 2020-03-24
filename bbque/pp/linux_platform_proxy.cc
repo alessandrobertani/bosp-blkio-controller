@@ -1670,6 +1670,10 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 		return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
 	}
 	*/
+	logger->Info("Restore: [pid=%d] waiting for restore...", pid);
+	while (kill(pid, 0)) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
 	logger->Info("Restore: [pid=%d] execution resumed", pid);
 	return ReliabilityActionsIF::ExitCode_t::OK;
