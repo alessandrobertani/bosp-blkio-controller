@@ -231,5 +231,15 @@ inline std::string GetParentProcessName(uint32_t pid)
 	return parent_name;
 }
 
+inline std::string ApplicationPath(std::string const & prefix_dir,
+				   uint32_t app_pid,
+				   std::string const & app_name)
+{
+	return std::string(
+			prefix_dir
+			+ "/" + std::to_string(app_pid)
+			+ "_" + app_name);
+}
+
 
 #endif // BBQUE_UTILITY_H_

@@ -1531,7 +1531,10 @@ LinuxPlatformProxy::Dump(app::SchedPtr_t psched)
 	logger->Debug("Dump: [%s] checkpoint [pid=%d]... (user=%d)",
 		psched->StrId(), psched->Pid(), getuid());
 
-	std::string image_dir(ApplicationPath(image_prefix_dir, psched));
+	std::string image_dir(ApplicationPath(
+					image_prefix_dir,
+					psched->Pid(),
+					psched->Name()));
 	if (!boost::filesystem::exists(image_dir)) {
 		logger->Debug("Dump: [%s] creating directory [%s]",
 			psched->StrId(), image_dir.c_str());
@@ -1661,7 +1664,9 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 {
-	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
+	std::string freezer_dir(ApplicationPath(freezer_prefix_dir,
+						psched->Pid(),
+						psched->Name()));
 	logger->Debug("Freeze: [%s] freezer directory = [%s]",
 		psched->StrId(), freezer_dir.c_str());
 
@@ -1703,7 +1708,9 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 ReliabilityActionsIF::ExitCode_t
 LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 {
-	std::string freezer_dir(ApplicationPath(freezer_prefix_dir, psched));
+	std::string freezer_dir(ApplicationPath(freezer_prefix_dir,
+						psched->Pid(),
+						psched->Name()));
 	logger->Debug("Thaw: [%s] freezer directory = [%s]",
 		psched->StrId(), freezer_dir.c_str());
 
@@ -1728,16 +1735,6 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 }
 
 #endif
-
-std::string LinuxPlatformProxy::ApplicationPath(
-						std::string const & prefix_dir,
-						app::SchedPtr_t psched) const
-{
-	return std::string(
-			prefix_dir
-			+ "/" + std::to_string(psched->Pid())
-			+ "_" + psched->Name());
-}
 
 } // namespace pp
 } // namespace bbque

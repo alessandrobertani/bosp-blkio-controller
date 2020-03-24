@@ -239,14 +239,6 @@ private:
 	                       bool excl = false, bool move = true) noexcept;
 	ExitCode_t BuildAppCG(SchedPtr_t papp, CGroupDataPtr_t &pcgd) noexcept;
 
-	/**
-	 * @brief
-	 * @param prefix
-	 * @return
-	 */
-	std::string ApplicationPath(
-	        std::string const & prefix, ba::SchedPtr_t psched) const;
-
 };
 
 }   // namespace pp
