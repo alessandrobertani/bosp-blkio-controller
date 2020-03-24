@@ -243,6 +243,7 @@ void BbqueRPC_FIFO_Client::ChannelTrd(const char * name)
 
 RTLIB_ExitCode_t BbqueRPC_FIFO_Client::ChannelPair(const char * name)
 {
+	UNUSED(name);
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
 	rpc_fifo_APP_PAIR_t rf_APP_PAIR = {
 		{
