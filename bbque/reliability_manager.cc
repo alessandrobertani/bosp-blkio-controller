@@ -427,19 +427,20 @@ void ReliabilityManager::Dump(app::SchedPtr_t psched)
 void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
 {
 	// Retrieve info about the application type
-	std::string app_type_filename(checkpoint_appinfo_dir);
-	//app_type_filename += std::to_string(pid) + "_" + exe_name + "/type";
-	app_type_filename = ApplicationPath(checkpoint_appinfo_dir, pid, exe_name)
-		+ "/type";
-	std::ifstream type_inf(app_type_filename, std::ifstream::in);
-	if (!type_inf.is_open()) {
-		logger->Error("Restoring: missing info file %s",
+	std::string app_type_filename(
+				ApplicationPath(checkpoint_appinfo_dir, pid, exe_name)
+				+ "/type");
+	logger->Debug("Restore: opening %s...", app_type_filename.c_str());
+	std::ifstream type_ifs(app_type_filename, std::ifstream::in);
+	if (!type_ifs.is_open()) {
+		logger->Error("Restoring: missing type info file %s",
 			app_type_filename.c_str());
 		return;
 	}
 
 	std::string app_type;
-	type_inf >> app_type;
+	type_ifs >> app_type;
+	type_ifs.close();
 
 	if (app_type.compare("ADAPTIVE") == 0) {
 		logger->Info("Restore: ADAPTIVE application");
@@ -454,8 +455,25 @@ void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
 			}
 		}
 
+		// Retrieve the recipe previously used
+		std::string app_recipe_filename(ApplicationPath(checkpoint_appinfo_dir,
+								pid,
+								exe_name)
+						+ "/recipe");
+		logger->Debug("Restore: opening %s...", app_recipe_filename.c_str());
+		std::ifstream recipe_ifs(app_recipe_filename, std::ifstream::in);
+		if (!recipe_ifs.is_open()) {
+			logger->Error("Restoring: missing recipe info file %s",
+				app_type_filename.c_str());
+			return;
+		}
+
+		std::string app_recipe;
+		recipe_ifs >> app_recipe;
+		recipe_ifs.close();
+
 		// Restore the execution context
-		am.RestoreEXC(exe_name, pid, 0, "dummy");
+		am.RestoreEXC(exe_name, pid, 0, app_recipe);
 
 		// Trigger the resource allocation policy execution
 		ResourceManager & rm = ResourceManager::GetInstance();
