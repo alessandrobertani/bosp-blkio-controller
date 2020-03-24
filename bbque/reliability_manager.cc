@@ -442,19 +442,24 @@ void ReliabilityManager::Restore(app::AppPid_t pid, std::string exe_name)
 	type_inf >> app_type;
 
 	if (app_type.compare("ADAPTIVE") == 0) {
+		logger->Info("Restore: ADAPTIVE application");
 		AppUid_t uid = app::Application::Uid(pid, 0);
 		app::SchedPtr_t psched = am.GetApplication(uid);
 		if (psched) {
-			if (psched->Active()) {
-				logger->Debug("Restore: trying to restore a "
+			if (psched->Active() && am.CheckEXC(pid, 0, false)) {
+				logger->Warn("Restore: trying to restore a "
 					"running application: <%s>",
 					psched->StrId());
 				return;
 			}
-			logger->Notice("Restore: ADAPTIVE application");
-
-			am.DestroyEXC(pid);
 		}
+
+		// Restore the execution context
+		am.RestoreEXC(exe_name, pid, 0, "dummy");
+
+		// Trigger the resource allocation policy execution
+		ResourceManager & rm = ResourceManager::GetInstance();
+		rm.NotifyEvent(ResourceManager::BBQ_OPTS);
 	}
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	else if (app_type.compare("PROCESS") == 0) {
