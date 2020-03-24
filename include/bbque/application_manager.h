@@ -76,6 +76,14 @@ public:
 	 */
 	virtual ~ApplicationManager();
 
+
+#ifdef CONFIG_BBQUE_RELIABILITY
+
+	void SaveEXCReliabilityInfo(
+				AppPtr_t papp,
+				std::string const & recipe_name);
+#endif
+
 	/**
 	 * @see ApplicationManagerConfIF
 	 */

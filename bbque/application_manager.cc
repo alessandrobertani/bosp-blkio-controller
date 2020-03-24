@@ -894,17 +894,36 @@ ApplicationManager::CreateEXC(std::string const & _name,
 	lang_ul.unlock();
 	logger->Info("CreateEXC: [%s] CREATED", papp->StrId());
 
+#ifdef CONFIG_BBQUE_RELIABILITY
+	SaveEXCReliabilityInfo(papp, _rcp_name);
+#endif
+
 	return papp;
 }
 
+#ifdef CONFIG_BBQUE_RELIABILITY
+
+void
+ApplicationManager::SaveEXCReliabilityInfo(AppPtr_t papp,
+					   std::string const & recipe_name)
 {
-	AppPtr_t papp = CreateEXC(name, restore_pid, exc_id, recipe, lang);
-	if (!papp) {
-		logger->Fatal("RestoreEXC: cannot create descriptor for pid=%d",
-			restore_pid);
-		assert(papp);
-		return nullptr;
+	if (!boost::filesystem::exists(papp->checkpoint_info_dir)) {
+		logger->Error("SaveEXCReliabilityInfo: missing directory %s",
+			papp->checkpoint_info_dir);
 	}
+
+	std::string recipe_info_path = papp->checkpoint_info_dir + "/recipe";
+	logger->Debug("SaveEXCReliabilityInfo: application recipe info directory: %s",
+		recipe_info_path.c_str());
+
+	std::ofstream recipe_info_ofs(recipe_info_path, std::ofstream::out);
+	if (recipe_info_ofs.good()) {
+		logger->Info("SaveEXCReliabilityInfo: saving recipe name");
+		recipe_info_ofs << recipe_name << std::endl;
+	}
+	recipe_info_ofs.close();
+}
+#endif
 
 AppPtr_t
 ApplicationManager::RestoreEXC(std::string const & name,
