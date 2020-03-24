@@ -126,7 +126,7 @@ public:
 	/**
 	 * @brief Notify the resource manager about application and setup cgroups
 	 */
-	RTLIB_ExitCode_t InitializeApplication(const char * name, pid_t restore_pid = 0);
+	RTLIB_ExitCode_t InitApplication(const char * name, pid_t restore_pid = 0);
 
 	/**
 	 * @brief Register a new execution context

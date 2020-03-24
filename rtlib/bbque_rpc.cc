@@ -349,8 +349,7 @@ RTLIB_ExitCode_t BbqueRPC::ParseOptions()
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::InitializeApplication(
-						 const char * name, pid_t r_pid)
+RTLIB_ExitCode_t BbqueRPC::InitApplication(const char * name, pid_t r_pid)
 {
 	if (rtlib_is_initialized)
 		return RTLIB_OK;

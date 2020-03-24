@@ -355,7 +355,7 @@ RTLIB_ExitCode_t RTLIB_Init(
 	}
 
 	// Initializing the RPC communication channel
-	result = rpc->InitializeApplication(name, restore_pid);
+	result = rpc->InitApplication(name, restore_pid);
 	if (result != RTLIB_OK) {
 		logger->Error("RTLIB_Init: RPC channel initialization FAILED");
 		return RTLIB_BBQUE_UNREACHABLE;
