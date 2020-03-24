@@ -198,6 +198,10 @@ void LinuxPlatformProxy::InitReliabilitySupport()
 {
 	//	char criu_exec_path[] = BBQUE_CRIU_BINARY_PATH);
 	//	char criu_serv_addr[] = BBQUE_PATH_VAR;
+	boost::filesystem::perms prms(boost::filesystem::owner_all);
+	prms |= boost::filesystem::others_read;
+	prms |= boost::filesystem::group_read;
+	prms |= boost::filesystem::group_write;
 
 	// Checkpoint image path
 	image_prefix_dir += "/linux";
@@ -205,24 +209,30 @@ void LinuxPlatformProxy::InitReliabilitySupport()
 		image_prefix_dir.c_str());
 
 	if (!boost::filesystem::exists(image_prefix_dir)) {
-		if (boost::filesystem::create_directories(image_prefix_dir))
+		if (boost::filesystem::create_directories(image_prefix_dir)) {
 			logger->Debug("Reliability: "
 				"checkpoint images directory created");
+		}
 		else
 			logger->Error("Reliability: "
 				"checkpoint images directory not created");
 	}
+	boost::filesystem::permissions(image_prefix_dir, prms);
+
 
 	// Freezer initialization
 	freezer_prefix_dir += "/linux";
 	logger->Info("Reliability: freezer interfaces path: %s",
 		freezer_prefix_dir.c_str());
 	if (!boost::filesystem::exists(freezer_prefix_dir)) {
-		if (boost::filesystem::create_directory(freezer_prefix_dir))
+		if (boost::filesystem::create_directory(freezer_prefix_dir)) {
 			logger->Debug("Reliability: freezer created");
+		}
 		else
 			logger->Error("Reliability: freezer created");
 	}
+	boost::filesystem::permissions(freezer_prefix_dir, prms);
+
 
 	// CRIU initialization
 	int c_ret = criu_init_opts();

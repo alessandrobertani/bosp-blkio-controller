@@ -27,11 +27,9 @@
 #include "bbque/config.h"
 #include "bbque/app/schedulable.h"
 
-namespace bbque
-{
+namespace bbque {
 
-namespace pp
-{
+namespace pp {
 
 /**
  * @class ReliabilityActionsIF
@@ -63,19 +61,24 @@ public:
 		bbque_assert(strlen(BBQUE_CHECKPOINT_IMAGE_PATH) > 0);
 		bbque_assert(strlen(BBQUE_FREEZER_PATH) > 0);
 
+		boost::filesystem::perms prms(boost::filesystem::owner_all);
+		prms |= boost::filesystem::others_read;
+		prms |= boost::filesystem::group_read;
+		prms |= boost::filesystem::group_write;
+
 		if (!boost::filesystem::exists(image_prefix_dir)) {
 			boost::filesystem::create_directories(image_prefix_dir);
 		}
+		boost::filesystem::permissions(image_prefix_dir, prms);
 
 		if (!boost::filesystem::exists(freezer_prefix_dir)) {
 			boost::filesystem::create_directory(freezer_prefix_dir);
 		}
+		boost::filesystem::permissions(freezer_prefix_dir, prms);
 #endif
 	}
 
-	virtual ~ReliabilityActionsIF()
-	{
-	};
+	virtual ~ReliabilityActionsIF() { };
 
 	/**
 	 * @brief Perform the checkpoint (dump) of an application/process/task

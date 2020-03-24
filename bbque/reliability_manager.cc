@@ -73,10 +73,15 @@ ReliabilityManager::ReliabilityManager() :
 			"Restore a managed application or process");
 
 	// Create the directory for the general checkpoint information of each
-	// integrated application
+	// integrated application "/info"
 	try {
 		if (!boost::filesystem::exists(checkpoint_appinfo_dir))
 			boost::filesystem::create_directory(checkpoint_appinfo_dir);
+		boost::filesystem::perms prms(boost::filesystem::owner_all);
+		prms |= boost::filesystem::others_read;
+		prms |= boost::filesystem::group_read;
+		prms |= boost::filesystem::group_write;
+		boost::filesystem::permissions(checkpoint_appinfo_dir, prms);
 	}
 	catch (std::exception & ex) {
 		logger->Error("ReliabilityManager: %s: %s",
