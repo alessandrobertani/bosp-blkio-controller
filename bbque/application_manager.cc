@@ -912,8 +912,30 @@ ApplicationManager::RestoreEXC(std::string const & name,
 			       uint8_t exc_id,
 			       std::string const & recipe,
 			       RTLIB_ProgrammingLanguage_t lang)
+{
 	logger->Info("RestoreEXC: restoring application with pid=%d", restore_pid);
-	ChangeEXCState(papp, app::Schedulable::RESTORING);
+
+	AppPtr_t papp = GetApplication(Application::Uid(restore_pid, exc_id));
+	if (!papp) {
+		logger->Info("RestoreEXC: recreating the descriptor for "
+			"[pid=%d, exc_id=%d]",
+			restore_pid, exc_id);
+		papp = CreateEXC(name, restore_pid, exc_id, recipe, lang);
+		if (!papp) {
+			logger->Fatal("RestoreEXC: cannot create descriptor for"
+				" pid=%d",
+				restore_pid);
+			assert(papp);
+			return nullptr;
+		}
+	}
+	else {
+		logger->Info("RestoreEXC: resuming descriptor [%s]",
+			papp->StrId());
+		ChangeEXCState(papp,
+			app::Schedulable::RESTORING,
+			app::Schedulable::SYNC_NONE);
+	}
 
 	PrintStatus(true);
 	PrintSyncQ();
@@ -1655,7 +1677,8 @@ ApplicationManager::Reschedule(ba::AppCPtr_t papp,
 			       ba::AwmPtr_t awm)
 {
 	// Ready application could be synchronized to start
-	if (papp->State() == app::Schedulable::READY) {
+	if ((papp->State() == app::Schedulable::READY)
+	|| (papp->State() == app::Schedulable::RESTORING)) {
 		logger->Debug("(Re)schedule: [%s] for STARTING", papp->StrId());
 		return SetForSynchronization(papp, app::Schedulable::STARTING);
 	}
