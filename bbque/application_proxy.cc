@@ -65,6 +65,12 @@ ApplicationProxy::ApplicationProxy() :
 	cm.RegisterCommand(MODULE_NAMESPACE CMD_APP_TERMINATED,
 			static_cast<CommandHandler*> (this),
 			"Unregister the specified EXC");
+
+
+#define CMD_AP_LIST_SESSIONS ".list_sessions"
+	cm.RegisterCommand(MODULE_NAMESPACE CMD_AP_LIST_SESSIONS,
+			static_cast<CommandHandler*> (this),
+			"List the current communication sessions");
 	// Spawn the command dispatching thread
 	Worker::Start();
 }
@@ -1730,8 +1736,20 @@ void ApplicationProxy::Task()
 	logger->Info("Task: Messages dispatcher ENDED");
 }
 
+void ApplicationProxy::ListSessions() const
+{
+	std::unique_lock<std::mutex> conCtxMap_ul(conCtxMap_mtx);
+	logger->Notice("ListSessions: applications...");
+	for (auto & ctx_entry : conCtxMap) {
+		auto pid = ctx_entry.first;
+		auto ctx = ctx_entry.second;
+		logger->Notice("--> %d [%s]", pid, ctx->app_name);
+	}
+}
+
 int ApplicationProxy::CommandsCb(int argc, char *argv[])
 {
+	logger->Info("CommandsCb: %s %s", argv[0], argv[1]);
 
 	// Manage external application termination
 	if (0 == strcmp(argv[0], MODULE_NAMESPACE CMD_APP_TERMINATED)) {
@@ -1770,6 +1788,9 @@ int ApplicationProxy::CommandsCb(int argc, char *argv[])
 		}
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 		return 0;
+	}
+	else if (0 == strcmp(argv[0], MODULE_NAMESPACE CMD_AP_LIST_SESSIONS)) {
+		ListSessions();
 	}
 
 	return 0;

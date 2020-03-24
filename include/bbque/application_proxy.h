@@ -209,7 +209,7 @@ private:
 
 	conCtxMap_t conCtxMap;
 
-	std::mutex conCtxMap_mtx;
+	mutable std::mutex conCtxMap_mtx;
 
 	typedef struct rqsSn : public snCtx_t
 	{
@@ -381,6 +381,8 @@ private:
 	 * @brief The command dispatching thread.
 	 */
 	void Task();
+
+	void ListSessions() const;
 
 };
 
