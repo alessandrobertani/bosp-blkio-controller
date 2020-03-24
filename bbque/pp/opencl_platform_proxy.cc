@@ -134,7 +134,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::LoadPlatformData()
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::Setup(SchedPtr_t papp)
 {
 	(void) papp;
-	logger->Warn("PLAT OCL: No setup action implemented");
+	logger->Warn("Setup: No setup action implemented");
 	return PlatformProxy::PLATFORM_OK;
 }
 
@@ -317,7 +317,6 @@ OpenCLPlatformProxy::InsertDeviceID(uint32_t platform_id,
 				    ResourcePathPtr_t r_path,
 				    int dev_id)
 {
-
 	logger->Debug("InsertDeviceID: platform=%d device=%d -> path=<%s>",
 		platform_id, dev_id, r_path->ToString().c_str());
 
@@ -330,7 +329,6 @@ OpenCLPlatformProxy::InsertDevicePath(uint32_t platform_id,
 				      int dev_id,
 				      ResourcePathPtr_t r_path)
 {
-
 	logger->Debug("InsertDevicePath: path=<%s> -> platform=%d device=%d",
 		r_path->ToString().c_str(), platform_id, dev_id);
 
@@ -339,10 +337,11 @@ OpenCLPlatformProxy::InsertDevicePath(uint32_t platform_id,
 }
 
 int
-OpenCLPlatformProxy::GetDeviceID(uint32_t platform_id, ResourcePathPtr_t r_path) const
+OpenCLPlatformProxy::GetDeviceID(uint32_t platform_id,
+				 ResourcePathPtr_t r_path) const
 {
 	if (platform_id >= device_ids.size()) {
-		logger->Warn("GetDeviceID: platform id=%d does not exist",
+		logger->Debug("GetDeviceID: platform id=%d does not exist",
 			platform_id);
 		return R_ID_NONE;
 	}
@@ -360,10 +359,11 @@ OpenCLPlatformProxy::GetDeviceID(uint32_t platform_id, ResourcePathPtr_t r_path)
 }
 
 int
-OpenCLPlatformProxy::GetFirstDeviceID(uint32_t platform_id, ResourceType r_type) const
+OpenCLPlatformProxy::GetFirstDeviceID(uint32_t platform_id,
+				      ResourceType r_type) const
 {
 	if (platform_id >= device_ids.size()) {
-		logger->Warn("GetDeviceID: platform id=%d does not exist",
+		logger->Debug("GetDeviceID: platform id=%d does not exist",
 			platform_id);
 		return R_ID_NONE;
 	}
@@ -384,15 +384,20 @@ ResourcePathPtr_t
 OpenCLPlatformProxy::GetDevicePath(uint32_t platform_id, int device_id) const
 {
 	if (platform_id >= device_paths.size()) {
-		logger->Warn("GetDevicePath: platform id=%d does not exist",
+		logger->Debug("GetDevicePath: platform id=%d does not exist",
 			platform_id);
+		return nullptr;
+	}
+
+	if (device_id < 0) {
+		logger->Debug("GetDevicePath: not device assigned [id=%d]",
+			device_id);
 		return nullptr;
 	}
 
 	auto const & dev_to_path_map = device_paths[platform_id];
 	auto const & r_path_it = dev_to_path_map.find(device_id);
 	if (r_path_it == dev_to_path_map.end()) {
-
 		logger->Warn("GetDevicePath: device id=%d does not exist",
 			device_id);
 		return nullptr;
@@ -403,21 +408,20 @@ OpenCLPlatformProxy::GetDevicePath(uint32_t platform_id, int device_id) const
 
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::Refresh()
 {
-
 	return PlatformProxy::PLATFORM_OK;
 }
 
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::Release(SchedPtr_t papp)
 {
 	(void) papp;
-	logger->Warn("PLAT OCL: No release action implemented");
+	logger->Warn("Release: No release action implemented");
 	return PlatformProxy::PLATFORM_OK;
 }
 
 PlatformProxy::ExitCode_t OpenCLPlatformProxy::ReclaimResources(SchedPtr_t papp)
 {
 	(void) papp;
-	logger->Warn("PLAT OCL: No reclaiming action implemented");
+	logger->Warn("ReclaimResources: No reclaiming action implemented");
 	return PlatformProxy::PLATFORM_OK;
 }
 
@@ -429,7 +433,7 @@ OpenCLPlatformProxy::MapResources(ba::SchedPtr_t papp,
 	(void) papp;
 	(void) assign_map;
 	(void) excl;
-	logger->Warn("PLAT OCL: No mapping action implemented");
+	logger->Warn("MapResources: No mapping action implemented");
 	return PlatformProxy::PLATFORM_OK;
 }
 
