@@ -596,13 +596,19 @@ ApplicationProxy::SyncP_PreChange(pcmdSn_t pcs, pPreChangeRsp_t presp)
 
 	// Send the Command
 	presp->result = SyncP_PreChangeSend(pcs);
-	if (presp->result != RTLIB_OK)
+	if (presp->result != RTLIB_OK) {
+		logger->Error("SyncP_PreChange: [pid=%05d: %s] message sending failed",
+			presp->pcs->pid, presp->pcs->papp->StrId());
 		return presp->result;
+	}
 
 	// Get back the response
 	presp->result = SyncP_PreChangeRecv(pcs, presp);
-	if (presp->result != RTLIB_OK)
+	if (presp->result != RTLIB_OK) {
+		logger->Error("SyncP_PreChange: [pid=%05d: %s] response reception failed",
+			presp->pcs->pid, presp->pcs->papp->StrId());
 		return presp->result;
+	}
 
 #ifdef CONFIG_BBQUE_YP_SASB_ASYNC
 	// Give back the result to the calling thread
@@ -611,8 +617,10 @@ ApplicationProxy::SyncP_PreChange(pcmdSn_t pcs, pPreChangeRsp_t presp)
 		presp->pcs->pid, presp->pcs->papp->StrId());
 #endif
 
-	return RTLIB_OK;
+	logger->Info("SyncP_PreChange: [pid=%05d: %s] OK",
+		presp->pcs->pid, presp->pcs->papp->StrId());
 
+	return RTLIB_OK;
 }
 
 void
@@ -651,7 +659,7 @@ ApplicationProxy::SyncP_PreChange(AppPtr_t papp, pPreChangeRsp_t presp)
 	presp->pcs->resp_ftr = (presp->pcs->resp_prm).get_future();
 
 #else
-	// Enqueuing the Command Session Handler
+	// Enqueue the Command Session Handler
 	EnqueueHandler(presp->pcs);
 
 	// Run the Command Executor
@@ -1168,8 +1176,8 @@ void ApplicationProxy::CompleteTransaction(pchMsg_t & pmsg)
 #define EXC_STRID "[%05d:%6s:%02d]"
 #define ExcStrId(pcon, exc_id) pcon->app_pid, pcon->app_name, exc_id
 
-ApplicationProxy::pconCtx_t ApplicationProxy::GetConnectionContext(
-								   rpc_msg_header_t *pmsg_hdr)
+ApplicationProxy::pconCtx_t
+ApplicationProxy::GetConnectionContext(rpc_msg_header_t *pmsg_hdr)
 {
 	std::unique_lock<std::mutex> conCtxMap_ul(conCtxMap_mtx);
 	conCtxMap_t::iterator it;
@@ -1184,6 +1192,11 @@ ApplicationProxy::pconCtx_t ApplicationProxy::GetConnectionContext(
 			pmsg_hdr->app_pid, pmsg_hdr->exc_id);
 		return pconCtx_t();
 	}
+
+	logger->Debug("GetConnectionContext: found connection context for"
+		"[pid: %d, exc: %d]",
+		pmsg_hdr->app_pid, pmsg_hdr->exc_id);
+
 	return (*it).second;
 }
 
@@ -1726,7 +1739,10 @@ void ApplicationProxy::Task()
 		logger->Debug("Task: new incoming message from RTLIB");
 
 		msgType = GetNextMessage(pmsg);
+		logger->Debug("Task: incoming message type: %d", msgType);
+
 		if (msgType > bl::RPC_EXC_MSGS_COUNT) {
+			logger->Debug("Task: response message received [=%d]", msgType);
 			CompleteTransaction(pmsg);
 			continue;
 		}

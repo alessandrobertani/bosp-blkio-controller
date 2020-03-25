@@ -82,7 +82,7 @@ private:
 	typedef struct cmdRsp
 	{
 		RTLIB_ExitCode result;
-		// The comand session to handler this command
+		// The command session to handle this command
 		pcmdSn_t pcs;
 	} cmdRsp_t;
 
@@ -185,6 +185,8 @@ public:
 	int CommandsCb(int argc, char *argv[]);
 private:
 
+	// Sessions
+
 	typedef std::shared_ptr<snCtx_t> psnCtx_t;
 
 	typedef std::map<uint8_t, psnCtx_t> snCtxMap_t;
@@ -193,9 +195,12 @@ private:
 
 	std::mutex snCtxMap_mtx;
 
+
+	// Connections
+
 	typedef struct conCtx
 	{
-		/** The applicaiton PID */
+		/** The application PID */
 		ba::AppPid_t app_pid;
 		/** The application name */
 		char app_name[RTLIB_APP_NAME_LENGTH];
@@ -211,6 +216,9 @@ private:
 
 	mutable std::mutex conCtxMap_mtx;
 
+
+	// Request sessions
+
 	typedef struct rqsSn : public snCtx_t
 	{
 		pchMsg_t pmsg;
@@ -220,9 +228,9 @@ private:
 
 
 	/**
-	 * @brief	A multimap to track active Command Sessions.
+	 * @brief A multi-map to track active Command Sessions.
 	 *
-	 * This multimap maps command session threads ID on the session data.
+	 * This multi-map maps command session threads ID on the session data.
 	 * @param AppPid_t the command session thread ID
 	 * @param pcmdSn_t the command session handler
 	 */
@@ -231,7 +239,6 @@ private:
 	cmdSnMap_t cmdSnMap;
 
 	std::mutex cmdSnMap_mtx;
-
 
 
 	typedef std::shared_ptr<cmdRsp_t> pcmdRsp_t;
