@@ -1658,34 +1658,43 @@ LinuxPlatformProxy::Restore(uint32_t pid, std::string exe_name)
 	criu_set_tcp_established(true);
 	criu_set_evasive_devices(true);
 	criu_set_file_locks(true);
+	//	criu_set_shell_job(true);
 
-	int np = fork();
-	if (np != 0) {
-		logger->Debug("Restore: [pid=%d] child pid=%d", pid, np);
-	}
-	else {
-		prctl(PR_SET_NAME, exe_name.c_str()); // Process name = binary name
+	logger->Info("Restore: [pid=%d] restoring...", pid);
 
-		int c_ret = criu_restore(); // Do restore
-		if (c_ret < 0) {
-			logger->Error("Restore: [pid=%d] error=%d", pid, c_ret);
-			return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
-		}
-	}
-
-	/*
+	// Do restore
 	int c_ret = criu_restore_child();
 	if (c_ret < 0) {
 		logger->Error("Restore: [pid=%d] error=%d", pid, c_ret);
 		return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
 	}
-	*/
-	logger->Info("Restore: [pid=%d] waiting for restore...", pid);
-	while (kill(pid, 0)) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
 
+	// Wait for the restored process to be back to run
+	logger->Info("Restore: [pid=%d] waiting for restore...", pid);
+	unsigned short int nr_attempts = 10;
+	bool resumed = false;
+	do {
+		if (kill(pid, 0)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			nr_attempts--;
+			logger->Debug("Restore: [pid=%d] attempts left = %d",
+				pid, nr_attempts);
+			resumed = false;
+		}
+		else {
+			resumed = true;
+		}
+		logger->Debug("Restore: [pid=%d] resumed checked = %d",
+			pid, resumed);
+	}
+	while (!resumed && (nr_attempts > 0));
+
+	if (!resumed) {
+		logger->Error("Restore: [pid=%d] failed", pid);
+		return ReliabilityActionsIF::ExitCode_t::ERROR_UNKNOWN;
+	}
 	logger->Info("Restore: [pid=%d] execution resumed", pid);
+
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
