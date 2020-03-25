@@ -43,7 +43,7 @@ domains = cpu,gpu,acc,grp.gpu,grp.acc,sys
 # log enabled at starting time
 log.enabled   = 0
 # output directory for the power monitor logs
-log.dir       = /tmp
+log.dir       = /tmp/bbque/power
 # monitoring period
 period_ms     = 4000
 # number of monitoring threads to spawn
