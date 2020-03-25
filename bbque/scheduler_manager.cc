@@ -67,7 +67,7 @@ SchedulerManager::metrics[SM_METRICS_COUNT] = {
 	SM_COUNTER_METRIC("comp",	"Scheduler completions count"),
 	SM_COUNTER_METRIC("start",	"START count"),
 	SM_COUNTER_METRIC("reconf",	"RECONF count"),
-	SM_COUNTER_METRIC("migrate","MIGRATE count"),
+	SM_COUNTER_METRIC("migrate",    "MIGRATE count"),
 	SM_COUNTER_METRIC("migrec",	"MIGREC count"),
 	SM_COUNTER_METRIC("block",	"BLOCK count"),
 	//----- Timing metrics
@@ -82,22 +82,23 @@ SchedulerManager::metrics[SM_METRICS_COUNT] = {
 
 };
 
-
-SchedulerManager & SchedulerManager::GetInstance() {
+SchedulerManager & SchedulerManager::GetInstance()
+{
 	static SchedulerManager rs;
 	return rs;
 }
 
 SchedulerManager::SchedulerManager() :
-	am(ApplicationManager::GetInstance()),
+    am(ApplicationManager::GetInstance()),
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	prm(ProcessManager::GetInstance()),
+    prm(ProcessManager::GetInstance()),
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
-	mc(bu::MetricsCollector::GetInstance()),
+    mc(bu::MetricsCollector::GetInstance()),
 #ifdef CONFIG_BBQUE_DM
-	dm(DataManager::GetInstance()),
+    dm(DataManager::GetInstance()),
 #endif
-	sched_count(0) {
+    sched_count(0)
+{
 	std::string opt_namespace((SCHEDULER_POLICY_NAMESPACE"."));
 	std::string opt_policy;
 
@@ -111,16 +112,17 @@ SchedulerManager::SchedulerManager() :
 	po::options_description opts_desc("Resource Scheduler Options");
 	opts_desc.add_options()
 		(MODULE_CONFIG".policy",
-		 po::value<std::string>(&opt_policy)->default_value(
-			 BBQUE_SCHEDPOL_DEFAULT), "The optimization policy to use");
+		po::value<std::string>(
+		&opt_policy)->default_value(BBQUE_SCHEDPOL_DEFAULT),
+		"The optimization policy to use");
 	po::variables_map opts_vm;
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 
 	//---------- Load the required optimization plugin
 	logger->Info("Loading optimization policy [%s%s]...",
-			opt_namespace.c_str(), opt_policy.c_str());
+		opt_namespace.c_str(), opt_policy.c_str());
 	policy = ModulesFactory::GetModule<bp::SchedulerPolicyIF>(
-			opt_namespace + opt_policy);
+		opt_namespace + opt_policy);
 	if (!policy) {
 		logger->Fatal("Optimization policy load FAILED "
 			"(Error: missing plugin for [%s%s])",
@@ -133,8 +135,7 @@ SchedulerManager::SchedulerManager() :
 
 }
 
-SchedulerManager::~SchedulerManager() {
-}
+SchedulerManager::~SchedulerManager() { }
 
 #define SM_COLLECT_STATS(STATE) \
 	count = am.AppsCount(Schedulable::STATE);\
@@ -142,7 +143,8 @@ SchedulerManager::~SchedulerManager() {
 	SM_ADD_SCHED(metrics, SM_SCHED_AVG_ ## STATE, (double)count);
 
 void
-SchedulerManager::CollectStats() {
+SchedulerManager::CollectStats()
+{
 	uint16_t count;
 
 	// Account for scheduling decisions
@@ -155,7 +157,8 @@ SchedulerManager::CollectStats() {
 }
 
 SchedulerManager::ExitCode_t
-SchedulerManager::Schedule() {
+SchedulerManager::Schedule()
+{
 
 	if (!policy) {
 		logger->Crit("Resource scheduling FAILED (Error: missing policy)");
@@ -167,31 +170,35 @@ SchedulerManager::Schedule() {
 	// for statistics collection
 
 	// TODO here should be plugged a scheduling decision policy
-	// Such a policy should decide whter a scheduling sould be run
+	// Such a policy should decide whether a scheduling should be run
 	// or not, e.g. based on the kind of READY applications or considering
 	// stability problems and scheduling overheads.
 	// In case of a scheduling is not considered safe proper at this time,
 	// a DELAYED exit code should be returned
 	DB(logger->Warn("TODO: add scheduling activation policy"));
 
-
-	SetState(State_t::SCHEDULING);  // --> Applications from now in a not consistent state
+	// --> Applications from now in a not consistent state
+	SetState(State_t::SCHEDULING);
 	++sched_count;
 
-	// Collecing execution metrics
+	// Metrics: scheduling runs count and timing
 	if (sched_count > 1)
 		SM_GET_TIMING(metrics, SM_SCHED_PERIOD, sm_tmr);
-	SM_COUNT_EVENT(metrics, SM_SCHED_RUNS);  // Account for actual scheduling runs
-	SM_RESET_TIMING(sm_tmr);                 // Reset timer for policy execution time profiling
+	SM_COUNT_EVENT(metrics, SM_SCHED_RUNS);
+	SM_RESET_TIMING(sm_tmr);
 
+	// Status view to fill with scheduling
 	System &sv = System::GetInstance();
-	br::RViewToken_t sched_view_id;          // Status view to fill with scheduling
+	br::RViewToken_t sched_view_id;
 
-	logger->Notice("Scheduling [%d] START, policy [%s]", sched_count, policy->Name());
+	logger->Notice("Scheduling [%d] START, policy [%s]",
+		sched_count, policy->Name());
 	SchedulerPolicyIF::ExitCode result = policy->Schedule(sv, sched_view_id);
 	if (result != SchedulerPolicyIF::SCHED_DONE) {
-		logger->Error("Scheduling [%d] FAILED: error=%d", sched_count, result);
-		SetState(State_t::READY);     // --> Applications in a consistent state again
+		logger->Error("Scheduling [%d] FAILED: error=%d",
+			sched_count, result);
+		// --> Applications in a consistent state again
+		SetState(State_t::READY);
 		return FAILED;
 	}
 
@@ -199,15 +206,16 @@ SchedulerManager::Schedule() {
 	CommitRunningApplications();
 
 	// Set the scheduled resource view
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ra.SetScheduledView(sched_view_id);
 
-	SetState(State_t::READY);     // --> Applications in a consistent state again
+	// --> Applications in a consistent state again
+	SetState(State_t::READY);
 
-	SM_GET_TIMING(metrics, SM_SCHED_TIME, sm_tmr); 	// Collecing execution metrics
-	SM_RESET_TIMING(sm_tmr);                // Reset timer for policy execution time profiling
-	SM_COUNT_EVENT(metrics, SM_SCHED_COMP); // Account for scheduling completed
-	CollectStats();                         // Collect statistics on scheduling execution
+	SM_GET_TIMING(metrics, SM_SCHED_TIME, sm_tmr);
+	SM_RESET_TIMING(sm_tmr);
+	SM_COUNT_EVENT(metrics, SM_SCHED_COMP);
+	CollectStats();
 
 #ifdef CONFIG_BBQUE_DM
 	dm.NotifyUpdate(stat::EVT_SCHEDULING);
@@ -218,7 +226,8 @@ SchedulerManager::Schedule() {
 	return DONE;
 }
 
-void SchedulerManager::CommitRunningApplications() {
+void SchedulerManager::CommitRunningApplications()
+{
 	// Running (AEM) applications
 	AppsUidMapIt apps_it;
 	AppPtr_t papp = am.GetFirst(Schedulable::RUNNING, apps_it);
@@ -236,13 +245,15 @@ void SchedulerManager::CommitRunningApplications() {
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 }
 
-void SchedulerManager::SetState(State_t _s) {
+void SchedulerManager::SetState(State_t _s)
+{
 	std::unique_lock<std::mutex> ul(mux);
 	state = _s;
 	status_cv.notify_all();
 }
 
-void SchedulerManager::WaitForReady() {
+void SchedulerManager::WaitForReady()
+{
 	std::unique_lock<std::mutex> ul(mux);
 	while (state != State_t::READY)
 		status_cv.wait(ul);
