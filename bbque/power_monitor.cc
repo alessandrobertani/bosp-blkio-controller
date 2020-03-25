@@ -48,8 +48,7 @@
 namespace po = boost::program_options;
 using namespace bbque::trig;
 
-namespace bbque
-{
+namespace bbque {
 
 
 #define LOAD_CONFIG_OPTION(name, type, var, default) \
@@ -62,18 +61,18 @@ PowerMonitor & PowerMonitor::GetInstance()
 	return instance;
 }
 
-PowerMonitor::PowerMonitor():
-	Worker(),
-	pm(PowerManager::GetInstance()),
+PowerMonitor::PowerMonitor() :
+    Worker(),
+    pm(PowerManager::GetInstance()),
 #ifdef CONFIG_BBQUE_PM_BATTERY
-	bm(BatteryManager::GetInstance()),
+    bm(BatteryManager::GetInstance()),
 #endif
-	cm(CommandManager::GetInstance()),
+    cm(CommandManager::GetInstance()),
 #ifdef CONFIG_BBQUE_DM
-	dm(DataManager::GetInstance()),
+    dm(DataManager::GetInstance()),
 #endif
-	cfm(ConfigurationManager::GetInstance()),
-	optimize_dfr("wm.opt", std::bind(&PowerMonitor::SendOptimizationRequest, this))
+    cfm(ConfigurationManager::GetInstance()),
+    optimize_dfr("wm.opt", std::bind(&PowerMonitor::SendOptimizationRequest, this))
 {
 
 	// Initialization
@@ -111,7 +110,8 @@ PowerMonitor::PowerMonitor():
 
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
-	} catch(boost::program_options::invalid_option_value ex) {
+	}
+	catch (boost::program_options::invalid_option_value ex) {
 		logger->Error("Errors in configuration file [%s]", ex.what());
 	}
 
@@ -135,13 +135,13 @@ PowerMonitor::PowerMonitor():
 
 #define CMD_WM_DATALOG "datalog"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_DATALOG,
-	                   static_cast<CommandHandler*>(this),
-	                   "Start/stop power monitor data logging");
+			static_cast<CommandHandler*>(this),
+			"Start/stop power monitor data logging");
 #ifdef CONFIG_BBQUE_PM_BATTERY
 #define CMD_WM_SYSLIFETIME "syslifetime"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_SYSLIFETIME,
-	                   static_cast<CommandHandler*>(this),
-	                   "Set the system target lifetime");
+			static_cast<CommandHandler*>(this),
+			"Set the system target lifetime");
 
 	pbatt = bm.GetBattery();
 	if (pbatt == nullptr)
@@ -159,9 +159,9 @@ PowerMonitor::PowerMonitor():
 	triggers[PowerManager::InfoType::TEMPERATURE]->margin = temp_margin;
 #ifdef CONFIG_BBQUE_DM
 	triggers[PowerManager::InfoType::TEMPERATURE]->SetActionFunction(
-	[&, this]() {
-		dm.NotifyUpdate(stat::EVT_RESOURCE);
-	});
+									[&, this]() {
+										dm.NotifyUpdate(stat::EVT_RESOURCE);
+									});
 #endif // CONFIG_BBQUE_DM
 	// Power consumption scheduling policy trigger setting
 	logger->Debug("Power consumption scheduling policy trigger setting");
@@ -182,16 +182,16 @@ PowerMonitor::PowerMonitor():
 	logger->Info("| THRESHOLDS             | VALUE       | MARGIN  |      TRIGGER     |");
 	logger->Info("+------------------------+-------------+---------+------------------+");
 	logger->Info("| Temperature            | %6d C    | %6.0f%%  | %16s |",
-	             triggers[PowerManager::InfoType::TEMPERATURE]->threshold_high / 1000,
-	             triggers[PowerManager::InfoType::TEMPERATURE]->margin * 100, temp_trig.c_str());
+		triggers[PowerManager::InfoType::TEMPERATURE]->threshold_high / 1000,
+		triggers[PowerManager::InfoType::TEMPERATURE]->margin * 100, temp_trig.c_str());
 	logger->Info("| Power consumption      | %6d mW   | %6.0f%%  | %16s |",
-	             triggers[PowerManager::InfoType::POWER]->threshold_high,
-	             triggers[PowerManager::InfoType::POWER]->margin * 100, power_trig.c_str());
+		triggers[PowerManager::InfoType::POWER]->threshold_high,
+		triggers[PowerManager::InfoType::POWER]->margin * 100, power_trig.c_str());
 	logger->Info("| Battery discharge rate | %6d %%/h  | %6.0f%% | %16s |",
-	             triggers[PowerManager::InfoType::CURRENT]->threshold_high,
-	             triggers[PowerManager::InfoType::CURRENT]->margin * 100, batt_trig.c_str());
+		triggers[PowerManager::InfoType::CURRENT]->threshold_high,
+		triggers[PowerManager::InfoType::CURRENT]->margin * 100, batt_trig.c_str());
 	logger->Info("| Battery charge level   | %6d %c/100|  %6s | %16s |",
-	             triggers[PowerManager::InfoType::ENERGY]->threshold_high, '%', "-", batt_trig.c_str());
+		triggers[PowerManager::InfoType::ENERGY]->threshold_high, '%', "-", batt_trig.c_str());
 	logger->Info("=====================================================================");
 
 	// Staus of the optimization policy execution request
@@ -205,17 +205,17 @@ PowerMonitor::PowerMonitor():
 void PowerMonitor::Init()
 {
 	PowerMonitorGet[size_t(PowerManager::InfoType::LOAD)]        =
-	        &PowerManager::GetLoad;
+		&PowerManager::GetLoad;
 	PowerMonitorGet[size_t(PowerManager::InfoType::TEMPERATURE)] =
-	        &PowerManager::GetTemperature;
+		&PowerManager::GetTemperature;
 	PowerMonitorGet[size_t(PowerManager::InfoType::FREQUENCY)]   =
-	        &PowerManager::GetClockFrequency;
+		&PowerManager::GetClockFrequency;
 	PowerMonitorGet[size_t(PowerManager::InfoType::POWER)]       =
-	        &PowerManager::GetPowerUsage;
+		&PowerManager::GetPowerUsage;
 	PowerMonitorGet[size_t(PowerManager::InfoType::PERF_STATE)]  =
-	        &PowerManager::GetPerformanceState;
+		&PowerManager::GetPerformanceState;
 	PowerMonitorGet[size_t(PowerManager::InfoType::POWER_STATE)] =
-	        &PowerManager::GetPowerState;
+		&PowerManager::GetPowerState;
 }
 
 PowerMonitor::~PowerMonitor()
@@ -237,19 +237,20 @@ void PowerMonitor::Task()
 	if (nr_resources_to_monitor > nr_threads) {
 		nr_resources_per_thread = nr_resources_to_monitor / nr_threads;
 		nr_resources_left = nr_resources_to_monitor % nr_threads;
-	} else
+	}
+	else
 		nr_threads = 1;
 	logger->Debug("Monitor: nr_threads=%d nr_resources_to_monitor=%d",
-	              nr_threads, nr_resources_to_monitor);
+		nr_threads, nr_resources_to_monitor);
 
 	uint16_t nt = 0, last_resource_id = 0;
 	for (; nt < nr_threads; ++nt) {
 		logger->Debug("Monitor: starting thread %d...", nt);
 		last_resource_id += nr_resources_per_thread;
 		samplers.push_back(std::thread(
-		                           &PowerMonitor::SampleResourcesStatus, this,
-		                           nt * nr_resources_per_thread,
-		                           last_resource_id));
+					&PowerMonitor::SampleResourcesStatus, this,
+					nt * nr_resources_per_thread,
+					last_resource_id));
 
 	}
 	// The number of resources is not divisible by the number of threads...
@@ -257,19 +258,18 @@ void PowerMonitor::Task()
 	if (nr_resources_left > 0) {
 		logger->Debug("Monitor: starting thread %d [extra]...", nr_threads);
 		samplers.push_back(std::thread(
-		                           &PowerMonitor::SampleResourcesStatus, this,
-		                           nr_threads * nr_resources_per_thread,
-		                           nr_resources_to_monitor));
+					&PowerMonitor::SampleResourcesStatus, this,
+					nr_threads * nr_resources_per_thread,
+					nr_resources_to_monitor));
 	}
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	samplers.push_back(std::thread(&PowerMonitor::SampleBatteryStatus, this));
 #endif
-	while(!done)
+	while (!done)
 		Wait();
 	std::for_each(samplers.begin(), samplers.end(), std::mem_fn(&std::thread::join));
 }
-
 
 int PowerMonitor::CommandsCb(int argc, char *argv[])
 {
@@ -281,7 +281,7 @@ int PowerMonitor::CommandsCb(int argc, char *argv[])
 	if (!strncmp(CMD_WM_DATALOG, command_id, strlen(CMD_WM_DATALOG))) {
 		if (argc != 2) {
 			logger->Error("CommandsCb: command [%s] missing action [start/stop/clear]",
-			              command_id);
+				command_id);
 			return 1;
 		}
 		return DataLogCmdHandler(argv[1]);
@@ -291,7 +291,7 @@ int PowerMonitor::CommandsCb(int argc, char *argv[])
 	if (!strncmp(CMD_WM_SYSLIFETIME , command_id, strlen(CMD_WM_SYSLIFETIME))) {
 		if (argc < 2) {
 			logger->Error("CommandsCb: command [%s] missing argument"
-			              "[set/clear/info/help]", command_id);
+				"[set/clear/info/help]", command_id);
 			return 1;
 		}
 		if (argc > 2)
@@ -304,10 +304,9 @@ int PowerMonitor::CommandsCb(int argc, char *argv[])
 	return -1;
 }
 
-
 PowerMonitor::ExitCode_t PowerMonitor::Register(
-        br::ResourcePathPtr_t rp,
-        PowerManager::SamplesArray_t const & samples_window)
+						br::ResourcePathPtr_t rp,
+						PowerManager::SamplesArray_t const & samples_window)
 {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
@@ -324,7 +323,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	for (auto & rsrc : r_list) {
 		rsrc->EnablePowerProfiling(samples_window);
 		logger->Info("Register: adding <%s> to power monitoring...",
-		             rsrc->Path()->ToString().c_str());
+			rsrc->Path()->ToString().c_str());
 		wm_info.resources.push_back( { rsrc->Path(), rsrc});
 		wm_info.log_fp.emplace(rsrc->Path(), new std::ofstream());
 	}
@@ -333,26 +332,25 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 }
 
 PowerMonitor::ExitCode_t PowerMonitor::Register(
-        const std::string & rp_str,
-        PowerManager::SamplesArray_t const & samples_window)
+						const std::string & rp_str,
+						PowerManager::SamplesArray_t const & samples_window)
 {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	return Register(ra.GetPath(rp_str), samples_window);
 }
 
-
 void PowerMonitor::Start(uint32_t period_ms)
 {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	logger->Debug("Start: <%d> registered resources to monitor",
-	              wm_info.resources.size());
+		wm_info.resources.size());
 
 	if ((period_ms != 0) && (period_ms != wm_info.period_ms))
 		wm_info.period_ms = period_ms;
 
 	if (wm_info.started) {
 		logger->Warn("Start: power logging already started (T = %d ms)...",
-		             wm_info.period_ms);
+			wm_info.period_ms);
 		return;
 	}
 
@@ -360,7 +358,6 @@ void PowerMonitor::Start(uint32_t period_ms)
 	events.set(WM_EVENT_UPDATE);
 	worker_status_cv.notify_all();
 }
-
 
 void PowerMonitor::Stop()
 {
@@ -375,10 +372,9 @@ void PowerMonitor::Stop()
 	worker_status_cv.notify_all();
 }
 
-
 void PowerMonitor::ManageRequest(
-        PowerManager::InfoType info_type,
-        double curr_value)
+				 PowerManager::InfoType info_type,
+				 double curr_value)
 {
 	// Return if optimization request already sent
 	if (opt_request_sent) return;
@@ -390,37 +386,36 @@ void PowerMonitor::ManageRequest(
 
 	// Check and execute the trigger (i.e., the trigger function or the
 	// schedule the optimization request)
-//	logger->Debug("ManageRequest: (before) trigger armed: %d",trigger->IsArmed());
+	//	logger->Debug("ManageRequest: (before) trigger armed: %d",trigger->IsArmed());
 	bool request_to_send = trigger->Check(curr_value);
-//	logger->Debug("ManageRequest: (after)  trigger armed: %d",trigger->IsArmed());
+	//	logger->Debug("ManageRequest: (after)  trigger armed: %d",trigger->IsArmed());
 	if (request_to_send) {
 		logger->Info("ManageRequest: trigger <InfoType: %d> current = %d, threshold = %u [m=%0.f]",
-		             info_type, curr_value, trigger->threshold_high, trigger->margin);
+			info_type, curr_value, trigger->threshold_high, trigger->margin);
 		auto trigger_func = trigger->GetActionFunction();
 		if (trigger_func) {
 			trigger_func();
 			opt_request_sent = false;
-		} else {
+		}
+		else {
 			opt_request_sent = true;
 			optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms));
 		}
 	}
 }
 
-
 void PowerMonitor::SendOptimizationRequest()
 {
 	ResourceManager & rm(ResourceManager::GetInstance());
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
 	logger->Info("Trigger: optimization request sent [generic: %d, battery: %d]",
-	             opt_request_sent.load(), opt_request_for_battery);
+		opt_request_sent.load(), opt_request_for_battery);
 	opt_request_sent = false;
 }
 
-
 void  PowerMonitor::SampleResourcesStatus(
-        uint16_t first_resource_index,
-        uint16_t last_resource_index)
+					  uint16_t first_resource_index,
+					  uint16_t last_resource_index)
 {
 	PowerManager::SamplesArray_t samples;
 	PowerManager::InfoType info_type;
@@ -431,12 +426,12 @@ void  PowerMonitor::SampleResourcesStatus(
 	else
 		thd_id = first_resource_index;
 	logger->Debug("SampleResourcesStatus: [thread %d] monitoring resources in range [%d, %d)",
-	              thd_id, first_resource_index, last_resource_index);
+		thd_id, first_resource_index, last_resource_index);
 
 	while (!done) {
 		if (events.none()) {
 			logger->Debug("SampleResourcesStatus: [thread %d] no events to process",
-			              first_resource_index);
+				first_resource_index);
 			Wait();
 		}
 		if (!events.test(WM_EVENT_UPDATE))
@@ -454,17 +449,17 @@ void  PowerMonitor::SampleResourcesStatus(
 			uint info_idx   = 0;
 			uint info_count = 0;
 			logger->Debug("SampleResourcesStatus: [thread %d] monitoring <%s>",
-			              thd_id, r_path->ToString().c_str());
+				thd_id, r_path->ToString().c_str());
 
 			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
-			     info_count < rsrc->GetPowerInfoEnabledCount();
-			     ++info_idx, ++info_count) {
+			info_count < rsrc->GetPowerInfoEnabledCount();
+			++info_idx, ++info_count) {
 				// Check if the power profile information has been required
 				info_type = PowerManager::InfoTypeIndex[info_idx];
 				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0) {
 					logger->Warn("SampleResourcesStatus: [thread %d] power profile "
-					             "not enabled for %s",
-					             thd_id,
+						"not enabled for %s",
+						thd_id,
 						rsrc->Path()->ToString().c_str());
 					continue;
 				}
@@ -473,8 +468,8 @@ void  PowerMonitor::SampleResourcesStatus(
 				// descriptor power profile information
 				if (PowerMonitorGet[info_idx] == nullptr) {
 					logger->Warn("SampleResourcesStatus: [thread %d] power monitoring "
-					             "or <%s> not available",
-					             thd_id, PowerManager::InfoTypeStr[info_idx]);
+						"or <%s> not available",
+						thd_id, PowerManager::InfoTypeStr[info_idx]);
 					continue;
 				}
 				PowerMonitorGet[info_idx](pm, r_path, samples[info_idx]);
@@ -489,9 +484,9 @@ void  PowerMonitor::SampleResourcesStatus(
 			}
 
 			logger->Debug("SampleResourcesStatus: [thread %d] sampling %s ",
-			              thd_id, (log_i + i_values).c_str());
+				thd_id, (log_i + i_values).c_str());
 			logger->Debug("SampleResourcesStatus: [thread %d] sampling %s ",
-			              thd_id, (log_m + m_values).c_str());
+				thd_id, (log_m + m_values).c_str());
 			if (wm_info.log_enabled) {
 				DataLogWrite(r_path, i_values);
 			}
@@ -502,27 +497,26 @@ void  PowerMonitor::SampleResourcesStatus(
 	logger->Notice("SampleResourcesStatus: [thread %d] terminating", thd_id);
 }
 
-
 void PowerMonitor::BuildLogString(
-        br::ResourcePtr_t rsrc,
-        uint info_idx,
-        std::string & inst_values,
-        std::string & mean_values)
+				  br::ResourcePtr_t rsrc,
+				  uint info_idx,
+				  std::string & inst_values,
+				  std::string & mean_values)
 {
 	auto info_type = PowerManager::InfoTypeIndex[info_idx];
 
 	std::stringstream ss_i;
 	ss_i
-	                << std::setprecision(0) << std::fixed
-	                << std::setw(str_w[info_idx]) << std::left
-	                << rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
+		<< std::setprecision(0) << std::fixed
+		<< std::setw(str_w[info_idx]) << std::left
+		<< rsrc->GetPowerInfo(info_type, br::Resource::INSTANT);
 	inst_values  += ss_i.str() + " ";
 
 	std::stringstream ss_m;
 	ss_m
-	                << std::setprecision(str_p[info_idx]) << std::fixed
-	                << std::setw(str_w[info_idx]) << std::left
-	                << rsrc->GetPowerInfo(info_type, br::Resource::MEAN);
+		<< std::setprecision(str_p[info_idx]) << std::fixed
+		<< std::setw(str_w[info_idx]) << std::left
+		<< rsrc->GetPowerInfo(info_type, br::Resource::MEAN);
 	mean_values += ss_m.str() + " ";
 }
 
@@ -530,18 +524,16 @@ void PowerMonitor::BuildLogString(
  *                        DATA LOGGING                             *
  *******************************************************************/
 
-void PowerMonitor::DataLogWrite(
-        br::ResourcePathPtr_t rp,
-        std::string const & data_line,
-        std::ios_base::openmode om)
+void PowerMonitor::DataLogWrite(br::ResourcePathPtr_t rp,
+				std::string const & data_line,
+				std::ios_base::openmode om)
 {
-
 	//std::string file_path(BBQUE_WM_DATALOG_PATH "/");
 	std::string file_path(wm_info.log_dir + "/");
 	file_path.append(rp->ToString());
 	file_path.append(".dat");
 	logger->Debug("DataLogWrite: writing to file [%s]: %s",
-	              file_path.c_str(), data_line.c_str());
+		file_path.c_str(), data_line.c_str());
 
 	// Open file
 	wm_info.log_fp[rp]->open(file_path, om);
@@ -554,8 +546,8 @@ void PowerMonitor::DataLogWrite(
 	*wm_info.log_fp[rp] << data_line << std::endl;
 	if (wm_info.log_fp[rp]->fail()) {
 		logger->Error("DataLogWrite: log file write failed [F:%d, B:%d]",
-		              wm_info.log_fp[rp]->fail(),
-		              wm_info.log_fp[rp]->bad());
+			wm_info.log_fp[rp]->fail(),
+			wm_info.log_fp[rp]->bad());
 		*wm_info.log_fp[rp] << "Error";
 		*wm_info.log_fp[rp] << std::endl;
 		return;
@@ -564,7 +556,6 @@ void PowerMonitor::DataLogWrite(
 	wm_info.log_fp[rp]->close();
 }
 
-
 void PowerMonitor::DataLogClear()
 {
 	for (auto log_ofs : wm_info.log_fp) {
@@ -572,21 +563,20 @@ void PowerMonitor::DataLogClear()
 	}
 }
 
-
 int PowerMonitor::DataLogCmdHandler(const char * arg)
 {
 	std::string action(arg);
 	logger->Info("DataLogCmdHandler: action = [%s]", action.c_str());
 	// Start
 	if ((action.compare("start") == 0)
-	    && (!wm_info.log_enabled)) {
+	&& (!wm_info.log_enabled)) {
 		logger->Info("DataLogCmdHandler: starting data logging...");
 		wm_info.log_enabled = true;
 		return 0;
 	}
 	// Stop
 	if ((action.compare("stop") == 0)
-	    && (wm_info.log_enabled)) {
+	&& (wm_info.log_enabled)) {
 		logger->Info("DataLogCmdHandler: stopping data logging...");
 		wm_info.log_enabled = false;
 		return 0;
@@ -602,7 +592,7 @@ int PowerMonitor::DataLogCmdHandler(const char * arg)
 	}
 
 	logger->Warn("DataLogCmdHandler: unknown action [%s]",
-	             action.c_str());
+		action.c_str());
 	return -1;
 }
 
@@ -622,7 +612,7 @@ int32_t PowerMonitor::GetSysPowerBudget()
 			logger->Debug("System battery full charged and power plugged");
 			return 0;
 		}
-	*/
+	 */
 
 	if (sys_lifetime.always_on) {
 		logger->Debug("GetSysPowerBudget: system lifetime target = 'always_on'");
@@ -644,12 +634,12 @@ int32_t PowerMonitor::GetSysPowerBudget()
 #ifdef CONFIG_BBQUE_PM_BATTERY
 
 int PowerMonitor::SystemLifetimeCmdHandler(
-        const std::string action, const std::string hours)
+					   const std::string action, const std::string hours)
 {
 	std::unique_lock<std::mutex> ul(sys_lifetime.mtx);
 	std::chrono::system_clock::time_point now;
 	logger->Info("SystemLifetimeCmdHandler: action=[%s], hours=[%s]",
-	             action.c_str(), hours.c_str());
+		action.c_str(), hours.c_str());
 	// Help
 	if (action.compare("help") == 0) {
 		logger->Notice("SystemLifetimeCmdHandler: %s set <HOURS> (set hours)", CMD_WM_SYSLIFETIME);
@@ -679,7 +669,8 @@ int PowerMonitor::SystemLifetimeCmdHandler(
 		if (!IsNumber(hours)) {
 			logger->Error("SystemLifetimeCmdHandler: invalid argument");
 			return -1;
-		} else if (hours.compare("always_on") == 0) {
+		}
+		else if (hours.compare("always_on") == 0) {
 			logger->Info("SystemLifetimeCmdHandler: set to 'always on'");
 			sys_lifetime.power_budget_mw = -1;
 			sys_lifetime.always_on     = true;
@@ -696,7 +687,6 @@ int PowerMonitor::SystemLifetimeCmdHandler(
 	return 0;
 }
 
-
 void PowerMonitor::SampleBatteryStatus()
 {
 	while (pbatt && !done) {
@@ -710,7 +700,6 @@ void PowerMonitor::SampleBatteryStatus()
 	}
 }
 
-
 void PowerMonitor::ExecuteTriggerForBattery()
 {
 	// Do not require other policy execution (due battery level) until the charge
@@ -718,12 +707,11 @@ void PowerMonitor::ExecuteTriggerForBattery()
 	if (pbatt->IsDischarging()) {
 		// Battery level
 		ManageRequest(
-		        PowerManager::InfoType::ENERGY, static_cast<float>(pbatt->GetChargePerc()));
+			PowerManager::InfoType::ENERGY, static_cast<float>(pbatt->GetChargePerc()));
 		// Discharging rate check
 		ManageRequest(PowerManager::InfoType::CURRENT, pbatt->GetDischargingRate());
 	}
 }
-
 
 void PowerMonitor::PrintSystemLifetimeInfo() const
 {
