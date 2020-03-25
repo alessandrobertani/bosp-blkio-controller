@@ -115,6 +115,24 @@ PowerMonitor::PowerMonitor():
 		logger->Error("Errors in configuration file [%s]", ex.what());
 	}
 
+	// Create data logging directory
+	if (wm_info.log_enabled) {
+		try {
+			if (!boost::filesystem::exists(wm_info.log_dir))
+				boost::filesystem::create_directory(wm_info.log_dir);
+			boost::filesystem::perms prms(boost::filesystem::owner_all);
+			prms |= boost::filesystem::others_read;
+			prms |= boost::filesystem::group_read;
+			boost::filesystem::permissions(wm_info.log_dir, prms);
+			logger->Info("PowerMonitor: data logging enabled [dir=%s]",
+				wm_info.log_dir.c_str());
+		}
+		catch (std::exception & ex) {
+			logger->Error("PowerMonitor: %s: %s",
+				ex.what(), wm_info.log_dir.c_str());
+		}
+	}
+
 #define CMD_WM_DATALOG "datalog"
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_DATALOG,
 	                   static_cast<CommandHandler*>(this),
