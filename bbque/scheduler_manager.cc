@@ -174,8 +174,6 @@ SchedulerManager::Schedule() {
 	// a DELAYED exit code should be returned
 	DB(logger->Warn("TODO: add scheduling activation policy"));
 
-	// Check if there are some dead applications to remove
-	am.CheckActiveEXCs();
 
 	SetState(State_t::SCHEDULING);  // --> Applications from now in a not consistent state
 	++sched_count;
