@@ -73,7 +73,7 @@ SchedulerManager::metrics[SM_METRICS_COUNT] = {
 	//----- Timing metrics
 	SM_SAMPLE_METRIC("time",	"Scheduler execution t[ms]"),
 	SM_SAMPLE_METRIC("period",	"Scheduler activation period t[ms]"),
-	//----- Couting statistics
+	//----- Counting statistics
 	SM_SAMPLE_METRIC("avg.start",	"Avg START per schedule"),
 	SM_SAMPLE_METRIC("avg.reconf",	"Avg RECONF per schedule"),
 	SM_SAMPLE_METRIC("avg.migrec",	"Avg MIGREC per schedule"),
