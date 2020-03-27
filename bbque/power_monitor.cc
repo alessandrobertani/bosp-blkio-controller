@@ -119,7 +119,7 @@ PowerMonitor::PowerMonitor() :
 	if (wm_info.log_enabled) {
 		try {
 			if (!boost::filesystem::exists(wm_info.log_dir))
-				boost::filesystem::create_directory(wm_info.log_dir);
+				boost::filesystem::create_directories(wm_info.log_dir);
 			boost::filesystem::perms prms(boost::filesystem::owner_all);
 			prms |= boost::filesystem::others_read;
 			prms |= boost::filesystem::group_read;
