@@ -745,11 +745,11 @@ void DataManager::UpdateApplicationsData()
 	logger->Debug("UpdateData: applications status...");
 	app_stats.clear();
 
-	num_applications = am.AppsCount(ApplicationStatusIF::RUNNING);
+	num_applications = am.AppsCount(Schedulable::RUNNING);
 
 	// Per-application information
 	AppsUidMapIt app_it;
-	AppPtr_t app_ptr = am.GetFirst(ApplicationStatusIF::RUNNING, app_it);
+	AppPtr_t app_ptr = am.GetFirst(Schedulable::RUNNING, app_it);
 
 	while (app_ptr != nullptr) {
 		app_status_t temp_app;
@@ -759,7 +759,7 @@ void DataManager::UpdateApplicationsData()
 		temp_app.state = app_ptr->State();
 		auto temp_awm = app_ptr->CurrentAWM();
 		logger->Debug("UpdateData: app = <%d>, state = <%s>, current AWM = <%s:%d>",
-		              temp_app.id, ApplicationStatusIF::StateStr(app_ptr->State()));
+			temp_app.id, Schedulable::StateStr(app_ptr->State()));
 
 		if (temp_awm == nullptr) {
 			logger->Debug("UpdateData: app = <%d>, no AWM", temp_app.id);
@@ -856,7 +856,7 @@ void DataManager::UpdateApplicationsData()
 #endif
 		app_stats.push_back(temp_app);
 
-		app_ptr = am.GetNext(ApplicationStatusIF::RUNNING, app_it);
+		app_ptr = am.GetNext(Schedulable::RUNNING, app_it);
 	}
 }
 
