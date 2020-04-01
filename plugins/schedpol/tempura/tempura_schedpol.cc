@@ -205,26 +205,36 @@ TempuraSchedPol::InitBudgets()
 {
 	// Binding type (CPU, GPU,...))
 	BindingMap_t & bindings(bdm.GetBindingDomains());
-	for (auto & bd_entry : bindings) {
-		BindingInfo_t const & bd_info(*(bd_entry.second));
 
-		// Resource path e.g., "sys0.cpu[0..n].XX"
-		for (br::ResourcePtr_t const & rsrc : bd_info.resources) {
-			br::ResourcePathPtr_t r_path(rsrc->Path());
-			r_path->AppendString("pe");
+	// The policy works only with CPUs
+	auto cpu_bindings = bindings[br::ResourceType::CPU];
 
-			// Add a budget info object
-			br::ResourcePtrList_t r_list(ra.GetResources(r_path));
-			budgets.emplace(r_path, std::make_shared<BudgetInfo>(r_path, r_list));
-			logger->Debug("Init: budgeting on '%s' [Model: %s]",
-			              r_path->ToString().c_str(),
-			              budgets[r_path]->model.c_str());
+	// Resource path e.g., "sys0.cpu[0..n].XX"
+	for (br::ResourcePtr_t const & rsrc : cpu_bindings->resources) {
 
-			// CPU frequency setting
-			InitCPUFreqGovernor(r_path);
-			logger->Debug("Init: CPU frequency governor set [%s]",
-			              cpufreq_gov.c_str());
+		// Some resource path could be a reference to an "intermediate"
+		// resource level (e.g., "sys0.cpu2")
+		br::ResourcePathPtr_t r_path;
+		if (rsrc->Path() == nullptr) {
+			r_path = ra.GetPath("sys." + rsrc->Name());
 		}
+		else
+			r_path = rsrc->Path();
+
+		// Build the resource path "sysX.cpuY.pe"
+		r_path->AppendString("pe");
+
+		// Add a budget info object
+		br::ResourcePtrList_t r_list(ra.GetResources(r_path));
+		budgets.emplace(r_path, std::make_shared<BudgetInfo>(r_path, r_list));
+		logger->Debug("Init: budgeting on '%s' [Model: %s]",
+			r_path->ToString().c_str(),
+			budgets[r_path]->model.c_str());
+
+		// CPU frequency setting
+		InitCPUFreqGovernor(r_path);
+		logger->Debug("Init: CPU frequency governor set [%s]",
+			cpufreq_gov.c_str());
 	}
 
 	return SCHED_OK;
