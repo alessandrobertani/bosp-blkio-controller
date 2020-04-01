@@ -82,9 +82,9 @@ AgentImpl::GetWorkloadStatus(grpc::ServerContext * context,
 	logger->Debug("WorkloadStatus: request from sys%d for sys%d",
 		request->sender_id(), request->dest_id());
 	reply->set_nr_running(system.ApplicationsCount(
-		bbque::app::ApplicationStatusIF::RUNNING));
+						bbque::app::Schedulable::RUNNING));
 	reply->set_nr_ready(system.ApplicationsCount(
-		bbque::app::ApplicationStatusIF::READY));
+						bbque::app::Schedulable::READY));
 
 	return grpc::Status::OK;
 }
