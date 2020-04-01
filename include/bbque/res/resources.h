@@ -42,15 +42,13 @@ using bbque::utils::ExtraDataContainer;
 using bbque::utils::Timer;
 using bbque::utils::pEma_t;
 
-namespace bbque
-{
+namespace bbque {
 
 // Forward declaration
 class ResourceAccounter;
 
 
-namespace res
-{
+namespace res {
 
 // Forward declarations
 class Resource;
@@ -75,7 +73,7 @@ using ResourceStatePtr_t = std::shared_ptr<ResourceState>;
 using AppUsageQtyMap_t = std::map<AppUid_t, uint64_t>;
 
 /** Hash map collecting the state views of a resource */
-using RSHashMap_t =  std::unordered_map<RViewToken_t, ResourceStatePtr_t>;
+using RSHashMap_t = std::unordered_map<RViewToken_t, ResourceStatePtr_t>;
 
 
 using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
@@ -92,19 +90,20 @@ using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
  * Indeed a state is a dynamic concept, while the total is a static
  * information.
  */
-struct ResourceState {
+struct ResourceState
+{
 
 	/**
 	 * @brief Constructor
 	 */
-	ResourceState():
-		used(0) {
-	}
+	ResourceState() :
+	    used(0) { }
 
 	/**
 	 * @brief Destructor
 	 */
-	~ResourceState() {
+	~ResourceState()
+	{
 		apps.clear();
 	}
 
@@ -118,7 +117,6 @@ struct ResourceState {
 	AppUsageQtyMap_t apps;
 
 };
-
 
 /**
  * @class Resource
@@ -136,24 +134,25 @@ struct ResourceState {
  * of resource. This feature is particularly useful for components like the
  * Scheduler/Optimizer (see below.)
  */
-class Resource: public ResourceIdentifier, public ExtraDataContainer
+class Resource : public ResourceIdentifier, public ExtraDataContainer
 {
-
-// This makes method SetTotal() accessible to RA
+	// This makes method SetTotal() accessible to RA
 	friend class bbque::ResourceAccounter;
 
 public:
 
-	enum ExitCode_t {
-	        RS_SUCCESS = 0,       /** Generic success code */
-	        RS_FAILED,            /** Generic failure code */
-	        RS_NO_APPS,           /** Resource not used by any application */
-	        RS_PWR_INFO_DISABLED  /** Required a power information not enabled */
+	enum ExitCode_t
+	{
+		RS_SUCCESS = 0, /** Generic success code */
+		RS_FAILED, /** Generic failure code */
+		RS_NO_APPS, /** Resource not used by any application */
+		RS_PWR_INFO_DISABLED /** Required a power information not enabled */
 	};
 
-	enum ValueType {
-	        INSTANT,
-	        MEAN
+	enum ValueType
+	{
+		INSTANT,
+		MEAN
 	};
 
 	/**
@@ -172,64 +171,70 @@ public:
 	{
 	public:
 
-		PowerSettings():
-			freq_governor(""),
-			freq_khz(0),
-			perf_state(-1) {
-		}
+		PowerSettings() :
+		    freq_governor(""),
+		    freq_khz(0),
+		    perf_state(-1) { }
 
 		PowerSettings(
-		        std::string const & gov,
-		        uint32_t freq,
-		        int32_t pstate):
+			std::string const & gov,
+			uint32_t freq,
+			int32_t pstate) :
 
-			freq_governor(gov),
-			freq_khz(freq),
-			perf_state(pstate) {
-		}
+		    freq_governor(gov),
+		    freq_khz(freq),
+		    perf_state(pstate) { }
 
-		enum Actions {
-		        TURN_ONOFF      = 1,
-		        CHANGE_GOVERNOR = 2,
-		        SET_FREQUENCY   = 4,
-		        SET_PERF_STATE  = 8
+		enum Actions
+		{
+			TURN_ONOFF = 1,
+			CHANGE_GOVERNOR = 2,
+			SET_FREQUENCY = 4,
+			SET_PERF_STATE = 8
 		};
 
-		bool operator==(const PowerSettings & other) const noexcept {
+		bool operator==(const PowerSettings & other) const noexcept
+		{
 			return ((this->freq_governor.compare(other.freq_governor) == 0)
-			        && this->freq_khz == other.freq_khz
-			        && this->perf_state == other.perf_state);
+				&& this->freq_khz == other.freq_khz
+				&& this->perf_state == other.perf_state);
 		}
 
-		void operator=(const PowerSettings & other) {
+		void operator=(const PowerSettings & other)
+		{
 			SetOn(other.online);
 			SetFrequencyGovernor(other.freq_governor);
 			SetClockFrequency(other.freq_khz);
 			SetPerformanceState(other.perf_state);
 		}
 
-
-		std::string const & FrequencyGovernor() const {
+		std::string const & FrequencyGovernor() const
+		{
 			return freq_governor;
 		}
 
-		uint32_t ClockFrequency() const {
+		uint32_t ClockFrequency() const
+		{
 			return freq_khz;
 		}
 
-		int32_t PerformanceState() const {
+		int32_t PerformanceState() const
+		{
 			return perf_state;
 		}
 
-		bool IsOnline() const {
+		bool IsOnline() const
+		{
 			return online;
 		}
 
-		uint8_t PendingActions() const {
+		uint8_t PendingActions() const
+		{
 			return pending_actions;
 		}
 
-		bool SetOn(bool on) {
+		bool SetOn(bool on)
+		{
 			if (this->online != on) {
 				pending_actions |= TURN_ONOFF;
 				this->online = on;
@@ -238,9 +243,10 @@ public:
 			return false;
 		}
 
-		bool SetFrequencyGovernor(std::string const & freq_governor){
+		bool SetFrequencyGovernor(std::string const & freq_governor)
+		{
 			if (this->freq_governor.compare(freq_governor) != 0
-				&& !freq_governor.empty()) {
+			&& !freq_governor.empty()) {
 				pending_actions |= CHANGE_GOVERNOR;
 				this->freq_governor.assign(freq_governor);
 				return true;
@@ -248,9 +254,10 @@ public:
 			return false;
 		}
 
-		bool SetClockFrequency(uint32_t freq_khz){
+		bool SetClockFrequency(uint32_t freq_khz)
+		{
 			if (this->freq_khz != freq_khz
-				&& freq_khz != 0) {
+			&& freq_khz != 0) {
 				pending_actions |= SET_FREQUENCY;
 				this->freq_khz = freq_khz;
 				return true;
@@ -258,9 +265,10 @@ public:
 			return false;
 		}
 
-		bool SetPerformanceState(int32_t perf_state){
+		bool SetPerformanceState(int32_t perf_state)
+		{
 			if (this->perf_state != perf_state
-				&& perf_state != -1) {
+			&& perf_state != -1) {
 				pending_actions |= SET_PERF_STATE;
 				this->perf_state = perf_state;
 				return true;
@@ -268,7 +276,8 @@ public:
 			return false;
 		}
 
-		void Reset() {
+		void Reset()
+		{
 			online = true;
 			freq_governor.assign("");
 			freq_khz = 0;
@@ -276,7 +285,8 @@ public:
 			pending_actions = 0;
 		}
 
-		void ClearPendingActions() {
+		void ClearPendingActions()
+		{
 			pending_actions = 0;
 		}
 
@@ -315,7 +325,8 @@ public:
 	/**
 	 * Destructor
 	 */
-	~Resource() {
+	~Resource()
+	{
 		state_views.clear();
 #ifdef CONFIG_BBQUE_PM
 		pw_profile.values.clear();
@@ -326,7 +337,8 @@ public:
 	 * @brief Set the resource model name
 	 * e.g. The model name of a CPU ("Intel i7-2640M")
 	 */
-	void SetModel(std::string const & model_name) {
+	void SetModel(std::string const & model_name)
+	{
 		model.assign(model_name);
 	}
 
@@ -337,14 +349,16 @@ public:
 	 *
 	 * @return A char string object reference
 	 */
-	std::string const & Model() const {
+	std::string const & Model() const
+	{
 		return model;
 	}
 
 	/**
 	 * @brief Set the resource path string
 	 */
-	void SetPath(ResourcePathPtr_t r_path) {
+	void SetPath(ResourcePathPtr_t r_path)
+	{
 		path = r_path;
 	}
 
@@ -352,7 +366,8 @@ public:
 	 * @brief The registered resource path string
 	 * @return A string containing the resource path
 	 */
-	ResourcePathPtr_t Path() const {
+	ResourcePathPtr_t Path() const
+	{
 		return path;
 	}
 
@@ -364,7 +379,8 @@ public:
 	 * @brief Resource total
 	 * @return The total amount of resource
 	 */
-	uint64_t Total() const {
+	uint64_t Total() const
+	{
 		return total;
 	}
 
@@ -403,7 +419,8 @@ public:
 	 * @param view_id The token referencing the resource view
 	 * @return Number of applications
 	 */
-	uint16_t ApplicationsCount(RViewToken_t view_id = 0) const {
+	uint16_t ApplicationsCount(RViewToken_t view_id = 0) const
+	{
 		AppUsageQtyMap_t apps_map;
 		return ApplicationsCount(apps_map, view_id);
 	}
@@ -425,7 +442,8 @@ public:
 	 * @param view_id The token referencing the resource view
 	 * @return The number of applications
 	 */
-	uint16_t Applications(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0) const {
+	uint16_t Applications(AppUsageQtyMap_t & apps_map, RViewToken_t view_id = 0) const
+	{
 		return ApplicationsCount(apps_map, view_id);
 	}
 
@@ -433,7 +451,8 @@ public:
 	 * @brief The number of state views of the resource
 	 * @return The size of the map
 	 */
-	size_t ViewCount() const {
+	size_t ViewCount() const
+	{
 		return state_views.size();
 	}
 
@@ -450,7 +469,8 @@ public:
 	 *
 	 * @return The amount of resources not being currently reserved
 	 */
-	uint64_t Unreserved() const {
+	uint64_t Unreserved() const
+	{
 		return (total - reserved);
 	}
 
@@ -459,14 +479,15 @@ public:
 	 *
 	 * @return
 	 */
-	ExitCode_t  Reserve(uint64_t amount);
+	ExitCode_t Reserve(uint64_t amount);
 
 	/**
 	 * @brief Amount not available, not allocable
 	 *
 	 * @return The not allocable amount
 	 */
-	uint64_t Reserved() const {
+	uint64_t Reserved() const
+	{
 		return reserved;
 	}
 
@@ -480,7 +501,8 @@ public:
 	 *
 	 * @return true if it is offline, false otherwise
 	 */
-	bool IsOffline() const {
+	bool IsOffline() const
+	{
 		return !pw_config.IsOnline();
 	}
 
@@ -498,7 +520,8 @@ public:
 	 * @brief Set a new power configuration to apply
 	 * later on during the optimization stage
 	 */
-	void SetPowerSettings(PowerSettings new_settings) {
+	void SetPowerSettings(PowerSettings new_settings)
+	{
 		pw_config = new_settings;
 	}
 
@@ -506,7 +529,8 @@ public:
 	 * @brief Get the currently set power configuration
 	 *  to actuate during the optimization stage
 	 */
-	PowerSettings & GetPowerSettings() {
+	PowerSettings & GetPowerSettings()
+	{
 		return pw_config;
 	}
 
@@ -535,14 +559,16 @@ public:
 	 *
 	 * @return The number of samples
 	 */
-	uint GetPowerInfoSamplesWindowSize(PowerManager::InfoType i_type) const {
+	uint GetPowerInfoSamplesWindowSize(PowerManager::InfoType i_type) const
+	{
 		return pw_profile.samples_window[int(i_type)];
 	}
 
 	/**
 	 * @brief The number of power profile information required
 	 */
-	uint GetPowerInfoEnabledCount() const {
+	uint GetPowerInfoEnabledCount() const
+	{
 		return pw_profile.enabled_count;
 	}
 
@@ -552,7 +578,8 @@ public:
 	 * @param i_type The power profile information to update
 	 * @param sample The sample value
 	 */
-	void UpdatePowerInfo(PowerManager::InfoType i_type, uint32_t sample) {
+	void UpdatePowerInfo(PowerManager::InfoType i_type, uint32_t sample)
+	{
 		std::unique_lock<std::mutex> ul(pw_profile.mux);
 		pw_profile.values[int(i_type)]->update(sample);
 	}
@@ -580,7 +607,8 @@ public:
 	 *
 	 * @param deg_perc Percentage of performance degradation
 	 */
-	void UpdateDegradationPerc(uint8_t deg_perc) {
+	void UpdateDegradationPerc(uint8_t deg_perc)
+	{
 		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		rb_profile.degradation_perc->update(deg_perc);
 	}
@@ -590,7 +618,8 @@ public:
 	 *
 	 * @return Current percentage of performance degradation
 	 */
-	uint8_t CurrentDegradationPerc() const {
+	uint8_t CurrentDegradationPerc() const
+	{
 		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		return rb_profile.degradation_perc->last_value();
 	}
@@ -600,7 +629,8 @@ public:
 	 *
 	 * @return Mean percentage of performance degradation
 	 */
-	float MeanDegradationPerc() const {
+	float MeanDegradationPerc() const
+	{
 		std::unique_lock<std::mutex> ul(rb_profile.mux);
 		return rb_profile.degradation_perc->get();
 	}
@@ -611,27 +641,30 @@ private:
 	/**
 	 * @brief The metrics to track run-time availability of a resource
 	 */
-	typedef struct AvailabilityProfile {
-		Timer online_tmr;          /** Timer to keep track of online time;   */
-		Timer offline_tmr;         /** Timer to keep track of offline time;  */
-		uint64_t lastOnlineTime;   /** Last online timeframe [ms]            */
-		uint64_t lastOfflineTime;  /** Last offline timeframe [ms]           */
+	typedef struct AvailabilityProfile
+	{
+		Timer online_tmr; /** Timer to keep track of online time;   */
+		Timer offline_tmr; /** Timer to keep track of offline time;  */
+		uint64_t lastOnlineTime; /** Last online timeframe [ms]            */
+		uint64_t lastOfflineTime; /** Last offline timeframe [ms]           */
 	} AvailabilityProfile_t;
 
 	/**
 	 * @brief Information related to the power/thermal status of the resource
 	 */
-	typedef struct PowerProfile {
+	typedef struct PowerProfile
+	{
 		mutable std::mutex mux;
 		PowerManager::SamplesArray_t samples_window; /** Available run-time information */
-		std::vector<pEma_t> values;                  /** Sampled values */
-		uint enabled_count;                          /** Count of power profiling info enabled */
+		std::vector<pEma_t> values; /** Sampled values */
+		uint enabled_count; /** Count of power profiling info enabled */
 	} PowerProfile_t;
 
 	/**
 	 * @brief Runtime information about the reliability of the resource
 	 */
-	typedef struct ReliabilityProfile {
+	typedef struct ReliabilityProfile
+	{
 		mutable std::mutex mux;
 		pEma_t degradation_perc; /** Percentage of performance degradation (stats) */
 	} ReliabilityProfile_t;
@@ -660,8 +693,7 @@ private:
 	/** Power/thermal status (if the platform support is available) */
 	PowerProfile_t pw_profile;
 
-	PowerManager::SamplesArray_t default_samples_window =
-	{ BBQUE_PM_DEFAULT_SAMPLES_WINSIZE };
+	PowerManager::SamplesArray_t default_samples_window = {BBQUE_PM_DEFAULT_SAMPLES_WINSIZE};
 #endif
 
 	/** The run-time reliability profile of this resource */
@@ -694,7 +726,8 @@ private:
 	 * @note This method acts only upon the default state view only
 	 * @param tot The amount to set
 	 */
-	void SetTotal(uint64_t tot) {
+	void SetTotal(uint64_t tot)
+	{
 		total = tot;
 	}
 
@@ -788,8 +821,8 @@ private:
 };
 
 
-}   // namespace res
+} // namespace res
 
-}   // namespace bbque
+} // namespace bbque
 
 #endif // BBQUE_RESOURCES_H_

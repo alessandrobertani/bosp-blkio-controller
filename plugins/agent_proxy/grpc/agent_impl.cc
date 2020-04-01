@@ -20,19 +20,17 @@
 #include "bbque/config.h"
 
 #ifdef CONFIG_BBQUE_PM
-  #include "bbque/pm/power_manager.h"
+#include "bbque/pm/power_manager.h"
 #endif
 
-namespace bbque
-{
-namespace plugins
-{
+namespace bbque {
+namespace plugins {
 
-grpc::Status AgentImpl::GetResourceStatus(
-		grpc::ServerContext * context,
-		const bbque::ResourceStatusRequest * request,
-		bbque::ResourceStatusReply * reply) {
-
+grpc::Status
+AgentImpl::GetResourceStatus(grpc::ServerContext * context,
+			     const bbque::ResourceStatusRequest * request,
+			     bbque::ResourceStatusReply * reply)
+{
 	logger->Debug("ResourceStatus: request from sys%d for sys%d",
 		request->sender_id(), request->dest_id());
 	if (request->path().empty()) {
@@ -54,7 +52,7 @@ grpc::Status AgentImpl::GetResourceStatus(
 	}
 
 	bbque::res::ResourcePathPtr_t resource_path(
-		system.GetResourcePath(request->path()));
+						system.GetResourcePath(request->path()));
 	if (resource_path == nullptr) {
 		logger->Error("ResourceStatus: invalid resource path specified");
 		return grpc::Status::CANCELLED;
@@ -76,12 +74,11 @@ grpc::Status AgentImpl::GetResourceStatus(
 	return grpc::Status::OK;
 }
 
-
-grpc::Status AgentImpl::GetWorkloadStatus(
-		grpc::ServerContext * context,
-		const bbque::GenericRequest * request,
-		bbque::WorkloadStatusReply * reply) {
-
+grpc::Status
+AgentImpl::GetWorkloadStatus(grpc::ServerContext * context,
+			     const bbque::GenericRequest * request,
+			     bbque::WorkloadStatusReply * reply)
+{
 	logger->Debug("WorkloadStatus: request from sys%d for sys%d",
 		request->sender_id(), request->dest_id());
 	reply->set_nr_running(system.ApplicationsCount(
@@ -92,11 +89,11 @@ grpc::Status AgentImpl::GetWorkloadStatus(
 	return grpc::Status::OK;
 }
 
-grpc::Status AgentImpl::GetChannelStatus(
-		grpc::ServerContext * context,
-		const bbque::GenericRequest * request,
-		bbque::ChannelStatusReply * reply) {
-
+grpc::Status
+AgentImpl::GetChannelStatus(grpc::ServerContext * context,
+			    const bbque::GenericRequest * request,
+			    bbque::ChannelStatusReply * reply)
+{
 	logger->Debug("ChannelStatus: request from sys%d for sys%d",
 		request->sender_id(), request->dest_id());
 	reply->set_connected(true);
@@ -104,12 +101,11 @@ grpc::Status AgentImpl::GetChannelStatus(
 	return grpc::Status::OK;
 }
 
-
-grpc::Status AgentImpl::SetNodeManagementAction(
-		grpc::ServerContext * context,
-		const bbque::NodeManagementRequest * action,
-		bbque::GenericReply * error) {
-
+grpc::Status
+AgentImpl::SetNodeManagementAction(grpc::ServerContext * context,
+				   const bbque::NodeManagementRequest * action,
+				   bbque::GenericReply * error)
+{
 	logger->Debug(" === SetNodeManagementAction ===");
 	logger->Info("Management action: %d ", action->value());
 	error->set_value(bbque::GenericReply::OK);

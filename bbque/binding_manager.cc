@@ -24,9 +24,7 @@
 #define MODULE_CONFIG      "BindingManager"
 
 
-namespace bbque
-{
-
+namespace bbque {
 
 BindingManager & BindingManager::GetInstance()
 {
@@ -34,10 +32,9 @@ BindingManager & BindingManager::GetInstance()
 	return instance;
 }
 
-BindingManager::BindingManager():
-	logger(bbque::utils::Logger::GetLogger(MODULE_NAMESPACE)),
-	ra(ResourceAccounter::GetInstance()) {}
-
+BindingManager::BindingManager() :
+    logger(bbque::utils::Logger::GetLogger(MODULE_NAMESPACE)),
+    ra(ResourceAccounter::GetInstance()) { }
 
 void BindingManager::InitBindingDomains()
 {
@@ -46,11 +43,11 @@ void BindingManager::InitBindingDomains()
 	ConfigurationManager & config_manager(ConfigurationManager::GetInstance());
 	std::string domains_str;
 	boost::program_options::options_description opts_desc(
-	        "BindingManager options (domains)");
+							"BindingManager options (domains)");
 	opts_desc.add_options()
 		(MODULE_CONFIG ".domains",
-		 boost::program_options::value<std::string>(&domains_str)->default_value("cpu"),
-		 "Resource binding domain");
+		boost::program_options::value<std::string>(&domains_str)->default_value("cpu"),
+		"Resource binding domain");
 	boost::program_options::variables_map opts_vm;
 	config_manager.ParseConfigurationFile(opts_desc, opts_vm);
 	logger->Info("InitBindingDomains: configuration value = %s", domains_str.c_str());
@@ -66,14 +63,14 @@ void BindingManager::InitBindingDomains()
 
 		// Binding domain resource path
 		br::ResourcePathPtr_t base_path =
-		        std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
+			std::make_shared<br::ResourcePath>(ra.GetPrefixPath());
 		base_path->Concat(binding_str);
 
 		// Binding domain resource type check
 		br::ResourceType type = base_path->Type();
 		if (type == br::ResourceType::UNDEFINED) {
 			logger->Error("InitBindingDomains: <%s> is not a valid domain path",
-				      base_path->ToString().c_str());
+				base_path->ToString().c_str());
 			continue;
 		}
 
@@ -81,7 +78,7 @@ void BindingManager::InitBindingDomains()
 #ifndef CONFIG_TARGET_NVIDIA
 		if (type == br::ResourceType::GPU) {
 			logger->Info("InitBindingDomains: OpenCL or NVIDIA support disabled."
-			             " Discarding <GPU> bindings");
+				" Discarding <GPU> bindings");
 			continue;
 		}
 #endif
@@ -90,21 +87,19 @@ void BindingManager::InitBindingDomains()
 		domains.emplace(type, std::make_shared<BindingInfo_t>());
 		domains[type]->base_path = base_path;
 		logger->Info("InitBindingDomains: base_path=<%s> -> type=<%s>",
-		             domains[type]->base_path->ToString().c_str(),
-		             br::GetResourceTypeString(type));
+			domains[type]->base_path->ToString().c_str(),
+			br::GetResourceTypeString(type));
 	}
 
 	logger->Info("InitBindingDomains: nr. loaded domains = %d",
-		     domains.size());
+		domains.size());
 }
-
 
 BindingManager::ExitCode_t BindingManager::LoadBindingDomains()
 {
-
 	InitBindingDomains();
 	if (domains.empty()) {
-		logger->Fatal("Missing binding domains");
+		logger->Fatal("LoadBindingDomains: missing binding domains");
 		return ERR_MISSING_OPTIONS;
 	}
 
@@ -116,19 +111,19 @@ BindingManager::ExitCode_t BindingManager::LoadBindingDomains()
 
 		// Skip missing resource bindings
 		if (binding.resources.empty()) {
-			logger->Warn("Init: <%s> bindings not available",
-			             binding.base_path->ToString().c_str());
+			logger->Warn("LoadBindingDomains: <%s> bindings not available",
+				binding.base_path->ToString().c_str());
 		}
 
 		// Get all the possible resource binding IDs
 		for (br::ResourcePtr_t & rsrc : binding.resources) {
 			binding.r_ids.emplace(rsrc->ID());
-			logger->Info("Init: R<%s> ID: %d",
-			             binding.base_path->ToString().c_str(), rsrc->ID());
+			logger->Info("LoadBindingDomains: R<%s> ID: %d",
+				binding.base_path->ToString().c_str(), rsrc->ID());
 		}
-		logger->Info("Init: R<%s>: %d possible bindings",
-		             binding.base_path->ToString().c_str(),
-		             binding.resources.size());
+		logger->Info("LoadBindingDomains: R<%s>: %d possible bindings",
+			binding.base_path->ToString().c_str(),
+			binding.resources.size());
 	}
 
 	return OK;

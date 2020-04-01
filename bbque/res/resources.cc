@@ -22,26 +22,23 @@
 
 namespace bu = bbque::utils;
 
-namespace bbque
-{
-namespace res
-{
+namespace bbque {
+namespace res {
 
 /*****************************************************************************
  * class Resource
  *****************************************************************************/
 
-Resource::Resource(br::ResourceType type, BBQUE_RID_TYPE id, uint64_t tot):
-	br::ResourceIdentifier(type, id),
-	total(tot),
-	reserved(0)
+Resource::Resource(br::ResourceType type, BBQUE_RID_TYPE id, uint64_t tot) :
+    br::ResourceIdentifier(type, id),
+    total(tot),
+    reserved(0)
 {
 	name = std::string(GetResourceTypeString(type)) + std::to_string(id);
 
 	// Initialize profiling data structures
 	InitProfilingInfo();
 }
-
 
 void Resource::InitProfilingInfo()
 {
@@ -62,7 +59,7 @@ void Resource::SetOffline()
 	av_profile.offline_tmr.start();
 	av_profile.lastOnlineTime = av_profile.online_tmr.getElapsedTimeMs();
 	fprintf(stderr, FI("Resource {%s} OFFLINED, last on-line %.3f[s]\n"),
-	        name.c_str(), (av_profile.lastOnlineTime / 1000.0));
+		name.c_str(), (av_profile.lastOnlineTime / 1000.0));
 }
 
 void Resource::SetOnline()
@@ -73,7 +70,7 @@ void Resource::SetOnline()
 	av_profile.online_tmr.start();
 	av_profile.lastOfflineTime = av_profile.offline_tmr.getElapsedTimeMs();
 	fprintf(stderr, FI("Resource {%s} ONLINED, last off-line %.3f[s]\n"),
-	        name.c_str(), (av_profile.lastOfflineTime / 1000.0));
+		name.c_str(), (av_profile.lastOfflineTime / 1000.0));
 }
 
 uint64_t Resource::Used(RViewToken_t view_id) const
@@ -123,8 +120,8 @@ Resource::ExitCode_t Resource::Reserve(uint64_t amount)
 
 	reserved = amount;
 	DB(fprintf(stderr, FD("Resource {%s}: update reserved to [%" PRIu64 "] "
-	                      "=> available [%" PRIu64 "]\n"),
-	           name.c_str(), reserved, total - reserved));
+			"=> available [%" PRIu64 "]\n"),
+		name.c_str(), reserved, total - reserved));
 	return RS_SUCCESS;
 }
 
@@ -133,7 +130,7 @@ uint64_t Resource::UsedBy(SchedPtr_t const & papp, RViewToken_t view_id) const
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
 		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
-		           name.c_str(), view_id));
+			name.c_str(), view_id));
 		return 0;
 	}
 
@@ -141,9 +138,8 @@ uint64_t Resource::UsedBy(SchedPtr_t const & papp, RViewToken_t view_id) const
 	return UsedBy(papp, view->apps);
 }
 
-
 uint64_t Resource::Acquire(SchedPtr_t const & papp, uint64_t amount,
-                           RViewToken_t view_id)
+			   RViewToken_t view_id)
 {
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
@@ -167,8 +163,8 @@ uint64_t Resource::Release(SchedPtr_t const & papp, RViewToken_t view_id)
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
 		DB(fprintf(stderr,
-		           FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
-		           name.c_str(), view_id));
+			FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
+			name.c_str(), view_id));
 		return 0;
 	}
 	return Release(papp->Uid(), view);
@@ -179,8 +175,8 @@ uint64_t Resource::Release(AppUid_t app_uid, RViewToken_t view_id)
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
 		DB(fprintf(stderr,
-		           FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
-		           name.c_str(), view_id));
+			FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
+			name.c_str(), view_id));
 		return 0;
 	}
 	return Release(app_uid, view);
@@ -192,7 +188,7 @@ uint64_t Resource::Release(AppUid_t app_uid, ResourceStatePtr_t view)
 	auto lkp = view->apps.find(app_uid);
 	if (lkp == view->apps.end()) {
 		DB(fprintf(stderr, FD("Resource {%s}: no resources allocated to uid=%d\n"),
-		           name.c_str(), app_uid));
+			name.c_str(), app_uid));
 		return 0;
 	}
 
@@ -205,10 +201,9 @@ uint64_t Resource::Release(AppUid_t app_uid, ResourceStatePtr_t view)
 	return used_by_app;
 }
 
-
 void Resource::DeleteView(RViewToken_t view_id)
 {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	// Avoid to delete the default view
 	if (view_id == ra.GetSystemView())
 		return;
@@ -229,7 +224,7 @@ uint64_t Resource::UsedBy(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) 
 {
 	if (!papp) {
 		DB(fprintf(stderr, FW("Resource {%s}: App/EXC null pointer\n"),
-		           name.c_str()));
+			name.c_str()));
 		return 0;
 	}
 
@@ -237,7 +232,7 @@ uint64_t Resource::UsedBy(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) 
 	auto app_using_it(apps_map.find(papp->Uid()));
 	if (app_using_it == apps_map.end()) {
 		DB(fprintf(stderr, FD("Resource {%s}: no usage value for [%s]\n"),
-		           name.c_str(), papp->StrId()));
+			name.c_str(), papp->StrId()));
 		return 0;
 	}
 
@@ -247,7 +242,7 @@ uint64_t Resource::UsedBy(SchedPtr_t const & papp, AppUsageQtyMap_t & apps_map) 
 
 ResourceStatePtr_t Resource::GetStateView(RViewToken_t view_id) const
 {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	// Default view if token = 0
 	if (view_id == 0)
 		view_id = ra.GetSystemView();
@@ -263,7 +258,7 @@ ResourceStatePtr_t Resource::GetStateView(RViewToken_t view_id) const
 #ifdef CONFIG_BBQUE_PM
 
 void Resource::EnablePowerProfiling(
-        PowerManager::SamplesArray_t const & samples_window)
+				    PowerManager::SamplesArray_t const & samples_window)
 {
 	pw_profile.enabled_count = 0;
 
@@ -275,7 +270,7 @@ void Resource::EnablePowerProfiling(
 
 		// Is the sample window size changed?
 		if (pw_profile.values[i] &&
-		    pw_profile.samples_window[i] == samples_window[i])
+		pw_profile.samples_window[i] == samples_window[i])
 			continue;
 
 		// New sample window size
@@ -283,7 +278,6 @@ void Resource::EnablePowerProfiling(
 	}
 	pw_profile.samples_window = samples_window;
 }
-
 
 void Resource::EnablePowerProfiling()
 {
