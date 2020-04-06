@@ -23,6 +23,8 @@ AndroidPlatformProxy::AndroidPlatformProxy()
 {
 	this->logger = bu::Logger::GetLogger(ANDROID_PP_NAMESPACE);
 	assert(logger);
+	this->platform_id = "bq.android";
+	this->hardware_id = BBQUE_TARGET_HARDWARE_ID;
 #ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
 	proc_listener.Start();
 #endif
@@ -85,15 +87,6 @@ bool AndroidPlatformProxy::IsHighPerformance(
 	return false;
 }
 
-const char* AndroidPlatformProxy::GetPlatformID(int16_t system_id) const {
-	(void) system_id;
-	return "android";
-}
-
-const char* AndroidPlatformProxy::GetHardwareID(int16_t system_id) const {
-	(void) system_id;
-	return "device";
-}
 
 AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Setup(SchedPtr_t papp) {
 	logger->Info("Setup: %s", papp->StrId());

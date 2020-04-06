@@ -19,16 +19,13 @@
 #define ANDROID_PLATFORM_PROXY_H
 
 #include "bbque/platform_proxy.h"
-
 #include "bbque/pm/power_manager.h"
 #include "bbque/pp/proc_listener.h"
 
 #define ANDROID_PP_NAMESPACE "bq.pp.android"
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 /**
  * @class AndroidPlatformProxy
@@ -41,15 +38,6 @@ public:
 
 	static AndroidPlatformProxy * GetInstance();
 
-	/**
-	 * @brief Return the Platform specific string identifier
-	 */
-	virtual const char* GetPlatformID(int16_t system_id=-1) const override;
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	virtual const char* GetHardwareID(int16_t system_id=-1) const override;
 	/**
 	 * @brief Platform specific resource setup interface.
 	 */
@@ -81,8 +69,9 @@ public:
 	/**
 	 * @brief Platform specific resource binding interface.
 	 */
-	virtual ExitCode_t MapResources(
-	    SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
+	virtual ExitCode_t MapResources(SchedPtr_t papp,
+					ResourceAssignmentMapPtr_t pres,
+					bool excl = true) override;
 
 	/**
 	 * @brief Test platform specific termination.
@@ -91,7 +80,7 @@ public:
 
 
 	virtual bool IsHighPerformance(
-	    bbque::res::ResourcePathPtr_t const & path) const override;
+				bbque::res::ResourcePathPtr_t const & path) const override;
 
 private:
 
@@ -111,7 +100,9 @@ private:
 	 * If true, indicates that the related CPU cores is an
 	 * high-performance one.
 	 */
-	std::array<bool, BBQUE_TARGET_CPU_CORES_NUM> high_perf_cores = { {false} };
+	std::array<bool, BBQUE_TARGET_CPU_CORES_NUM> high_perf_cores = {
+		{false}
+	};
 
 	void InitCoresType();
 #endif
@@ -127,7 +118,7 @@ private:
 	 */
 	std::unique_ptr<bu::Logger> logger;
 
-	bool platformLoaded=false;
+	bool platformLoaded = false;
 };
 
 }
