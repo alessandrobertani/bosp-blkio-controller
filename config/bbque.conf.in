@@ -5,40 +5,39 @@
 #
 ################################################################################
 
+################################################################################
+# Generic options
+################################################################################
 
-################################################################################
-# Generic Options
-################################################################################
 [bbque]
 #plugins = ${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_PLUGINS}
 
-################################################################################
-# Recipes Loader Options
-################################################################################
 [rloader]
 #xml.recipe_dir = ${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_RECIPES}
 
-################################################################################
-# RPC Channel Options
-################################################################################
 [rpc]
 #fif.dir = ${CONFIG_BOSP_RUNTIME_RWPATH}
 
 ################################################################################
-# Resource Manager Options
+# Daemon execution parameters
 ################################################################################
+
 [ResourceManager]
+# opt_interval is in milliseconds
 #opt_interval = 4000
 
-################################################################################
-# Binding Manager Options
-################################################################################
+[SchedulerManager]
+#policy = test
+
 [BindingManager]
 domains = cpu,gpu,acc,grp.gpu,grp.acc,sys
 
-################################################################################
-# PlatformProxy Options
-################################################################################
+[SynchronizationManager]
+#policy = sasb
+
+[PowerManager]
+temp.sockets = ${CONFIG_BBQUE_PM_TSENSOR_PATHS}
+
 [PowerMonitor]
 # log enabled at starting time
 log.enabled   = 0
@@ -62,37 +61,16 @@ power.trigger   = over_threshold
 #batt.threshold_level = 15
 batt.trigger   = under_threshold
 
-[PowerManager]
-temp.sockets = ${CONFIG_BBQUE_PM_TSENSOR_PATHS}
-
-# CGroups CFS bandwidht enforcement parameters
+# CGroups CFS bandwidth enforcement parameters
 [LinuxPlatformProxy]
 # The safety margin [%] to add for CFS bandwidth enforcement
 # cfs_bandwidth.margin_pct    =   0
 # The threshold [%] under which we enable CFS bandwidth enforcement
 # cfs_bandwidth.threshold_pct = 100
 
-################################################################################
-# Scheduler Manager Options
-################################################################################
-[SchedulerManager]
-#policy = test
-
-################################################################################
-# Synchronization Manager Options
-################################################################################
-[SynchronizationManager]
-#policy = sasb
-
-################################################################################
-# AgentProxy Options
-################################################################################
 [AgentProxy]
 #port = ${CONFIG_BBQUE_AGENT_PROXY_PORT_DEFAULT}
 
-################################################################################
-# OpenMPI Options
-################################################################################
 [ompi]
 nodes.addrs = 127.0.0.1      # list of addresses separated by comma
 nodes.slots = 2              # list of slots per address separated by comma
@@ -102,22 +80,17 @@ updatetime.resources = 500   # In milliseconds
 # test.mig_destination_node =
 # test.mig_time =
 
-################################################################################
-# Data Communication Interface Options
-################################################################################
 [DataManager]
 server_port = 30200
 client_attempts = 3
 
 ################################################################################
-# Logger Options
+# Logger configuration
 ################################################################################
+
 [logger]
 #log4cpp.conf_file = ${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_CONF}/bbque.conf
 
-################################################################################
-# Log4CPP Logger Configuration
-################################################################################
 [log4cpp]
 ###
 # Set root category priority and its appender
@@ -133,15 +106,15 @@ rootCategory = ${BBQUE_LOG_LEVEL}, raFile
 # the rootCategory
 ###
 #category.bq =  	  INFO
-#category.bq.ap = 	  INFO
+category.bq.ap = 	  NOTICE
 category.bq.app = 	  NOTICE
-#category.bq.am =	  NOTICE
+category.bq.am =	  INFO
 category.bq.awm =	  NOTICE
 category.bq.cm =	  INFO
 category.bq.df = 	  NOTICE
 category.bq.dm =	  NOTICE
 category.bq.em =	  INFO
-category.bq.lm =	  INFO
+#category.bq.lm =	  INFO
 category.bq.mc =	  ERROR
 category.bq.om =	  NOTICE
 category.bq.pl =	  INFO
@@ -160,13 +133,12 @@ category.bq.rm = 	  INFO
 category.bq.rp = 	  NOTICE
 category.bq.rt = 	  NOTICE
 category.bq.rbind =	  NOTICE
-#category.bq.rpc.fif = 	  NOTICE
-#category.bq.rpc.prx = 	  NOTICE
+category.bq.rpc.fif = 	  NOTICE
+category.bq.rpc.prx = 	  NOTICE
 #category.bq.sm = 	  INFO
 #category.bq.sp = 	  NOTICE
 #category.bq.ym = 	  INFO
 category.bq.wm =	  INFO
-
 
 ###
 # Root Appender
