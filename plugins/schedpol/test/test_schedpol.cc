@@ -136,8 +136,10 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 
 	// Iterate over all the applications to schedule
 	ForEachApplicationToScheduleDo(assign_awm_app);
-	if (result != SCHED_OK)
+	if (result != SCHED_OK) {
+		logger->Debug("Schedule: not SCHED_OK return [result=%d]", result);
 		return result;
+	}
 	logger->Debug("Schedule: done with applications");
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
@@ -252,8 +254,11 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	}
 
 	// Resource request addition
+	std::string pe_request("sys.cpu.pe");
+	logger->Debug("AssignWorkingMode: [%s] adding resource request <%s>",
+		      papp->StrId(), pe_request.c_str());
 	pawm->AddResourceRequest(
-		"sys.cpu.pe",
+		pe_request,
 		CPU_QUOTA_TO_ALLOCATE,
 		br::ResourceAssignment::Policy::BALANCED);
 
@@ -261,6 +266,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	BindingManager & bdm(BindingManager::GetInstance());
 	BindingMap_t & bindings(bdm.GetBindingDomains());
 	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
+	logger->Debug("AssignWorkingMode: [%s] nr. CPU ids: %d",
+		      papp->StrId(), cpu_ids.size());
+
 	for (BBQUE_RID_TYPE cpu_id : cpu_ids) {
 		logger->Info("AssingWorkingMode: [%s] binding attempt CPU id = %d",
 			papp->StrId(), cpu_id);
@@ -283,7 +291,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 		}
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
 		MapTaskGraph(papp); // Task level mapping
+
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 		return SCHED_OK;
 	}
@@ -321,15 +331,14 @@ int32_t TestSchedPol::DoCPUBinding(
 
 void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
 {
+	logger->Info("MapTaskGraph: [%s] mapping the task graph...", papp->StrId());
+
 	auto task_graph = papp->GetTaskGraph();
 	if (task_graph == nullptr) {
 		logger->Warn("AssignWorkingMode: [%s] no task - graph to map",
 			papp->StrId());
 		return;
 	}
-
-	uint16_t throughput;
-	uint32_t c_time;
 
 	int unit_id = 3;          // An arbitrary processing unit number
 	unsigned short int i = 0; // task index
@@ -338,6 +347,8 @@ void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
 	PlatformManager & plm(PlatformManager::GetInstance());
 	const auto systems = plm.GetPlatformDescription().GetSystemsAll();
 
+	uint16_t throughput;
+	uint32_t c_time;
 	for (auto t_entry : task_graph->Tasks()) {
 		unit_id++;
 		auto & task(t_entry.second);
