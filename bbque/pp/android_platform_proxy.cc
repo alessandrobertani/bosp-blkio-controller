@@ -3,28 +3,28 @@
 namespace bbque {
 namespace pp {
 
-
-AndroidPlatformProxy * AndroidPlatformProxy::GetInstance() {
+AndroidPlatformProxy * AndroidPlatformProxy::GetInstance()
+{
 	static AndroidPlatformProxy * instance;
 	if (instance == nullptr)
 		instance = new AndroidPlatformProxy();
 	return instance;
 }
 
-
 AndroidPlatformProxy::AndroidPlatformProxy()
 #ifdef CONFIG_BBQUE_PM
-	:
-	pm(PowerManager::GetInstance())
+    :
+    pm(PowerManager::GetInstance())
 #endif
 #ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
-	, proc_listener(ProcessListener::GetInstance())
-#endif 
+    , proc_listener(ProcessListener::GetInstance())
+#endif
 {
 	this->logger = bu::Logger::GetLogger(ANDROID_PP_NAMESPACE);
 	assert(logger);
 	this->platform_id = "bq.android";
 	this->hardware_id = BBQUE_TARGET_HARDWARE_ID;
+
 #ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
 	proc_listener.Start();
 #endif
@@ -37,7 +37,8 @@ AndroidPlatformProxy::AndroidPlatformProxy()
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 
-void AndroidPlatformProxy::InitCoresType() {
+void AndroidPlatformProxy::InitCoresType()
+{
 	std::stringstream ss;
 	ss.str(BBQUE_BIG_LITTLE_HP);
 	std::string first_core_str, last_core_str;
@@ -58,42 +59,44 @@ void AndroidPlatformProxy::InitCoresType() {
 		logger->Debug("InitCoresType: %d is high-performance", core_id);
 		high_perf_cores[core_id] = true;
 	}
-/*
-	while (std::getline(ss, core_str, ',')) {
+	/*
+		while (std::getline(ss, core_str, ',')) {
 
 
-	}
-*/
+		}
+	 */
 }
 
 #endif
 
-bool AndroidPlatformProxy::IsHighPerformance(
-		bbque::res::ResourcePathPtr_t const & path) const {
+bool
+AndroidPlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const
+{
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 
 	BBQUE_RID_TYPE core_id =
 		path->GetID(bbque::res::ResourceType::PROC_ELEMENT);
 	if (core_id >= 0 && core_id <= BBQUE_TARGET_CPU_CORES_NUM) {
 		logger->Debug("IsHighPerformance: <%s> = %d",
-				path->ToString().c_str(), high_perf_cores[core_id]);
+			path->ToString().c_str(), high_perf_cores[core_id]);
 		return high_perf_cores[core_id];
 	}
 	logger->Error("IsHighPerformance: cannot find process element ID in <%s>",
-			path->ToString().c_str());
+		path->ToString().c_str());
 #else
 	(void) path;
 #endif
 	return false;
 }
 
-
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Setup(SchedPtr_t papp) {
+AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Setup(SchedPtr_t papp)
+{
 	logger->Info("Setup: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::LoadPlatformData() {
+AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::LoadPlatformData()
+{
 	logger->Info("LoadPlatformData...");
 	if (platformLoaded)
 		return PLATFORM_OK;
@@ -104,16 +107,16 @@ AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::LoadPlatformData() {
 	try {
 		pd = &this->GetPlatformDescription();
 	}
-	catch(const std::runtime_error& e) {
+	catch (const std::runtime_error& e) {
 		UNUSED(e);
 		logger->Fatal("Unable to get the PlatformDescription object");
 		return PLATFORM_LOADING_FAILED;
 	}
 
-	for (const auto & sys_entry: pd->GetSystemsAll()) {
+	for (const auto & sys_entry : pd->GetSystemsAll()) {
 		auto & sys = sys_entry.second;
 		logger->Debug("[%s@%s] Scanning the CPUs...",
-				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+			sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu);
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
@@ -122,7 +125,7 @@ AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::LoadPlatformData() {
 			}
 		}
 		logger->Debug("[%s@%s] Scanning the memories...",
-				sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+			sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto mem : sys.GetMemoriesAll()) {
 			ExitCode_t result = this->RegisterMEM(*mem);
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
@@ -132,7 +135,7 @@ AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::LoadPlatformData() {
 
 			if (sys.IsLocal()) {
 				logger->Debug("[%s@%s] is local",
-						sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+					sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 			}
 		}
 	}
@@ -143,13 +146,14 @@ AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::LoadPlatformData() {
 }
 
 AndroidPlatformProxy::ExitCode_t
-AndroidPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+AndroidPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu)
+{
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
-	for (const auto pe: cpu.GetProcessingElementsAll()) {
+	for (const auto pe : cpu.GetProcessingElementsAll()) {
 		auto pe_type = pe.GetPartitionType();
 		if (PlatformDescription::MDEV == pe_type ||
-			PlatformDescription::SHARED == pe_type) {
+		PlatformDescription::SHARED == pe_type) {
 
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
@@ -163,51 +167,56 @@ AndroidPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu) {
 	return PLATFORM_OK;
 }
 
-
 AndroidPlatformProxy::ExitCode_t
-AndroidPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem) {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+AndroidPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem)
+{
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
 	std::string resource_path(mem.GetPath());
 	const auto q_bytes = mem.GetQuantity();
 
 	if (ra.RegisterResource(resource_path, "", q_bytes)  == nullptr)
-				return PLATFORM_DATA_PARSING_ERROR;
+		return PLATFORM_DATA_PARSING_ERROR;
 
 	logger->Debug("Registration of <%s> %d bytes done",
-			resource_path.c_str(), q_bytes);
+		resource_path.c_str(), q_bytes);
 
 	return PLATFORM_OK;
 }
 
-
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Refresh() {
+AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Refresh()
+{
 	logger->Info("Refresh...");
 	// TODO implementing as LinuxPP
 	return PLATFORM_OK;
 }
 
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Release(SchedPtr_t papp) {
+AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::Release(SchedPtr_t papp)
+{
 	logger->Info("Release: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::ReclaimResources(SchedPtr_t papp) {
+AndroidPlatformProxy::ExitCode_t
+AndroidPlatformProxy::ReclaimResources(SchedPtr_t papp)
+{
 	logger->Info("ReclaimResources: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
-AndroidPlatformProxy::ExitCode_t AndroidPlatformProxy::MapResources(
-		SchedPtr_t papp,
-		ResourceAssignmentMapPtr_t pres,bool excl) {
-
+AndroidPlatformProxy::ExitCode_t
+AndroidPlatformProxy::MapResources(SchedPtr_t papp,
+				   ResourceAssignmentMapPtr_t pres,
+				   bool excl)
+{
 	(void) pres;
 	(void) excl;
 	logger->Info(" MapResources: %s", papp->StrId());
 	return PLATFORM_OK;
 }
 
-void AndroidPlatformProxy::Exit() {
+void AndroidPlatformProxy::Exit()
+{
 	logger->Info("Exit: Termination...");
 #ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER
 	proc_listener.Terminate();
@@ -220,7 +229,7 @@ bool AndroidPlatformProxy::IsHighPerformance(
 	UNUSED(path);
 	return true;
 }
-*/
+ */
 
 }	// namespace pp
 }	// namespace bbque
