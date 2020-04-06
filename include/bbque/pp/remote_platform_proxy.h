@@ -24,10 +24,8 @@
 
 #define REMOTE_PLATFORM_PROXY_NAMESPACE "bb.pp.rpp"
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 class RemotePlatformProxy : public PlatformProxy, public bbque::plugins::AgentProxyIF
 {
@@ -35,7 +33,7 @@ public:
 
 	RemotePlatformProxy();
 
-	virtual ~RemotePlatformProxy() {}
+	virtual ~RemotePlatformProxy() { }
 
 	/**
 	 * @brief Platform specific resource setup interface.
@@ -66,7 +64,7 @@ public:
 	 * @brief Map resources assignments on remote nodes.
 	 */
 	ExitCode_t MapResources(
-	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true);
+				SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true);
 
 	/**
 	 * @brief Actuate power management on remote nodes.
@@ -83,7 +81,7 @@ public:
 	 * @brief Check if a remote resource is "high-performance" qualified.
 	 */
 	bool IsHighPerformance(
-	        bbque::res::ResourcePathPtr_t const & path) const override;
+			bbque::res::ResourcePathPtr_t const & path) const override;
 
 	/**
 	 * @brief Remote platform termination.
@@ -101,21 +99,21 @@ public:
 
 
 	bbque::agent::ExitCode_t GetResourceStatus(
-	        std::string const & resource_path, agent::ResourceStatus & status);
+						std::string const & resource_path, agent::ResourceStatus & status);
 
 
 	bbque::agent::ExitCode_t GetWorkloadStatus(
-	        std::string const & system_path, agent::WorkloadStatus & status);
+						std::string const & system_path, agent::WorkloadStatus & status);
 
 	bbque::agent::ExitCode_t GetWorkloadStatus(
-	        int system_id, agent::WorkloadStatus & status);
+						int system_id, agent::WorkloadStatus & status);
 
 
 	bbque::agent::ExitCode_t GetChannelStatus(
-	        std::string const & system_path, agent::ChannelStatus & status);
+						std::string const & system_path, agent::ChannelStatus & status);
 
 	bbque::agent::ExitCode_t GetChannelStatus(
-	        int system_id, agent::ChannelStatus & status);
+						int system_id, agent::ChannelStatus & status);
 
 
 	bbque::agent::ExitCode_t SendJoinRequest(std::string const & system_path);
@@ -129,8 +127,8 @@ public:
 
 
 	bbque::agent::ExitCode_t SendScheduleRequest(
-	        std::string const & system_path,
-	        agent::ApplicationScheduleRequest const & request) ;
+						std::string const & system_path,
+						agent::ApplicationScheduleRequest const & request);
 
 private:
 
@@ -144,7 +142,7 @@ private:
 	ExitCode_t LoadAgentProxy();
 
 };
-}   // namespace pp
-}   // namespace bbque
+} // namespace pp
+} // namespace bbque
 
 #endif // BBQUE_REMOTE_PLATFORM_PROXY_H

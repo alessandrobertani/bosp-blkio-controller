@@ -21,17 +21,17 @@
 
 #define MODULE_NAMESPACE "bq.pp.recipe"
 
+
+
 #ifndef CONFIG_MANGO_GN_EMULATION
-  #warning "This may work only with Emulate Acceleration enabled"
+#warning "This may work only with Emulate Acceleration enabled"
 #endif
 
 namespace br = bbque::res;
 namespace po = boost::program_options;
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 RecipePlatformProxy * RecipePlatformProxy::GetInstance()
 {
@@ -47,17 +47,16 @@ RecipePlatformProxy::RecipePlatformProxy()
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 	logger->Debug("RecipePlatformProxy");
-}
-
-RecipePlatformProxy::~RecipePlatformProxy()
-{
 
 	this->hardware_id = "recipe";
 }
 
+RecipePlatformProxy::~RecipePlatformProxy() { }
+
 RecipePlatformProxy::ExitCode_t
-RecipePlatformProxy::MapResources(
-    SchedPtr_t psched, ResourceAssignmentMapPtr_t pres, bool excl) noexcept
+RecipePlatformProxy::MapResources(SchedPtr_t psched,
+				  ResourceAssignmentMapPtr_t pres,
+				  bool excl) noexcept
 {
 	UNUSED(pres);
 	UNUSED(excl);
@@ -75,38 +74,38 @@ RecipePlatformProxy::MapResources(
 		auto & task(task_entry.second);
 		ArchType arch = ArchType::GN;
 		logger->Info("MapResources: [%s] task id=%d -> arch=%s",
-		             papp->StrId(), id, GetStringFromArchType(arch));
+			papp->StrId(), id, GetStringFromArchType(arch));
 		task->SetAssignedArch(arch);
 	}
 
 	// Memory
 	uint32_t base_addr = 0x0;
-	for (auto & b: tg->Buffers()) {
+	for (auto & b : tg->Buffers()) {
 		auto & id(b.first);
 		auto & buffer(b.second);
 		uint32_t mem_bank = 0;
 		uint32_t phy_addr = base_addr;
 		logger->Info("MapResources: [%s] buffer id=%d -> mem=%d [@%x]",
-		             papp->StrId(), id, mem_bank, phy_addr);
+			papp->StrId(), id, mem_bank, phy_addr);
 		buffer->SetMemoryBank(mem_bank);
 		buffer->SetPhysicalAddress(phy_addr);
 		base_addr = phy_addr + buffer->Size();
 	}
 
 	// Memory for events
-	for (auto & e: tg->Events()) {
+	for (auto & e : tg->Events()) {
 		auto & id(e.first);
 		auto & event(e.second);
 		uint32_t phy_addr = base_addr;
 		logger->Info("MapResources: [%s] event id=%d -> [@%x]",
-		             papp->StrId(), id, phy_addr);
+			papp->StrId(), id, phy_addr);
 		event->SetPhysicalAddress(phy_addr);
 		base_addr += 0x4;
 	}
 
 	papp->SetTaskGraph(tg);
 	logger->Info("MapResources: [%s] task-graph mapping updated",
-	             papp->StrId());
+		papp->StrId());
 
 	return PLATFORM_OK;
 }

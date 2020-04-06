@@ -34,13 +34,11 @@ namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
-class RecipePlatformProxy: public OpenCLPlatformProxy {
-
+class RecipePlatformProxy : public OpenCLPlatformProxy
+{
 public:
 
 	static RecipePlatformProxy * GetInstance();
@@ -50,8 +48,9 @@ public:
 	 */
 	virtual ~RecipePlatformProxy();
 
-	ExitCode_t MapResources(
-		SchedPtr_t psched, ResourceAssignmentMapPtr_t pres, bool excl) noexcept;
+	ExitCode_t MapResources(SchedPtr_t psched,
+				ResourceAssignmentMapPtr_t pres,
+				bool excl) noexcept;
 
 private:
 

@@ -69,23 +69,23 @@
 
 #define BBQUE_PP_LINUX_PLATFORM_ID "org.linux.cgroup"
 
-#define BBQUE_LINUXPP_SILOS    BBQUE_LINUXPP_CGROUP"/silos"
+#define BBQUE_PP_LINUX_SILOS BBQUE_PP_LINUX_CGROUP"/silos"
 
-#define BBQUE_LINUXPP_CPUS_PARAM           "cpuset.cpus"
-#define BBQUE_LINUXPP_CPUP_PARAM           "cpu.cfs_period_us"
-#define BBQUE_LINUXPP_CPUQ_PARAM           "cpu.cfs_quota_us"
-#define BBQUE_LINUXPP_MEMN_PARAM           "cpuset.mems"
-#define BBQUE_LINUXPP_MEMB_PARAM           "memory.limit_in_bytes"
-#define BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM  "cpuset.cpu_exclusive"
-#define BBQUE_LINUXPP_MEM_EXCLUSIVE_PARAM  "cpuset.mem_exclusive"
-#define BBQUE_LINUXPP_PROCS_PARAM          "cgroup.procs"
-#define BBQUE_LINUXPP_NETCLS_PARAM         "net_cls.classid"
+#define BBQUE_PP_LINUX_CPUS_PARAM           "cpuset.cpus"
+#define BBQUE_PP_LINUX_CPUP_PARAM           "cpu.cfs_period_us"
+#define BBQUE_PP_LINUX_CPUQ_PARAM           "cpu.cfs_quota_us"
+#define BBQUE_PP_LINUX_MEMN_PARAM           "cpuset.mems"
+#define BBQUE_PP_LINUX_MEMB_PARAM           "memory.limit_in_bytes"
+#define BBQUE_PP_LINUX_CPU_EXCLUSIVE_PARAM  "cpuset.cpu_exclusive"
+#define BBQUE_PP_LINUX_MEM_EXCLUSIVE_PARAM  "cpuset.mem_exclusive"
+#define BBQUE_PP_LINUX_PROCS_PARAM          "cgroup.procs"
+#define BBQUE_PP_LINUX_NETCLS_PARAM         "net_cls.classid"
 
-#define BBQUE_LINUXPP_SYS_MEMINFO "/proc/meminfo"
+#define BBQUE_PP_LINUX_SYS_MEMINFO "/proc/meminfo"
 
 // The default CFS bandwidth period [us]
-#define BBQUE_LINUXPP_CPUP_DEFAULT  100000
-#define BBQUE_LINUXPP_CPUP_MAX      1000000
+#define BBQUE_PP_LINUX_CPUP_DEFAULT  100000
+#define BBQUE_PP_LINUX_CPUP_MAX      1000000
 
 // Checking for kernel version requirements
 
@@ -276,12 +276,12 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeQDisk(int if_index)
 	memset(&req, 0, sizeof (req));
 	memset(&k, 0, sizeof (k));
 
-	req.n.nlmsg_len = NLMSG_LENGTH(sizeof (struct tcmsg));
+	req.n.nlmsg_len   = NLMSG_LENGTH(sizeof (struct tcmsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST | NLM_F_EXCL | NLM_F_CREATE;
-	req.n.nlmsg_type = RTM_NEWQDISC;
-	req.t.tcm_family = AF_UNSPEC;
-	req.t.tcm_parent = TC_H_ROOT;
-	req.t.tcm_handle = Q_HANDLE;
+	req.n.nlmsg_type  = RTM_NEWQDISC;
+	req.t.tcm_family  = AF_UNSPEC;
+	req.t.tcm_parent  = TC_H_ROOT;
+	req.t.tcm_handle  = Q_HANDLE;
 
 	strncpy(k, "htb", sizeof (k) - 1);
 	addattr_l(&req.n, sizeof (req), TCA_KIND, k, strlen(k) + 1);
@@ -315,18 +315,15 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeCLS(int if_index)
 	memset(k, 0, sizeof (k));
 	memset(&req, 0, sizeof (req));
 
-	req.n.nlmsg_len = NLMSG_LENGTH(sizeof (struct tcmsg));
+	req.n.nlmsg_len   = NLMSG_LENGTH(sizeof (struct tcmsg));
 	req.n.nlmsg_flags = NLM_F_REQUEST | (NLM_F_REPLACE | NLM_F_CREATE);
-	req.n.nlmsg_type = RTM_NEWTFILTER;
-	req.t.tcm_family = AF_UNSPEC;
+	req.n.nlmsg_type  = RTM_NEWTFILTER;
+	req.t.tcm_family  = AF_UNSPEC;
+	req.t.tcm_parent  = Q_HANDLE;
 
-	//parent handle
-	req.t.tcm_parent = Q_HANDLE;
-
-	//proto & prio
 	uint32_t protocol = 8; // 8 = ETH_P_IP
-	uint32_t prio = 10;
-	req.t.tcm_info = TC_H_MAKE(prio << 16, protocol);
+	uint32_t prio     = 10;
+	req.t.tcm_info    = TC_H_MAKE(prio << 16, protocol);
 
 	// &kind
 	strncpy(k, "cgroup", sizeof (k) - 1);
@@ -520,7 +517,7 @@ LinuxPlatformProxy::ReclaimResources(SchedPtr_t papp) noexcept
 
 	// Move this app into "silos" CGroup
 	cgroup_set_value_uint64(psilos->pc_cpuset,
-				BBQUE_LINUXPP_PROCS_PARAM,
+				BBQUE_PP_LINUX_PROCS_PARAM,
 				papp->Pid());
 
 	// Configure the CGroup based on resource bindings
@@ -713,7 +710,7 @@ LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
 	std::string PID("0x10" + sstream_PID.str());
 
 	cgroup_add_value_string(pcgd->pc_net_cls,
-				BBQUE_LINUXPP_NETCLS_PARAM, PID.c_str());
+				BBQUE_PP_LINUX_NETCLS_PARAM, PID.c_str());
 	res = cgroup_modify_cgroup(pcgd->pcg);
 	if (res) {
 		logger->Error("SetCGNetworkBandwidth: CGroup NET_CLS resource mapping FAILED "
@@ -1203,7 +1200,7 @@ LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept
 	logger->Debug("BuildSilosCG: Building SILOS CGroup...");
 
 	// Build new CGroup data
-	pcgd = CGroupDataPtr_t(new CGroupData_t(BBQUE_LINUXPP_SILOS));
+	pcgd = CGroupDataPtr_t(new CGroupData_t(BBQUE_PP_LINUX_SILOS));
 	result = BuildCGroup(pcgd);
 	if (BBQUE_UNLIKELY(result != PLATFORM_OK))
 		return result;
@@ -1213,8 +1210,8 @@ LinuxPlatformProxy::BuildSilosCG(CGroupDataPtr_t &pcgd) noexcept
 	sprintf(prlb->mems, "0");
 
 	// Configuring silos constraints
-	cgroup_set_value_string(pcgd->pc_cpuset, BBQUE_LINUXPP_CPUS_PARAM, prlb->cpus);
-	cgroup_set_value_string(pcgd->pc_cpuset, BBQUE_LINUXPP_MEMN_PARAM, prlb->mems);
+	cgroup_set_value_string(pcgd->pc_cpuset, BBQUE_PP_LINUX_CPUS_PARAM, prlb->cpus);
+	cgroup_set_value_string(pcgd->pc_cpuset, BBQUE_PP_LINUX_MEMN_PARAM, prlb->mems);
 
 	// Updating silos constraints
 	logger->Info("BuildSilosCG: Updating kernel CGroup [%s]", pcgd->cgpath);
@@ -1377,7 +1374,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 	// Setting CPUs as EXCLUSIVE if required
 	if (excl) {
 		cgroup_set_value_string(pcgd->pc_cpuset,
-					BBQUE_LINUXPP_CPU_EXCLUSIVE_PARAM, "1");
+					BBQUE_PP_LINUX_CPU_EXCLUSIVE_PARAM, "1");
 	}
 #else
 	excl = false;
@@ -1385,13 +1382,13 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 
 	// Set the assigned CPUs
 	cgroup_set_value_string(pcgd->pc_cpuset,
-				BBQUE_LINUXPP_CPUS_PARAM,
+				BBQUE_PP_LINUX_CPUS_PARAM,
 				prlb->cpus ? prlb->cpus : "");
 
 	// Set the assigned memory NODE (only if we have at least one CPUS)
 	if (prlb->cpus[0]) {
 		cgroup_set_value_string(pcgd->pc_cpuset,
-					BBQUE_LINUXPP_MEMN_PARAM,
+					BBQUE_PP_LINUX_MEMN_PARAM,
 					prlb->mems);
 
 		logger->Debug("SetupCGroup: CPUSET for [%s]: {cpus [%c: %s], mems[%s]}",
@@ -1419,7 +1416,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 	else
 		sprintf(quota, "-1");
 
-	cgroup_set_value_string(pcgd->pc_memory, BBQUE_LINUXPP_MEMB_PARAM, quota);
+	cgroup_set_value_string(pcgd->pc_memory, BBQUE_PP_LINUX_MEMB_PARAM, quota);
 
 	logger->Debug("SetupCGroup: MEMORY for [%s]: {bytes_limit [%s]}",
 		pcgd->papp->StrId(), quota);
@@ -1431,13 +1428,13 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,2,0)
 
-	uint32_t cfs_period_us = BBQUE_LINUXPP_CPUP_MAX;
+	uint32_t cfs_period_us = BBQUE_PP_LINUX_CPUP_MAX;
 	char const *cfs_c = std::to_string(cfs_period_us).c_str();
 
 	if (BBQUE_LIKELY(pcgd->cfs_quota_available)) {
 		bool quota_enforcing = true;
 		// Set the default CPU bandwidth period
-		cgroup_set_value_string(pcgd->pc_cpu, BBQUE_LINUXPP_CPUP_PARAM, cfs_c);
+		cgroup_set_value_string(pcgd->pc_cpu, BBQUE_PP_LINUX_CPUP_PARAM, cfs_c);
 
 		// Set the assigned CPU bandwidth amount
 		// NOTE: if a quota is NOT assigned we have amount_cpus="0", but this
@@ -1463,7 +1460,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 			cpus_quota = (cfs_period_us / 100) * prlb->amount_cpus;
 			cgroup_set_value_int64(
 					pcgd->pc_cpu,
-					BBQUE_LINUXPP_CPUQ_PARAM,
+					BBQUE_PP_LINUX_CPUQ_PARAM,
 					cpus_quota);
 
 			logger->Debug("SetupCGroup: CPU for [%s]: {period [%s], quota [%lu]}",
@@ -1515,7 +1512,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 		prlb->mems,
 		prlb->amount_memb);
 	cgroup_set_value_uint64(
-				pcgd->pc_cpuset, BBQUE_LINUXPP_PROCS_PARAM, pcgd->papp->Pid());
+				pcgd->pc_cpuset, BBQUE_PP_LINUX_PROCS_PARAM, pcgd->papp->Pid());
 
 	logger->Debug("SetupCGroup: Updating cgroup [%s]", pcgd->cgpath);
 	result = cgroup_modify_cgroup(pcgd->pcg);
@@ -1718,7 +1715,7 @@ LinuxPlatformProxy::Freeze(app::SchedPtr_t psched)
 	}
 
 	// change state to frozen
-	std::string freezer_attr(freezer_dir + BBQUE_LINUXPP_FREEZER_STATE);
+	std::string freezer_attr(freezer_dir + BBQUE_PP_LINUX_FREEZER_STATE);
 	std::ofstream fstate_ofs(freezer_attr, std::ofstream::out);
 	try {
 		fstate_ofs << "FROZEN";
@@ -1747,7 +1744,7 @@ LinuxPlatformProxy::Thaw(app::SchedPtr_t psched)
 		return ReliabilityActionsIF::ExitCode_t::ERROR_PROCESS_ID;
 	}
 
-	std::string freezer_attr(freezer_dir + BBQUE_LINUXPP_FREEZER_STATE);
+	std::string freezer_attr(freezer_dir + BBQUE_PP_LINUX_FREEZER_STATE);
 	std::ofstream fofs(freezer_attr, std::ofstream::out);
 	try {
 		fofs << "THAWED";

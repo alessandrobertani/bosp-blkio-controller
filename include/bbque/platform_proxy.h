@@ -34,27 +34,26 @@ using bbque::res::RViewToken_t;
 using bbque::app::SchedPtr_t;
 using bbque::pp::ReliabilityActionsIF;
 
-namespace bbque
-{
+namespace bbque {
 
 /**
  * @class PlatformProxy
  * @brief The PlatformProxy class is the interface for all PlatformProxy
  * classes. The access to these classes is provided by the PlatformManager
  */
-class PlatformProxy: public ReliabilityActionsIF
+class PlatformProxy : public ReliabilityActionsIF
 {
-
 public:
 
-	PlatformProxy(): ReliabilityActionsIF() { }
+	PlatformProxy() : ReliabilityActionsIF() { }
 
-	virtual ~PlatformProxy() {}
+	virtual ~PlatformProxy() { }
 
 	/**
 	 * @brief Exit codes returned by methods of this class
 	 */
-	typedef enum ExitCode {
+	typedef enum ExitCode
+	{
 		PLATFORM_OK = 0,
 		PLATFORM_GENERIC_ERROR,
 		PLATFORM_INIT_FAILED,
@@ -131,7 +130,7 @@ public:
 	 * usage to the application
 	 */
 	virtual ExitCode_t MapResources(
-	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
+					SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) = 0;
 
 	/**
 	 * @brief Set the power management configuration if set by the policy
@@ -144,7 +143,7 @@ public:
 	 * if set by the policy
 	 */
 	virtual ExitCode_t ActuatePowerManagement(
-	        bbque::res::ResourcePtr_t resource);
+						bbque::res::ResourcePtr_t resource);
 
 	/**
 	 * @brief Graceful closure of the platform proxy
@@ -160,14 +159,14 @@ public:
 	 * @return true or false
 	 */
 	virtual bool IsHighPerformance(
-	        bbque::res::ResourcePathPtr_t const & path) const;
+				bbque::res::ResourcePathPtr_t const & path) const;
 
 
 #ifndef CONFIG_BBQUE_PIL_LEGACY
 	/**
-	* @brief Return the platform description loaded by the relative plugin.
-	*        This method is not available with legacy parser.
-	*/
+	 * @brief Return the platform description loaded by the relative plugin.
+	 *        This method is not available with legacy parser.
+	 */
 	static const pp::PlatformDescription & GetPlatformDescription();
 #endif
 
@@ -181,7 +180,7 @@ public:
 	virtual ReliabilityActionsIF::ExitCode_t Restore(app::SchedPtr_t psched) override;
 
 	virtual ReliabilityActionsIF::ExitCode_t Restore(
-	        uint32_t task_id, std::string exec_name) override;
+							uint32_t task_id, std::string exec_name) override;
 
 
 	virtual ReliabilityActionsIF::ExitCode_t Freeze(uint32_t exe_id) override;

@@ -20,14 +20,11 @@ namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
-class NVMLPlatformProxy: public OpenCLPlatformProxy
+class NVMLPlatformProxy : public OpenCLPlatformProxy
 {
-
 public:
 
 	static NVMLPlatformProxy * GetInstance();
@@ -43,10 +40,11 @@ public:
 	ExitCode_t LoadPlatformData() override final;
 
 	/**
-	 * @brief Nvidia resource assignment mapping
+	 * @brief nVIDIA resource assignment mapping
 	 */
-	ExitCode_t MapResources(
-	        SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true);
+	ExitCode_t MapResources(SchedPtr_t papp,
+				ResourceAssignmentMapPtr_t pres,
+				bool excl = true);
 
 	/**
 	 * nvml specific termination

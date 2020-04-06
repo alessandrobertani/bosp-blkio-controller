@@ -28,11 +28,9 @@
 namespace br = bbque::res;
 namespace po = boost::program_options;
 
-namespace bbque
-{
+namespace bbque {
 
-namespace pp
-{
+namespace pp {
 
 NVMLPlatformProxy * NVMLPlatformProxy::GetInstance()
 {
@@ -50,10 +48,7 @@ NVMLPlatformProxy::NVMLPlatformProxy()
 	this->hardware_id = BBQUE_PP_NVML_HARDWARE_ID;
 }
 
-NVMLPlatformProxy::~NVMLPlatformProxy()
-{
-
-}
+NVMLPlatformProxy::~NVMLPlatformProxy() { }
 
 PlatformProxy::ExitCode_t NVMLPlatformProxy::LoadPlatformData()
 {
@@ -102,11 +97,10 @@ PlatformProxy::ExitCode_t NVMLPlatformProxy::LoadPlatformData()
 	return PlatformProxy::PLATFORM_OK;
 }
 
-
 PlatformProxy::ExitCode_t NVMLPlatformProxy::MapResources(
-        ba::SchedPtr_t papp,
-        br::ResourceAssignmentMapPtr_t assign_map,
-        bool excl)
+							  ba::SchedPtr_t papp,
+							  br::ResourceAssignmentMapPtr_t assign_map,
+							  bool excl)
 {
 	(void) papp;
 	(void) assign_map;
@@ -129,27 +123,28 @@ PlatformProxy::ExitCode_t NVMLPlatformProxy::RegisterDevices()
 		result = nvmlDeviceGetName (nv_devices[dev_id], dev_name, NVML_DEVICE_NAME_BUFFER_SIZE);
 		if (NVML_SUCCESS != result) {
 			logger->Warn("RegisterDevices: failed to get name of device %d: %s",
-			             dev_id, nvmlErrorString(result));
-		} else {
+				dev_id, nvmlErrorString(result));
+		}
+		else {
 			logger->Warn("RegisterDevices:  device id=%d name=%s",
-			             dev_id, dev_name);
+				dev_id, dev_name);
 		}
 
 		// Build the resource path
 		std::string r_path(sys_path);
 		r_path += GetResourceTypeString(br::ResourceType::GPU)
-		          + std::to_string(dev_id)
-		          + std::string(".pe0");
+			+ std::to_string(dev_id)
+			+ std::string(".pe0");
 		logger->Debug("RegisterDevices: r_path=<%s>", r_path.c_str());
 
 		// Add to resource accounter
-		ResourceAccounter &ra(ResourceAccounter::GetInstance());
+		ResourceAccounter & ra(ResourceAccounter::GetInstance());
 		auto resource = ra.RegisterResource(r_path, "", 100);
 		resource->SetModel("NVIDIA");
 		auto r_path_ptr = resource->Path();
 		bbque_assert(r_path_ptr);
 		logger->Debug("RegisterDevices: r_path_ptr=<%s>",
-		              r_path_ptr->ToString().c_str());
+			r_path_ptr->ToString().c_str());
 
 #ifdef CONFIG_BBQUE_WM
 		PowerMonitor & wm(PowerMonitor::GetInstance());
@@ -159,14 +154,13 @@ PlatformProxy::ExitCode_t NVMLPlatformProxy::RegisterDevices()
 		InsertDeviceID(0, r_path_ptr, dev_id);
 		InsertDevicePath(0, dev_id, r_path_ptr);
 		logger->Info("RegisterDevices: id=%d type=<%s> model=%s",
-		             dev_id,
-		             GetResourceTypeString(br::ResourceType::GPU),
-		             resource->Model().c_str());
+			dev_id,
+			GetResourceTypeString(br::ResourceType::GPU),
+			resource->Model().c_str());
 	}
 
 	return PlatformProxy::PLATFORM_OK;
 }
-
 
 void NVMLPlatformProxy::Exit()
 {
@@ -175,7 +169,7 @@ void NVMLPlatformProxy::Exit()
 	nvmlReturn_t result = nvmlShutdown();
 	if (NVML_SUCCESS != result) {
 		logger->Warn("NVML: Failed to shutdown NVML: [Err:%s]",
-		             nvmlErrorString(result));
+			nvmlErrorString(result));
 	}
 	logger->Notice("NVML shutdownend correctly");
 

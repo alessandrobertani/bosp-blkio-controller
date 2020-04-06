@@ -91,8 +91,8 @@ public:
 	 * @brief OpenCL resource assignment mapping
 	 */
 	ExitCode_t MapResources(
-	        ba::SchedPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map,
-	        bool excl) override;
+				ba::SchedPtr_t papp, br::ResourceAssignmentMapPtr_t assign_map,
+				bool excl) override;
 
 	/**
 	 * OpenCL specific termination

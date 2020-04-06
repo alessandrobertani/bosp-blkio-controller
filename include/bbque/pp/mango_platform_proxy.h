@@ -16,12 +16,8 @@
 #define MANGO_MAX_MEMORIES       256
 #define MANGO_PEAKOS_FILE_SIZE   256*1024*1024
 
-namespace bbque
-{
-namespace pp
-{
-
-
+namespace bbque {
+namespace pp {
 
 class MangoPlatformProxy : public PlatformProxy
 {
@@ -63,7 +59,7 @@ public:
 	 * @brief Mango specific resource binding interface.
 	 */
 	ExitCode_t MapResources(
-	    SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
+				SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
 
 	/**
 	 * @brief Mango specific termiantion.
@@ -80,9 +76,9 @@ public:
 
 
 private:
-//-------------------- CONSTS
+	//-------------------- CONSTS
 
-//-------------------- ATTRIBUTES
+	//-------------------- ATTRIBUTES
 
 	bool refreshMode;
 
@@ -102,7 +98,7 @@ private:
 	uint32_t monitor_period_len = 2000;
 
 
-//-------------------- METHODS
+	//-------------------- METHODS
 
 	MangoPlatformProxy();
 
@@ -110,8 +106,8 @@ private:
 	ExitCode_t BootTiles_PEAK(uint32_t cluster_id, int tile_id) noexcept;
 	ExitCode_t RegisterTiles(uint32_t cluster_id) noexcept;
 	ExitCode_t RegisterMemoryBank(
-	    std::string const & group_prefix,
-	    uint32_t cluster_id, int tile_id, int mem_id) noexcept;
+				std::string const & group_prefix,
+				uint32_t cluster_id, int tile_id, int mem_id) noexcept;
 
 	ExitCode_t SetProcessorArchInfo(TaskGraph & tg) noexcept;
 
@@ -121,17 +117,17 @@ private:
 		MangoPartitionSkimmer();
 
 		virtual ExitCode_t Skim(
-		    const TaskGraph & tg,
-		    std::list<Partition> &,
-		    uint32_t hw_cluster_id) override final;
+					const TaskGraph & tg,
+					std::list<Partition> &,
+					uint32_t hw_cluster_id) override final;
 
 		virtual ExitCode_t SetPartition(
-		    TaskGraph & tg,
-		    const Partition & partition) noexcept override final;
+						TaskGraph & tg,
+						const Partition & partition) noexcept override final;
 
 		virtual ExitCode_t UnsetPartition(
-		    const TaskGraph & tg,
-		    const Partition & partition) noexcept override final;
+						const TaskGraph & tg,
+						const Partition & partition) noexcept override final;
 
 	private:
 		std::unique_ptr<bu::Logger> logger;
@@ -140,7 +136,7 @@ private:
 
 };
 
-}   // namespace pp
-}   // namespace bbque
+} // namespace pp
+} // namespace bbque
 
 #endif // MANGO_PLATFORM_PROXY_H

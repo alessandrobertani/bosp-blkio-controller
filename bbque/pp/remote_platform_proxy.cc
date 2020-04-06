@@ -3,10 +3,8 @@
 #include "bbque/pp/remote_platform_proxy.h"
 #include "bbque/config.h"
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 RemotePlatformProxy::RemotePlatformProxy()
 {
@@ -38,8 +36,8 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadAgentProxy()
 	logger->Debug("LoadAgentProxy: loading %s", plugin_name.c_str());
 
 	agent_proxy = std::unique_ptr<bbque::plugins::AgentProxyIF>(
-	                      ModulesFactory::GetModule<bbque::plugins::AgentProxyIF>(
-	                              plugin_name));
+		ModulesFactory::GetModule<bbque::plugins::AgentProxyIF>(
+		plugin_name));
 
 	if (agent_proxy == nullptr) {
 		logger->Fatal("LoadAgentProxy: plugin loading failed!");
@@ -47,7 +45,7 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::LoadAgentProxy()
 	}
 
 	logger->Debug("LoadAgentProxy: passing the platform description to"
-	              "the agent proxy...");
+		"the agent proxy...");
 	agent_proxy->SetPlatformDescription(&GetPlatformDescription());
 	logger->Info("LoadAgentProxy: agent proxy plugin ready");
 
@@ -68,7 +66,7 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::Release(SchedPtr_t papp)
 }
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ReclaimResources(
-        SchedPtr_t papp)
+								      SchedPtr_t papp)
 {
 	(void) papp;
 	logger->Warn("ReclaimResources: not implemented.");
@@ -76,9 +74,9 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ReclaimResources(
 }
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::MapResources(
-        SchedPtr_t papp,
-        ResourceAssignmentMapPtr_t pres,
-        bool excl)
+								  SchedPtr_t papp,
+								  ResourceAssignmentMapPtr_t pres,
+								  bool excl)
 {
 	(void) papp;
 	(void) pres;
@@ -95,13 +93,12 @@ RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ActuatePowerManagement()
 }
 
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::ActuatePowerManagement(
-        bbque::res::ResourcePtr_t resource)
+									    bbque::res::ResourcePtr_t resource)
 {
 	(void) resource;
 	logger->Error("ActuatePowerManagement: not implemented.");
 	return PLATFORM_OK;
 }
-
 
 void RemotePlatformProxy::Exit()
 {
@@ -110,7 +107,7 @@ void RemotePlatformProxy::Exit()
 }
 
 bool RemotePlatformProxy::IsHighPerformance(
-        bbque::res::ResourcePathPtr_t const & path) const
+					    bbque::res::ResourcePathPtr_t const & path) const
 {
 	(void) path;
 	return false;
@@ -149,7 +146,7 @@ void RemotePlatformProxy::WaitForServerToStop()
 
 bbque::agent::ExitCode_t
 RemotePlatformProxy::GetResourceStatus(
-        std::string const & resource_path, agent::ResourceStatus & status)
+				       std::string const & resource_path, agent::ResourceStatus & status)
 {
 	if (agent_proxy == nullptr) {
 		logger->Error("GetResourceStatus failed. AgentProxy plugin missing");
@@ -160,7 +157,7 @@ RemotePlatformProxy::GetResourceStatus(
 
 bbque::agent::ExitCode_t
 RemotePlatformProxy::GetWorkloadStatus(
-        std::string const & system_path, agent::WorkloadStatus & status)
+				       std::string const & system_path, agent::WorkloadStatus & status)
 {
 	if (agent_proxy == nullptr) {
 		logger->Error("GetWorkloadStatus failed. AgentProxy plugin missing");
@@ -171,7 +168,7 @@ RemotePlatformProxy::GetWorkloadStatus(
 
 bbque::agent::ExitCode_t
 RemotePlatformProxy::GetWorkloadStatus(
-        int system_id, agent::WorkloadStatus & status)
+				       int system_id, agent::WorkloadStatus & status)
 {
 	if (agent_proxy == nullptr) {
 		logger->Error("GetWorkloadStatus failed. AgentProxy plugin missing");
@@ -182,7 +179,7 @@ RemotePlatformProxy::GetWorkloadStatus(
 
 bbque::agent::ExitCode_t
 RemotePlatformProxy::GetChannelStatus(
-        std::string const & system_path, agent::ChannelStatus & status)
+				      std::string const & system_path, agent::ChannelStatus & status)
 {
 	if (agent_proxy == nullptr) {
 		logger->Error("GetChannelStatus failed. AgentProxy plugin missing");
@@ -243,8 +240,8 @@ RemotePlatformProxy::SendDisjoinRequest(int system_id)
 
 bbque::agent::ExitCode_t
 RemotePlatformProxy::SendScheduleRequest(
-        std::string const & system_path,
-        agent::ApplicationScheduleRequest const & request)
+					 std::string const & system_path,
+					 agent::ApplicationScheduleRequest const & request)
 {
 	if (agent_proxy == nullptr) {
 		logger->Error("SendDisjoinRequest failed. AgentProxy plugin missing");

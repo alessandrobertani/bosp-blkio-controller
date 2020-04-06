@@ -9,7 +9,11 @@ include linux_platform_proxy.h!
 #include "bbque/app/schedulable.h"
 
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
-#include <netlink/libnetlink.h>
+
+//#include <netlink/libnetlink.h>
+#include <netlink/netlink.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
 #endif
 
 #include <cstdint>
@@ -24,7 +28,7 @@ include linux_platform_proxy.h!
  * @note this CGroup should be given both "task" and "admin" permissions to
  * the UID used to run the BarbequeRTRM
  */
-#define BBQUE_LINUXPP_CGROUP "user.slice"
+#define BBQUE_PP_LINUX_CGROUP "user.slice"
 
 /**
  * @brief The cgroup expected to define resources clusterization
@@ -34,17 +38,17 @@ include linux_platform_proxy.h!
  * consider this clusterization when scheduling applications by trying to keep
  * each application within a single cluster.
  */
-#define BBQUE_LINUXPP_RESOURCES BBQUE_LINUXPP_CGROUP"/res"
+#define BBQUE_PP_LINUX_RESOURCES BBQUE_PP_LINUX_CGROUP"/res"
 
 /**
  * @brief The CGroup expected to define Clusters
  *
- * Resources managed by Barbeque are clusterized by grouping available
+ * Resources managed by BarbequeRTRM are clusterized by grouping available
  * platform resources into CGroups which name start with this radix.
  */
-#define BBQUE_LINUXPP_CLUSTER "node"
+#define BBQUE_PP_LINUX_CLUSTER "node"
 
-#define BBQUE_LINUXPP_FREEZER_STATE "/freezer.state"
+#define BBQUE_PP_LINUX_FREEZER_STATE "/freezer.state"
 
 
 namespace bbque {
@@ -53,16 +57,19 @@ namespace pp {
 /**
  * @brief Resource assignment bindings on a Linux machine
  */
-struct RLinuxBindings_t {
-	unsigned short node_id = 0;       /** Computing node, e.g. processor */
-	char *cpus = NULL;                /** Processing elements / CPU cores assigned */
-	char *mems = NULL;                /** Memory nodes assigned */
-	char *memb = NULL;                /** Memory limits in bytes */
-	uint_fast32_t amount_cpus  = 0;   /** Percentage of CPUs time assigned */
-	int_fast64_t amount_memb   = 0;   /** Amount of socket MEMORY assigned (byte) */
-	int_fast64_t amount_net_bw = 0;   /** Amount of network bandwidth assigned (bps) */
+struct RLinuxBindings_t
+{
+	unsigned short node_id = 0; /** Computing node, e.g. processor */
+	char *cpus = NULL; /** Processing elements / CPU cores assigned */
+	char *mems = NULL; /** Memory nodes assigned */
+	char *memb = NULL; /** Memory limits in bytes */
+	uint_fast32_t amount_cpus = 0; /** Percentage of CPUs time assigned */
+	int_fast64_t amount_memb = 0; /** Amount of socket MEMORY assigned (byte) */
+	int_fast64_t amount_net_bw = 0; /** Amount of network bandwidth assigned (bps) */
 
-	RLinuxBindings_t(const uint_fast8_t MaxCpusCount, const uint_fast8_t MaxMemsCount) {
+	RLinuxBindings_t(const uint_fast8_t MaxCpusCount,
+			const uint_fast8_t MaxMemsCount)
+	{
 		// 3 chars are required for each CPU/MEM resource if formatted
 		// with syntax: "nn,". This allows for up-to 99 resources per
 		// cluster
@@ -90,8 +97,8 @@ using RLinuxBindingsPtr_t = std::shared_ptr<RLinuxBindings_t>;
 struct CGroupData_t : public bbque::utils::PluginData_t
 {
 	bbque::app::SchedPtr_t papp; /** The controlled application */
-#define BBQUE_LINUXPP_CGROUP_PATH_MAX 128 // "user.slice/res/12345:ABCDEF:00";
-	char cgpath[BBQUE_LINUXPP_CGROUP_PATH_MAX];
+#define BBQUE_PP_LINUX_CGROUP_PATH_MAX 128 // "user.slice/res/12345:ABCDEF:00";
+	char cgpath[BBQUE_PP_LINUX_CGROUP_PATH_MAX];
 	struct cgroup *pcg;
 	struct cgroup_controller *pc_cpu;
 	struct cgroup_controller *pc_cpuset;
@@ -106,8 +113,8 @@ struct CGroupData_t : public bbque::utils::PluginData_t
 	    papp(sched_app), pcg(NULL), pc_cpu(NULL),
 	    pc_cpuset(NULL), pc_memory(NULL)
 	{
-		snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,
-			BBQUE_LINUXPP_RESOURCES"/%s",
+		snprintf(cgpath, BBQUE_PP_LINUX_CGROUP_PATH_MAX,
+			BBQUE_PP_LINUX_RESOURCES"/%s",
 			papp->StrId());
 	}
 
@@ -116,7 +123,7 @@ struct CGroupData_t : public bbque::utils::PluginData_t
 	    pcg(NULL), pc_cpu(NULL),
 	    pc_cpuset(NULL), pc_memory(NULL)
 	{
-		snprintf(cgpath, BBQUE_LINUXPP_CGROUP_PATH_MAX,
+		snprintf(cgpath, BBQUE_PP_LINUX_CGROUP_PATH_MAX,
 			"%s", cgp);
 	}
 
