@@ -17,6 +17,9 @@
 
 #include <cstring>
 #include <ctype.h>
+#include <map>
+
+#include <boost/program_options.hpp>
 
 #include "bbque/app/working_mode.h"
 #include "bbque/process_manager.h"
@@ -118,39 +121,31 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 	app::Process::ScheduleRequest sched_req;
 	app::AppPid_t pid = 0;
 	std::string name;
-	char c;
-	while ((c = getopt(argc, argv, "n:p:c:a:m:h")) != -1) {
-		switch (c) {
-		case 'n':
-			if (optarg != nullptr) {
-				name.assign(optarg);
-				Add(name);
-			}
-			break;
-		case 'p':
-			if (optarg != nullptr)
-				pid = atoi(optarg);
-			break;
-		case 'c':
-			if (optarg != nullptr)
-				sched_req.cpu_cores = atoi(optarg);
-			break;
-		case 'a':
-			if (optarg != nullptr)
-				sched_req.acc_cores = atoi(optarg);
-			break;
-		case 'm':
-			if (optarg != nullptr)
-				sched_req.memory_mb = atoi(optarg);
-			break;
-		case 'h':
-		default :
-			CommandManageSetScheduleHelp();
-		}
+
+	namespace po = boost::program_options;
+	po::options_description desc(MODULE_NAMESPACE CMD_SETSCHED_PROCESS " options");
+	desc.add_options()
+		("help,h", "Command-line help")
+		("name,n", po::value<std::string>(&name), "Process name")
+		("pid,p", po::value<unsigned int>(&pid)->default_value(0), "Process id number")
+		("cpus,c", po::value<unsigned int>(&sched_req.cpu_cores), "CPU cores")
+		("acc,a", po::value<unsigned int>(&sched_req.acc_cores)->default_value(0), "Accelerator cores")
+		("mem,m", po::value<unsigned int>(&sched_req.memory_mb)->default_value(0), "Amount of memory");
+
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
+
+	if (vm.count("help")) {
+		CommandManageSetScheduleHelp();
+		return;
 	}
 
-	if (name.empty()) {
-		logger->Error("CommandsCb: wrong arguments specification");
+	if (vm.count("name") && vm.count("cpus")) {
+		Add(name);
+	}
+	else {
+		logger->Error("CommandManageSetSchedule: invalid arguments");
 		CommandManageSetScheduleHelp();
 		return;
 	}
@@ -158,19 +153,18 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	*(managed_procs[name].sched_req) = sched_req;
 	logger->Notice("CommandsCb: <%s> (pid=%d) schedule request: cpus=%d accs=%d mem=%d",
-	               name.c_str(),
-	               pid,
-	               managed_procs[name].sched_req->cpu_cores,
-	               managed_procs[name].sched_req->acc_cores,
-	               managed_procs[name].sched_req->memory_mb);
+		name.c_str(),
+		pid,
+		managed_procs[name].sched_req->cpu_cores,
+		managed_procs[name].sched_req->acc_cores,
+		managed_procs[name].sched_req->memory_mb);
 }
-
 
 void ProcessManager::CommandManageSetScheduleHelp() const
 {
-	logger->Notice("%s -n=<process_name> [-p=<pid>] -c=<cpu_cores> "
-	               "[-a=<accelerator_cores>] [-m=<memory_MB>]",
-	               MODULE_NAMESPACE CMD_SETSCHED_PROCESS);
+	logger->Notice("%s -n <process_name> [-p <pid>] -c <cpu_cores> "
+		"[-a <accelerator_cores>] [-m <memory_MB>]",
+		MODULE_NAMESPACE CMD_SETSCHED_PROCESS);
 }
 
 
