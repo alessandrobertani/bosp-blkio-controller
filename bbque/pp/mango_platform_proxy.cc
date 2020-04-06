@@ -13,8 +13,13 @@
 
 #include <libhn/hn.h>
 
-#define BBQUE_MANGOPP_PLATFORM_ID    "org.mango"
-#define MANGO_PEAKOS_FILE_SIZE       256*1024*1024
+#define BBQUE_PP_MANGO_PLATFORM_ID   "org.mango"
+
+#ifndef CONFIG_MANGO_GN_EMULATION
+#define BBQUE_PP_MANGO_HARDWARE_ID   "prodesign-fpga"
+#else
+#define BBQUE_PP_MANGO_HARDWARE_ID   "emulated"
+#endif
 
 namespace bb = bbque;
 namespace br = bbque::res;
@@ -682,6 +687,9 @@ MangoPlatformProxy::MangoPlatformProxy() :
 	logger = bu::Logger::GetLogger(MANGO_PP_NAMESPACE);
 	bbque_assert(logger);
 
+	this->platform_id = BBQUE_PP_MANGO_PLATFORM_ID;
+	this->hardware_id = BBQUE_PP_MANGO_HARDWARE_ID;
+
 	// In order to initialize the communication with the HN library we have to
 	// prepare the filter to enable access to registers and statistics
 	// TODO: this was a copy-and-paste of the example, we have to ask to UPV
@@ -740,18 +748,6 @@ MangoPlatformProxy::~MangoPlatformProxy()
 	logger->Info("MangoPlatformProxy: nothing left to be done");
 }
 
-
-const char* MangoPlatformProxy::GetPlatformID(int16_t system_id) const noexcept
-{
-	UNUSED(system_id);
-	return BBQUE_MANGOPP_PLATFORM_ID;
-}
-
-const char* MangoPlatformProxy::GetHardwareID(int16_t system_id) const noexcept
-{
-	UNUSED(system_id);
-	return BBQUE_TARGET_HARDWARE_ID;    // Defined in bbque.conf
-}
 
 bool MangoPlatformProxy::IsHighPerformance(
     bbque::res::ResourcePathPtr_t const & path) const

@@ -50,22 +50,6 @@ public:
 	 */
 	virtual ~RecipePlatformProxy();
 
-	/**
-	 * @brief Return the Platform specific string identifier
-	 */
-	virtual const char * GetPlatformID(int16_t system_id = -1) const override {
-		(void) system_id;
-		return "org.opencl.recipe";
-	}
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	virtual const char * GetHardwareID(int16_t system_id = -1) const override {
-		(void) system_id;
-		return "recipe";
-	}
-
 	ExitCode_t MapResources(
 		SchedPtr_t psched, ResourceAssignmentMapPtr_t pres, bool excl) noexcept;
 

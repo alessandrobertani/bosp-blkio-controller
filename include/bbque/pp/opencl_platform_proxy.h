@@ -38,22 +38,22 @@
 #include "bbque/res/identifier.h"
 #include "bbque/utils/worker.h"
 
+#define BBQUE_PP_OPENCL_PLATFORM_ID   "bq.linux.opencl"
+#define BBQUE_PP_OPENCL_HARDWARE_ID   "khronos"
+
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque
-{
+namespace bbque {
 
-namespace pp
-{
+namespace pp {
 
 using DevPathMap_t = std::map<int, ResourcePathPtr_t>;
 using PathDevMap_t = std::map<ResourcePathPtr_t, int>;
 
-class OpenCLPlatformProxy: public PlatformProxy
+class OpenCLPlatformProxy : public PlatformProxy
 {
-
 public:
 
 	static OpenCLPlatformProxy * GetInstance();
@@ -62,24 +62,6 @@ public:
 	 * @brief Destructor
 	 */
 	virtual ~OpenCLPlatformProxy();
-
-	/**
-	 * @brief Return the Platform specific string identifier
-	 */
-	const char * GetPlatformID(int16_t system_id = -1) const override
-	{
-		(void) system_id;
-		return "org.opencl";
-	}
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	const char * GetHardwareID(int16_t system_id = -1) const override
-	{
-		(void) system_id;
-		return "opencl";
-	}
 
 	/**
 	 * @brief Platform specific resource setup interface.

@@ -3,7 +3,9 @@
 
 #include "bbque/platform_proxy.h"
 
-#define TEST_PP_NAMESPACE "bq.pp.test"
+#define BBQUE_TEST_PP_NAMESPACE     "bq.pp.test"
+#define BBQUE_PP_TEST_PLATFORM_ID   "bq.test"
+#define BBQUE_PP_TEST_HARDWARE_ID   "emulated"
 
 namespace bbque {
 namespace pp {
@@ -19,15 +21,6 @@ public:
 
 	static TestPlatformProxy * GetInstance();
 
-	/**
-	 * @brief Return the Platform specific string identifier
-	 */
-	virtual const char* GetPlatformID(int16_t system_id=-1) const override;
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	virtual const char* GetHardwareID(int16_t system_id=-1) const override;
 	/**
 	 * @brief Platform specific resource setup interface.
 	 */

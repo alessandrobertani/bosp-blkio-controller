@@ -43,16 +43,6 @@ public:
 	virtual ~LinuxPlatformProxy();
 
 	/**
-	 * @brief Return the Linux specific string identifier
-	 */
-	const char* GetPlatformID(int16_t system_id = -1) const noexcept override final;
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	const char* GetHardwareID(int16_t system_id = -1) const noexcept override final;
-
-	/**
 	 * @brief Linux specific resource setup interface.
 	 */
 	ExitCode_t Setup(SchedPtr_t papp) noexcept override final;

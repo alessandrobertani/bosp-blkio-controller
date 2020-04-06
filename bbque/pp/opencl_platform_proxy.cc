@@ -61,6 +61,8 @@ OpenCLPlatformProxy::OpenCLPlatformProxy() :
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
+	this->platform_id = BBQUE_PP_OPENCL_PLATFORM_ID;
+	this->hardware_id = BBQUE_PP_OPENCL_HARDWARE_ID;
 }
 
 OpenCLPlatformProxy::~OpenCLPlatformProxy() { }

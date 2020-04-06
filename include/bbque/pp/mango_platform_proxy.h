@@ -13,7 +13,8 @@
 #define MANGO_PP_NAMESPACE "bq.pp.mango"
 
 // UPV -> POLIMI there could be as much memories as tiles in MANGO
-#define MANGO_MAX_MEMORIES 256
+#define MANGO_MAX_MEMORIES       256
+#define MANGO_PEAKOS_FILE_SIZE   256*1024*1024
 
 namespace bbque
 {
@@ -29,16 +30,6 @@ public:
 	static MangoPlatformProxy * GetInstance();
 
 	virtual ~MangoPlatformProxy();
-
-	/**
-	 * @brief Return the Mango specific string identifier
-	 */
-	const char* GetPlatformID(int16_t system_id=-1) const noexcept override final;
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	const char* GetHardwareID(int16_t system_id=-1) const noexcept override final;
 
 	/**
 	 * @brief Mango specific resource setup interface.

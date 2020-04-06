@@ -13,6 +13,9 @@
 #include "bbque/pm/power_manager.h"
 #include "bbque/pm/power_manager_nvidia.h"
 
+#define BBQUE_PP_NVML_PLATFORM_ID "org.linux.nvidia"
+#define BBQUE_PP_NVML_HARDWARE_ID "cuda"
+
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
@@ -33,25 +36,6 @@ public:
 	 * @brief Destructor
 	 */
 	virtual ~NVMLPlatformProxy();
-
-	/**
-	 * @brief Return the Platform specific string identifier
-	 */
-	const char * GetPlatformID(int16_t system_id = -1) const override final
-	{
-		(void) system_id;
-		return "CUDA";
-	}
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	const char * GetHardwareID(int16_t system_id = -1) const override final
-	{
-		(void) system_id;
-		return "nvidia";
-	}
-
 
 	/**
 	 * @brief Load NVML device data function

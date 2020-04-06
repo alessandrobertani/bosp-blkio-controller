@@ -46,6 +46,8 @@ NVMLPlatformProxy::NVMLPlatformProxy()
 {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
+	this->platform_id = BBQUE_PP_NVML_PLATFORM_ID;
+	this->hardware_id = BBQUE_PP_NVML_HARDWARE_ID;
 }
 
 NVMLPlatformProxy::~NVMLPlatformProxy()

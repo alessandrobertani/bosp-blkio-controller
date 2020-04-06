@@ -14,20 +14,6 @@ RemotePlatformProxy::RemotePlatformProxy()
 	assert(logger);
 }
 
-const char* RemotePlatformProxy::GetPlatformID(int16_t system_id) const
-{
-	(void) system_id;
-	logger->Warn("GetPlatformID: not implemented.");
-	return "";
-}
-
-const char* RemotePlatformProxy::GetHardwareID(int16_t system_id) const
-{
-	(void) system_id;
-	logger->Warn("GetHardwareID: not implemented.");
-	return "";
-}
-
 RemotePlatformProxy::ExitCode_t RemotePlatformProxy::Setup(SchedPtr_t papp)
 {
 	(void) papp;

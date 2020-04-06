@@ -52,6 +52,7 @@ RecipePlatformProxy::RecipePlatformProxy()
 RecipePlatformProxy::~RecipePlatformProxy()
 {
 
+	this->hardware_id = "recipe";
 }
 
 RecipePlatformProxy::ExitCode_t

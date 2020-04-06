@@ -11,20 +11,11 @@ TestPlatformProxy * TestPlatformProxy::GetInstance() {
 	return instance;
 }
 
-
-TestPlatformProxy::TestPlatformProxy() {
-	this->logger = bu::Logger::GetLogger(TEST_PP_NAMESPACE);
-}
-
-
-const char* TestPlatformProxy::GetPlatformID(int16_t system_id) const {
-	(void) system_id;
-	return "org.test";
-}
-
-const char* TestPlatformProxy::GetHardwareID(int16_t system_id) const {
-	(void) system_id;
-	return "test";
+TestPlatformProxy::TestPlatformProxy()
+{
+	this->logger = bu::Logger::GetLogger(BBQUE_TEST_PP_NAMESPACE);
+	this->platform_id = BBQUE_PP_TEST_PLATFORM_ID;
+	this->hardware_id = BBQUE_PP_TEST_HARDWARE_ID;
 }
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::Setup(SchedPtr_t papp) {

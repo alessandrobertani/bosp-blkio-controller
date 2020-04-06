@@ -76,7 +76,11 @@ public:
 	 *                  platform identifier. If not specified or equal
 	 *                  to "-1", the platform id of the local system is returned.
 	 */
-	virtual const char* GetPlatformID(int16_t system_id = -1) const = 0;
+	virtual const char* GetPlatformID(int16_t system_id = -1) const
+	{
+		UNUSED(system_id);
+		return platform_id.c_str();
+	}
 
 	/**
 	 * @brief Return the Hardware identifier string
@@ -84,7 +88,11 @@ public:
 	 *                  hardware identifier. If not specified or equal
 	 *                  to "-1", the hw id of the local system is returned.
 	 */
-	virtual const char* GetHardwareID(int16_t system_id = -1) const = 0;
+	virtual const char* GetHardwareID(int16_t system_id = -1) const
+	{
+		UNUSED(system_id);
+		return hardware_id.c_str();
+	}
 
 	/**
 	 * @brief Platform specific resource setup interface.
@@ -189,6 +197,10 @@ public:
 protected:
 
 	static plugins::PlatformLoaderIF* pli;
+
+	std::string platform_id;
+
+	std::string hardware_id;
 };
 
 } // namespace bbque

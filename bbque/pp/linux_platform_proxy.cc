@@ -67,7 +67,7 @@
 
 #endif
 
-#define BBQUE_LINUXPP_PLATFORM_ID "org.linux.cgroup"
+#define BBQUE_PP_LINUX_PLATFORM_ID "org.linux.cgroup"
 
 #define BBQUE_LINUXPP_SILOS    BBQUE_LINUXPP_CGROUP"/silos"
 
@@ -125,6 +125,9 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(LINUX_PP_NAMESPACE);
 	assert(logger);
+
+	this->platform_id = BBQUE_PP_LINUX_PLATFORM_ID;
+	this->hardware_id = BBQUE_TARGET_HARDWARE_ID; // Defined via Kconfig
 
 	//---------- Loading configuration
 	this->LoadConfiguration();
@@ -434,18 +437,6 @@ LinuxPlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path
 	(void) path;
 #endif
 	return false;
-}
-
-const char* LinuxPlatformProxy::GetPlatformID(int16_t system_id) const noexcept
-{
-	(void) system_id;
-	return BBQUE_LINUXPP_PLATFORM_ID;
-}
-
-const char* LinuxPlatformProxy::GetHardwareID(int16_t system_id) const noexcept
-{
-	(void) system_id;
-	return BBQUE_TARGET_HARDWARE_ID; // Defined in bbque.conf
 }
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::Setup(SchedPtr_t papp) noexcept
