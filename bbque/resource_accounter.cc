@@ -319,7 +319,7 @@ ResourceAccounter::GetResources(ResourcePathPtr_t resource_path_ptr) const
 	// If the path is a template find all the resources matching the
 	// template. Otherwise perform a "mixed path" based search.
 	if (resource_path_ptr->IsTemplate()) {
-		logger->Fatal("GetResources: path <%s> is a template",
+		logger->Debug("GetResources: path <%s> is a template",
 			resource_path_ptr->ToString().c_str());
 		return resources.find_list(*(resource_path_ptr.get()), RT_MATCH_TYPE);
 	}
