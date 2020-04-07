@@ -34,7 +34,7 @@ public:
 	 * @brief Return the Hardware identifier string
 	 * @param system_id It specifies from which system take the
 	 *       platform identifier. If not specified or equal
-	 *       to "-1", the hw id of the local system is returned.
+	 *       to "-1", the HW id of the local system is returned.
 	 */
 	std::string const & GetHardwareID(int16_t system_id = -1) const override;
 

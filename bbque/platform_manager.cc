@@ -154,7 +154,7 @@ std::string const & PlatformManager::GetPlatformID(int16_t system_id) const
 	logger->Error("GetPlatformID: requested id for unknown system %d", system_id);
 	return "";
 #else
-	assert(system_id <= 0);  // Sys0 is also valid
+	assert(system_id <= 0);  // sys0 is also valid
 	return lpp->GetPlatformID();
 #endif
 
@@ -183,7 +183,7 @@ std::string const & PlatformManager::GetHardwareID(int16_t system_id) const
 	return "";
 #else
 	assert(system_id <= 0);  // sys0 is also valid
-	return lpp->GetPlatformID();
+	return lpp->GetHardwareID();
 #endif
 }
 

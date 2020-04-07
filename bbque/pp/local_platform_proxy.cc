@@ -66,8 +66,10 @@ LocalPlatformProxy::LocalPlatformProxy()
 #endif
 
 	bbque_assert(this->host);
-	std::string host_proxy(this->host->GetPlatformID());
-	logger->Info("LocalPlatformProxy: host = { %s }", host_proxy.c_str());
+	this->platform_id = this->host->GetPlatformID();
+	this->hardware_id = this->host->GetHardwareID();
+
+	logger->Info("LocalPlatformProxy: host = { %s }", this->platform_id.c_str());
 
 #ifdef CONFIG_TARGET_LINUX_MANGO
 	this->accl.push_back(std::unique_ptr<MangoPlatformProxy>(MangoPlatformProxy::GetInstance()));
@@ -83,29 +85,12 @@ LocalPlatformProxy::LocalPlatformProxy()
 	this->accl.push_back(std::unique_ptr<NVMLPlatformProxy>(NVMLPlatformProxy::GetInstance()));
 #endif
 
-	std::string accl_proxies;
 	for (auto & p : this->accl) {
-		accl_proxies += p->GetPlatformID() + std::string(", ");
+		this->platform_id += p->GetPlatformID();
+		this->hardware_id += p->GetHardwareID();
 	}
-	logger->Info("LocalPlatformProxy: accl = { %s }", accl_proxies.c_str());
-}
-
-std::string const & LocalPlatformProxy::GetPlatformID(int16_t system_id) const
-{
-#ifdef CONFIG_TARGET_LINUX_MANGO
-	return this->accl[0]->GetPlatformID(system_id);
-#else
-	return this->host->GetPlatformID(system_id);
-#endif
-}
-
-std::string const & LocalPlatformProxy::GetHardwareID(int16_t system_id) const
-{
-#ifdef CONFIG_TARGET_LINUX_MANGO
-	return this->accl[0]->GetHardwareID(system_id);
-#else
-	return this->host->GetHardwareID(system_id);
-#endif
+	logger->Info("LocalPlatformProxy: platform id=<%s> hw=[%s]",
+		this->platform_id.c_str(), this->hardware_id.c_str());
 }
 
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp)

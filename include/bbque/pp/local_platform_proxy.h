@@ -21,7 +21,9 @@
 
 #include "bbque/platform_proxy.h"
 
+#include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace bbque {
@@ -34,16 +36,6 @@ public:
 	LocalPlatformProxy();
 
 	virtual ~LocalPlatformProxy() { }
-
-	/**
-	 * @brief Return the Platform specific string identifier
-	 */
-	std::string const & GetPlatformID(int16_t system_id = -1) const;
-
-	/**
-	 * @brief Return the Hardware identifier string
-	 */
-	std::string const & GetHardwareID(int16_t system_id = -1) const;
 
 	/**
 	 * @brief Platform specific resource setup interface.
@@ -76,8 +68,7 @@ public:
 	/**
 	 * @brief Map the local resource assignments.
 	 */
-	ExitCode_t MapResources(
-				SchedPtr_t papp,
+	ExitCode_t MapResources(SchedPtr_t papp,
 				ResourceAssignmentMapPtr_t pres,
 				bool excl = true);
 
@@ -90,8 +81,7 @@ public:
 	/**
 	 * @brief Actuate power management for a specific local node resource
 	 */
-	ExitCode_t ActuatePowerManagement(
-					bbque::res::ResourcePtr_t resource) override;
+	ExitCode_t ActuatePowerManagement(bbque::res::ResourcePtr_t resource) override;
 
 	/**
 	 * @brief Local termination.
