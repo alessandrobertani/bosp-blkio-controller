@@ -198,7 +198,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(std::string const & _rec
 			pp_node = LoadPlatform(app_node);
 			if (!pp_node) {
 				result = RL_PLATFORM_MISMATCH;
-				throw std::runtime_error("LoadPlatform failed.");
+				throw std::runtime_error("LoadPlatform failed");
 			}
 
 			plat_attribute = pp_node->first_attribute("id", 0, true);
@@ -207,7 +207,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(std::string const & _rec
 			// Application Working Modes
 			result = LoadWorkingModes(pp_node);
 			if (result != RL_SUCCESS) {
-				throw std::runtime_error("LoadWorkingModes failed.");
+				throw std::runtime_error("LoadWorkingModes failed");
 			}
 
 			// Task requirements (for task-graph based programming models)
@@ -221,7 +221,7 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(std::string const & _rec
 		catch (rapidxml::parse_error &ex) {
 			logger->Error(ex.what());
 			result = RL_ABORTED;
-			throw std::runtime_error("XML parsing failed.");
+			throw std::runtime_error("XML parsing failed");
 		}
 	} // external try
 	catch (std::runtime_error &ex) {
@@ -310,6 +310,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 
 std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name)
 {
+
 	boost::filesystem::path p(recipe_dir + "/" + _name + ".recipe");
 	return boost::filesystem::last_write_time(p);
 }
@@ -398,6 +399,7 @@ RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node<> * _xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 		return RL_ABORTED;
 	}
@@ -426,6 +428,7 @@ void RXMLRecipeLoader::LoadTaskGraphInfo(rapidxml::xml_node<> *_xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 		return;
 	}
@@ -505,6 +508,7 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<> *_xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 		return;
 	}
@@ -569,6 +573,7 @@ void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 		return;
 	}
@@ -621,6 +626,7 @@ void RXMLRecipeLoader::LoadTaskGraphMapping(rapidxml::xml_node<> *_xml_elem,
 
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 		return;
 	}
@@ -661,6 +667,7 @@ void RXMLRecipeLoader::LoadMappingData(rapidxml::xml_node<> * obj_elem,
 				map_data.id   = atoi(attribute->value());
 			}
 			else {
+
 				logger->Error("LoadMappingData: unknown attribute '%s'",
 					attribute->name());
 			}
@@ -712,6 +719,7 @@ uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 		}
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 		return __RSRC_FORMAT_ERR;
 	}
@@ -727,6 +735,7 @@ uint8_t RXMLRecipeLoader::AppendToWorkingMode(AwmPtr_t & wm,
 	// return a "weak load" code if some resources are missing
 	auto preq = wm->AddResourceRequest(_res_path, _res_usage);
 	if (preq == nullptr) {
+
 		logger->Warn("'%s' recipe: resource '%s' not available",
 			recipe_ptr->Path().c_str(), _res_path.c_str());
 		return __RSRC_WEAK_LOAD;
@@ -774,6 +783,7 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(rapidxml::xml_node<> * _res_elem
 	// If the quantity is 0 return without adding the resource request to the
 	// current AWM
 	if (res_usage == 0) {
+
 		return __RSRC_SUCCESS;
 	}
 
@@ -811,6 +821,7 @@ void RXMLRecipeLoader::LoadPluginsData(T _container,
 		}
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 	}
 }
@@ -835,6 +846,7 @@ void RXMLRecipeLoader::ParsePluginTag(T _container,
 
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 	}
 
@@ -854,6 +866,7 @@ void RXMLRecipeLoader::GetPluginData(T _container,
 		_container->SetPluginData(pattr);
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 	}
 }
@@ -907,6 +920,7 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node)
 		}
 	}
 	catch (rapidxml::parse_error &ex) {
+
 		logger->Error(ex.what());
 	}
 
@@ -932,6 +946,7 @@ void RXMLRecipeLoader::CheckMandatoryNode (
 
 	//Throwing an exception if the mandatory node doesn't exist
 	if (_nodeToCheck == 0) {
+
 		std::string exception_message("The mandatory node doesn't exist in this"
 					"recipe. The node name is: " + child_name + "."
 					"The parent name is: " + parent_name);
