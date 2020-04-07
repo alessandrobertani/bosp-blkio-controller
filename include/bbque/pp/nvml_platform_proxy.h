@@ -13,7 +13,7 @@
 #include "bbque/pm/power_manager.h"
 #include "bbque/pm/power_manager_nvidia.h"
 
-#define BBQUE_PP_NVML_PLATFORM_ID "org.linux.nvidia"
+#define BBQUE_PP_NVML_PLATFORM_ID ".nvidia"
 #define BBQUE_PP_NVML_HARDWARE_ID "cuda"
 
 namespace ba = bbque::app;

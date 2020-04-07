@@ -31,6 +31,8 @@
 
 #include <bitset>
 
+#define BBQUE_PP_LINUX_PLATFORM_ID "bq.linux"
+
 namespace bbque {
 namespace pp {
 

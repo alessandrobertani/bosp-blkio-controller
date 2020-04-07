@@ -38,7 +38,7 @@
 #include "bbque/res/identifier.h"
 #include "bbque/utils/worker.h"
 
-#define BBQUE_PP_OPENCL_PLATFORM_ID   "bq.linux.opencl"
+#define BBQUE_PP_OPENCL_PLATFORM_ID   ".opencl"
 #define BBQUE_PP_OPENCL_HARDWARE_ID   "khronos"
 
 namespace ba = bbque::app;

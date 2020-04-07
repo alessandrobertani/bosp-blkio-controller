@@ -13,14 +13,6 @@
 
 #include <libhn/hn.h>
 
-#define BBQUE_PP_MANGO_PLATFORM_ID   "org.mango"
-
-#ifndef CONFIG_MANGO_GN_EMULATION
-#define BBQUE_PP_MANGO_HARDWARE_ID   "prodesign-fpga"
-#else
-#define BBQUE_PP_MANGO_HARDWARE_ID   "emulated"
-#endif
-
 namespace bb = bbque;
 namespace br = bbque::res;
 namespace po = boost::program_options;

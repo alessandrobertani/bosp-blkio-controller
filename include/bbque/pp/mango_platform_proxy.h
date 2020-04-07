@@ -16,6 +16,14 @@
 #define MANGO_MAX_MEMORIES       256
 #define MANGO_PEAKOS_FILE_SIZE   256*1024*1024
 
+#define BBQUE_PP_MANGO_PLATFORM_ID   ".mango"
+
+#ifndef CONFIG_MANGO_GN_EMULATION
+#define BBQUE_PP_MANGO_HARDWARE_ID   "prodesign-fpga"
+#else
+#define BBQUE_PP_MANGO_HARDWARE_ID   "emulated"
+#endif
+
 namespace bbque {
 namespace pp {
 

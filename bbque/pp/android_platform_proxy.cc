@@ -22,7 +22,7 @@ AndroidPlatformProxy::AndroidPlatformProxy()
 {
 	this->logger = bu::Logger::GetLogger(ANDROID_PP_NAMESPACE);
 	assert(logger);
-	this->platform_id = "bq.android";
+	this->platform_id = BBQUE_PP_ANDROID_PLATFORM_ID;
 	this->hardware_id = BBQUE_TARGET_HARDWARE_ID;
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_LISTENER

@@ -21,8 +21,6 @@
 
 #define MODULE_NAMESPACE "bq.pp.recipe"
 
-
-
 #ifndef CONFIG_MANGO_GN_EMULATION
 #warning "This may work only with Emulate Acceleration enabled"
 #endif

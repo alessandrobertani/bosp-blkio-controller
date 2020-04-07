@@ -67,8 +67,6 @@
 
 #endif
 
-#define BBQUE_PP_LINUX_PLATFORM_ID "org.linux.cgroup"
-
 #define BBQUE_PP_LINUX_SILOS BBQUE_PP_LINUX_CGROUP"/silos"
 
 #define BBQUE_PP_LINUX_CPUS_PARAM           "cpuset.cpus"

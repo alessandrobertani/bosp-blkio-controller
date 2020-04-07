@@ -22,7 +22,8 @@
 #include "bbque/pm/power_manager.h"
 #include "bbque/pp/proc_listener.h"
 
-#define ANDROID_PP_NAMESPACE "bq.pp.android"
+#define ANDROID_PP_NAMESPACE         "bq.pp.android"
+#define BBQUE_PP_ANDROID_PLATFORM_ID "bq.android"
 
 namespace bbque {
 namespace pp {
