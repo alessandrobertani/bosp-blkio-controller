@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <BarbequeRTRM recipe_version="0.8">
 	<application priority="4">
-		<platform id="org.linux.cgroup">
+		<platform id="bq.*">
 			<awms>
 				<awm id="0" name="Low" value="50">
 					<resources>
