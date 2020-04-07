@@ -47,22 +47,21 @@ std::unique_ptr<bu::Logger> logger;
 
 int main(int argc, char *argv[])
 {
-	const char * exe_name = basename(argv[0]);
 	if (argc < 3) {
 		std::cout << "ERROR: ./%s <name> <pid> <checkpoint_dir>"
-	          << exe_name << std::endl;
+	          << basename(argv[0]) << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	std::string recipe("dummy");
-	const char * name = argv[1];
+	const char * app_name = argv[1];
 	uint32_t pid = atoi(argv[2]);
 	std::string chkp_dir(argv[3]);
 
 	logger = bu::Logger::GetLogger(BBQUE_LOG_MODULE);
 	logger->Debug("RTLib initialization...");
 	RTLIB_Services_t * rtlib;
-	RTLIB_Init(name, &rtlib, pid);
+	RTLIB_Init(app_name, &rtlib, pid);
 	if (!rtlib) {
 		logger->Error("BarbequeRTRM not reachable");
 		exit(EXIT_FAILURE);
@@ -70,20 +69,20 @@ int main(int argc, char *argv[])
 	assert(rtlib);
 
 	logger->Debug("Registering EXC (recipe=%s)...", recipe.c_str());
-	auto pexc = std::make_shared<bt::BbqueRestoreEXC>(
-			exe_name, recipe, rtlib, chkp_dir, pid);
+	std::string exc_name(app_name);
+	exc_name += "_exc0";
+	auto pexc = std::make_shared<bt::BbqueRestoreEXC>(exc_name, recipe, rtlib, chkp_dir, pid);
 	if (!pexc->isRegistered()) {
 		logger->Error("Registration failed: check the recipe file");
 		exit(EXIT_FAILURE);
 	}
 
-	logger->Info("Launching the restore of [name=%s pid=%d]...", name, pid);
+	logger->Info("Launching the restore of [name=%s pid=%d]...", app_name, pid);
 	logger->Info("Checkpoint image directory: %s ", chkp_dir.c_str());
 	pexc->Start();
 
-	logger->Info("Waiting for [name=%s pid=%d] to terminate...", name, pid);
+	logger->Info("Waiting for [name=%s pid=%d] to terminate...", app_name, pid);
 	pexc->WaitCompletion();
-	logger->Info("Application [name=%s pid=%d] terminated", name, pid);
 
 	return EXIT_SUCCESS;
 }

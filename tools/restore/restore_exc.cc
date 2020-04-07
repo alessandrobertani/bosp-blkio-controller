@@ -89,16 +89,19 @@ RTLIB_ExitCode_t BbqueRestoreEXC::onRun()
 {
 	logger->Info("BbqueRestoreEXC::onRun() ");
 
-	logger->Notice("BbqueRestoreEXC: restoring [pid=%d] from pid=%d",
-	              pid, getpid());
+	if (!restored) {
+		logger->Notice("BbqueRestoreEXC: restoring [pid=%d] from pid=%d",
+		              pid, getpid());
 
-	int c_ret = criu_restore_child();
-	if (c_ret < 0) {
-		logger->Error("BbqueRestoreEXC: [pid=%d] error=%d", pid, c_ret);
-		perror("BbqueRestoreEXC");
-		return RTLIB_EXC_WORKLOAD_NONE;
+		int c_ret = criu_restore_child();
+		if (c_ret < 0) {
+			logger->Error("BbqueRestoreEXC: [pid=%d] error=%d", pid, c_ret);
+			perror("BbqueRestoreEXC");
+			return RTLIB_EXC_WORKLOAD_NONE;
+		}
+		restored = true;
+
 	}
-	restored = true;
 
 	return RTLIB_OK;
 }
@@ -110,10 +113,11 @@ RTLIB_ExitCode_t BbqueRestoreEXC::onMonitor()
 
 	logger->Info("BbqueRestoreEXC::onMonitor(): ");
 
-	if (restored) {
-		logger->Notice("BbqueRestoreEXC: restore done, exiting...");
+	if (restored && kill(pid, 0) == 0) {
+		logger->Notice("BbqueRestoreEXC: [pid=%d] restored", pid);
 		return RTLIB_EXC_WORKLOAD_NONE;
 	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 	return RTLIB_OK;
 }
@@ -122,9 +126,10 @@ RTLIB_ExitCode_t BbqueRestoreEXC::onRelease()
 {
 	logger->Info("BbqueRestoreEXC::onRelease(): exit");
 
-	logger->Notice("BbqueRestoreEXC: waiting for restored application");
+	logger->Notice("BbqueRestoreEXC: synchronizing [pid=%d] termination", pid);
 	int status;
 	waitpid(pid, &status, 0);
+	logger->Notice("BbqueRestoreEXC: application [pid=%d] terminated", pid);
 
 	return RTLIB_OK;
 }
