@@ -92,7 +92,7 @@ LocalPlatformProxy::LocalPlatformProxy()
 	logger->Info("LocalPlatformProxy: accl = { %s }", accl_proxies.c_str());
 }
 
-const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const
+std::string const & LocalPlatformProxy::GetPlatformID(int16_t system_id) const
 {
 #ifdef CONFIG_TARGET_LINUX_MANGO
 	return this->accl[0]->GetPlatformID(system_id);
@@ -101,7 +101,7 @@ const char* LocalPlatformProxy::GetPlatformID(int16_t system_id) const
 #endif
 }
 
-const char* LocalPlatformProxy::GetHardwareID(int16_t system_id) const
+std::string const & LocalPlatformProxy::GetHardwareID(int16_t system_id) const
 {
 #ifdef CONFIG_TARGET_LINUX_MANGO
 	return this->accl[0]->GetHardwareID(system_id);

@@ -248,7 +248,7 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 	rapidxml::xml_node<> * pp_last = nullptr;
 #ifndef CONFIG_TARGET_EMULATED_HOST
 	rapidxml::xml_node<> * pp_gen_elem = nullptr;
-	const char * sys_platform_id;
+	std::string sys_platform_id;
 	std::string sys_platform_hw;
 	std::string platform_id;
 	std::string platform_hw;
@@ -264,15 +264,15 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 #ifndef CONFIG_TARGET_EMULATED_HOST
 		// System platform ID
 		sys_platform_id = plm.GetPlatformID();
-		if (!sys_platform_id) {
+		if (sys_platform_id.empty()) {
 			logger->Error("Platform: unable to get the system ID");
-			assert(sys_platform_id != nullptr);
+			assert(!sys_platform_id.empty());
 			return nullptr;
 		}
 		// Plaform hardware (optional)
 		sys_platform_hw.assign(plm.GetHardwareID());
 		logger->Info("Platform: system ID=%s HW=%s",
-		             sys_platform_id, sys_platform_hw.c_str());
+			sys_platform_id.c_str(), sys_platform_hw.c_str());
 
 		// Look for the platform section matching the system platform id
 		while (pp_elem) {

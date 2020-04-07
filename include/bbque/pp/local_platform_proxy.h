@@ -40,12 +40,13 @@ public:
 	/**
 	 * @brief Return the Platform specific string identifier
 	 */
-	const char* GetPlatformID(int16_t system_id = -1) const;
+	std::string const & GetPlatformID(int16_t system_id = -1) const;
 
 	/**
 	 * @brief Return the Hardware identifier string
 	 */
-	const char* GetHardwareID(int16_t system_id = -1) const;
+	std::string const & GetHardwareID(int16_t system_id = -1) const;
+
 	/**
 	 * @brief Platform specific resource setup interface.
 	 */

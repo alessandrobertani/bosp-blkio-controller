@@ -70,27 +70,28 @@ public:
 	} ExitCode_t;
 
 	/**
-	 * @brief Return the Platform specific string identifier
+	 * @brief Return an identification string for the target platform
 	 * @param system_id It specifies from which system take the
 	 *                  platform identifier. If not specified or equal
 	 *                  to "-1", the platform id of the local system is returned.
 	 */
-	virtual const char* GetPlatformID(int16_t system_id = -1) const
+	virtual std::string const & GetPlatformID(int16_t system_id = -1) const
 	{
 		UNUSED(system_id);
-		return platform_id.c_str();
+		return platform_id;
 	}
 
 	/**
-	 * @brief Return the Hardware identifier string
+	 * @brief Return an identification string for the specific hardware
+	 * implementation of the target platform
 	 * @param system_id It specifies from which system take the
 	 *                  hardware identifier. If not specified or equal
 	 *                  to "-1", the hw id of the local system is returned.
 	 */
-	virtual const char* GetHardwareID(int16_t system_id = -1) const
+	virtual std::string const & GetHardwareID(int16_t system_id = -1) const
 	{
 		UNUSED(system_id);
-		return hardware_id.c_str();
+		return hardware_id;
 	}
 
 	/**

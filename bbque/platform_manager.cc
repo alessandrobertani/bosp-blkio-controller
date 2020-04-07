@@ -130,7 +130,7 @@ void PlatformManager::Task()
 
 }
 
-const char * PlatformManager::GetPlatformID(int16_t system_id) const
+std::string const & PlatformManager::GetPlatformID(int16_t system_id) const
 {
 	logger->Debug("GetPlatformID: requested id for system %d", system_id);
 
@@ -173,7 +173,7 @@ const std::string & PlatformManager::GetIpAddress(int16_t system_id) const
 	return addr;
 }
 
-const char * PlatformManager::GetHardwareID(int16_t system_id) const
+std::string const & PlatformManager::GetHardwareID(int16_t system_id) const
 {
 	logger->Debug("GetHardwareID: requested HW id for system %d", system_id);
 
