@@ -22,35 +22,33 @@
 #include "bbque/utils/assert.h"
 
 #ifdef CONFIG_TARGET_LINUX
-  #include "bbque/pp/linux_platform_proxy.h"
+#include "bbque/pp/linux_platform_proxy.h"
 #elif defined CONFIG_TARGET_ANDROID
-  #include "bbque/pp/android_platform_proxy.h"
+#include "bbque/pp/android_platform_proxy.h"
 #elif defined CONFIG_TARGET_EMULATED_HOST
-  #include "bbque/pp/test_platform_proxy.h"
+#include "bbque/pp/test_platform_proxy.h"
 #else
-  #error No host platform proxy: check target platform dependencies
+#error No host platform proxy: check target platform dependencies
 #endif
 
 #if defined CONFIG_TARGET_LINUX_MANGO
-  #include "bbque/pp/mango_platform_proxy.h"
+#include "bbque/pp/mango_platform_proxy.h"
 #endif
 
 #if defined CONFIG_TARGET_LINUX_RECIPE
-  #include "bbque/pp/recipe_platform_proxy.h"
+#include "bbque/pp/recipe_platform_proxy.h"
 #endif
 
 #ifdef CONFIG_TARGET_OPENCL
-  #include "bbque/pp/opencl_platform_proxy.h"
+#include "bbque/pp/opencl_platform_proxy.h"
 #endif
 
 #ifdef CONFIG_TARGET_NVIDIA
-  #include "bbque/pp/nvml_platform_proxy.h"
+#include "bbque/pp/nvml_platform_proxy.h"
 #endif
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 LocalPlatformProxy::LocalPlatformProxy()
 {
@@ -86,7 +84,7 @@ LocalPlatformProxy::LocalPlatformProxy()
 #endif
 
 	std::string accl_proxies;
-	for (auto & p: this->accl) {
+	for (auto & p : this->accl) {
 		accl_proxies += p->GetPlatformID() + std::string(", ");
 	}
 	logger->Info("LocalPlatformProxy: accl = { %s }", accl_proxies.c_str());
@@ -131,7 +129,6 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp)
 	return PLATFORM_OK;
 }
 
-
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData()
 {
 	ExitCode_t ec;
@@ -150,7 +147,6 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::LoadPlatformData()
 
 	return PLATFORM_OK;
 }
-
 
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh()
 {
@@ -171,7 +167,6 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Refresh()
 	return PLATFORM_OK;
 }
 
-
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp)
 {
 	ExitCode_t ec;
@@ -190,7 +185,6 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Release(SchedPtr_t papp)
 
 	return PLATFORM_OK;
 }
-
 
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t papp)
 {
@@ -217,11 +211,10 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ReclaimResources(SchedPtr_t p
 	return PLATFORM_OK;
 }
 
-
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::MapResources(
-        SchedPtr_t papp,
-        ResourceAssignmentMapPtr_t pres,
-        bool excl)
+LocalPlatformProxy::ExitCode_t
+LocalPlatformProxy::MapResources(SchedPtr_t papp,
+				 ResourceAssignmentMapPtr_t pres,
+				 bool excl)
 {
 	ExitCode_t ec;
 	uint8_t err_count = 0;
@@ -260,8 +253,8 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement()
 	return PLATFORM_OK;
 }
 
-LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement(
-        bbque::res::ResourcePtr_t resource)
+LocalPlatformProxy::ExitCode_t
+LocalPlatformProxy::ActuatePowerManagement(bbque::res::ResourcePtr_t resource)
 {
 
 #ifdef CONFIG_BBQUE_PM
@@ -273,8 +266,8 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement(
 
 	if (ps.PendingActions() | br::Resource::PowerSettings::TURN_ONOFF) {
 		logger->Debug("ActuatePowerManagement: <%> set on/off: %d",
-		              resource->Path()->ToString().c_str(),
-		              ps.IsOnline());
+			resource->Path()->ToString().c_str(),
+			ps.IsOnline());
 		if (ps.IsOnline())
 			pm.SetOn(resource->Path());
 		else
@@ -283,30 +276,30 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement(
 
 	if (ps.PendingActions() | br::Resource::PowerSettings::CHANGE_GOVERNOR) {
 		logger->Debug("ActuatePowerManagement: <%> setting governor '%s'",
-		              resource->Path()->ToString().c_str(),
-		              ps.FrequencyGovernor().c_str());
+			resource->Path()->ToString().c_str(),
+			ps.FrequencyGovernor().c_str());
 		pm.SetClockFrequencyGovernor(
-		        resource->Path(), ps.FrequencyGovernor());
+					resource->Path(), ps.FrequencyGovernor());
 	}
 
 	if (ps.PendingActions() | br::Resource::PowerSettings::SET_FREQUENCY) {
 		logger->Debug("ActuatePowerManagement: <%> setting frequency: %d KHz",
-		              resource->Path()->ToString().c_str(),
-		              ps.ClockFrequency());
+			resource->Path()->ToString().c_str(),
+			ps.ClockFrequency());
 		pm.SetClockFrequency(resource->Path(), ps.ClockFrequency());
 	}
 
 	if (ps.PendingActions() | br::Resource::PowerSettings::SET_PERF_STATE) {
 		logger->Debug("ActuatePowerManagement: <%> setting performance state: %d",
-		              resource->Path()->ToString().c_str(),
-		              ps.PerformanceState());
+			resource->Path()->ToString().c_str(),
+			ps.PerformanceState());
 		pm.SetClockFrequency(resource->Path(), ps.PerformanceState());
 	}
 
 	ps.ClearPendingActions();
 	logger->Debug("ActuatePowerManagement: <%s> pending actions left: %d",
-	              resource->Path()->ToString().c_str(),
-	              resource->GetPowerSettings().PendingActions());
+		resource->Path()->ToString().c_str(),
+		resource->GetPowerSettings().PendingActions());
 #else
 	UNUSED(resource);
 
@@ -315,28 +308,25 @@ LocalPlatformProxy::ExitCode_t LocalPlatformProxy::ActuatePowerManagement(
 	return PLATFORM_OK;
 }
 
-
 void LocalPlatformProxy::Exit()
 {
 	logger->Info("Exit: closing host platform proxy [%s]...",
-	             host->GetPlatformID());
+		host->GetPlatformID());
 	this->host->Exit();
 	for (auto & accl_pp : accl) {
 		logger->Info("Exit: closing accliliary platform proxy [%s]...",
-		             accl_pp->GetPlatformID());
+			accl_pp->GetPlatformID());
 		accl_pp->Exit();
 	}
 }
 
-
-bool LocalPlatformProxy::IsHighPerformance(
-        bbque::res::ResourcePathPtr_t const & path) const
+bool
+LocalPlatformProxy::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const
 {
 	if (path->GetID(bbque::res::ResourceType::CPU) >= 0)
 		return this->host->IsHighPerformance(path);
 	return false;
 }
-
 
 ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Dump(app::SchedPtr_t psched)
 {
@@ -356,8 +346,8 @@ ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Dump(app::SchedPtr_t psched
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Restore(
-        uint32_t pid, std::string exec_name)
+ReliabilityActionsIF::ExitCode_t
+LocalPlatformProxy::Restore(uint32_t pid, std::string exec_name)
 {
 	ReliabilityActionsIF::ExitCode_t ec;
 

@@ -35,10 +35,10 @@ PlatformManager::PlatformManager()
 
 	try {
 		this->lpp = std::unique_ptr<pp::LocalPlatformProxy>(
-								new pp::LocalPlatformProxy());
+			new pp::LocalPlatformProxy());
 #ifdef CONFIG_BBQUE_DIST_MODE
 		this->rpp = std::unique_ptr<pp::RemotePlatformProxy>(
-								new pp::RemotePlatformProxy());
+			new pp::RemotePlatformProxy());
 #endif
 	}
 	catch (const std::runtime_error & r) {
@@ -49,8 +49,8 @@ PlatformManager::PlatformManager()
 	// Register a command dispatcher to handle CGroups reconfiguration
 	CommandManager & cm = CommandManager::GetInstance();
 	cm.RegisterCommand(PLATFORM_MANAGER_NAMESPACE ".refresh",
-		static_cast<CommandHandler *> (this),
-		"Refresh CGroups resources description");
+			static_cast<CommandHandler *> (this),
+			"Refresh CGroups resources description");
 
 	Worker::Setup(BBQUE_MODULE_NAME("plm"), PLATFORM_MANAGER_NAMESPACE);
 }
@@ -160,19 +160,6 @@ std::string const & PlatformManager::GetPlatformID(int16_t system_id) const
 
 }
 
-const std::string & PlatformManager::GetIpAddress(int16_t system_id) const
-{
-	logger->Info("GetIpAddress: requested ip address for system %d", system_id);
-
-	assert(system_id >= -1);
-
-	const auto systems = this->GetPlatformDescription().GetSystemsAll();
-	const auto & addr = systems.at(system_id).GetNetAddress();
-	logger->Info("GetIpAddress: found ip address %s", addr.c_str());
-
-	return addr;
-}
-
 std::string const & PlatformManager::GetHardwareID(int16_t system_id) const
 {
 	logger->Debug("GetHardwareID: requested HW id for system %d", system_id);
@@ -195,9 +182,22 @@ std::string const & PlatformManager::GetHardwareID(int16_t system_id) const
 	logger->Error("GetHardwareID: requested HW id for unknown system %d", system_id);
 	return "";
 #else
-	assert(system_id <= 0);  // Sys0 is also valid
+	assert(system_id <= 0);  // sys0 is also valid
 	return lpp->GetPlatformID();
 #endif
+}
+
+const std::string & PlatformManager::GetIpAddress(int16_t system_id) const
+{
+	logger->Info("GetIpAddress: requested ip address for system %d", system_id);
+
+	assert(system_id >= -1);
+
+	const auto systems = this->GetPlatformDescription().GetSystemsAll();
+	const auto & addr = systems.at(system_id).GetNetAddress();
+	logger->Info("GetIpAddress: found ip address %s", addr.c_str());
+
+	return addr;
 }
 
 PlatformManager::ExitCode_t PlatformManager::Setup(SchedPtr_t papp)
@@ -350,8 +350,8 @@ PlatformManager::ExitCode_t PlatformManager::ReclaimResources(SchedPtr_t papp)
 	return PLATFORM_OK;
 }
 
-PlatformManager::ExitCode_t PlatformManager::MapResources(
-	SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
+PlatformManager::ExitCode_t
+PlatformManager::MapResources(SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl)
 {
 	ExitCode_t ec;
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -373,7 +373,7 @@ PlatformManager::ExitCode_t PlatformManager::MapResources(
 
 	// Get the set of assigned (bound) Systems
 	br::ResourceBitset systems(br::ResourceBinder::GetMask(
-		pres, br::ResourceType::SYSTEM));
+							pres, br::ResourceType::SYSTEM));
 	logger->Debug("MapResources: [%s] resource assignment from %d system(s)",
 		papp->StrId(), systems.Count());
 
@@ -507,8 +507,8 @@ PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement()
 	return PLATFORM_OK;
 }
 
-PlatformManager::ExitCode_t PlatformManager::ActuatePowerManagement(
-	bbque::res::ResourcePtr_t resource)
+PlatformManager::ExitCode_t
+PlatformManager::ActuatePowerManagement(bbque::res::ResourcePtr_t resource)
 {
 	ExitCode_t ec;
 	logger->Info("ActuatePowerManagement: processing <%s>...",
@@ -553,8 +553,8 @@ void PlatformManager::Exit()
 	logger->Notice("Exit: platform supports terminated");
 }
 
-bool PlatformManager::IsHighPerformance(
-	bbque::res::ResourcePathPtr_t const & path) const
+bool
+PlatformManager::IsHighPerformance(bbque::res::ResourcePathPtr_t const & path) const
 {
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	return lpp->IsHighPerformance(path);
@@ -608,8 +608,8 @@ ReliabilityActionsIF::ExitCode_t PlatformManager::Dump(app::SchedPtr_t psched)
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
 
-ReliabilityActionsIF::ExitCode_t PlatformManager::Restore(
-	uint32_t pid, std::string exec_name, int remote_sys_id)
+ReliabilityActionsIF::ExitCode_t
+PlatformManager::Restore(uint32_t pid, std::string exec_name, int remote_sys_id)
 {
 	ReliabilityActionsIF::ExitCode_t ec;
 

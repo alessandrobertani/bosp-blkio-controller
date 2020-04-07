@@ -24,10 +24,8 @@
 #include <memory>
 #include <vector>
 
-namespace bbque
-{
-namespace pp
-{
+namespace bbque {
+namespace pp {
 
 class LocalPlatformProxy : public PlatformProxy
 {
@@ -79,9 +77,9 @@ public:
 	 * @brief Map the local resource assignments.
 	 */
 	ExitCode_t MapResources(
-	        SchedPtr_t papp,
-	        ResourceAssignmentMapPtr_t pres,
-	        bool excl = true);
+				SchedPtr_t papp,
+				ResourceAssignmentMapPtr_t pres,
+				bool excl = true);
 
 	/**
 	 * @brief Actuate power management actions for to (local) not managed
@@ -93,7 +91,7 @@ public:
 	 * @brief Actuate power management for a specific local node resource
 	 */
 	ExitCode_t ActuatePowerManagement(
-	        bbque::res::ResourcePtr_t resource) override;
+					bbque::res::ResourcePtr_t resource) override;
 
 	/**
 	 * @brief Local termination.
@@ -104,7 +102,7 @@ public:
 	 * @brief Check if a local resource is "high-performance" qualified.
 	 */
 	bool IsHighPerformance(
-	        bbque::res::ResourcePathPtr_t const & path) const override;
+			bbque::res::ResourcePathPtr_t const & path) const override;
 
 
 	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
@@ -134,7 +132,7 @@ private:
 
 };
 
-}   // namespace pp
-}   // namespace bbque
+} // namespace pp
+} // namespace bbque
 
 #endif // LOCALPLATFORMPROXY_H

@@ -18,7 +18,7 @@ class PlatformManager : public PlatformProxy, public utils::Worker, public Comma
 {
 public:
 	/**
-	 * @brief Get a reference to the paltform proxy
+	 * @brief Get a reference to the platform proxy
 	 */
 	static PlatformManager & GetInstance();
 
@@ -28,7 +28,7 @@ public:
 	 *       platform identifier. If not specified or equal
 	 *       to "-1", the platform id of the local system is returned.
 	 */
-	const char* GetPlatformID(int16_t system_id = -1) const override;
+	std::string const & GetPlatformID(int16_t system_id = -1) const override;
 
 	/**
 	 * @brief Return the Hardware identifier string
@@ -36,7 +36,7 @@ public:
 	 *       platform identifier. If not specified or equal
 	 *       to "-1", the hw id of the local system is returned.
 	 */
-	const char* GetHardwareID(int16_t system_id = -1) const override;
+	std::string const & GetHardwareID(int16_t system_id = -1) const override;
 
 	/**
 	 * @brief Get the IP address of a system
@@ -81,8 +81,9 @@ public:
 	 * @param excl If true the specified resources are assigned for exclusive
 	 * usage to the application
 	 */
-	ExitCode_t MapResources(
-				SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl = true) override;
+	ExitCode_t MapResources(SchedPtr_t papp,
+				ResourceAssignmentMapPtr_t pres,
+				bool excl = true) override;
 
 	/**
 	 * @brief Set the power management configuration set by the scheduling
@@ -114,13 +115,14 @@ public:
 	void Exit() override;
 
 	/******************************************************************
-	 * ReliabilityActionsIF inherithed member functions                *
+	 * ReliabilityActionsIF inherited member functions                *
 	 ******************************************************************/
 
 	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
 
-	ReliabilityActionsIF::ExitCode_t Restore(
-						uint32_t pid, std::string exec_name, int remote_sys_id = -1);
+	ReliabilityActionsIF::ExitCode_t Restore(uint32_t pid,
+						std::string exec_name,
+						int remote_sys_id = -1);
 
 	ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
 
@@ -220,7 +222,7 @@ private:
 	PlatformManager(PlatformManager const&) = delete;
 
 	/**
-	 * @brief Assigment-Copy operator not allowed in singletons
+	 * @brief Assignment-Copy operator not allowed in singletons
 	 */
 	void operator=(PlatformManager const&) = delete;
 
