@@ -1,6 +1,6 @@
 <BarbequeRTRM recipe_version="0.8">
 	<application priority="4">
-		<platform id="org.linux.cgroup">
+		<platform id="bq.*">
 			<awms>
 				<awm id="0" name="OK" value="100">
 					<resources>
@@ -18,7 +18,7 @@
 				</reqs>
 			</tg>
 		</platform>
-		<platform hw="arch20" id="org.mango">
+		<platform hw="arch20" id="bq.*.mango">
 			<awms>
 				<awm id="0" name="test" value="10">
 					<resources>
