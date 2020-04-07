@@ -23,6 +23,7 @@
 #include <iostream>
 #include <list>
 #include <fstream>
+#include <regex>
 #include <boost/filesystem/operations.hpp>
 
 #include "bbque/platform_manager.h"
@@ -238,84 +239,73 @@ RecipeLoaderIF::ExitCode_t RXMLRecipeLoader::LoadRecipe(std::string const & _rec
 
 rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xml_elem)
 {
-	rapidxml::xml_node<> * pp_elem = nullptr;
-	rapidxml::xml_node<> * pp_last = nullptr;
-	rapidxml::xml_node<> * pp_gen_elem = nullptr;
+	rapidxml::xml_node<> * platform_node = nullptr;
+	rapidxml::xml_node<> * match_platform_node = nullptr;
 	std::string sys_platform_id;
 	std::string sys_platform_hw;
-	std::string platform_id;
-	std::string platform_hw;
+	std::string rec_platform_id;
+	std::string rec_platform_hw;
 	PlatformManager & plm = PlatformManager::GetInstance();
-	bool id_matched  = false;
 
 	try {
 		// <platform>
-		pp_elem = _xml_elem->first_node("platform", 0, true);
-		pp_last = pp_elem;
-		CheckMandatoryNode(pp_elem, "platform", _xml_elem);
+		platform_node = _xml_elem->first_node("platform", 0, true);
+		match_platform_node = platform_node;
+		CheckMandatoryNode(platform_node, "platform", _xml_elem);
 
 		// System platform ID
 		sys_platform_id = plm.GetPlatformID();
 		if (sys_platform_id.empty()) {
-			logger->Error("Platform: unable to get the system ID");
+			logger->Error("LoadPlatform: unable to get the system ID");
 			assert(!sys_platform_id.empty());
 			return nullptr;
 		}
-		// Platform hardware (optional)
-		sys_platform_hw.assign(plm.GetHardwareID());
-		logger->Info("Platform: system ID=%s HW=%s",
+
+		// System hardware ID (optional system implementation specification)
+		sys_platform_hw = plm.GetHardwareID();
+		logger->Info("LoadPlatform: system ID=%s HW=%s",
 			sys_platform_id.c_str(), sys_platform_hw.c_str());
 
 		// Look for the platform section matching the system platform id
-		while (pp_elem) {
-			platform_id = loadAttribute("id", true, pp_elem);
-			platform_hw = loadAttribute("hw", false, pp_elem);
-			logger->Info("Platform: search ID=%s HW=%s",
-				platform_id.c_str(), platform_hw.c_str());
+		while (platform_node) {
+			rec_platform_id = loadAttribute("id", true, platform_node);
+			rec_platform_hw = loadAttribute("hw", false, platform_node);
+			logger->Info("LoadPlatform: looking for ID=%s HW=%s",
+				rec_platform_id.c_str(), rec_platform_hw.c_str());
 
-			// Keep track of the "generic" platform section (if any)
-			if (!pp_gen_elem
-			&& (platform_id.compare(PLATFORM_ID_GENERIC) ==	0)) {
-				pp_gen_elem = pp_elem;
-				logger->Debug("Platform: found a generic section");
-				pp_elem = pp_elem->next_sibling("platform", 0, true);
-				continue;
-			}
+			std::regex platform_pattern(rec_platform_id);
+			if (std::regex_match(sys_platform_id, platform_pattern)) {
+				logger->Info("LoadPlatform: %s matches <%s>",
+					rec_platform_id.c_str(),
+					sys_platform_id.c_str());
+				match_platform_node = platform_node;
 
-			// Keep track of the section matching the system platform ID
-			if (platform_id.compare(sys_platform_id) == 0) {
-				pp_last = pp_elem;
-				id_matched = true;
-				logger->Debug("Platform: found a ID match: %s",
-					platform_id.c_str());
 				// Hardware (SoC) check required?
-				if ((platform_hw.size() > 1)
-				&& (platform_hw.compare(sys_platform_hw) == 0)) {
-					logger->Debug("Platform: found a HW match: %s",
-						platform_hw.c_str());
-					break;
+				if (rec_platform_hw.size() <= 1) {
+					logger->Info("LoadPlatform: no specific HW");
+					return match_platform_node;
+				}
+				else {
+					if (rec_platform_hw.compare(sys_platform_hw) == 0) {
+						logger->Info("LoadPlatform: hardware matching: %s",
+							rec_platform_hw.c_str());
+						return match_platform_node;
+					}
+					else {
+						logger->Debug("LoadPlatform: hardware not matching: %s",
+							rec_platform_hw.c_str());
+					}
 				}
 			}
-			pp_elem = pp_elem->next_sibling("platform", 0, true);
-		}
 
-		// If the platform ID does not match the system platform, check if it
-		// has been found the 'generic' section
-		if (!id_matched && pp_gen_elem) {
-			logger->Warn("Platform: mismatch. Section '%s' will be parsed",
-				PLATFORM_ID_GENERIC);
-			return pp_gen_elem;
+			platform_node = platform_node->next_sibling("platform", 0, true);
 		}
-
-		logger->Info("Platform: best matching = [%s:%s]",
-			platform_id.c_str(), platform_hw.c_str());
 	}
 	catch (rapidxml::parse_error &ex) {
 		logger->Error(ex.what());
-		return nullptr;
 	}
 
-	return pp_last;
+	return nullptr;
 }
 
 std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name)
