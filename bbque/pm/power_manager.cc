@@ -49,6 +49,10 @@
 # include "bbque/pm/power_manager_mango.h"
 #endif // CONFIG_BBQUE_PM_MANGO
 
+#ifdef CONFIG_BBQUE_PM_RECIPE
+# include "bbque/pm/power_manager_recipe.h"
+#endif // CONFIG_BBQUE_PM_RECIPE
+
 namespace bw = bbque::pm;
 
 namespace bbque {
@@ -112,7 +116,7 @@ PowerManager::PowerManager() {
 		std::shared_ptr<PowerManager>(new AMDPowerManager());
 #endif
 #ifdef CONFIG_BBQUE_PM_NVIDIA
-    logger->Notice("Using NVIDIA provider for GPUs power management");
+	logger->Notice("Using NVIDIA provider for GPUs power management");
 	device_managers[br::ResourceType::GPU] =
 		std::shared_ptr<PowerManager>(new NVIDIAPowerManager());
 #endif
@@ -136,7 +140,7 @@ PowerManager::PowerManager() {
 		std::shared_ptr<PowerManager>(new ARM_CortexA9_CPUPowerManager());
 	return;
 # endif
-	// Generic
+	// Generic CPU
 	logger->Notice("Using generic CPU power management module");
 	device_managers[br::ResourceType::CPU] =
 		std::shared_ptr<PowerManager>(new CPUPowerManager());
@@ -147,7 +151,16 @@ PowerManager::PowerManager() {
 	logger->Notice("Using MANGO platform power management module");
 	device_managers[br::ResourceType::ACCELERATOR] =
 		std::shared_ptr<PowerManager>(new MangoPowerManager());
-#endif // CONFIG_BBQUE_PM_MANGO
+
+#endif
+	// RECIPE accelerators
+#ifdef CONFIG_BBQUE_PM_RECIPE
+	logger->Notice("Using RECIPE platform power management module");
+	device_managers[br::ResourceType::ACCELERATOR] =
+		std::shared_ptr<PowerManager>(new RecipePowerManager());
+#endif // CONFIG_BBQUE_PM_RECIPE
+
+	logger->Info("PowerManager: device managers count=%d", device_managers.size());
 
 }
 

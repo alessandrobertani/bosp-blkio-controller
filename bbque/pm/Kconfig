@@ -44,7 +44,6 @@ config  BBQUE_PM_CPU
   Enable the support for the management of CPU(s) from the power-thermal point
   of view.
 
-
 config  BBQUE_PM_NVIDIA
   bool "NVIDIA GPU(s) Power Management"
   depends on BBQUE_PM
@@ -76,10 +75,20 @@ config  BBQUE_PM_GPU_ARM_MALI
   power-thermal point of view.
 
 config  BBQUE_PM_MANGO
-  bool "MANGO Platform Power Management"
+  bool "H2020-MANGO Platform Power Management"
   depends on BBQUE_PM
   depends on TARGET_LINUX_MANGO
   default n
   ---help---
-  Enable the support for the management of a MANGO platform from the power
-  management point of view.
+  Enable the support for the management of a H2020-MANGO platform from the
+  power management point of view.
+
+config  BBQUE_PM_RECIPE
+  bool "H2020-RECIPE Platform Power Management"
+  depends on BBQUE_PM
+  depends on TARGET_LINUX_RECIPE
+  default n
+  ---help---
+  Enable the support for the management of a H2020-RECIPE platform from the
+  power management point of view.
+

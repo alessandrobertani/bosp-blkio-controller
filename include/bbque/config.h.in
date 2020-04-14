@@ -220,9 +220,11 @@
 /** Enable GPU Power Management support for ARM Mali */
 #cmakedefine CONFIG_BBQUE_PM_GPU_ARM_MALI
 
-/** Enable GPU Power Management support for ARM Mali */
+/** Enable GPU Power Management support for H2020 MANGO */
 #cmakedefine CONFIG_BBQUE_PM_MANGO
 
+/** Enable GPU Power Management support for H2020 RECIPE */
+#cmakedefine CONFIG_BBQUE_PM_RECIPE
 
 /** Distributed systems mode */
 #cmakedefine CONFIG_BBQUE_DIST_MODE

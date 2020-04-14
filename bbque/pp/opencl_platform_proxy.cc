@@ -295,6 +295,8 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 #ifdef CONFIG_BBQUE_WM
 			PowerMonitor & wm(PowerMonitor::GetInstance());
 			wm.Register(r_path_ptr);
+			logger->Debug("RegisterDevices: r_path=<%s> added to power monitor",
+				r_path.c_str());
 #endif
 		}
 
