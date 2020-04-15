@@ -53,6 +53,14 @@ protected:
 
 	cl_device_id * ocl_devices = nullptr;
 
+
+	/**
+	 * Error handler function
+	 * @param acc_id The id number of the accelerator for which the call has been made
+	 * @param err an optional error value returned by the HW-specific function call
+	 */
+	PMResult ErrorHandler(int acc_id, int err = 0);
+
 };
 
 }

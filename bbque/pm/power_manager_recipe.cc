@@ -15,9 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Launch the HN daemon with the mmi64 communication enabled:
+ * $ hn_daemon -P <port> -R
+ */
+
 #include <cstring>
 
 #include "bbque/pm/power_manager_recipe.h"
+#include "CL/cl.h"
 #include "CL/cl_ext_upv.h"
 
 using namespace bbque::res;
@@ -98,6 +104,24 @@ RecipePowerManager::~RecipePowerManager()
 }
 
 
+PowerManager::PMResult RecipePowerManager::ErrorHandler(int acc_id, int err)
+{
+	switch (err) {
+	case CL_INVALID_DEVICE:
+		logger->Error("ErrorHandler: accelerator=<%d> invalid device",
+			acc_id);
+		return PMResult::ERR_RSRC_INVALID_PATH;
+	case CL_INVALID_VALUE:
+		logger->Error("ErrorHandler: accelerator=<%d> invalid value returned",
+			acc_id);
+		return PMResult::ERR_SENSORS_ERROR;
+	default:
+		logger->Error("ErrorHandler: accelerator=<%d> [error=%d]",
+			acc_id, err);
+		return PMResult::ERR_UNKNOWN;
+	}
+}
+
 PowerManager::PMResult
 RecipePowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius)
 {
@@ -112,7 +136,7 @@ RecipePowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsi
 	// Accelerator ID
 	int acc_id = rp->GetID(br::ResourceType::ACCELERATOR);
 	if (acc_id < 0) {
-		logger->Warn("GetTemperature: no tiles of type ACCELERATOR");
+		logger->Warn("GetTemperature: no resource of type ACCELERATOR");
 		return PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
@@ -120,61 +144,36 @@ RecipePowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsi
 
 	logger->Info("GetTemperature: device accelerator id=%d", acc_id);
 
-		char dev_name[64];
-		auto status = clGetDeviceInfo(
-					this->ocl_devices[acc_id],
-					CL_DEVICE_NAME,
-					sizeof(dev_name),
-					dev_name,
-					NULL);
-		if (status == CL_SUCCESS) {
-			logger->Info("GetTemperature:: device %d:%s",
-				acc_id, dev_name);
-		}
+#ifdef BBQUE_DEBUG
+	char dev_name[64];
+	auto status = clGetDeviceInfo(
+				this->ocl_devices[acc_id],
+				CL_DEVICE_NAME,
+				sizeof(dev_name),
+				dev_name,
+				NULL);
+	if (status == CL_SUCCESS) {
+		logger->Info("GetTemperature:: device %d:%s",
+			acc_id, dev_name);
+	}
+#endif
 
-
-/*
-49       if (strcmp(device_name[i], DEVICE_NAME_STRATIX) >= 0)
- 50       {
- 51         // device is a proFPGA stratix board
- 52         int *temperature;
- 53         char temp_ch [16];
- 54         size_t temp_size;
- 55         status = clGetDeviceInfo(devices[i], CL_DEVICE_CORE_TEMPERATURE_RECIPE, 16, temp_ch, &temp_size);
- 56
- 57         if (status == CL_SUCCESS)
- 58         {
- 59           temperature = (int *)temp_ch;
- 60           printf("proFPGA stratix device match found, Temperature: %d Celsius\n", *temperature);
- 61         }
- 62         else
- 63         {
- 64           printf("  ERROR geting proFPGA device temperature\n\n");
- 65         }
- 66       }
- 67     }
-*/
-
-	char temp_ch[16];
-	memset(temp_ch, 0, sizeof(temp_ch));
+	int16_t temp_value = 0;
 	size_t nb = 0;
 	int err = clGetDeviceInfo(
 				this->ocl_devices[acc_id],
 				CL_DEVICE_CORE_TEMPERATURE_RECIPE,
-				sizeof(temp_ch),
-				&temp_ch,
+				sizeof(temp_value),
+				&temp_value,
 				&nb);
-	if (err != 0) {
-		logger->Error("GetTemperature: accelerator=<%d>  [error=%d]",
-			acc_id, err);
-		return PMResult::ERR_UNKNOWN;
+
+	if (err == 0) {
+		celsius = temp_value;
+		return PMResult::OK;
 	}
 
-	int * temp_value = (int *) temp_ch;
-	logger->Debug("GetTemperature: raw value = %d", *temp_value);
-
-	celsius = static_cast<uint32_t>(*temp_value);
-	return PMResult::OK;
+	logger->Error("GetTemperature: <%s> runtime error", rp->ToString().c_str());
+	return ErrorHandler(acc_id, err);
 }
 
 }
