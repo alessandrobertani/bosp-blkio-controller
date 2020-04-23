@@ -124,7 +124,7 @@ install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDumpParser.aw
 	RENAME bbque-cpu-parser)
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDump.sh"
 	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
-	RENAME bbque-cpu-dump)
+	RENAME bbque-cpu-load)
 
 
 #----- Deploy the BBQ Signal Stability Analysis script

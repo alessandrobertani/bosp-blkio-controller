@@ -2,22 +2,23 @@
 
 source @CMAKE_INSTALL_PREFIX@/etc/bbque/bosp_init.env > /dev/null 2>&1
 BBQUE_SYSROOT="${BBQUE_SYSROOT:-$SYSROOT}"
-
+OUTFILE=$BBQUE_SYSROOT/var/bbque/CpuUsage.dat
 CORES=$(grep processor /proc/cpuinfo | wc -l)
 MAXF=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq)
 
 function readCpuLoad() {
-while true; do
-	cat $BBQUE_SYSROOT/mnt/cgroup/cpuacct.usage_percpu
-	sleep 1;
-done
+	while true; do
+		cat /sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls/cpuacct.usage_percpu
+		sleep 1;
+	done
 }
 
 # Clean data file
-echo "" > $BBQUE_SYSROOT/var/bbque/CpuUsage.dat
+echo "" > $OUTFILE
+printf "Logging CPU load in %s...\n" $OUTFILE
 
 readCpuLoad | \
-	stdbuf -oL $BBQUE_SYSROOT/sbin/bbque-cpu-parser \
+	stdbuf -oL $BBQUE_SYSROOT/sbin/bbque/bbque-cpu-parser \
 		-v CORES=$CORES -v MAXF=$MAXF \
 		>> $BBQUE_SYSROOT/var/bbque/CpuUsage.dat
 
