@@ -50,8 +50,8 @@ void init_BbqueEXC(py::module &m) {
       .def("Done", &BbqueEXC::Done)
       .def("CurrentAWM", &BbqueEXC::CurrentAWM)
       .def("Configuration", &BbqueEXC::Configuration)
-      .def_property_readonly("exc_name", &PyBbqueEXC::get_exc_name)
-      .def_property_readonly("rpc_name", &PyBbqueEXC::get_rpc_name)
+      .def_property_readonly("exc_name", &BbqueEXC::GetName)
+      .def_property_readonly("rpc_name", &BbqueEXC::GetRpcName)
       .def_property_readonly("logger", [](PyBbqueEXC &bbqueEXC)
             {
                auto logger_w = new RTLIB_Logger_Wrapper(bbqueEXC.get_logger());
