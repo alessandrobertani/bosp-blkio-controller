@@ -646,6 +646,22 @@ public:
 		return config;
 	};
 
+	/**
+	 * @brief Required by pybind11 for the Python wrapper
+	 **/
+	std::string const & GetName()
+	{
+		return exc_name;
+	}
+
+	/**
+	 * @brief Required by pybind11 for the Python wrapper
+	 **/
+	std::string const & GetRpcName()
+	{
+		return rpc_name;
+	}
+
 protected:
 
 	/**
