@@ -173,8 +173,10 @@ PowerManager::~PowerManager() {
 PowerManager::PMResult PowerManager::GetLoad(
 		br::ResourcePathPtr_t const & rp, uint32_t &perc) {
 	auto dm = GetDeviceManager(rp, "GetLoad");
-	if (dm == nullptr)
+	if (dm == nullptr) {
+		perc = 0;
 		return PMResult::ERR_API_NOT_SUPPORTED;
+	}
 	return dm->GetLoad(rp, perc);
 }
 
@@ -182,8 +184,10 @@ PowerManager::PMResult PowerManager::GetLoad(
 PowerManager::PMResult PowerManager::GetTemperature(
 		br::ResourcePathPtr_t const & rp, uint32_t &celsius) {
 	auto dm = GetDeviceManager(rp, "GetTemperature");
-	if (dm == nullptr)
+	if (dm == nullptr) {
+		celsius = 0;
 		return PMResult::ERR_API_NOT_SUPPORTED;
+	}
 	return dm->GetTemperature(rp, celsius);
 }
 
@@ -191,8 +195,10 @@ PowerManager::PMResult PowerManager::GetTemperature(
 PowerManager::PMResult
 PowerManager::GetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t &khz) {
 	auto dm = GetDeviceManager(rp, "GetClockFrequency");
-	if (dm == nullptr)
+	if (dm == nullptr) {
+		khz = 0;
 		return PMResult::ERR_API_NOT_SUPPORTED;
+	}
 	return dm->GetClockFrequency(rp, khz);
 }
 
