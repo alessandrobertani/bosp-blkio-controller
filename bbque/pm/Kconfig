@@ -49,6 +49,7 @@ config  BBQUE_PM_NVIDIA
   depends on BBQUE_PM
   depends on TARGET_NVIDIA
   depends on !TARGET_LINUX_ARM
+  select BBQUE_PM_GPU
   default n
   ---help---
   Enable the support for the management of NVIDIA GPU(s) from the power-thermal
@@ -59,6 +60,7 @@ config  BBQUE_PM_AMD
   depends on BBQUE_PM
   depends on TARGET_OPENCL
   depends on !TARGET_LINUX_ARM
+  select BBQUE_PM_GPU
   default n
   ---help---
   Enable the support for the management of AMD GPU(s) from the power-thermal
@@ -69,6 +71,7 @@ config  BBQUE_PM_GPU_ARM_MALI
   depends on BBQUE_PM
   depends on TARGET_OPENCL
   depends on TARGET_LINUX_ARM
+  select BBQUE_PM_GPU
   default n
   ---help---
   Enable the support for the management of ARM Mali GPU(s) from the
@@ -78,6 +81,7 @@ config  BBQUE_PM_MANGO
   bool "H2020-MANGO Platform Power Management"
   depends on BBQUE_PM
   depends on TARGET_LINUX_MANGO
+  depends on !MANGO_GN_EMULATION
   default n
   ---help---
   Enable the support for the management of a H2020-MANGO platform from the
@@ -87,8 +91,13 @@ config  BBQUE_PM_RECIPE
   bool "H2020-RECIPE Platform Power Management"
   depends on BBQUE_PM
   depends on TARGET_LINUX_RECIPE
+  depends on !MANGO_GN_EMULATION
   default n
   ---help---
   Enable the support for the management of a H2020-RECIPE platform from the
   power management point of view.
 
+
+config BBQUE_PM_GPU
+  bool
+  default n

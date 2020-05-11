@@ -212,6 +212,9 @@
 /** Enable CPU Power Management support */
 #cmakedefine CONFIG_BBQUE_PM_CPU
 
+/** Enable GPU Power Management support */
+#cmakedefine CONFIG_BBQUE_PM_GPU
+
 #define BBQUE_PM_NR_CPU_SOCKETS ${CONFIG_BBQUE_PM_NR_CPU_SOCKETS}
 
 #define BBQUE_PM_TSENSOR_PATHS "${CONFIG_BBQUE_PM_TSENSOR_PATHS}"

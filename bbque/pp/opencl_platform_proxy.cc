@@ -294,9 +294,28 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 			r_path_ptr = resource->Path();
 #ifdef CONFIG_BBQUE_WM
 			PowerMonitor & wm(PowerMonitor::GetInstance());
-			wm.Register(r_path_ptr);
-			logger->Debug("RegisterDevices: r_path=<%s> added to power monitor",
-				r_path.c_str());
+
+			if (r_type == br::ResourceType::ACCELERATOR) {
+#ifndef CONFIG_GN_MANGO_EMULATION
+				wm.Register(r_path_ptr);
+				logger->Debug("RegisterDevices: r_path=<%s> added to power monitor",
+					r_path.c_str());
+#else
+				logger->Debug("RegisterDevices: r_path=<%s> is emulated (skipping)...",
+					r_path.c_str());
+#endif
+			}
+			else if (r_type == br::ResourceType::GPU) {
+#ifdef CONFIG_BBQUE_PM_GPU
+				wm.Register(r_path_ptr);
+				logger->Debug("RegisterDevices: r_path=<%s> added to power monitor",
+					r_path.c_str());
+#else
+				logger->Debug("RegisterDevices: r_path=<%s> has not PM support enabled",
+					r_path.c_str());
+#endif
+			}
+
 #endif
 		}
 

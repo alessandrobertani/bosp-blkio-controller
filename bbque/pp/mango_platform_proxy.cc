@@ -1081,8 +1081,10 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept
 	pd_t::System &sys = pd.GetLocalSystem();
 
 #ifdef CONFIG_BBQUE_WM
+#ifdef CONFIG_BBQUE_PM_MANGO
 	PowerMonitor & wm(PowerMonitor::GetInstance());
 	monitor_period_len = wm.GetPeriodLengthMs();
+#endif
 #endif
 
 	for (uint_fast32_t tile_id = 0; tile_id < num_tiles; tile_id++) {
@@ -1126,10 +1128,12 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept
 			auto rsrc_ptr = ra.RegisterResource(pe.GetPath(), "", 100);
 			rsrc_ptr->SetModel(hn_to_str_unit_family(tile_info.unit_family));
 #ifdef CONFIG_BBQUE_WM
+#ifdef CONFIG_BBQUE_PM_MANGO
 			// Register the processor core for power monitoring
 			wm.Register(pe.GetPath());
 			logger->Debug("RegisterTiles: [%s] registered for power monitoring",
 				pe.GetPath().c_str());
+#endif
 #endif
 		}
 
