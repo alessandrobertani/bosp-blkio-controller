@@ -301,8 +301,6 @@ public:
 
 private:
 
-	using PidSet_t    = std::set<app::AppPid_t>;
-	using PidSetPtr_t = std::shared_ptr<PidSet_t>;
 
 	/**
 	 * @brief Runtime information about the instances of managed processes
@@ -312,13 +310,14 @@ private:
 	public:
 		ProcessInstancesInfo()
 		{
-			sched_req = std::make_shared<app::Process::ScheduleRequest>();
-			pid_set   = std::make_shared<PidSet_t>();
+			shared_sched_req = std::make_shared<app::Process::ScheduleRequest>();
 		}
+
 		// Scheduling request
-		app::Process::ScheduleRequestPtr_t sched_req;
-		// Set of PIDs of active process instances
-		PidSetPtr_t pid_set;
+		Process::ScheduleRequestPtr_t shared_sched_req;
+
+		// Scheduling requests for each process instance
+		std::map<app::AppPid_t, app::Process::ScheduleRequestPtr_t> sched_reqs;
 	};
 
 	/** The logger used by the application manager */

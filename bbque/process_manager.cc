@@ -146,14 +146,24 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 		return;
 	}
 
-	std::unique_lock<std::mutex> u_lock(proc_mutex);
-	*(managed_procs[name].sched_req) = sched_req;
 	logger->Notice("CommandsCb: <%s> (pid=%d) schedule request: cpus=%d accs=%d mem=%d",
 		name.c_str(),
 		pid,
-		managed_procs[name].sched_req->cpu_cores,
-		managed_procs[name].sched_req->acc_cores,
-		managed_procs[name].sched_req->memory_mb);
+		sched_req.cpu_cores,
+		sched_req.acc_cores,
+		sched_req.memory_mb);
+
+	std::unique_lock<std::mutex> u_lock(proc_mutex);
+	if (pid == 0) {
+		logger->Debug("CommandManageSetSchedule: setting scheduling request for all <%s>",
+			name.c_str());
+		*(managed_procs[name].shared_sched_req) = sched_req;
+	}
+	else {
+		logger->Debug("CommandManageSetSchedule: setting scheduling request for <%s, %d>",
+			name.c_str(), pid);
+		*(managed_procs[name].sched_reqs[pid]) = sched_req;
+	}
 }
 
 void ProcessManager::CommandManageSetScheduleHelp() const
@@ -200,18 +210,41 @@ ProcessManager::NotifyStart(std::string const & name,
 		//		logger->Debug("NotifyStart: %s not managed", name.c_str());
 		return;
 	}
-	logger->Debug("NotifyStart: adding process [%s: %d]", name.c_str(), pid);
+	logger->Debug("NotifyStart: [%s: %d] adding process ", name.c_str(), pid);
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
-	managed_procs[name].pid_set->emplace(pid);
 
 	// Create a new process descriptor and enqueue it
 	ProcPtr_t new_proc = std::make_shared<Process>(name, pid);
 	new_proc->SetState(state);
+
+	// Is there any scheduling request information?
+	Process::ScheduleRequestPtr_t sched_req;
+	auto it_srq = managed_procs[name].sched_reqs.find(pid);
+	if (it_srq == managed_procs[name].sched_reqs.end()) {
+		logger->Debug("NotifyStart: [%s: %d] general scheduling request info",
+			name.c_str(), pid);
+		sched_req = managed_procs[name].shared_sched_req;
+	}
+	else {
+		logger->Debug("NotifyStart: [%s: %d] PID-specific scheduling request info",
+			name.c_str(), pid);
+		sched_req = it_srq->second;
+	}
+
+	new_proc->SetScheduleRequestInfo(sched_req);
+	logger->Debug("NotifyStart: [%s: %d] schedule request info: cpus=%d accs=%d mem=%d",
+		name.c_str(),
+		pid,
+		sched_req->cpu_cores,
+		sched_req->acc_cores,
+		sched_req->memory_mb);
+
+	// Add to the processes maps
 	state_procs[state].emplace(pid, new_proc);
 	all_procs.emplace(pid, new_proc);
 
 	// Trigger a re-scheduling
-	logger->Info("NotifyStart: launching a scheduling request for [%s]",
+	logger->Info("NotifyStart: [%s: %d] triggering the resource allocation...",
 		new_proc->StrId());
 	ResourceManager & rm(ResourceManager::GetInstance());
 	rm.NotifyEvent(ResourceManager::BBQ_OPTS);
