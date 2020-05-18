@@ -31,27 +31,25 @@
 #include "bbque/utils/logging/logger.h"
 #include "bbque/utils/map_iterator.h"
 
-namespace bbque
-{
+namespace bbque {
 
-using ProcPtr_t    = std::shared_ptr<app::Process>;
+using ProcPtr_t = std::shared_ptr<app::Process>;
 using ProcessMap_t = std::map<app::AppPid_t, ProcPtr_t>;
 using ProcessMapIterator = utils::MapIterator<ProcPtr_t>;
 using ProcessMapIteratorRetainer_t = utils::MapIteratorRetainer_t<ProcPtr_t>;
 
 using namespace app;
 
-
-class ProcessManager: public CommandHandler
+class ProcessManager : public CommandHandler
 {
-
 public:
 
 	/**
 	 * @enum ExitCode_t
 	 * @brief Get the ProcessManager instance
 	 */
-	enum ExitCode_t {
+	enum ExitCode_t
+	{
 		SUCCESS = 0,
 		PROCESS_NOT_SCHEDULED,
 		PROCESS_NOT_SCHEDULABLE,
@@ -96,9 +94,9 @@ public:
 	 * @param state initial state (READY by default)
 	 */
 	void NotifyStart(
-	        std::string const & name,
-	        app::AppPid_t pid,
-	        app::Schedulable::State_t state = app::Schedulable::READY);
+			std::string const & name,
+			app::AppPid_t pid,
+			app::Schedulable::State_t state = app::Schedulable::READY);
 
 	/**
 	 * @brief Notify the termination of a process/program
@@ -214,8 +212,8 @@ public:
 	 * returns always AM_APP_DISABLED.
 	 */
 	ExitCode_t ScheduleRequest(
-	        ProcPtr_t proc, app::AwmPtr_t  awm,
-	        br::RViewToken_t status_view, size_t b_refn);
+				ProcPtr_t proc, app::AwmPtr_t awm,
+				br::RViewToken_t status_view, size_t b_refn);
 
 	/**
 	 * @brief Re-schedule this application according to previous scheduling
@@ -231,7 +229,7 @@ public:
 	 * available.
 	 */
 	ExitCode_t ScheduleRequestAsPrev(
-	        ProcPtr_t proc, br::RViewToken_t status_view)
+					ProcPtr_t proc, br::RViewToken_t status_view)
 	{
 		return ScheduleRequest(proc, proc->CurrentAWM(), status_view, 0);
 	}
@@ -258,7 +256,7 @@ public:
 	ExitCode_t NoSchedule(ProcPtr_t proc)
 	{
 		return ChangeState(proc,
-		                   Schedulable::SYNC, Schedulable::BLOCKED);
+				Schedulable::SYNC, Schedulable::BLOCKED);
 	}
 
 	/*******************************************************************************
@@ -270,7 +268,7 @@ public:
 	 *
 	 * @param proc the application which has been synchronized
 	 *
-	 * @return SUCCESS on succesful commit, PROCESS_NOT_FOUND or
+	 * @return SUCCESS on successful commit, PROCESS_NOT_FOUND or
 	 * PROCESS_NOT_SCHEDULED on errors.
 	 */
 	ExitCode_t SyncCommit(ProcPtr_t proc);
@@ -286,28 +284,28 @@ public:
 	 * @brief Commit the "continue to run" for the specified application
 	 *
 	 * @param proc a pointer to the interested application
-	 * @return SUCCESS on succesful commit, PROCESS_NOT_FOUND or
+	 * @return SUCCESS on successful commit, PROCESS_NOT_FOUND or
 	 * PROCESS_NOT_SCHEDULED on errors.
 	 */
 	ExitCode_t SyncContinue(ProcPtr_t proc);
 
 	/**
-	 * @brief Dump a logline to report all processes status
+	 * @brief Dump a log line to report all processes status
 	 *
-	 * @param verbose print in INFO logleve is ture, in DEBUG if false
+	 * @param verbose print if INFO level is true, in DEBUG if false
 	 */
 	void PrintStatus(bool verbose);
 
 
 private:
 
-
 	/**
-	 * @brief Runtime information about the instances of managed processes
+	 * @brief Run-time information about the instances of managed processes
 	 */
 	class ProcessInstancesInfo
 	{
 	public:
+
 		ProcessInstancesInfo()
 		{
 			shared_sched_req = std::make_shared<app::Process::ScheduleRequest>();
@@ -351,9 +349,9 @@ private:
 	 * @brief Change a process state
 	 */
 	ExitCode_t ChangeState(
-	        ProcPtr_t proc,
-	        Schedulable::State_t to_state,
-	        Schedulable::SyncState_t next_state = Schedulable::SYNC_NONE);
+			ProcPtr_t proc,
+			Schedulable::State_t to_state,
+			Schedulable::SyncState_t next_state = Schedulable::SYNC_NONE);
 
 	/**
 	 * @brief The handler for commands defined by this module
