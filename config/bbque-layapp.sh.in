@@ -82,7 +82,7 @@ echo "source $KCONFIG_LINE" >> $KCONFIG_PATH
 ### Append include statement in bosp.mk ###
 
 BOSPMK_TMPLINE=${DIRARRAY[1]:1}/bosp.mk
-BOSPMK_LINE=${BOSPMK_TMPLINE#"$APP_PREFIX/"}
+BOSPMK_LINE=samples/${BOSPMK_TMPLINE#"$APP_PREFIX/"}
 BOSPMK_FILE=$APP_PATH/../bosp.mk
 echo "Adding line [$BOSPMK_LINE] to:" $BOSPMK_FILE
 cat $BOSPMK_FILE | sed -i "/_include_dont_edit_/i -include ${BOSPMK_LINE}" $BOSPMK_FILE
