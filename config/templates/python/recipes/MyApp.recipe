@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<BarbequeRTRM recipe_version="0.8">
+	<application priority="4">
+		<platform id="bq.*">
+			<awms>
+				<awm id="0" name="Low" value="50">
+					<resources>
+						<cpu>
+							<pe qty="50"/>
+							<mem units="Mb" qty="2"/>
+						</cpu>
+					</resources>
+				</awm>
+				<awm id="1" name="High" value="75">
+					<resources>
+						<cpu>
+							<pe qty="75"/>
+							<mem units="Mb" qty="2"/>
+						</cpu>
+					</resources>
+				</awm>
+				<awm id="2" name="Max" value="100">
+					<resources>
+						<cpu>
+							<pe qty="100"/>
+							<mem units="Mb" qty="10"/>
+						</cpu>
+						<gpu>
+							<pe qty="100"/>
+						</gpu>
+					</resources>
+				</awm>
+			</awms>
+		</platform>
+	</application>
+</BarbequeRTRM>
+<!-- vim: set tabstop=4 filetype=xml : -->

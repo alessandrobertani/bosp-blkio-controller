@@ -1,0 +1,8 @@
+
+config SAMPLES_APPTYPE_MYAPP
+  bool "MyApp"
+  default n
+  select BOSP_SAMPLES_APPTYPE
+  select BBQUE_BINDINGS_PYTHON
+  ---help---
+  Build the MyApp Python-AEM application. 

@@ -6,7 +6,7 @@ APP_TYPE=${2:-'cpp'}
 APP_PREFIX=${3:-'samples'}
 APP_LANG=cpp
 
-TYPE=(cpp opencl opencv)
+TYPE=(cpp opencl opencv python)
 SUBDIR=(contrib samples)
 
 clear
@@ -24,10 +24,13 @@ read APP_NAME
 APP_NAME="$(sed -e 's/\b[A-Za-z]/\u\0/g; s/\ //g' <<< $APP_NAME)"
 [ x$APP_NAME == x ] && APP_NAME='MyApp'
 
-echo -n "> Select application type (0: CPP, 1: OpenCL, 2: OpenCV) [default=0]: "
+echo -n "> Select application type (0: CPP, 1: OpenCL, 2: OpenCV, 3:Python) [default=0]: "
 read APP_TYPE_ID
 [ x$APP_TYPE_ID == x ] && APP_TYPE_ID=0
 APP_TYPE=${TYPE[$APP_TYPE_ID]}
+
+[ $APP_TYPE == python ] && APP_LANG=python
+echo -n "> Application language: " $APP_LANG
 
 #echo -n "> Select application source sub-folder (0: contrib 1:samples) [defaul=1] : "
 #read APP_PREFIX_ID
@@ -39,10 +42,11 @@ APP_TYPE=${TYPE[$APP_TYPE_ID]}
 APP_PATH=$BOSPSH_SOURCES/$APP_PREFIX/$APP_TYPE/$APP_NAME
 
 echo "============================================================="
-echo "Application name: " $APP_NAME
-echo "Application type: " $APP_TYPE
-echo "Sub-directory: " $APP_PREFIX
-echo "Application sources path: " $APP_PATH
+echo "Application name     : " $APP_NAME
+echo "Application type     : " $APP_TYPE
+echo "Application language : " $APP_LANG
+echo "Sub-directory        : " $APP_PREFIX
+echo "Application source   : " $APP_PATH
 echo "============================================================="
 echo
 read -p  "Proceed? (Y/n) [default=Y] : " CONTINUE
@@ -96,9 +100,7 @@ make bootstrap
 cd $APP_PATH
 
 # Open editor for EXC editing
-[ xdg-open &>/dev/null ] && \
-		xdg-open .       && \
-		xdg-open src/${APP_NAME}_exc.cc
+[ xdg-open &>/dev/null ] &&  xdg-open .
 
 # Switch back to original folder, which could be convenient to trigger make
 cd $CDIR
