@@ -2,6 +2,8 @@
 # The AEM MyApp Python Application
 ################################################################################
 
+cmake_minimum_required(VERSION 3.0)
+
 # The name of this project.
 project (MyApp)
 

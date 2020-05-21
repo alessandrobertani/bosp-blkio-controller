@@ -1,3 +1,8 @@
+###############################################################################
+# The AEM MyApp Application
+################################################################################
+
+cmake_minimum_required(VERSION 3.0)
 
 #----- Check for the required RTLib library
 find_package(BbqRTLib REQUIRED)
