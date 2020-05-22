@@ -2210,7 +2210,7 @@ float BbqueRPC::ComputeGoalGap(pRegisteredEXC_t exc)
 				(current_cps > exc->cps_goal_max);
 		}
 
-		logger->Debug("ComputeGoalGap: [CPS] targ=%.2f curr=%.2f",
+		logger->Notice("ComputeGoalGap: [CPS] targ=%.2f curr=%.2f",
 			target_cps, current_cps);
 
 		if (bad_allocation) {
@@ -2967,8 +2967,7 @@ void BbqueRPC::PrintNoisePct(double total, double avg)
 #define STDDEV(v) \
 	sqrt(static_cast<double>(variance(it_ct->second[CL_CMD_ ## v ## _TIME])))*1e-06
 
-void BbqueRPC::OclSetDevice(
-			    uint32_t platform_id, uint8_t device_id, RTLIB_ExitCode_t status)
+void BbqueRPC::OclSetDevice(uint32_t platform_id, uint8_t device_id, RTLIB_ExitCode_t status)
 {
 	rtlib_ocl_set_device(platform_id, device_id, status);
 }
@@ -3409,8 +3408,7 @@ RTLIB_ExitCode_t BbqueRPC::SetJPSGoal(
  *    RTLib Notifiers Support
  ******************************************************************************/
 
-void BbqueRPC::NotifyExit(
-			  RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::NotifyExit(RTLIB_EXCHandler_t exc_handler)
 {
 	assert(exc_handler);
 	auto exc = getRegistered(exc_handler);
@@ -3432,8 +3430,7 @@ void BbqueRPC::NotifyExit(
 	}
 }
 
-void BbqueRPC::NotifyPreConfigure(
-				  RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::NotifyPreConfigure(RTLIB_EXCHandler_t exc_handler)
 {
 	logger->Debug("===> NotifyConfigure");
 	(void) exc_handler;
@@ -3451,7 +3448,9 @@ void BbqueRPC::NotifyPreConfigure(
 #ifdef CONFIG_TARGET_OPENCL
 	pSystemResources_t local_sys(exc->resource_assignment[0]);
 	assert(local_sys != nullptr);
-	logger->Debug("NotifyPreConfigure - OCL Device: %d", local_sys->ocl_device_id);
+	logger->Debug("NotifyPreConfigure: OpenCL platform=%d device=%d",
+		local_sys->ocl_platform_id,
+		local_sys->ocl_device_id);
 	OclSetDevice(
 		local_sys->ocl_platform_id,
 		local_sys->ocl_device_id,
@@ -3459,8 +3458,7 @@ void BbqueRPC::NotifyPreConfigure(
 #endif
 }
 
-void BbqueRPC::NotifyPostConfigure(
-				   RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::NotifyPostConfigure(RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
@@ -3495,8 +3493,7 @@ void BbqueRPC::NotifyPostConfigure(
 	InitCPUBandwidthStats(exc);
 }
 
-void BbqueRPC::NotifyPreRun(
-			    RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::NotifyPreRun(RTLIB_EXCHandler_t exc_handler)
 {
 	logger->Debug("Pre-Run: retrieving execution context info");
 	// Retrieving the requested execution context
@@ -3534,8 +3531,7 @@ void BbqueRPC::NotifyPreRun(
 
 }
 
-void BbqueRPC::NotifyPostRun(
-			     RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::NotifyPostRun(RTLIB_EXCHandler_t exc_handler)
 {
 	logger->Debug("Post-Run: retrieving execution context info");
 	assert(exc_handler);
@@ -3581,8 +3577,7 @@ void BbqueRPC::NotifyPostRun(
 #endif // CONFIG_TARGET_OPENCL
 }
 
-void BbqueRPC::NotifyPreMonitor(
-				RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::NotifyPreMonitor(RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	assert(exc_handler);
