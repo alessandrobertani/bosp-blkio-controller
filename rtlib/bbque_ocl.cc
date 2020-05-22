@@ -108,29 +108,36 @@ CL_API_SUFFIX__VERSION_1_0 {
 	                  "platform: %p, device_type: %u, num_entries: %u, devices: %p, num_devices: %p)...",
 	                  platform, device_type, num_entries, devices, num_devices));
 
-	logger->Info("clGetDeviceIds: BarbequeRTRM assigned platform: %d", rtlib_ocl.platform_id);
-	if (platform != rtlib_ocl.platforms[rtlib_ocl.platform_id]) {
-		logger->Error("OCL: Invalid platform specified");
+	// If BarbequeRTRM has not assigned any platform, take the one specified
+	// by the application as argument
+	if (rtlib_ocl.platform_id < 0) {
+		logger->Warn("clGetDeviceIDs: platform not assigned, setting 0 by default");
+	}
+	else if (platform != rtlib_ocl.platforms[rtlib_ocl.platform_id]) {
+		logger->Error("clGetDeviceIDs: Invalid platform specified");
 		return CL_INVALID_PLATFORM;
 	}
-
-	// Force the assignment of a single OpenCL Platform
-	platform = rtlib_ocl.platforms[rtlib_ocl.platform_id];
-
-	if (rtlib_ocl.device_id == R_ID_ANY) {
-		DB2(logger->Debug("clGetDeviceIDs: AWM not assigned, call forwarding..."));
-		return rtlib_ocl.getDeviceIDs(platform,
-					      device_type,
-		                              num_entries,
-					      devices,
-					      num_devices);
+	else {
+		// Force the assignment of a single OpenCL Platform
+		logger->Notice("clGetDeviceIds: BarbequeRTRM assigned platform: %d",
+			rtlib_ocl.platform_id);
+		platform = rtlib_ocl.platforms[rtlib_ocl.platform_id];
 	}
 
-	// Current implementation: return at most ONCE device
-	if (num_devices) {
-		rtlib_ocl.device_id == R_ID_NONE ?
-			(*num_devices) = 0 :
-			(*num_devices) = 1;
+	if (rtlib_ocl.device_id < 0) {
+		logger->Warn("clGetDeviceIDs: no BarbequeRTRM assignment, using the "
+			"application choices...");
+		return rtlib_ocl.getDeviceIDs(platform,
+					device_type,
+					num_entries,
+					devices,
+					num_devices);
+	}
+	else {
+		// TODO: Current implementation: return at most ONCE device,
+		// please extend with multiple devices
+		(*num_devices) = 1;
+		logger->Warn("clGetDeviceIDs: BarbequeRTRM assigning a single device");
 	}
 
 	if (devices == NULL)
