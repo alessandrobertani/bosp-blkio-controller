@@ -52,6 +52,18 @@ public:
 				ResourceAssignmentMapPtr_t pres,
 				bool excl) noexcept;
 
+#ifdef CONFIG_BBQUE_CR_FPGA
+
+	ReliabilityActionsIF::ExitCode_t Dump(app::SchedPtr_t psched) override;
+
+	ReliabilityActionsIF::ExitCode_t Restore(uint32_t pid, std::string exe_name) override;
+
+	ReliabilityActionsIF::ExitCode_t Freeze(app::SchedPtr_t psched) override;
+
+	ReliabilityActionsIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
+
+#endif
+
 private:
 
 	RecipePlatformProxy();
@@ -60,6 +72,16 @@ private:
 	 * @brief The logger
 	 */
 	std::unique_ptr<bu::Logger> logger;
+
+
+#ifdef CONFIG_BBQUE_CR_FPGA
+
+	/**
+	 * @brief Initialize the support for freezing, checkpoint, restore actions
+	 */
+	void InitReliabilitySupport();
+#endif
+
 
 };
 

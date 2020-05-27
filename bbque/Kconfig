@@ -164,19 +164,8 @@ menu "Reliability Management"
     ---help---
     Add the support for checkpoint/restore and execution freezing.
 
-  config BBQUE_CRIU_BINARY_PATH
-    depends on BBQUE_RELIABILITY
-    string "CRIU binary path"
-    default "/usr/sbin/criu"
-    ---help---
-    The path under which the CRIU executable is located.
 
-  config BBQUE_FREEZER_PATH
-    depends on BBQUE_RELIABILITY
-    string "Freezer interfaces path"
-    default "/sys/fs/cgroup/freezer/bbque"
-    ---help---
-    The path under which freezer interfaces are located.
+  comment "Checkpoint/Restore (C/R) support"
 
   config BBQUE_CHECKPOINT_IMAGE_PATH
     depends on BBQUE_RELIABILITY
@@ -201,5 +190,36 @@ menu "Reliability Management"
     ---help---
     The path under which to store the images of the processes dump
     after a checkpoint.
+
+  comment "Linux system-specific support"
+
+  config BBQUE_CRIU_BINARY_PATH
+    depends on BBQUE_RELIABILITY
+    string "CRIU binary path"
+    default "/usr/sbin/criu"
+    ---help---
+    The path under which the CRIU executable is located.
+
+  config BBQUE_FREEZER_PATH
+    depends on BBQUE_RELIABILITY
+    string "Freezer interfaces path"
+    default "/sys/fs/cgroup/freezer/bbque"
+    ---help---
+    The path under which freezer interfaces are located.
+
+  comment "Other target-specific supports"
+
+  config BBQUE_CR_FPGA
+    depends on BBQUE_RELIABILITY
+    depends on TARGET_LINUX_RECIPE
+    bool "FPGA accelerators C/R"
+    ---help---
+    Checkpoint/Restore support for FPGA accelerators of the RECIPE platforms.
+
+  config BBQUE_LIBACRE_PATH
+    depends on BBQUE_CR_FPGA
+    string "ACRE library installation path"
+    ---help---
+    Installation path of the libacre.
 
 endmenu #Reliability

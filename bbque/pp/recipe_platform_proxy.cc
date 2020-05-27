@@ -108,5 +108,123 @@ RecipePlatformProxy::MapResources(SchedPtr_t psched,
 	return PLATFORM_OK;
 }
 
+#ifdef CONFIG_BBQUE_CR_FPGA
+
+void RecipePlatformProxy::InitReliabilitySupport()
+{
+	boost::filesystem::perms prms(boost::filesystem::owner_all);
+	prms |= boost::filesystem::others_read;
+	prms |= boost::filesystem::group_read;
+	prms |= boost::filesystem::group_write;
+
+	// Checkpoint image path for the
+	image_prefix_dir += "/recipe";
+	logger->Info("Reliability: checkpoint images directory:  %s",
+		image_prefix_dir.c_str());
+
+	if (!boost::filesystem::exists(image_prefix_dir)) {
+		if (boost::filesystem::create_directories(image_prefix_dir)) {
+			logger->Debug("Reliability: "
+				"checkpoint images directory created");
+		}
+		else
+			logger->Error("Reliability: "
+				"checkpoint images directory not created");
+	}
+	boost::filesystem::permissions(image_prefix_dir, prms);
+
+}
+
+ReliabilityActionsIF::ExitCode_t
+RecipePlatformProxy::Dump(app::SchedPtr_t psched)
+{
+	logger->Debug("Dump: [%s] checkpoint [pid=%d]... (user=%d)",
+		psched->StrId(), psched->Pid(), getuid());
+
+	std::string image_dir(ApplicationPath(
+					image_prefix_dir,
+					psched->Pid(),
+					psched->Name()));
+	if (!boost::filesystem::exists(image_dir)) {
+		logger->Debug("Dump: [%s] creating directory [%s]",
+			psched->StrId(), image_dir.c_str());
+		boost::filesystem::create_directory(image_dir);
+	}
+
+	// CRIU image directory
+	int fd = open(image_dir.c_str(), O_DIRECTORY);
+	if (fd < 0) {
+		logger->Warn("Dump: [%s] image directory [%s] not accessible",
+			psched->StrId(), image_dir.c_str());
+		perror("CRIU");
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
+	}
+	else {
+		logger->Debug("Dump: [%s] image directory [%s] open",
+			psched->StrId(), image_dir.c_str());
+	}
+
+	// Dump the FPGA checkpoint
+
+	logger->Info("Dump: [%s] checkpoint done [image_dir=%s]",
+		psched->StrId(), image_dir.c_str());
+	return ReliabilityActionsIF::ExitCode_t::OK;
+}
+
+ReliabilityActionsIF::ExitCode_t
+RecipePlatformProxy::Restore(uint32_t pid, std::string exe_name)
+{
+	// Retrieve checkpoint image directory
+	std::string image_dir(image_prefix_dir
+			+ "/" + std::to_string(pid)
+			+ "_" + exe_name);
+
+	logger->Debug("Restore: [pid=%d] recovering checkpoint from = [%s]",
+		pid, image_dir.c_str());
+
+	if (!boost::filesystem::exists(image_dir)) {
+		logger->Debug("Restore: [pid=%d] missing directory [%s]",
+			pid, image_dir.c_str());
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
+	}
+
+	int fd = open(image_dir.c_str(), O_DIRECTORY);
+	if (fd < 0) {
+		logger->Warn("Restore: [pid=%d] image directory [%s] not accessible",
+			pid, image_dir.c_str());
+		return ReliabilityActionsIF::ExitCode_t::ERROR_FILESYSTEM;
+	}
+	else {
+		logger->Debug("Restore: [pid=%d] image directory [%s] open",
+			pid, image_dir.c_str());
+	}
+
+	// Do restore
+
+	return ReliabilityActionsIF::ExitCode_t::OK;
+}
+
+ReliabilityActionsIF::ExitCode_t
+RecipePlatformProxy::Freeze(app::SchedPtr_t psched)
+{
+	// Freeze the FPGA
+
+	return ReliabilityActionsIF::ExitCode_t::OK;
+}
+
+ReliabilityActionsIF::ExitCode_t
+RecipePlatformProxy::Thaw(app::SchedPtr_t psched)
+{
+	// Thaw the FPGA
+
+	return ReliabilityActionsIF::ExitCode_t::OK;
+}
+
+
+
+#endif // CONFIG_BBQUE_CR_FPGA
+
+
+
 } // namespace pp
 } // namespace bbque

@@ -253,6 +253,8 @@
 
 #define BBQUE_CHECKPOINT_PERIOD_LENGTH ${CONFIG_BBQUE_CHECKPOINT_PERIOD_LENGTH}
 
+#cmakedefine CONFIG_BBQUE_CR_FPGA
+
 
 /** Enable Event Management support */
 #cmakedefine CONFIG_BBQUE_EM
