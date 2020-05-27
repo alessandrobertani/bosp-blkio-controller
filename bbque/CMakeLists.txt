@@ -295,6 +295,15 @@ if (CONFIG_BBQUE_RELIABILITY)
   target_link_libraries (barbeque criu)
 endif (CONFIG_BBQUE_RELIABILITY)
 
+if (CONFIG_BBQUE_CR_FPGA)
+  find_library(LIBACRE acre
+	HINTS ${CONFIG_BBQUE_LIBACRE_PATH}
+	PATH_SUFFIXES lib)
+  message (STATUS"ACRE library................: ${LIBACRE}")
+  include_directories (${CONFIG_BBQUE_LIBACRE_PATH}/include/)
+  target_link_libraries (barbeque ${LIBACRE})
+endif ()
+
 
 # -------------- Static libraries and plugin linking  ------------------
 
