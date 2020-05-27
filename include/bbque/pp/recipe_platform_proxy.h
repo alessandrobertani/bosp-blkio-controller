@@ -80,6 +80,8 @@ private:
 	 * @brief Initialize the support for freezing, checkpoint, restore actions
 	 */
 	void InitReliabilitySupport();
+
+	bool HasAssignedResources(app::SchedPtr_t psched);
 #endif
 
 

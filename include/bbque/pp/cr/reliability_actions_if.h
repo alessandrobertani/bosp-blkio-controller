@@ -44,6 +44,7 @@ public:
 	enum class ExitCode_t
 	{
 		OK,
+		WARN_RESOURCES_NOT_ASSIGNED,
 		ERROR_PROCESS_ID,
 		ERROR_TASK_ID,
 		ERROR_FILESYSTEM,

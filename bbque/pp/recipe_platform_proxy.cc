@@ -110,6 +110,22 @@ RecipePlatformProxy::MapResources(SchedPtr_t psched,
 
 #ifdef CONFIG_BBQUE_CR_FPGA
 
+bool RecipePlatformProxy::HasAssignedResources(SchedPtr_t psched)
+{
+	uint32_t acc_id = 0;
+	auto curr_rsrc_map = psched->CurrentAWM()->GetResourceBinding();
+
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	auto nr_acc_cores  = ra.GetAssignedAmount(
+						curr_rsrc_map,
+						psched,
+						0,
+						br::ResourceType::PROC_ELEMENT,
+						br::ResourceType::ACCELERATOR,
+						acc_id);
+	return (nr_acc_cores > 0);
+}
+
 void RecipePlatformProxy::InitReliabilitySupport()
 {
 	boost::filesystem::perms prms(boost::filesystem::owner_all);
@@ -140,6 +156,12 @@ RecipePlatformProxy::Dump(app::SchedPtr_t psched)
 {
 	logger->Debug("Dump: [%s] checkpoint [pid=%d]... (user=%d)",
 		psched->StrId(), psched->Pid(), getuid());
+
+	if (!HasAssignedResources(psched)) {
+		logger->Warn("Dump: [%s] [pid=%d] not using RECIPE accelerators",
+			psched->StrId(), psched->Pid());
+		return ReliabilityActionsIF::ExitCode_t::WARN_RESOURCES_NOT_ASSIGNED;
+	}
 
 	std::string image_dir(ApplicationPath(
 					image_prefix_dir,
@@ -208,6 +230,11 @@ ReliabilityActionsIF::ExitCode_t
 RecipePlatformProxy::Freeze(app::SchedPtr_t psched)
 {
 	// Freeze the FPGA
+	if (!HasAssignedResources(psched)) {
+		logger->Warn("Freeze: [%s] [pid=%d] not using RECIPE accelerators",
+			psched->StrId(), psched->Pid());
+		return ReliabilityActionsIF::ExitCode_t::WARN_RESOURCES_NOT_ASSIGNED;
+	}
 
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
@@ -216,6 +243,11 @@ ReliabilityActionsIF::ExitCode_t
 RecipePlatformProxy::Thaw(app::SchedPtr_t psched)
 {
 	// Thaw the FPGA
+	if (!HasAssignedResources(psched)) {
+		logger->Warn("Thaw: [%s] [pid=%d] not using RECIPE accelerators",
+			psched->StrId(), psched->Pid());
+		return ReliabilityActionsIF::ExitCode_t::WARN_RESOURCES_NOT_ASSIGNED;
+	}
 
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
