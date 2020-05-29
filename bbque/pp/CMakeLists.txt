@@ -1,4 +1,6 @@
 
+cmake_minimum_required (VERSION 3.0 FATAL_ERROR)
+
 # ============== Headers dependencies ===================== #
 
 if (CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH)
