@@ -28,6 +28,8 @@
 namespace br = bbque::res;
 namespace po = boost::program_options;
 
+using namespace libacre;
+
 namespace bbque {
 namespace pp {
 
@@ -123,6 +125,10 @@ bool RecipePlatformProxy::HasAssignedResources(SchedPtr_t psched)
 						br::ResourceType::PROC_ELEMENT,
 						br::ResourceType::ACCELERATOR,
 						acc_id);
+
+	// TODO: For C/R: check that the accelerator is actually the device
+	// for which the libacre support is available
+
 	return (nr_acc_cores > 0);
 }
 
@@ -148,7 +154,6 @@ void RecipePlatformProxy::InitReliabilitySupport()
 				"checkpoint images directory not created");
 	}
 	boost::filesystem::permissions(image_prefix_dir, prms);
-
 }
 
 ReliabilityActionsIF::ExitCode_t
@@ -187,6 +192,10 @@ RecipePlatformProxy::Dump(app::SchedPtr_t psched)
 	}
 
 	// Dump the FPGA checkpoint
+	npu_handler.set_image_path(image_dir);
+	npu_handler.freeze("", 0);
+	npu_handler.checkpoint("", 0);
+	npu_handler.thaw("", 0);
 
 	logger->Info("Dump: [%s] checkpoint done [image_dir=%s]",
 		psched->StrId(), image_dir.c_str());
@@ -222,6 +231,8 @@ RecipePlatformProxy::Restore(uint32_t pid, std::string exe_name)
 	}
 
 	// Do restore
+	npu_handler.set_image_path(image_dir);
+	npu_handler.restore("", 0);
 
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
@@ -229,12 +240,14 @@ RecipePlatformProxy::Restore(uint32_t pid, std::string exe_name)
 ReliabilityActionsIF::ExitCode_t
 RecipePlatformProxy::Freeze(app::SchedPtr_t psched)
 {
-	// Freeze the FPGA
 	if (!HasAssignedResources(psched)) {
 		logger->Warn("Freeze: [%s] [pid=%d] not using RECIPE accelerators",
 			psched->StrId(), psched->Pid());
 		return ReliabilityActionsIF::ExitCode_t::WARN_RESOURCES_NOT_ASSIGNED;
 	}
+
+	// Freeze the FPGA
+	npu_handler.freeze("", 0);
 
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
@@ -242,17 +255,17 @@ RecipePlatformProxy::Freeze(app::SchedPtr_t psched)
 ReliabilityActionsIF::ExitCode_t
 RecipePlatformProxy::Thaw(app::SchedPtr_t psched)
 {
-	// Thaw the FPGA
 	if (!HasAssignedResources(psched)) {
 		logger->Warn("Thaw: [%s] [pid=%d] not using RECIPE accelerators",
 			psched->StrId(), psched->Pid());
 		return ReliabilityActionsIF::ExitCode_t::WARN_RESOURCES_NOT_ASSIGNED;
 	}
 
+	// Thaw the FPGA
+	npu_handler.thaw("", 0);
+
 	return ReliabilityActionsIF::ExitCode_t::OK;
 }
-
-
 
 #endif // CONFIG_BBQUE_CR_FPGA
 

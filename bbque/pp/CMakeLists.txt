@@ -124,6 +124,7 @@ if (CONFIG_BBQUE_CR_FPGA)
 	      HINTS ${CONFIG_BBQUE_LIBACRE_PATH}
 	      PATH_SUFFIXES lib)
 	message (STATUS "Advanced Checkpoint/Restore Engine......: ${LIBACRE}")
+	add_definitions(-DNPU_CORE)
 	target_link_libraries (bbque_pp acre)
 endif ()
 

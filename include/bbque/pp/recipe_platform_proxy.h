@@ -30,6 +30,10 @@
 
 #include "bbque/pp/opencl_platform_proxy.h"
 
+#ifdef CONFIG_BBQUE_CR_FPGA
+#include "acre/acre.h"
+#endif
+
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
@@ -73,15 +77,20 @@ private:
 	 */
 	std::unique_ptr<bu::Logger> logger;
 
-
 #ifdef CONFIG_BBQUE_CR_FPGA
+
+	libacre::NPUCheckpointRestore npu_handler;
 
 	/**
 	 * @brief Initialize the support for freezing, checkpoint, restore actions
 	 */
 	void InitReliabilitySupport();
 
+	/**
+	 * @brief Check if the given application has
+	 */
 	bool HasAssignedResources(app::SchedPtr_t psched);
+
 #endif
 
 
