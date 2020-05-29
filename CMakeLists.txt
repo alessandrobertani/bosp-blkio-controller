@@ -280,16 +280,16 @@ add_subdirectory (tools)
 add_subdirectory (demos)
 
 if (CONFIG_BBQUE_BUILD_TESTS)
-add_subdirectory(test)
+	add_subdirectory(test)
 endif (CONFIG_BBQUE_BUILD_TESTS)
 
 if (CONFIG_BBQUE_TG_PROG_MODEL)
-add_subdirectory(libpms) # Programming model support for task-graph based applications
-add_subdirectory(libtg)  # Support for task-graph representations
+	add_subdirectory(libpms) # Programming model support for task-graph based applications
+	add_subdirectory(libtg)  # Support for task-graph representations
 endif (CONFIG_BBQUE_TG_PROG_MODEL)
 
 if (CONFIG_BBQUE_DM)
-add_subdirectory(libdci) # Support for Data Communication Interface
+	add_subdirectory(libdci) # Support for Data Communication Interface
 endif (CONFIG_BBQUE_DM)
 
 ################################################################################
