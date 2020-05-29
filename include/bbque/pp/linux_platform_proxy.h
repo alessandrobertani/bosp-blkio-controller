@@ -75,8 +75,9 @@ public:
 	/**
 	 * @brief Linux specific resource binding interface.
 	 */
-	ExitCode_t MapResources(
-				SchedPtr_t papp, ResourceAssignmentMapPtr_t pres, bool excl) noexcept override final;
+	ExitCode_t MapResources(SchedPtr_t papp,
+				ResourceAssignmentMapPtr_t pres,
+				bool excl) noexcept override final;
 
 	/**
 	 * @brief Linux platform specific termination.
@@ -198,10 +199,11 @@ private:
 
 
 	/**
-	 * @brief Resources Mapping and Assigment to Applications
+	 * @brief Resources Mapping and Assignment to Applications
 	 */
 	ExitCode_t GetResourceMapping(
-				SchedPtr_t papp, ResourceAssignmentMapPtr_t assign_map,
+				SchedPtr_t papp,
+				ResourceAssignmentMapPtr_t assign_map,
 				RLinuxBindingsPtr_t prlb,
 				BBQUE_RID_TYPE node_id,
 				br::RViewToken_t rvt) noexcept;
@@ -213,7 +215,7 @@ private:
 	ExitCode_t RegisterNET(const PlatformDescription::NetworkIF &net, bool is_local = true) noexcept;
 	ExitCode_t RegisterIODev(const PlatformDescription::IO &io_dev, bool is_local = true) noexcept;
 
-	// --- CGroup-releated methods
+	// --- CGroup-related methods
 
 	/**
 	 * @brief Load the libcgroup and initialize the internal representation
