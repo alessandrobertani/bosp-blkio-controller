@@ -60,11 +60,7 @@ endif (CONFIG_BBQUE_RTLIB_MONITORS)
 #----- Add "bbque_rtlib" target dinamic binary
 add_library(bbque_rtlib SHARED ${RTLIB_SRC})
 
-# Boost
-find_package(Boost 1.55.0 REQUIRED system program_options filesystem serialization)
-target_link_libraries(bbque_rtlib
-	bbque_utils
-)
+target_link_libraries(bbque_rtlib bbque_utils)
 
 # Protocol buffer dependency (for PB_FIFO channel)
 if (CONFIG_BBQUE_RPC_PB_FIFO)
