@@ -101,18 +101,19 @@ ReliabilityManager::~ReliabilityManager()
 void ReliabilityManager::Task()
 {
 #ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
-	// Periodic checkpointing
+	// Periodic checkpoint
 	chk_timer.start();
 	chk_thread = std::thread(&ReliabilityManager::PeriodicCheckpointTask,
 				this);
 #endif
 	while (!done) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
-		// HW reliability monitoring...
+		// TODO: HW reliability monitoring...
 	}
 
 #ifdef CONFIG_BBQUE_PERIODIC_CHECKPOINT
-	logger->Debug("Task: waiting for periodic checkpointing thread");
+	logger->Debug("Task: waiting for periodic checkpoint thread");
+	chk_timer.stop();
 	chk_thread.join();
 #endif
 }
@@ -146,14 +147,14 @@ void ReliabilityManager::PeriodicCheckpointTask()
 		// End time
 		auto end_sec = chk_timer.getTimestampMs();
 		auto elapsed_sec = end_sec - start_sec;
-		logger->Debug("PeriodicCheckpoint: task perfomed in %.f ms",
+		logger->Debug("PeriodicCheckpoint: task completed in %.f ms",
 			elapsed_sec);
 
 		unsigned int next_chk_in = std::max<unsigned int>(
 			chk_period_len - elapsed_sec,
 			BBQUE_MIN_CHECKPOINT_PERIOD_MS);
 		// Wake me up later
-		logger->Debug("PeriodicCheckpoint: see you in %d ms", next_chk_in);
+		logger->Debug("PeriodicCheckpoint: next in %d ms", next_chk_in);
 		std::this_thread::sleep_for(std::chrono::milliseconds(next_chk_in));
 	}
 
