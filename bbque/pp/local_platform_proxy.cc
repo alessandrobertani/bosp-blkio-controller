@@ -324,7 +324,8 @@ ReliabilityActionsIF::ExitCode_t LocalPlatformProxy::Dump(app::SchedPtr_t psched
 
 	for (auto it = this->accl.begin() ; it < this->accl.end(); it++) {
 		ec = (*it)->Dump(psched);
-		if (ec != ReliabilityActionsIF::ExitCode_t::OK) {
+		if ((ec != ReliabilityActionsIF::ExitCode_t::OK)
+		&& (ec != ReliabilityActionsIF::ExitCode_t::WARN_RESOURCES_NOT_ASSIGNED)) {
 			return ec;
 		}
 	}
