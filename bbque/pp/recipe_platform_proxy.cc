@@ -60,6 +60,12 @@ RecipePlatformProxy::MapResources(SchedPtr_t psched,
 {
 	UNUSED(pres);
 	UNUSED(excl);
+
+	if (psched->GetType() == ba::Schedulable::Type::PROCESS) {
+		logger->Debug("MapResources: [%s] is a PROCESS -> (TODO)", psched->StrId());
+		return PLATFORM_OK;
+	}
+
 	auto papp = static_cast<ba::Application *>(psched.get());
 
 	auto tg = papp->GetTaskGraph();
