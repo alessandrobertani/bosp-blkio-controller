@@ -28,8 +28,6 @@
 namespace br = bbque::res;
 namespace po = boost::program_options;
 
-using namespace libacre;
-
 namespace bbque {
 namespace pp {
 
