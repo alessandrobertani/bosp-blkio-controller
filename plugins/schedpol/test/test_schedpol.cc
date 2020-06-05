@@ -67,8 +67,8 @@ char const * TestSchedPol::Name()
 }
 
 TestSchedPol::TestSchedPol() :
-	cm(ConfigurationManager::GetInstance()),
-	ra(ResourceAccounter::GetInstance())
+    cm(ConfigurationManager::GetInstance()),
+    ra(ResourceAccounter::GetInstance())
 {
 	logger = bu::Logger::GetLogger("bq.sp.test");
 	assert(logger);
@@ -76,13 +76,11 @@ TestSchedPol::TestSchedPol() :
 		logger->Info("test: Built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
-		FI("test: Built new dynamic object [%p]\n"), (void *) this);
+			FI("test: Built new dynamic object [%p]\n"), (void *) this);
 }
 
-TestSchedPol::~TestSchedPol()
-{
-
-}
+TestSchedPol::~TestSchedPol() {
+ }
 
 SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 {
@@ -116,8 +114,8 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 }
 
 SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
-	System & system,
-	RViewToken_t & status_view)
+						     System & system,
+						     RViewToken_t & status_view)
 {
 	SchedulerPolicyIF::ExitCode_t result = SCHED_DONE;
 
@@ -130,9 +128,9 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 	/** INSERT YOUR CODE HERE **/
 	fut_tg.get();
 	auto assign_awm_app = std::bind(
-		static_cast<ExitCode_t (TestSchedPol::*)(ba::AppCPtr_t)>
-		(&TestSchedPol::AssignWorkingMode),
-		this, _1);
+					static_cast<ExitCode_t (TestSchedPol::*)(ba::AppCPtr_t)>
+					(&TestSchedPol::AssignWorkingMode),
+					this, _1);
 
 	// Iterate over all the applications to schedule
 	ForEachApplicationToScheduleDo(assign_awm_app);
@@ -144,9 +142,9 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 	auto assign_awm_proc = std::bind(
-		static_cast<ExitCode_t (TestSchedPol::*)(ProcPtr_t)>
-		(&TestSchedPol::AssignWorkingMode),
-		this, _1);
+					static_cast<ExitCode_t (TestSchedPol::*)(ProcPtr_t)>
+					(&TestSchedPol::AssignWorkingMode),
+					this, _1);
 
 	// Iterate over all the processes to schedule
 	ForEachProcessToScheduleDo(assign_awm_proc);
@@ -189,7 +187,7 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc)
 
 	// Resource request addition
 	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-		br::ResourceAssignment::Policy::BALANCED);
+				br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
 	ProcessManager & prm(ProcessManager::GetInstance());
@@ -256,18 +254,18 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	// Resource request addition
 	std::string pe_request("sys.cpu.pe");
 	logger->Debug("AssignWorkingMode: [%s] adding resource request <%s>",
-		      papp->StrId(), pe_request.c_str());
+		papp->StrId(), pe_request.c_str());
 	pawm->AddResourceRequest(
-		pe_request,
-		CPU_QUOTA_TO_ALLOCATE,
-		br::ResourceAssignment::Policy::BALANCED);
+				pe_request,
+				CPU_QUOTA_TO_ALLOCATE,
+				br::ResourceAssignment::Policy::BALANCED);
 
 	// Look for the first available CPU
 	BindingManager & bdm(BindingManager::GetInstance());
 	BindingMap_t & bindings(bdm.GetBindingDomains());
 	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
 	logger->Debug("AssignWorkingMode: [%s] nr. CPU ids: %d",
-		      papp->StrId(), cpu_ids.size());
+		papp->StrId(), cpu_ids.size());
 
 	for (BBQUE_RID_TYPE cpu_id : cpu_ids) {
 		logger->Info("AssingWorkingMode: [%s] binding attempt CPU id = %d",
@@ -302,8 +300,8 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 }
 
 int32_t TestSchedPol::DoCPUBinding(
-	bbque::app::AwmPtr_t pawm,
-	BBQUE_RID_TYPE cpu_id)
+				   bbque::app::AwmPtr_t pawm,
+				   BBQUE_RID_TYPE cpu_id)
 {
 	// CPU-level binding: the processing elements are in the scope of the CPU 'cpu_id'
 	int32_t ref_num = -1;
