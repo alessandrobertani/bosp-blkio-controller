@@ -1483,6 +1483,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 	 **********************************************************************/
 
 	logger->Debug("SetupCGroup: Updating cgroup [%s]", pcgd->cgpath);
+	bbque_assert(pcgd->pcg);
 	result = cgroup_modify_cgroup(pcgd->pcg);
 	if (BBQUE_UNLIKELY(result)) {
 		logger->Error("SetupCGroup: cgroup resource mapping FAILED "
@@ -1491,7 +1492,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 		return PLATFORM_MAPPING_FAILED;
 	}
 
-	/* If a task has not beed assigned, we are done */
+	/* If a task has not been assigned, we are done */
 	if (!move)
 		return PLATFORM_OK;
 
