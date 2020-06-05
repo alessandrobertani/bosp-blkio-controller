@@ -54,7 +54,8 @@ void init_BbqueEXC(py::module &m) {
       .def_property_readonly("rpc_name", &BbqueEXC::GetRpcName)
       .def_property_readonly("logger", [](PyBbqueEXC &bbqueEXC)
             {
-               auto logger_w = new RTLIB_Logger_Wrapper(bbqueEXC.get_logger());
+               auto logger_w = std::unique_ptr<RTLIB_Logger_Wrapper>(
+                   new RTLIB_Logger_Wrapper(bbqueEXC.get_logger()));
                return logger_w;
             }, py::return_value_policy::take_ownership);
 }
