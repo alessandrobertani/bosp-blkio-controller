@@ -180,23 +180,24 @@ Schedulable::SyncState_t Schedulable::NextSyncState(AwmPtr_t const & next_awm) c
 		return STARTING;
 
 	// Changing assigned resources: RECONF|MIGREC|MIGRATE
-	if ((schedule.awm->Id() != next_awm->Id()) &&
-	(schedule.awm->BindingSet(br::ResourceType::CPU) !=
-	next_awm->BindingSet(br::ResourceType::CPU))) {
+
+	// Change of resource amount and binding
+	if (((schedule.awm->Id() != next_awm->Id()) ||
+	!schedule.awm->ResourceRequestsAreEqual(next_awm)) &&
+	(schedule.awm->BindingSet(br::ResourceType::CPU) != next_awm->BindingSet(br::ResourceType::CPU))) {
 		return MIGREC;
 	}
 
-	if ((schedule.awm->Id() == next_awm->Id()) &&
+	// Change of resource binding only
+	if ((schedule.awm->Id() == next_awm->Id() &&
+	schedule.awm->ResourceRequestsAreEqual(next_awm)) &&
 	(schedule.awm->BindingChanged(br::ResourceType::CPU))) {
 		return MIGRATE;
 	}
 
-	if (schedule.awm->Id() != next_awm->Id()) {
-		return RECONF;
-	}
-
-	// Check for inter-cluster resources re-assignment
-	if (Reshuffling(next_awm)) {
+	// Change of resource amount only
+	if ((schedule.awm->Id() != next_awm->Id()) ||
+	!schedule.awm->ResourceRequestsAreEqual(next_awm)) {
 		return RECONF;
 	}
 
