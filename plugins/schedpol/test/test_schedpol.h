@@ -127,6 +127,8 @@ private:
 
 	ExitCode_t AssignWorkingMode(ProcPtr_t proc);
 
+	ExitCode_t AddResourceRequests(ProcPtr_t proc, bbque::app::AwmPtr_t pawm);
+
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
 	ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);

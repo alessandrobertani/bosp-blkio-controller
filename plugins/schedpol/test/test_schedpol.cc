@@ -174,8 +174,7 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc)
 	auto pawm = std::make_shared<ba::WorkingMode>(0, "Run-time", 1, proc);
 
 	// Resource request addition
-	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
-				br::ResourceAssignment::Policy::BALANCED);
+	AddResourceRequests(proc, pawm);
 
 	// Look for the first available CPU
 	ProcessManager & prm(ProcessManager::GetInstance());
@@ -206,6 +205,40 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc)
 	}
 
 	return SCHED_ERROR;
+}
+
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
+{
+	// CPU quota
+	uint32_t cpu_quota = proc->GetScheduleRequestInfo()->cpu_cores * 100;
+	logger->Debug("AddResourceRequests: [%s] requested cpu_quota = %d",
+		proc->StrId(), cpu_quota);
+	if (cpu_quota == 0) {
+		pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+					br::ResourceAssignment::Policy::BALANCED);
+		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %d",
+			proc->StrId(), CPU_QUOTA_TO_ALLOCATE);
+	}
+	else {
+		pawm->AddResourceRequest("sys.cpu.pe",
+					cpu_quota,
+					br::ResourceAssignment::Policy::BALANCED);
+		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %d",
+			proc->StrId(), cpu_quota);
+	}
+
+	// Accelerators
+	uint32_t acc_quota = proc->GetScheduleRequestInfo()->acc_cores * 100;
+	if (acc_quota != 0) {
+		pawm->AddResourceRequest("sys.acc.pe",
+					acc_quota,
+					br::ResourceAssignment::Policy::BALANCED);
+		logger->Debug("AddResourceRequests: [%s] <sys.acc.pe> = %d",
+			proc->StrId(), acc_quota);
+	}
+
+	return SCHED_OK;
 }
 
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
