@@ -146,7 +146,8 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 		return;
 	}
 
-	logger->Notice("CommandsCb: <%s> (pid=%d) schedule request: cpus=%d accs=%d mem=%d",
+	logger->Notice("CommandManageSetSchedule: "
+		"<%s> (pid=%d) schedule request: cpus=%d accs=%d mem=%d",
 		name.c_str(),
 		pid,
 		sched_req.cpu_cores,
@@ -155,15 +156,36 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 	if (pid == 0) {
-		logger->Debug("CommandManageSetSchedule: setting scheduling request for all <%s>",
+		logger->Debug("CommandManageSetSchedule: "
+			"setting scheduling request for all <%s>",
 			name.c_str());
 		*(managed_procs[name].shared_sched_req) = sched_req;
 	}
 	else {
-		logger->Debug("CommandManageSetSchedule: setting scheduling request for <%s, %d>",
+		logger->Debug("CommandManageSetSchedule: "
+			"setting scheduling request for <%s, %d>",
 			name.c_str(), pid);
-		*(managed_procs[name].sched_reqs[pid]) = sched_req;
+
+		// Set the schedule request to the specific process
+		auto it = all_procs.find(pid);
+		if (it != all_procs.end()) {
+			it->second->SetScheduleRequestInfo(std::make_shared<Process::ScheduleRequest>(sched_req));
+			logger->Debug("CommandManageSetSchedule: "
+				"setting scheduling request for <%s, %d> completed",
+				name.c_str(), pid);
+		}
+		else {
+			logger->Error("CommandManageSetSchedule: FAILED - "
+				"missing process <%s, %d>",
+				name.c_str(), pid);
+			return;
+		}
 	}
+
+	// Trigger a rescheduling
+	logger->Info("CommandManageSetSchedule: triggering the resource allocation...");
+	ResourceManager & rm(ResourceManager::GetInstance());
+	rm.NotifyEvent(ResourceManager::BBQ_OPTS);
 }
 
 void ProcessManager::CommandManageSetScheduleHelp() const
@@ -182,7 +204,7 @@ void ProcessManager::Add(std::string const & name)
 		logger->Debug("Add: processes with name '%s' in the managed map", name.c_str());
 	}
 	else
-		logger->Debug("Add: processes with name '%s' already n the managed map", name.c_str());
+		logger->Debug("Add: processes with name '%s' already in the managed map", name.c_str());
 }
 
 void ProcessManager::Remove(std::string const & name)
@@ -213,23 +235,13 @@ ProcessManager::NotifyStart(std::string const & name,
 	logger->Debug("NotifyStart: [%s: %d] adding process ", name.c_str(), pid);
 	std::unique_lock<std::mutex> u_lock(proc_mutex);
 
-	// Create a new process descriptor and enqueue it
+	// Create a new process descriptor and queue it
 	ProcPtr_t new_proc = std::make_shared<Process>(name, pid);
 	new_proc->SetState(state);
 
 	// Is there any scheduling request information?
-	Process::ScheduleRequestPtr_t sched_req;
-	auto it_srq = managed_procs[name].sched_reqs.find(pid);
-	if (it_srq == managed_procs[name].sched_reqs.end()) {
-		logger->Debug("NotifyStart: [%s: %d] general scheduling request info",
-			name.c_str(), pid);
-		sched_req = managed_procs[name].shared_sched_req;
-	}
-	else {
-		logger->Debug("NotifyStart: [%s: %d] PID-specific scheduling request info",
-			name.c_str(), pid);
-		sched_req = it_srq->second;
-	}
+	Process::ScheduleRequestPtr_t sched_req =
+		managed_procs[name].shared_sched_req;
 
 	new_proc->SetScheduleRequestInfo(sched_req);
 	logger->Debug("NotifyStart: [%s: %d] schedule request info: cpus=%d accs=%d mem=%d",
