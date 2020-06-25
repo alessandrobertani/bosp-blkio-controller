@@ -461,21 +461,6 @@ public:
 
 	bool IsOffline(std::string const & path);
 
-	/**
-	 * @brief Check if resources are being reshuffled
-	 *
-	 * Resources reshuffling happens when two resources bindings are not
-	 * the same, i.e. different kind or amount of resources.
-	 *
-	 * @param current_map the "current" resources bindings
-	 * @param next_map the "next" resources bindings
-	 *
-	 * @return true when resources are being reshuffled
-	 */
-	bool IsReshuffling(
-	        br::ResourceAssignmentMapPtr_t const & current_map,
-	        br::ResourceAssignmentMapPtr_t const & next_map);
-
 
 	/**
 	 * @see ResourceAccounterConfIF

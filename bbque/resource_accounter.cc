@@ -1485,26 +1485,6 @@ ResourceAccounter::DoResourceBooking(ba::SchedPtr_t const & papp,
 	return RA_SUCCESS;
 }
 
-bool ResourceAccounter::IsReshuffling(br::ResourceAssignmentMapPtr_t const & current_map,
-				      br::ResourceAssignmentMapPtr_t const & next_map)
-{
-	auto curr_it = current_map->begin();
-	auto next_it = next_map->begin();
-
-	for (; (curr_it != current_map->end()) && (next_it != next_map->end());
-	++curr_it, ++next_it) {
-		auto curr_assign = (*curr_it).second;
-		auto next_assign = (*next_it).second;
-
-		if (curr_assign->GetMask() != next_assign->GetMask()) {
-			logger->Debug("IsReshuffling: Yes");
-			return true;
-		}
-	}
-
-	return false;
-}
-
 void ResourceAccounter::SchedResourceBooking(ba::SchedPtr_t const & papp,
 					     br::ResourcePtr_t & rsrc,
 					     br::RViewToken_t status_view,
