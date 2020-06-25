@@ -197,7 +197,7 @@ SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::BindWorkingModesAndSched()
 		logger->Info("BindWorkingModesAndSched: [%s] starting...",
 			sched_entity->papp->StrId());
 
-		uint64_t req_amount = sched_entity->pawm->RequestedAmount(proc_path);
+		uint64_t req_amount = sched_entity->pawm->GetRequestedAmount(proc_path);
 		size_t num_procs = req_amount > 100 ? ceil(float(req_amount) / 100.0) : 1;
 		logger->Debug("BindWorkingModesAndSched: [%s] "
 			"<sys.cpu.pe>=%d => num_procs=%d",

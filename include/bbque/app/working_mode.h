@@ -30,7 +30,8 @@
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque { namespace app {
+namespace bbque {
+namespace app {
 
 /**
  * @class WorkingMode
@@ -42,8 +43,8 @@ namespace bbque { namespace app {
  * An "Application Working Mode" (AWM) is characterized by a set of resource
  * usage requested and a "value", which is a Quality of Service indicator
  */
-class WorkingMode: public WorkingModeStatusIF {
-
+class WorkingMode : public WorkingModeStatusIF
+{
 public:
 
 	/**
@@ -71,14 +72,16 @@ public:
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline std::string const & Name() const {
+	inline std::string const & Name() const
+	{
 		return name;
 	}
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline int32_t Id() const {
+	inline int32_t Id() const
+	{
 		return id;
 	}
 
@@ -86,14 +89,16 @@ public:
 	 * @brief Set the working mode name
 	 * @param wm_name The name
 	 */
-	inline void SetName(std::string const & wm_name) {
+	inline void SetName(std::string const & wm_name)
+	{
 		name = wm_name;
 	}
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline SchedPtr_t const & Owner() const {
+	inline SchedPtr_t const & Owner() const
+	{
 		return owner;
 	}
 
@@ -101,7 +106,8 @@ public:
 	 * @brief Set the application owning the AWM
 	 * @param papp Application descriptor pointer
 	 */
-	inline void SetOwner(SchedPtr_t const & papp) {
+	inline void SetOwner(SchedPtr_t const & papp)
+	{
 		owner = papp;
 	}
 
@@ -109,51 +115,57 @@ public:
 	 * @brief Check if the AWM is hidden
 	 *
 	 * The AWM can be hidden if the current hardware configuration cannot
-	 * accomodate the resource requirements included. This happens for example
+	 * accommodate the resource requirements included. This happens for example
 	 * if the recipe has been profiled on a platform of the same family of the
 	 * current one, but with a larger availability of resources, or whenever
-	 * the amount of available resources changes at runtime, due to hardware
+	 * the amount of available resources changes at run-time, due to hardware
 	 * faults or low-level power/thermal policies. This means that the AWM
 	 * must not be taken into account by the scheduling policy.
 	 *
 	 * @return true if the AWM is hidden, false otherwise.
 	 */
-	inline bool Hidden() const {
-		return hidden;
+	inline bool Disabled() const
+	{
+		return disabled;
 	}
 
 	/**
 	 * @brief Return the value specified in the recipe
 	 */
-	inline uint32_t RecipeValue() const {
+	inline uint32_t RecipeValue() const
+	{
 		return value.recipe;
 	}
 
 	/**
 	 * @brief Return the configuration time specified in the recipe
 	 */
-	inline uint32_t RecipeConfigTime() const {
+	inline uint32_t RecipeConfigTime() const
+	{
 		return config_time.recipe;
 	}
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline float Value() const {
+	inline float Value() const
+	{
 		return value.normal;
 	}
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline float ConfigTime() const {
+	inline float ConfigTime() const
+	{
 		return config_time.normal;
 	}
 
 	/**
 	 * @brief Provide an ID-string supporting log messages readability
 	 */
-	const char * StrId() const {
+	const char * StrId() const
+	{
 		return str_id;
 	}
 
@@ -165,7 +177,8 @@ public:
 	 *
 	 * @param r_value The QoS value of the working mode
 	 */
-	inline void SetRecipeValue(float r_value) {
+	inline void SetRecipeValue(float r_value)
+	{
 		// Value must be positive
 		if (r_value < 0) {
 			value.recipe = 0.0;
@@ -179,7 +192,8 @@ public:
 	 *
 	 * @param r_time The configuration time of the working mode
 	 */
-	inline void SetRecipeConfigTime(uint32_t r_time) {
+	inline void SetRecipeConfigTime(uint32_t r_time)
+	{
 		if (r_time > 0)
 			config_time.recipe = r_time;
 	}
@@ -193,11 +207,12 @@ public:
 	 * @param n_value The normalized QoS value of the working mode. It must
 	 * belong to range [0, 1].
 	 */
-	inline void SetNormalValue(float n_value) {
+	inline void SetNormalValue(float n_value)
+	{
 		// Normalized value must be in [0, 1]
 		if ((n_value < 0.0) || (n_value > 1.0)) {
 			logger->Error("SetNormalValue: value not normalized (v = %2.2f)",
-					n_value);
+				n_value);
 			value.normal = 0.0;
 			return;
 		}
@@ -210,7 +225,8 @@ public:
 	 * @param norm_time The normalized configuration time of the working mode. It must
 	 * belong to range [0, 1].
 	 */
-	inline void SetNormalConfigTime(float norm_time) {
+	inline void SetNormalConfigTime(float norm_time)
+	{
 		// Normalized value must be in [0, 1]
 		if ((norm_time < 0.0) || (norm_time > 1.0)) {
 			logger->Error("SetNormalConfigTime: time not normalized (v = %2.2f)", norm_time);
@@ -226,16 +242,21 @@ public:
 	 *
 	 * Some HW architectures can be released in several different platform
 	 * versions, providing variable amount of resources. Moreover, the
-	 * availabilty of resources can vary at runtime due to faults or
-	 * low level power/thermal policies. To support such a dynamicity at
-	 * runtime it is useful to hide the AWM including a resource requirement
-	 * that cannot be satisfied, according to its current total avalability.
+	 * availability of resources can vary at run-time due to faults or
+	 * low level power/thermal policies. To support such a dynamic at
+	 * run-time it is useful to hide the AWM including a resource requirement
+	 * that cannot be satisfied, according to its current total availability.
 	 *
 	 * This method performs this check, setting the AWM to "hidden", in case
 	 * the condition above is true. Hidden AWMs must not be taken into account
 	 * by the scheduling policy
 	 */
 	ExitCode_t Validate();
+
+
+	/******************************************************************************
+	 * Resource binding
+	 *******************************************************************************/
 
 	/**
 	 * @brief Add a resource usage request
@@ -252,57 +273,64 @@ public:
 	 * request has been correctly added.
 	 */
 	br::ResourceAssignmentPtr_t AddResourceRequest(
-			std::string const & str_path,
-			uint64_t amount,
-			br::ResourceAssignment::Policy split_policy =
-				br::ResourceAssignment::Policy::SEQUENTIAL);
+						std::string const & str_path,
+						uint64_t amount,
+						br::ResourceAssignment::Policy split_policy =
+						br::ResourceAssignment::Policy::SEQUENTIAL);
 
 	/**
 	 * @brief Get a previously added resource request
 	 *
 	 * @param str_path Resource path in string format
-	 *
 	 * @return nullptr if the resource request cannot be found.
 	 * shared pointer to a ResourceAssignment object.
 	 */
-	br::ResourceAssignmentPtr_t GetResourceRequest(std::string const & str_path);
+	br::ResourceAssignmentPtr_t GetResourceRequest(
+						std::string const & str_path);
 
 	/**
 	 * @brief Get a previously added resource request
 	 *
-	 * @param str_path Resource path in pointer to object format
-	 *
+	 * @param resource_path Resource path in pointer to object format
 	 * @return nullptr if the resource request cannot be found.
 	 * shared pointer to a ResourceAssignment object.
 	 */
-	br::ResourceAssignmentPtr_t GetResourceRequest(br::ResourcePathPtr_t resource_path);
+	br::ResourceAssignmentPtr_t GetResourceRequest(
+						br::ResourcePathPtr_t resource_path);
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	uint64_t RequestedAmount(br::ResourcePathPtr_t resource_path) const;
-
-	/**
-	 * @see WorkingModeStatusIF
-	 */
-	inline br::ResourceAssignmentMap_t const & ResourceRequests() const {
+	br::ResourceAssignmentMap_t const & GetResourceRequests() const
+	{
 		return resources.requested;
 	}
 
 	/**
 	 * @see WorkingModeStatusIF
 	 */
-	inline size_t NumberOfResourceRequests() const {
+	size_t NumberOfResourceRequests() const
+	{
 		return resources.requested.size();
 	}
 
-	inline void ClearResourceRequests() {
+	/**
+	 * @brief Wipe out the list of resource requests
+	 */
+	void ClearResourceRequests()
+	{
 		resources.requested.clear();
+		this->ClearSchedResourceBinding();
+		this->ClearResourceBinding();
 	}
 
-/******************************************************************************
- * Resource binding
- *******************************************************************************/
+	/**
+	 * @brief Get the amount of requested resource
+	 *
+	 * @param resource_path Resource path in pointer to object format
+	 * @return the amount
+	 */
+	uint64_t GetRequestedAmount(br::ResourcePathPtr_t resource_path) const;
 
 	/**
 	 * @brief Bind resource assignments to system resources descriptors
@@ -338,7 +366,7 @@ public:
 			BBQUE_RID_TYPE out_id,
 			int32_t prev_refn = -1,
 			br::ResourceType filter_rtype =
-				br::ResourceType::UNDEFINED,
+			br::ResourceType::UNDEFINED,
 			br::ResourceBitset * filter_mask = nullptr);
 
 	/**
@@ -367,8 +395,8 @@ public:
 	 * @return The number of missing resources added
 	 */
 	uint32_t AddMissingResourceRequests(
-			br::ResourceAssignmentMapPtr_t bound_map,
-			br::ResourceType r_type);
+					br::ResourceAssignmentMapPtr_t bound_map,
+					br::ResourceType r_type);
 
 	/**
 	 * @brief Retrieve the source and the destination map of resource
@@ -381,8 +409,8 @@ public:
 	 * previously bound resource requests
 	 */
 	br::ResourceAssignmentMap_t * GetSourceAndOutBindingMaps(
-			br::ResourceAssignmentMapPtr_t & out_map,
-			int32_t prev_refn);
+								br::ResourceAssignmentMapPtr_t & out_map,
+								int32_t prev_refn);
 
 	/**
 	 * @brief Save a resource assignment map aming the bindings
@@ -402,10 +430,11 @@ public:
 	/**
 	 * @brief Set the resource binding to schedule
 	 *
-	 * This binds the map of resource assignments pointed by "resources.sched_bindings"
-	 * to the WorkingMode. The map will contain Usage objects
-	 * specifying the the amount of resource requested (value) and a list of
-	 * system resource descriptors to which bind the request.
+	 * This binds the map of resource assignments pointed by
+	 * "resources.sched_bindings" to the WorkingMode.
+	 * The map will contain Usage objects specifying the the amount of
+	 * resource requested (value) and a list of system resource descriptors
+	 * to which bind the request.
 	 *
 	 * This method is invoked during the scheduling step to track the set of
 	 * resources to acquire at the end of the synchronization step.
@@ -415,7 +444,9 @@ public:
 	 *
 	 * @return WM_SUCCESS, or WM_RSRC_MISS_BIND if some bindings are missing
 	 */
-	ExitCode_t SetResourceBinding(br::RViewToken_t status_view, uint32_t b_refn = 0);
+	ExitCode_t SetResourceBinding(
+				br::RViewToken_t status_view,
+				uint32_t b_refn = 0);
 
 	/**
 	 * @brief Get the map of scheduled resource assignments
@@ -428,7 +459,8 @@ public:
 	 *
 	 * @return A shared pointer to a map of Usage objects
 	 */
-	inline br::ResourceAssignmentMapPtr_t GetResourceBinding() const {
+	br::ResourceAssignmentMapPtr_t GetResourceBinding() const
+	{
 		return resources.sync_bindings;
 	}
 
@@ -443,7 +475,7 @@ public:
 	 * @param status_view The resource state view according to which update
 	 * @param update_changed if true update alse the "changed" flags
 	 */
-	void UpdateBindingInfo(br::RViewToken_t status_view, bool update_changed=false);
+	void UpdateBindingInfo(br::RViewToken_t status_view, bool update_changed = false);
 
 	/**
 	 * @brief Clear the scheduled resource binding
@@ -455,7 +487,8 @@ public:
 	/**
 	 * @see WorkingModeConfIF
 	 */
-	inline void ClearSchedResourceBinding() {
+	void ClearSchedResourceBinding()
+	{
 		resources.sched_bindings.clear();
 	}
 
@@ -474,10 +507,16 @@ public:
 	 */
 	bool BindingChanged(const br::ResourceType & r_type) const;
 
+
+	/******************************************************************************
+	 * Scheduling information
+	 *******************************************************************************/
+
 	/**
 	 * @brief Increment the scheduling counter
 	 */
-	inline void IncSchedulingCount() {
+	void IncSchedulingCount()
+	{
 		sched_count++;
 		logger->Debug("Selection count: %d", sched_count);
 	}
@@ -485,18 +524,20 @@ public:
 	/**
 	 * @brief Increment the scheduling counter
 	 */
-	inline uint32_t GetSchedulingCount() {
+	uint32_t GetSchedulingCount()
+	{
 		return sched_count;
 	}
 
-/******************************************************************************
- * Runtime profiling data
- *******************************************************************************/
+	/******************************************************************************
+	 * Runtime profiling data
+	 *******************************************************************************/
 
 	/**
 	 * @brief Collect the runtime profiling data from the RTLib
 	 */
-	struct RuntimeProfiling_t {
+	struct RuntimeProfiling_t
+	{
 		uint32_t exec_time;
 		uint32_t exec_time_tot;
 		uint32_t mem_time;
@@ -508,7 +549,8 @@ public:
 	 * @brief Set the time spent executing on a computing device
 	 * @param exec_time Value coming from RTLib
 	 */
-	inline void SetRuntimeProfExecTime(uint32_t exec_time) {
+	inline void SetRuntimeProfExecTime(uint32_t exec_time)
+	{
 		rt_prof.exec_time = exec_time;
 		rt_prof.exec_time_tot += exec_time;
 		logger->Debug("Execution time: {sample = %d, tot = %d} ns",
@@ -519,7 +561,8 @@ public:
 	 * @brief Set the time spent in performing memory operations
 	 * @param exec_time Value coming from RTLib
 	 */
-	inline void SetRuntimeProfMemTime(uint32_t mem_time) {
+	inline void SetRuntimeProfMemTime(uint32_t mem_time)
+	{
 		rt_prof.mem_time = mem_time;
 		rt_prof.mem_time_tot += mem_time;
 		logger->Debug("Memory time: {sample = %d, tot = %d} ns",
@@ -530,7 +573,8 @@ public:
 	 * @brief Set the latest synchronization latency
 	 * @param exec_time Value coming from RTLib
 	 */
-	inline void SetRuntimeProfSyncTime(uint32_t sync_time) {
+	inline void SetRuntimeProfSyncTime(uint32_t sync_time)
+	{
 		rt_prof.sync_time = sync_time;
 		logger->Debug("Synchronization time: %d", rt_prof.sync_time);
 	}
@@ -538,7 +582,8 @@ public:
 	/**
 	 * @brief Get the collection runtime profiling data
 	 */
-	inline RuntimeProfiling_t const & GetProfilingData() {
+	inline RuntimeProfiling_t const & GetProfilingData()
+	{
 		return rt_prof;
 	}
 
@@ -550,15 +595,22 @@ private:
 	 * Store binding information, i.e., on which system resources IDs the
 	 * resource (type) has been bound by the scheduling policy
 	 */
-	class BindingInfo {
+	class BindingInfo
+	{
 	public:
-		BindingInfo() { changed = false; }
-		virtual ~BindingInfo() {};
+
+		BindingInfo()
+		{
+			changed = false;
+		}
+
+		virtual ~BindingInfo() { };
 
 		/**
 		 * @brief Set current resource binding set
 		 */
-		inline void SetCurrentSet(br::ResourceBitset const & _curr) {
+		inline void SetCurrentSet(br::ResourceBitset const & _curr)
+		{
 			prev = curr;
 			curr = _curr;
 			changed = curr != prev;
@@ -567,7 +619,8 @@ private:
 		/**
 		 * @brief Restore the previous resource binding set
 		 */
-		inline void RestorePreviousSet() {
+		inline void RestorePreviousSet()
+		{
 			curr = prev;
 			changed = false;
 		}
@@ -575,21 +628,24 @@ private:
 		/**
 		 * @brief Get the current resource binding set
 		 */
-		inline br::ResourceBitset CurrentSet() const {
+		inline br::ResourceBitset CurrentSet() const
+		{
 			return curr;
 		}
 
 		/**
 		 * @brief Get the previous resource binding set
 		 */
-		inline br::ResourceBitset PreviousSet() const {
+		inline br::ResourceBitset PreviousSet() const
+		{
 			return prev;
 		}
 
 		/**
 		 * @brief Check if the binding set has changed
 		 */
-		inline bool IsChanged() const {
+		inline bool IsChanged() const
+		{
 			return changed;
 		}
 
@@ -625,21 +681,23 @@ private:
 	 * satisfied by the current hardware platform/configuration it can be
 	 * flagged as hidden. The idea is to support a dynamic reconfiguration
 	 * of the underlying hardware such that some AWMs could be dynamically
-	 * taken into account or not at runtime.
+	 * taken into account or not at run-time.
 	 */
-	bool hidden;
+	bool disabled;
 
 	/**
 	 * @struct ValueAttribute_t
 	 *
 	 * Store information regarding the value of the AWM
 	 */
-	struct ValueAttribute_t {
+	struct ValueAttribute_t
+	{
 		/** The QoS value associated to the working mode as specified in the
 		 * recipe */
 		uint32_t recipe;
 		/** The normalized QoS value associated to the working mode */
 		float normal;
+
 	} value;
 
 	/**
@@ -647,7 +705,8 @@ private:
 	 *
 	 * Store information regarding the configuration time of the AWM
 	 */
-	struct ConfigTimeAttribute_t {
+	struct ConfigTimeAttribute_t
+	{
 		/** The time (in milliseconds) profiled at design time and specified
 		 * in the recipe */
 		uint32_t recipe;
@@ -659,6 +718,7 @@ private:
 		 * NOTE: Currently unused attribute
 		 */
 		uint32_t runtime;
+
 	} config_time;
 
 	/**
@@ -678,7 +738,8 @@ private:
 	 * Store information about the resource requests specified in the recipe
 	 * and the bindings built by the scheduling policy
 	 */
-	struct ResourcesInfo {
+	struct ResourcesInfo
+	{
 		/**
 		 * The map of resources usages from the recipe
 		 */
@@ -712,4 +773,4 @@ private:
 
 } // namespace bbque
 
-#endif	// BBQUE_WORKING_MODE_H_
+#endif // BBQUE_WORKING_MODE_H_

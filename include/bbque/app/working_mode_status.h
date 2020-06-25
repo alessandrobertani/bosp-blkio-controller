@@ -42,10 +42,10 @@ typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
 
 class ResourceAssignment;
 
-typedef std::shared_ptr<ResourceAssignment> ResourceAssignmentPtr_t;
-typedef std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath> >
-	ResourceAssignmentMap_t;
-typedef std::shared_ptr<ResourceAssignmentMap_t> ResourceAssignmentMapPtr_t;
+using ResourceAssignmentPtr_t = std::shared_ptr<ResourceAssignment>;
+using ResourceAssignmentMap_t = std::map<ResourcePathPtr_t, ResourceAssignmentPtr_t, CompareSP<ResourcePath> >;
+using ResourceAssignmentMapPtr_t = std::shared_ptr<ResourceAssignmentMap_t>;
+
 }
 
 namespace app {
@@ -55,20 +55,21 @@ class WorkingModeStatusIF;
 
 /** Shared pointer to the class here defined */
 using SchedPtr_t = std::shared_ptr<Schedulable>;
-using AwmSPtr_t  = std::shared_ptr<WorkingModeStatusIF>;
+using AwmSPtr_t = std::shared_ptr<WorkingModeStatusIF>;
 
 /**
  * @class WorkingMode
  * @brief Read-only interface for the WorkingMode runtime status
  */
-class WorkingModeStatusIF: public bu::ExtraDataContainer {
-
+class WorkingModeStatusIF : public bu::ExtraDataContainer
+{
 public:
 
 	/**
 	 * @brief Error codes returned by methods
 	 */
-	enum ExitCode_t {
+	enum ExitCode_t
+	{
 		/** Success */
 		WM_SUCCESS = 0,
 		/** Application working mode not found */
@@ -126,13 +127,13 @@ public:
 	 * @param r_path Resource path object (shared pointer)
 	 * @return The requested amount
 	 */
-	virtual uint64_t RequestedAmount(br::ResourcePathPtr_t r_path) const = 0;
+	virtual uint64_t GetRequestedAmount(br::ResourcePathPtr_t r_path) const = 0;
 
 	/**
 	 * @brief Return a map of all the requested resources
 	 * @return A constant reference to the map of resource assignments object
 	 */
-	virtual br::ResourceAssignmentMap_t const & ResourceRequests() const = 0;
+	virtual br::ResourceAssignmentMap_t const & GetResourceRequests() const = 0;
 
 	/**
 	 * @brief How many resources the working mode uses
@@ -158,7 +159,7 @@ public:
 	/**
 	 * @brief Get the bitmap of the clusters currently used.
 	 *
-	 * Eeach bit set represents a cluster in use. When SetResourceBinding() is
+	 * Each bit set represents a cluster in use. When SetResourceBinding() is
 	 * called the set of clusters is properly filled.
 	 *
 	 * @return A bitset data structure
@@ -180,7 +181,7 @@ public:
 	 *
 	 * When a new resource binding is set, if the clusters map has changed keep
 	 * track of the change by setting a boolean variable. When the method is
-	 * call it returns the value of such variale. This is more efficient than
+	 * call it returns the value of such variable. This is more efficient than
 	 * checking if curr != prev every time.
 	 *
 	 * @return True if the AWM use a different map of clusters, false otherwise.

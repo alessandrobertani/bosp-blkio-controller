@@ -32,21 +32,22 @@
 namespace br = bbque::res;
 namespace bu = bbque::utils;
 
-namespace bbque { namespace app {
+namespace bbque {
+namespace app {
 
-
-WorkingMode::WorkingMode():
-	hidden(false) {
+WorkingMode::WorkingMode() :
+    disabled(false)
+{
 	// Set the log string id
 	strncpy(str_id, "", 12);
 }
 
-WorkingMode::WorkingMode(
-		int8_t _id,
-		std::string const & _name,
-		float _value,
-		SchedPtr_t _owner):
-	id(_id), name(_name), hidden(false) {
+WorkingMode::WorkingMode(int8_t _id,
+			 std::string const & _name,
+			 float _value,
+			 SchedPtr_t _owner) :
+    id(_id), name(_name), disabled(false)
+{
 	logger = bu::Logger::GetLogger(AWM_NAMESPACE);
 
 	// Value must be positive
@@ -65,7 +66,8 @@ WorkingMode::WorkingMode(
 		SetOwner(_owner);
 }
 
-WorkingMode::~WorkingMode() {
+WorkingMode::~WorkingMode()
+{
 	resources.requested.clear();
 	if (resources.sync_bindings)
 		resources.sync_bindings->clear();
@@ -74,82 +76,14 @@ WorkingMode::~WorkingMode() {
 	}
 }
 
-br::ResourceAssignmentPtr_t WorkingMode::AddResourceRequest(
-		std::string const & request_path,
-		uint64_t amount,
-		br::ResourceAssignment::Policy split_policy) {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-
-	// Requested resource path could require an implicit prefix.
-	// Look for it in the binding domains map.
-	BindingManager & bdm(BindingManager::GetInstance());
-	for (auto & binding: bdm.GetBindingDomains()) {
-		// e.g. "sys.cpu"
-		logger->Debug("AddResourceRequest: domain base_path=<%s>",
-			       binding.second->base_path->ToString().c_str());
-
-		// e.g. "sys.cpu.pe" + "cpu.pe"
-		auto resource_path = std::make_shared<br::ResourcePath>
-				(*binding.second->base_path + request_path);
-		if (resource_path == nullptr) {
-			logger->Warn("AddResourceRequest: invalid path");
-			continue;
-		}
-		logger->Debug("AddResourceRequest: request_path=<%s> ...",
-			      resource_path->ToString().c_str());
-
-		// Check the existance of requested (?) resources
-		if (!ra.ExistResource(resource_path)) {
-			logger->Debug("AddResourceRequest: <%s> does not exist",
-				resource_path->ToString().c_str());
-			continue;
-		}
-
-		// Insert a new resource usage object in the map
-		auto r_assign = std::make_shared<br::ResourceAssignment>(amount, split_policy);
-		resources.requested.emplace(resource_path, r_assign);
-		logger->Debug("AddResourceRequest: %s: added <%s> [usage: %" PRIu64 "] count=%d",
-			      str_id,
-			      resource_path->ToString().c_str(),
-			      amount,
-			      resources.requested.size());
-
-		return r_assign;
-	}
-
-	return nullptr;
-}
-
-br::ResourceAssignmentPtr_t WorkingMode::GetResourceRequest(
-		std::string const & str_path) {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
-	auto resource_path = ra.GetPath(str_path);
-	if (resource_path == nullptr) {
-		logger->Error("GetResourcePath: path <%> does not exist", str_path.c_str());
-		return nullptr;
-	}
-	return GetResourceRequest(resource_path);
-}
-
-br::ResourceAssignmentPtr_t WorkingMode::GetResourceRequest(
-		br::ResourcePathPtr_t resource_path) {
-
-	auto it_req = resources.requested.find(resource_path);
-	if (it_req == resources.requested.end()) {
-		logger->Error("GetResourcePath: path <%> not in requested set",
-			resource_path->ToString().c_str());
-		return nullptr;
-	}
-	return it_req->second;
-}
-
-WorkingMode::ExitCode_t WorkingMode::Validate() {
-	ResourceAccounter &ra(ResourceAccounter::GetInstance());
+WorkingMode::ExitCode_t WorkingMode::Validate()
+{
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	uint64_t total_amount;
-	hidden   = false;
+	disabled   = false;
 
 	// Map of resource assignments requested
-	for (auto & resource_entry: resources.requested) {
+	for (auto & resource_entry : resources.requested) {
 		// Current resource: path and amount required
 		ResourcePathPtr_t const & path_from_recipe(resource_entry.first);
 		br::ResourceAssignmentPtr_t & request_from_recipe(resource_entry.second);
@@ -165,7 +99,7 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 				path_from_recipe->ToString().c_str(),
 				request_from_recipe->GetAmount(),
 				total_amount);
-			hidden = true;
+			disabled = true;
 			logger->Warn("%s Validate: set to 'hidden'", str_id);
 			return WM_RSRC_USAGE_EXCEEDS;
 		}
@@ -174,9 +108,80 @@ WorkingMode::ExitCode_t WorkingMode::Validate() {
 	return WM_SUCCESS;
 }
 
-uint64_t WorkingMode::RequestedAmount(ResourcePathPtr_t resource_path) const {
+br::ResourceAssignmentPtr_t
+WorkingMode::AddResourceRequest(std::string const & request_path,
+				uint64_t amount,
+				br::ResourceAssignment::Policy split_policy)
+{
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 
-	for (auto & resource_entry: resources.requested) {
+	// Requested resource path could require an implicit prefix.
+	// Look for it in the binding domains map.
+	BindingManager & bdm(BindingManager::GetInstance());
+	for (auto & binding : bdm.GetBindingDomains()) {
+		// e.g. "sys.cpu"
+		logger->Debug("AddResourceRequest: domain base_path=<%s>",
+			binding.second->base_path->ToString().c_str());
+
+		// e.g. "sys.cpu.pe" + "cpu.pe"
+		auto resource_path = std::make_shared<br::ResourcePath>
+			(*binding.second->base_path + request_path);
+		if (resource_path == nullptr) {
+			logger->Warn("AddResourceRequest: invalid path");
+			continue;
+		}
+		logger->Debug("AddResourceRequest: request_path=<%s> ...",
+			resource_path->ToString().c_str());
+
+		// Check the existance of requested (?) resources
+		if (!ra.ExistResource(resource_path)) {
+			logger->Debug("AddResourceRequest: <%s> does not exist",
+				resource_path->ToString().c_str());
+			continue;
+		}
+
+		// Insert a new resource usage object in the map
+		auto r_assign = std::make_shared<br::ResourceAssignment>(amount, split_policy);
+		resources.requested.emplace(resource_path, r_assign);
+		logger->Debug("AddResourceRequest: %s: added <%s> [usage: %" PRIu64 "] count=%d",
+			str_id,
+			resource_path->ToString().c_str(),
+			amount,
+			resources.requested.size());
+
+		return r_assign;
+	}
+
+	return nullptr;
+}
+
+br::ResourceAssignmentPtr_t
+WorkingMode::GetResourceRequest(std::string const & str_path)
+{
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	auto resource_path = ra.GetPath(str_path);
+	if (resource_path == nullptr) {
+		logger->Error("GetResourcePath: path <%> does not exist", str_path.c_str());
+		return nullptr;
+	}
+	return GetResourceRequest(resource_path);
+}
+
+br::ResourceAssignmentPtr_t
+WorkingMode::GetResourceRequest(br::ResourcePathPtr_t resource_path)
+{
+	auto it_req = resources.requested.find(resource_path);
+	if (it_req == resources.requested.end()) {
+		logger->Error("GetResourcePath: path <%> not in requested set",
+			resource_path->ToString().c_str());
+		return nullptr;
+	}
+	return it_req->second;
+}
+
+uint64_t WorkingMode::GetRequestedAmount(ResourcePathPtr_t resource_path) const
+{
+	for (auto & resource_entry : resources.requested) {
 		ResourcePathPtr_t const & curr_path(resource_entry.first);
 		if (resource_path->Compare(*(curr_path.get())) == br::ResourcePath::NOT_EQUAL)
 			continue;
@@ -185,13 +190,13 @@ uint64_t WorkingMode::RequestedAmount(ResourcePathPtr_t resource_path) const {
 	return 0;
 }
 
-int32_t WorkingMode::BindResource(
-		br::ResourceType r_type,
-		BBQUE_RID_TYPE source_id,
-		BBQUE_RID_TYPE out_id,
-		int32_t prev_refn,
-		br::ResourceType filter_rtype,
-		br::ResourceBitset * filter_mask) {
+int32_t WorkingMode::BindResource(br::ResourceType r_type,
+				  BBQUE_RID_TYPE source_id,
+				  BBQUE_RID_TYPE out_id,
+				  int32_t prev_refn,
+				  br::ResourceType filter_rtype,
+				  br::ResourceBitset * filter_mask)
+{
 	logger->Debug("BindResource: %s owner is %s", str_id, owner->StrId());
 	logger->Debug("BindResource: <%s> from %d to %d",
 		br::GetResourceTypeString(r_type), source_id, out_id);
@@ -215,7 +220,7 @@ int32_t WorkingMode::BindResource(
 
 	// Do the binding
 	br::ResourceBinder::Bind(*source_map, r_type, source_id, out_id, out_map,
-			filter_rtype, filter_mask);
+				filter_rtype, filter_mask);
 	if (out_map->empty()) {
 		logger->Warn("BindResource: %s nothing to bind", str_id);
 		return -1;
@@ -224,16 +229,15 @@ int32_t WorkingMode::BindResource(
 	// Save the result of the binding
 	int32_t refn = StoreBinding(out_map, prev_refn);
 	logger->Debug("BindResource: %s R{%-3s} map size = %d [refn = %d]",
-			str_id, br::GetResourceTypeString(r_type),
-			out_map->size(), refn);
+		str_id, br::GetResourceTypeString(r_type),
+		out_map->size(), refn);
 	return refn;
 }
 
-
-int32_t WorkingMode::BindResource(
-		br::ResourcePathPtr_t resource_path,
-		br::ResourceBitset const & filter_mask,
-		int32_t prev_refn) {
+int32_t WorkingMode::BindResource(br::ResourcePathPtr_t resource_path,
+				  br::ResourceBitset const & filter_mask,
+				  int32_t prev_refn)
+{
 	logger->Debug("BindResource: <%s> to mask='%s'",
 		resource_path->ToString().c_str(), filter_mask.ToString().c_str());
 
@@ -260,32 +264,31 @@ int32_t WorkingMode::BindResource(
 		logger->Warn("BindResource: nothing to bind");
 		return -1;
 	}
-	logger->Debug("BindResource: binding of <%s> performend",
+	logger->Debug("BindResource: binding of <%s> performed",
 		resource_path->ToString().c_str());
 
 	int32_t refn = StoreBinding(out_map, prev_refn);
 	logger->Debug("BindResource: <%s> map size = %d [prev_refn = %d]",
-			resource_path->ToString().c_str(), out_map->size(), refn);
+		resource_path->ToString().c_str(), out_map->size(), refn);
 	return refn;
 }
 
-
-uint32_t WorkingMode::AddMissingResourceRequests(
-		br::ResourceAssignmentMapPtr_t bound_map,
-		br::ResourceType r_type) {
-
+uint32_t
+WorkingMode::AddMissingResourceRequests(br::ResourceAssignmentMapPtr_t bound_map,
+					br::ResourceType r_type)
+{
 	uint32_t diff_size = resources.requested.size() - bound_map->size();
 	logger->Debug("AddMissingResourceRequests: bound map size=%d ", bound_map->size());
 
 	uint32_t nr_added = 0;
 
-	for (auto & r_entry: resources.requested) {
+	for (auto & r_entry : resources.requested) {
 		auto & requested_path(r_entry.first);
 		auto & requested_usage(r_entry.second);
 		bool matched = false;
 
 		// Look for missing requests in the already bound map
-		for (auto & b_entry: *bound_map) {
+		for (auto & b_entry : *bound_map) {
 			auto & bound_path(b_entry.first);
 			logger->Debug("AddMissingResourceRequests: comparing r=<%s> vs b=<%s> ",
 				requested_path->ToString().c_str(),
@@ -296,8 +299,8 @@ uint32_t WorkingMode::AddMissingResourceRequests(
 			auto cmp = requested_path->Compare(*bound_path);
 			logger->Debug("AddMissingResourceRequests: comparison result=%d", cmp);
 			if ((cmp == br::ResourcePath::EQUAL)
-				|| ((cmp == br::ResourcePath::EQUAL_TYPES)
-					&& (requested_path->GetID(r_type) == bound_path->GetID(r_type)))) {
+			|| ((cmp == br::ResourcePath::EQUAL_TYPES)
+			&& (requested_path->GetID(r_type) == bound_path->GetID(r_type)))) {
 				matched = true;
 				logger->Debug("AddMissingResourceRequests: request to skip: "
 					"<%s>", requested_path->ToString().c_str());
@@ -325,11 +328,10 @@ uint32_t WorkingMode::AddMissingResourceRequests(
 	return nr_added;
 }
 
-
-br::ResourceAssignmentMap_t * WorkingMode::GetSourceAndOutBindingMaps(
-		br::ResourceAssignmentMapPtr_t & out_map,
-		int32_t prev_refn) {
-
+br::ResourceAssignmentMap_t *
+WorkingMode::GetSourceAndOutBindingMaps(br::ResourceAssignmentMapPtr_t & out_map,
+					int32_t prev_refn)
+{
 	// First binding?
 	if (prev_refn < 0) {
 		logger->Debug("BindResource: first binding");
@@ -349,11 +351,9 @@ br::ResourceAssignmentMap_t * WorkingMode::GetSourceAndOutBindingMaps(
 	return out_map.get();
 }
 
-
-int32_t WorkingMode::StoreBinding(
-		br::ResourceAssignmentMapPtr_t out_map,
-		int32_t prev_refn) {
-
+int32_t WorkingMode::StoreBinding(br::ResourceAssignmentMapPtr_t out_map,
+				  int32_t prev_refn)
+{
 	int32_t refn = -1;
 	if (prev_refn < 0) {
 		refn = 0;
@@ -371,26 +371,25 @@ int32_t WorkingMode::StoreBinding(
 	return refn;
 }
 
-
-br::ResourceAssignmentMapPtr_t WorkingMode::GetSchedResourceBinding(uint32_t b_refn) const {
+br::ResourceAssignmentMapPtr_t WorkingMode::GetSchedResourceBinding(uint32_t b_refn) const
+{
 	if (b_refn >= resources.sched_bindings.size()) {
 		logger->Error("SchedResourceBinding: %s invalid reference [%ld]",
-				str_id, b_refn);
+			str_id, b_refn);
 		return nullptr;
 	}
 	logger->Debug("SchedResourceBinding: found binding @[%ld]", b_refn);
 	return resources.sched_bindings[b_refn];
 }
 
-
-WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
-		br::RViewToken_t status_view,
-		uint32_t b_refn) {
+WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(br::RViewToken_t status_view,
+							uint32_t b_refn)
+{
 	// Set the new binding / resource assignments map
 	resources.sync_bindings = GetSchedResourceBinding(b_refn);
 	if (resources.sync_bindings == nullptr) {
 		logger->Error("SetBinding: %s invalid scheduling binding [%ld]",
-				str_id, b_refn);
+			str_id, b_refn);
 		return WM_BIND_FAILED;
 	}
 
@@ -400,41 +399,40 @@ WorkingMode::ExitCode_t WorkingMode::SetResourceBinding(
 	// Update the resource binding bit-masks
 	UpdateBindingInfo(status_view, true);
 	logger->Debug("SetBinding: %s resource binding [%ld] to allocate",
-			str_id, b_refn);
+		str_id, b_refn);
 
 	return WM_SUCCESS;
 }
 
-
-void WorkingMode::UpdateBindingInfo(
-		br::RViewToken_t status_view,
-		bool update_changed) {
+void WorkingMode::UpdateBindingInfo(br::RViewToken_t status_view,
+				    bool update_changed)
+{
 	br::ResourceBitset new_mask;
 	logger->Debug("UpdateBinding: mask update required (%s)",
-			update_changed ? "Y" : "N");
+		update_changed ? "Y" : "N");
 
 	// Update the resource binding bitmask (for each type)
 	for (int r_type_index = 0; r_type_index < R_TYPE_COUNT; ++r_type_index) {
 		br::ResourceType r_type = static_cast<br::ResourceType>(r_type_index);
 		if (r_type == br::ResourceType::PROC_ELEMENT ||
-			r_type == br::ResourceType::MEMORY) {
+		r_type == br::ResourceType::MEMORY) {
 			logger->Debug("UpdateBinding: %s R{%-3s} is terminal",
-					str_id, br::GetResourceTypeString(r_type));
+				str_id, br::GetResourceTypeString(r_type));
 			// 'Deep' get bit-mask in this case
 			new_mask = br::ResourceBinder::GetMask(
-				resources.sched_bindings[resources.sync_refn],
-				static_cast<br::ResourceType>(r_type),
-				br::ResourceType::CPU,
-				R_ID_ANY, owner, status_view);
+							resources.sched_bindings[resources.sync_refn],
+							static_cast<br::ResourceType>(r_type),
+							br::ResourceType::CPU,
+							R_ID_ANY, owner, status_view);
 		}
 		else {
 			new_mask = br::ResourceBinder::GetMask(
-				resources.sched_bindings[resources.sync_refn],
-				static_cast<br::ResourceType>(r_type));
+							resources.sched_bindings[resources.sync_refn],
+							static_cast<br::ResourceType>(r_type));
 		}
 		logger->Debug("UpdateBinding: %s R{%-3s}: %s",
-				str_id, br::GetResourceTypeString(r_type),
-				new_mask.ToStringCG().c_str());
+			str_id, br::GetResourceTypeString(r_type),
+			new_mask.ToStringCG().c_str());
 
 		// Update current/previous bitset changes only if required
 		if (!update_changed || new_mask.Count() == 0) {
@@ -445,16 +443,19 @@ void WorkingMode::UpdateBindingInfo(
 		BindingInfo & bi(resources.binding_masks[r_type]);
 		bi.SetCurrentSet(new_mask);
 		logger->Debug("UpdateBinding: %s R{%-3s} changed? (%d)",
-				str_id, br::GetResourceTypeString(r_type),
-				bi.IsChanged());
+			str_id, br::GetResourceTypeString(r_type),
+			bi.IsChanged());
 
 	}
 }
 
-void WorkingMode::ClearResourceBinding() {
+void WorkingMode::ClearResourceBinding()
+{
 	if (resources.sync_bindings == nullptr)
 		return;
 	resources.sync_bindings->clear();
+
+	// Restore the previous binding bitsets
 	for (int r_type_index = 0; r_type_index < R_TYPE_COUNT; ++r_type_index) {
 		br::ResourceType r_type = static_cast<br::ResourceType>(r_type_index);
 		resources.binding_masks[r_type].RestorePreviousSet();
@@ -462,7 +463,8 @@ void WorkingMode::ClearResourceBinding() {
 }
 
 br::ResourceBitset
-WorkingMode::BindingSet(const br::ResourceType & r_type) const {
+WorkingMode::BindingSet(const br::ResourceType & r_type) const
+{
 	auto const mask_it(resources.binding_masks.find(r_type));
 	br::ResourceBitset empty_set;
 	if (mask_it == resources.binding_masks.end())
@@ -471,7 +473,8 @@ WorkingMode::BindingSet(const br::ResourceType & r_type) const {
 }
 
 br::ResourceBitset
-WorkingMode::BindingSetPrev(const br::ResourceType & r_type) const {
+WorkingMode::BindingSetPrev(const br::ResourceType & r_type) const
+{
 	auto const mask_it(resources.binding_masks.find(r_type));
 	br::ResourceBitset empty_set;
 	if (mask_it == resources.binding_masks.end())
@@ -479,12 +482,14 @@ WorkingMode::BindingSetPrev(const br::ResourceType & r_type) const {
 	return mask_it->second.PreviousSet();
 }
 
-bool WorkingMode::BindingChanged(const br::ResourceType & r_type) const {
+bool WorkingMode::BindingChanged(const br::ResourceType & r_type) const
+{
 	auto const mask_it(resources.binding_masks.find(r_type));
 	if (mask_it == resources.binding_masks.end())
 		return false;
 	return mask_it->second.IsChanged();
 }
+
 
 } // namespace app
 

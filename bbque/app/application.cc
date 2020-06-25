@@ -145,7 +145,7 @@ void Application::InitWorkingModes(AppPtr_t & papp)
 		awms.recipe_vect[app_awm->Id()] = app_awm;
 
 		// Do not insert the hidden AWMs into the enabled list
-		if (app_awm->Hidden()) {
+		if (app_awm->Disabled()) {
 			logger->Debug("InitWorkingModes: skipping hidden AWM %d", app_awm->Id());
 			continue;
 		}
@@ -527,7 +527,7 @@ void Application::RebuildEnabledWorkingModes()
 		// resources
 		if ((!awms.enabled_bset.test(j))
 			|| (UsageOutOfBounds(awms.recipe_vect[j]))
-			|| awms.recipe_vect[j]->Hidden())
+			|| awms.recipe_vect[j]->Disabled())
 			continue;
 
 		// Insert the working mode
@@ -558,7 +558,7 @@ void Application::FinalizeEnabledWorkingModes()
 bool Application::UsageOutOfBounds(AwmPtr_t & awm)
 {
 	// Check if there are constraints on the resource assignments
-	for (auto const & rsrc_req_entry : awm->ResourceRequests()) {
+	for (auto const & rsrc_req_entry : awm->GetResourceRequests()) {
 		auto & rsrc_path(rsrc_req_entry.first);
 		auto & rsrc_amount(rsrc_req_entry.second);
 
@@ -675,7 +675,7 @@ uint64_t Application::GetResourceRequestStat(
 	uint64_t total = 0;
 
 	for (auto const & awm : awms.enabled_list) { // AWMs (enabled)
-		for (auto const & r_entry : awm->ResourceRequests()) { // Resources
+		for (auto const & r_entry : awm->GetResourceRequests()) { // Resources
 			ResourcePathPtr_t const & curr_path(r_entry.first);
 			uint64_t curr_amount = (r_entry.second)->GetAmount();
 

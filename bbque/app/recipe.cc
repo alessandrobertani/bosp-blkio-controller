@@ -118,7 +118,7 @@ void Recipe::Validate() {
 	// Validate each AWM according to current resources total availability
 	for (int i = 0; i < last_awm_id; ++i) {
 		working_modes[i]->Validate();
-		if (!working_modes[i]->Hidden()) {
+		if (!working_modes[i]->Disabled()) {
 			UpdateNormalInfo(values, working_modes[i]->RecipeValue());
 			UpdateNormalInfo(config_times, working_modes[i]->RecipeConfigTime());
 		}
@@ -151,7 +151,7 @@ void Recipe::UpdateNormalInfo(AwmNormalInfo & info, uint32_t last_value) {
 void Recipe::Normalize() {
 	// Set of AWMs: normalize attributes
 	for (int i = 0; i < last_awm_id; ++i) {
-		if (working_modes[i]->Hidden()) continue;
+		if (working_modes[i]->Disabled()) continue;
 		NormalizeValue(i);
 		NormalizeConfigTime(i);
 	}
