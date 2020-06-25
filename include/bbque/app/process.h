@@ -57,7 +57,7 @@ public:
 	using ScheduleRequestPtr_t = std::shared_ptr<ScheduleRequest>;
 
 	/**
-	 * @brief Constructur
+	 * @brief Constructor
 	 * @param _pid the process id
 	 * @param _prio the priority (optional)
 	 */
