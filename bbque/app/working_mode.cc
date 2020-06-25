@@ -190,6 +190,53 @@ uint64_t WorkingMode::GetRequestedAmount(ResourcePathPtr_t resource_path) const
 	return 0;
 }
 
+bool WorkingMode::ResourceRequestsAreEqual(AwmPtr_t awm2) const
+{
+	auto const & reqs2 = awm2->GetResourceRequests();
+	logger->Debug("ResourceRequestsAreEqual: <AWM %d> has %d resource request(s)",
+		awm2->Id(), reqs2.size());
+
+	// Is the number of resource requests equal?
+	if (this->NumberOfResourceRequests() != reqs2.size()) {
+		logger->Debug("ResourceRequestsAreEqual: different sizes"
+			"( %d vs %d)",
+			this->NumberOfResourceRequests(),
+			reqs2.size());
+		return false;
+	}
+
+	logger->Debug("ResourceRequestsAreEqual: comparing the resource request(s)...");
+
+	// Compare the resource amounts
+	for (auto & reqs_entry : reqs2) {
+		auto & r_path2(reqs_entry.first);
+		auto & r_assign2(reqs_entry.second);
+		auto r_it = resources.requested.find(r_path2);
+		if (r_it == resources.requested.end()) {
+			logger->Debug("ResourceRequestsAreEqual: <%s> was not requested",
+				r_path2->ToString().c_str());
+			return false;
+		}
+
+		logger->Debug("ResourceRequestsAreEqual: <%s>:%lu - <%s>:%lu",
+			r_it->first->ToString().c_str(),
+			r_it->second->GetAmount(),
+			r_path2->ToString().c_str(),
+			r_assign2->GetAmount());
+
+		if (r_it->second->GetAmount() != r_assign2->GetAmount()) {
+			logger->Debug("ResourceRequestsAreEqual: <%s> has a different"
+				" requested amount: %lu vs %lu",
+				r_path2->ToString().c_str(),
+				r_it->second->GetAmount(),
+				r_assign2->GetAmount());
+			return false;
+		}
+	}
+
+	return true;
+}
+
 int32_t WorkingMode::BindResource(br::ResourceType r_type,
 				  BBQUE_RID_TYPE source_id,
 				  BBQUE_RID_TYPE out_id,

@@ -333,6 +333,19 @@ public:
 	uint64_t GetRequestedAmount(br::ResourcePathPtr_t resource_path) const;
 
 	/**
+	 * @brief Resource requests comparison
+	 *
+	 * @param awm2 A second AWM object to compare
+	 * @return true if they include the same resource requests
+	 */
+	bool ResourceRequestsAreEqual(AwmPtr_t awm2) const;
+
+
+	/******************************************************************************
+	 * Resource binding
+	 *******************************************************************************/
+
+	/**
 	 * @brief Bind resource assignments to system resources descriptors
 	 *
 	 * Resource paths taken from the recipes use IDs that do not care about
