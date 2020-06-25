@@ -41,10 +41,8 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque
-{
-namespace plugins
-{
+namespace bbque {
+namespace plugins {
 
 class LoggerIF;
 
@@ -53,9 +51,8 @@ class LoggerIF;
  *
  * Test scheduler policy registered as a dynamic C++ plugin.
  */
-class TestSchedPol: public SchedulerPolicyIF
+class TestSchedPol : public SchedulerPolicyIF
 {
-
 public:
 
 	// :::::::::::::::::::::: Static plugin interface :::::::::::::::::::::::::

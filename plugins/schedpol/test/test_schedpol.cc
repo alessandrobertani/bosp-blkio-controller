@@ -79,8 +79,7 @@ TestSchedPol::TestSchedPol() :
 			FI("test: Built new dynamic object [%p]\n"), (void *) this);
 }
 
-TestSchedPol::~TestSchedPol() {
- }
+TestSchedPol::~TestSchedPol() { }
 
 SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 {
@@ -285,8 +284,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	return SCHED_ERROR;
 }
 
-int32_t TestSchedPol::DoCPUBinding(
-				   bbque::app::AwmPtr_t pawm,
+int32_t TestSchedPol::DoCPUBinding(bbque::app::AwmPtr_t pawm,
 				   BBQUE_RID_TYPE cpu_id)
 {
 	// CPU-level binding: the processing elements are in the scope of the CPU 'cpu_id'
