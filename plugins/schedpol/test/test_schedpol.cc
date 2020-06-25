@@ -172,18 +172,7 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc)
 	}
 
 	// Build a new working mode featuring assigned resources
-	ba::AwmPtr_t pawm = proc->CurrentAWM();
-	if (pawm == nullptr) {
-		pawm = std::make_shared<ba::WorkingMode>(99, "Run-time", 1, proc);
-	}
-	else {
-		if (proc->State() == Schedulable::RUNNING) {
-			proc->CurrentAWM()->ClearResourceRequests();
-			logger->Debug("AssignWorkingMode: <%s> RUNNING ->"
-				"clear previous resources requests",
-				proc->StrId());
-		}
-	}
+	auto pawm = std::make_shared<ba::WorkingMode>(0, "Run-time", 1, proc);
 
 	// Resource request addition
 	pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
@@ -245,11 +234,8 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	}
 
 	// Build a new working mode featuring assigned resources
-	ba::AwmPtr_t pawm = papp->CurrentAWM();
-	if (pawm == nullptr) {
-		pawm = std::make_shared<ba::WorkingMode>(
-			papp->WorkingModes().size(), "Run - time", 1, papp);
-	}
+	auto pawm = std::make_shared<ba::WorkingMode>(
+		papp->WorkingModes().size(), "Dynamic", 1, papp);
 
 	// Resource request addition
 	std::string pe_request("sys.cpu.pe");
