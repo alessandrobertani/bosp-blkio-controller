@@ -19,7 +19,6 @@
 
 #include "bbque/app/schedulable.h"
 #include "bbque/app/working_mode.h"
-#include "bbque/resource_accounter.h"
 #include "bbque/utils/logging/logger.h"
 
 #include <boost/filesystem.hpp>
@@ -347,18 +346,6 @@ uint64_t Schedulable::ScheduleCount() const noexcept
 {
 	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
 	return schedule.count;
-}
-
-bool Schedulable::Reshuffling(AwmPtr_t const & next_awm) const
-{
-	ResourceAccounter & ra(ResourceAccounter::GetInstance());
-	std::unique_lock<std::recursive_mutex> state_ul(schedule.mtx);
-	auto pumc = schedule.awm->GetResourceBinding();
-	auto puma = next_awm->GetResourceBinding();
-	state_ul.unlock();
-	if (ra.IsReshuffling(pumc, puma))
-		return true;
-	return false;
 }
 
 

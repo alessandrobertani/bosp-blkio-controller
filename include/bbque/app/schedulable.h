@@ -372,24 +372,9 @@ public:
 	virtual bool SwitchingAWM() const noexcept;
 
 	/**
-	 * @brief Number of schedulings
+	 * @brief Number of scheduling
 	 */
 	virtual uint64_t ScheduleCount() const noexcept;
-
-	/**
-	 * @brief Check if this is a reshuffling
-	 *
-	 * Resources reshuffling happens when two resources bindings are not
-	 * the same, i.e. different kind or amount of resources, while the
-	 * application is not being reconfigured or migrated.
-	 *
-	 * This method check if the specified AWM will produce a reshuffling.
-	 *
-	 * @param next_awm the AWM to compare with current
-	 * @return true if the specified next_awm will produce a resources
-	 * reshuffling
-	 */
-	virtual bool Reshuffling(AwmPtr_t const & next_awm) const;
 
 	/** @brief Set a remote application
 	 *
