@@ -157,14 +157,9 @@ TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 		return SCHED_OK;
 	}
 
-	if (papp->Running())
-		papp->CurrentAWM()->ClearResourceRequests();
-
 	// New AWM
-	auto pawm = papp->CurrentAWM();
-	if (pawm == nullptr)
-		pawm = std::make_shared<ba::WorkingMode>(
-		papp->WorkingModes().size(), "Run-time", 1, papp);
+	auto pawm = std::make_shared<ba::WorkingMode>(
+		papp->WorkingModes().size(), "TB", 1, papp);
 
 	// Processing element quota
 	std::string resource_path_str("sys.cpu.pe");
