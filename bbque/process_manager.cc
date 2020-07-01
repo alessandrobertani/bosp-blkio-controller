@@ -257,7 +257,7 @@ ProcessManager::NotifyStart(std::string const & name,
 
 	// Trigger a re-scheduling
 	logger->Info("NotifyStart: [%s: %d] triggering the resource allocation...",
-		new_proc->StrId());
+		name.c_str(), pid);
 	ResourceManager & rm(ResourceManager::GetInstance());
 	rm.NotifyEvent(ResourceManager::BBQ_OPTS);
 }
