@@ -47,6 +47,10 @@ RecipePlatformProxy::RecipePlatformProxy()
 	logger->Debug("RecipePlatformProxy");
 
 	this->hardware_id = "recipe";
+
+#ifdef CONFIG_BBQUE_CR_FPGA
+	InitReliabilitySupport();
+#endif
 }
 
 RecipePlatformProxy::~RecipePlatformProxy() { }
