@@ -115,10 +115,6 @@ LinuxPlatformProxy * LinuxPlatformProxy::GetInstance()
 LinuxPlatformProxy::LinuxPlatformProxy() :
     controller("cpuset"),
     refreshMode(false)
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-    ,
-    proc_listener(ProcessListener::GetInstance())
-#endif
 {
 	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(LINUX_PP_NAMESPACE);
@@ -148,10 +144,6 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 	InitNetworkManagement();
-#endif
-
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	proc_listener.Start();
 #endif
 
 }

@@ -27,7 +27,6 @@
 // The _types.h file must be included after the
 // constants define
 #include "bbque/pp/linux_platform_proxy_types.h"
-#include "bbque/pp/proc_listener.h"
 
 #include <bitset>
 
@@ -100,7 +99,9 @@ public:
 #endif
 
 private:
+
 	//-------------------- CONSTS
+
 	/**
 	 * @brief Default MAX number of CPUs per socket
 	 */
@@ -112,6 +113,7 @@ private:
 	const int MaxMemsCount = BBQUE_MAX_R_ID_NUM + 1;
 
 	//-------------------- ATTRIBUTES
+
 	/**
 	 * @brief the control group controller
 	 *
@@ -136,7 +138,6 @@ private:
 	 * application to run the RTLib
 	 */
 	CGroupDataPtr_t psilos;
-
 
 #ifdef CONFIG_BBQUE_RELIABILITY
 	/**
@@ -181,9 +182,6 @@ private:
 
 	std::string memory_ids_all;
 
-#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-	ProcessListener & proc_listener;
-#endif
 
 	//-------------------- METHODS
 

@@ -51,6 +51,10 @@ namespace bbque {
 namespace pp {
 
 LocalPlatformProxy::LocalPlatformProxy()
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+    :
+    proc_listener(ProcessListener::GetInstance())
+#endif
 {
 	logger = bu::Logger::GetLogger(PLATFORM_PROXY_NAMESPACE ".local");
 	assert(logger);
@@ -91,6 +95,11 @@ LocalPlatformProxy::LocalPlatformProxy()
 	}
 	logger->Info("LocalPlatformProxy: platform id=<%s> hw=[%s]",
 		this->platform_id.c_str(), this->hardware_id.c_str());
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	proc_listener.Start();
+#endif
+
 }
 
 LocalPlatformProxy::ExitCode_t LocalPlatformProxy::Setup(SchedPtr_t papp)
@@ -303,6 +312,10 @@ void LocalPlatformProxy::Exit()
 			accl_pp->GetPlatformID());
 		accl_pp->Exit();
 	}
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	proc_listener.Terminate();
+#endif
 }
 
 bool

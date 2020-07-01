@@ -71,7 +71,6 @@ menu "Linux Resource Management"
 
   config BBQUE_LINUX_PROC_MANAGER
     bool "Linux Process Management"
-    depends on TARGET_LINUX || TARGET_ANDROID
     default n
     ---help---
     Enables BarbequeRTRM to monitor the status of other processes running

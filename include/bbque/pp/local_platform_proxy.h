@@ -20,6 +20,7 @@
 #define BBQUE_LOCAL_PLATFORM_PROXY_H_
 
 #include "bbque/platform_proxy.h"
+#include "bbque/pp/proc_listener.h"
 
 #include <cstdint>
 #include <memory>
@@ -104,6 +105,13 @@ public:
 	ReliabilityActionsIF::ExitCode_t Thaw(app::SchedPtr_t papp) override;
 
 private:
+
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+	/**
+	 * @brief Process listener for detecting the launch of generic processes
+	 */
+	ProcessListener & proc_listener;
+#endif
 
 	std::unique_ptr<bu::Logger> logger;
 
