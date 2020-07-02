@@ -200,7 +200,8 @@ RecipePlatformProxy::Dump(app::SchedPtr_t psched)
 	}
 
 	// Dump the FPGA checkpoint
-	npu_handler.set_image_path(image_dir);
+	std::string image_path(image_dir + "/dump.img");
+	npu_handler.set_image_path(image_path);
 	npu_handler.freeze("", 0);
 	npu_handler.checkpoint("", 0);
 	npu_handler.thaw("", 0);
