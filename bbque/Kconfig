@@ -32,13 +32,23 @@ menu "Linux Resource Management"
   depends on !TARGET_EMULATED_HOST
   
     config BBQUE_LINUX_CG_SYSTEMD
-      bool "Mount CGroups in systemd directory"
+      bool "Mount root hierarchy in systemd directory"
       default y
       depends on TARGET_LINUX
       depends on !TARGET_EMULATED_HOST
       ---help---
       Mount Control Groups into the /sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls
       directory.
+
+    config BBQUE_LINUX_CG_CPU_EXCLUSIVE
+      bool "CPU exclusive set"
+      default y
+      depends on TARGET_LINUX
+      depends on !TARGET_EMULATED_HOST
+      ---help---
+      CPU cores managed by BarbequeRTRM are controlled in exclusive mode.
+      Unselect this option if the system includes other CPU partitions with the
+      exclusive mode option unset and an overlapped set of cores in the partition.
     
     config BBQUE_LINUX_CG_MEMORY
       bool "Memory controller"

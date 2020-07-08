@@ -65,6 +65,12 @@ void manage_v_arg(std::string arg, plp_data_t* data) {
 	case bhash("BBQUE_PLAT_MEMS"):
 		data->system_mems = content;
 		break;
+	case bhash("BBQUE_PLAT_CPUS_EX"):
+		data->cpu_exclusive = content;
+		break;
+	case bhash("BBQUE_PLAT_MEMS_EX"):
+		data->mem_exclusive = content;
+		break;
 	case bhash("BBQUE_FEAT_CPUQ"):
 		data->cpu_controller_available = content;
 		break;

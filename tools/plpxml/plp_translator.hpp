@@ -34,6 +34,8 @@ typedef struct plp_data_s {
 	std::string cfs_cpu_period;
 	std::string system_cpuset;
 	std::string system_mems;
+	std::string cpu_exclusive;
+	std::string mem_exclusive;
 	std::string cpu_controller_available;
 	std::string memory_controller_available;
 } plp_data_t;

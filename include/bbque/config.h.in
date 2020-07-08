@@ -172,6 +172,9 @@
 /** Enable Linux Process Listener module */
 #cmakedefine CONFIG_BBQUE_LINUX_PROC_MANAGER
 
+/* Set to 1 the cpuset.cpu_exclusive attribute */
+#cmakedefine CONFIG_BBQUE_LINUX_CG_CPU_EXCLUSIVE
+
 /* Enable Linux Control Groups 'memory' controller */
 #cmakedefine CONFIG_BBQUE_LINUX_CG_MEMORY
 

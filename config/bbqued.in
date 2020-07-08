@@ -175,6 +175,16 @@ setup_cgroups() {
 	PLAT_CPUS=`cat $BBQUE_CGMOUNT/cpuset.cpus`
 	PLAT_MEMS=`cat $BBQUE_CGMOUNT/cpuset.mems`
 
+	if [ ! -z "@CONFIG_BBQUE_LINUX_CG_CPU_EXCLUSIVE@" ]; then
+		bbqued_info "CPU/Memory exclusive: YES"
+		PLAT_CPUS_EX="1"
+		PLAT_MEMS_EX="1"
+	else
+		bbqued_info "CPU/Memory exclusive: NO"
+		PLAT_CPUS_EX="0"
+		PLAT_MEMS_EX="0"
+	fi
+
 	if [ ! -f $CGSETUP -o $PILSETUP -nt $CGSETUP ]; then
 
 		[ ! -z "@CONFIG_BBQUE_PIL_LEGACY@" ] && \
@@ -187,6 +197,8 @@ setup_cgroups() {
 				-v BBQUE_GID="$SUDO_USER_GROUP" \
 				-v BBQUE_PLAT_CPUS="$PLAT_CPUS" \
 				-v BBQUE_PLAT_MEMS="$PLAT_MEMS" \
+				-v BBQUE_PLAT_CPUS_EX="$PLAT_CPUS_EX" \
+				-v BBQUE_PLAT_MEMS_EX="$PLAT_MEMS_EX" \
 				-v BBQUE_FEAT_CPUQ="$CGROUP_FEATURES_CPUQ" \
 				-v BBQUE_FEAT_MEMC="$CGROUP_FEATURES_MEMC" \
 				$PILSETUP > $CGSETUP
