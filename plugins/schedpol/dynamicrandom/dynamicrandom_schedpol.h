@@ -111,6 +111,8 @@ private:
 	/** The two parameters read from config file and used for distribution */ 
 	float parameter1, parameter2;
 
+	/** The two bounds used to generate number of resources to use */
+	int lower_bound_perc, upper_bound_perc;
 
 	/**
 	 * @brief Constructor

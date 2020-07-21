@@ -71,6 +71,8 @@ DynamicRandomSchedPol::DynamicRandomSchedPol():
 	po::options_description opts_desc("Scheduling policy parameters");
 	opts_desc.add_options()
 		("DynamicRandomParameters.distribution", po::value<int> ((int*)&distribution)->default_value(1), "distribution")
+		("DynamicRandomParameters.lowerBound", po::value<int> (&lower_bound_perc)->default_value(10), "lowerBound")
+		("DynamicRandomParameters.upperBound", po::value<int> (&upper_bound_perc)->default_value(100), "upperBound")
 		("DynamicRandomParameters.parameter1", po::value<float> (&parameter1)->default_value(-1), "parameter1")
 		("DynamicRandomParameters.parameter2", po::value<float> (&parameter2)->default_value(-1), "parameter2")
 	;
@@ -110,7 +112,7 @@ SchedulerPolicyIF::ExitCode_t DynamicRandomSchedPol::Init() {
 
 
 	// Available resources 
-	nbr_av_res = sys->ResourceAvailable("sys.cpu.pe");
+	nbr_av_res = sys->ResourceAvailable("sys.cpu.pe", sched_status_view);
 	if(nbr_av_res == 0)
 	{
 		logger->Fatal("Init: no available resources");
@@ -160,15 +162,26 @@ DynamicRandomSchedPol::Schedule(
 }
 
 
-#define LOW_BOUND_PERCENTAGE 10
-#define UPPER_BOUND_PERCENTAGE 50
 
 SchedulerPolicyIF::ExitCode_t
 DynamicRandomSchedPol::AssignWorkingModeAndBind(bbque::app::AppCPtr_t papp) {
 
 	// Define the upper bound for the application
-	uint16_t upper_bound = nbr_av_res * (float(UPPER_BOUND_PERCENTAGE)/float(100));
-	uint16_t lower_bound = nbr_av_res * (float(LOW_BOUND_PERCENTAGE)/float(100));
+	uint16_t upper_bound = nbr_av_res * (float(lower_bound_perc)/float(100));
+	uint16_t lower_bound = nbr_av_res * (float(upper_bound_perc)/float(100));
+
+	// We check if upper bound is greater than lower bound, otherwise we swap the values
+	if(upper_bound < lower_bound)
+	{
+		uint16_t tmp = lower_bound;
+		lower_bound = upper_bound;
+		upper_bound = tmp;
+	}
+
+	// We check if the defined bounds are correct
+	if(upper_bound > nbr_av_res) upper_bound = nbr_av_res;
+	if(lower_bound < 1) lower_bound = 1;
+
 
 	uint16_t selected_nb_res = GenerateRandomValue(lower_bound, upper_bound);
 
@@ -214,7 +227,7 @@ DynamicRandomSchedPol::AssignWorkingModeAndBind(bbque::app::AppCPtr_t papp) {
 		nbr_av_res -= selected_nb_res;
 	}
 
-	return SCHED_OK;	
+	return SCHED_OK;
 }
 
 
