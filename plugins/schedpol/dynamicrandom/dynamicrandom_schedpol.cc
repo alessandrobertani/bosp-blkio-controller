@@ -209,7 +209,6 @@ DynamicRandomSchedPol::AssignWorkingModeAndBind(bbque::app::AppCPtr_t papp) {
 	// We set processing elements ids to the ResourceBitset object	
 	for (auto & pe_id: pe_ids) {
 		pes.Set(pe_id);
-		resource_path = ra.GetPath(resource_path_str);
 		logger->Info("AssignWorkingModeAndBind: binding refn: %d", ref_num);
 		++pe_count;
 		if (pe_count * 100 >= selected_nb_res) break;
@@ -239,39 +238,38 @@ uint16_t DynamicRandomSchedPol::GenerateRandomValue(uint16_t lower_bound, uint16
 	std::default_random_engine generator(seed());
 	uint16_t selected_nb_res;
 
-
 	if(distribution==UNIFORM)
 	{
-
 		std::uniform_int_distribution<int> res_dist(lower_bound, upper_bound);
 		selected_nb_res = res_dist(generator);
-
 	}
 	else if(distribution==NORMAL)
 	{
+		// parameter1 corresponds to the mean rate, parameter2 to the standard deviation
+		if(parameter1<0) parameter1=lower_bound/2 + upper_bound/2;
+		if(parameter2<0) parameter2=1;
 
 		std::normal_distribution<double> res_dist(parameter1, parameter2);
 		do
 		{
 			selected_nb_res = res_dist(generator);
 		} while( selected_nb_res > upper_bound || selected_nb_res < lower_bound );
-
 	}
 	else if(distribution==POISSON)
 	{
+		// parameter1 corresponds to the mean rate
+		if(parameter1<0) parameter1=lower_bound/2 + upper_bound/2;
 	
 		std::poisson_distribution<int> res_dist( parameter1 );
 		do
 		{
 			selected_nb_res = res_dist(generator);
 		} while( selected_nb_res > upper_bound || selected_nb_res < lower_bound );
-
 	}
 	else if(distribution==BINOMIAL)
 	{
-		
-		// p has to be less than 1
-		if(parameter1>1) parameter1=0.5;
+		// parameter1 corresponds to p which is the probability of success, p has to be less than 1
+		if(parameter1>1 || parameter1<0) parameter1=0.5;
 
 		std::binomial_distribution<int> res_dist( upper_bound, parameter1 );
 		do
@@ -282,7 +280,7 @@ uint16_t DynamicRandomSchedPol::GenerateRandomValue(uint16_t lower_bound, uint16
 	}
 	else if(distribution==EXPONENTIAL)
 	{
-
+		// parameter1 corresponds to lambda
 		std::exponential_distribution<double> res_dist( parameter1 );
 		do
 		{
