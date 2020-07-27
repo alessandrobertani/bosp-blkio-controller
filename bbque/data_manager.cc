@@ -803,6 +803,7 @@ void DataManager::UpdateApplicationsData()
 		if (temp_tg == nullptr) {
 			logger->Debug("UpdateData: <%s-%s>: no task-graph",
 				temp_app.name.c_str(), app_ptr->StrId());
+			app_ptr = am.GetNext(Schedulable::RUNNING, app_it);
 			continue;
 		}
 
