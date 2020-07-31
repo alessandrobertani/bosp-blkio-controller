@@ -41,9 +41,17 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-enum Distribution { UNIFORM = 1, NORMAL = 2, POISSON = 3, BINOMIAL = 4, EXPONENTIAL = 5 };
+enum Distribution
+{
+	UNIFORM = 1,
+	NORMAL = 2,
+	POISSON = 3,
+	BINOMIAL = 4,
+	EXPONENTIAL = 5
+};
 
-namespace bbque { namespace plugins {
+namespace bbque {
+namespace plugins {
 
 class LoggerIF;
 
@@ -52,8 +60,8 @@ class LoggerIF;
  *
  * DynamicRandom scheduler policy registered as a dynamic C++ plugin.
  */
-class DynamicRandomSchedPol: public SchedulerPolicyIF {
-
+class DynamicRandomSchedPol : public SchedulerPolicyIF
+{
 public:
 
 	// :::::::::::::::::::::: Static plugin interface :::::::::::::::::::::::::
@@ -64,7 +72,7 @@ public:
 	static void * Create(PF_ObjectParams *);
 
 	/**
-	 * @brief Destroy the dynamicrandom plugin 
+	 * @brief Destroy the dynamicrandom plugin
 	 */
 	static int32_t Destroy(void *);
 
@@ -108,7 +116,7 @@ private:
 	/** The chosen distribution */
 	Distribution distribution;
 
-	/** The two parameters read from config file and used for distribution */ 
+	/** The two parameters read from config file and used for distribution */
 	float parameter1, parameter2;
 
 	/** The two bounds used to generate number of resources to use */

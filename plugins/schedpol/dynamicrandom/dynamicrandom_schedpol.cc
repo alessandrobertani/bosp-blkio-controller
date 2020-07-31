@@ -34,15 +34,18 @@
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
 
-namespace bbque { namespace plugins {
+namespace bbque {
+namespace plugins {
 
 // :::::::::::::::::::::: Static plugin interface ::::::::::::::::::::::::::::
 
-void * DynamicRandomSchedPol::Create(PF_ObjectParams *) {
+void * DynamicRandomSchedPol::Create(PF_ObjectParams *)
+{
 	return new DynamicRandomSchedPol();
 }
 
-int32_t DynamicRandomSchedPol::Destroy(void * plugin) {
+int32_t DynamicRandomSchedPol::Destroy(void * plugin)
+{
 	if (!plugin)
 		return -1;
 	delete (DynamicRandomSchedPol *)plugin;
@@ -51,13 +54,15 @@ int32_t DynamicRandomSchedPol::Destroy(void * plugin) {
 
 // ::::::::::::::::::::: Scheduler policy module interface :::::::::::::::::::
 
-char const * DynamicRandomSchedPol::Name() {
+char const * DynamicRandomSchedPol::Name()
+{
 	return SCHEDULER_POLICY_NAME;
 }
 
-DynamicRandomSchedPol::DynamicRandomSchedPol():
-		cm(ConfigurationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance()) {
+DynamicRandomSchedPol::DynamicRandomSchedPol() :
+    cm(ConfigurationManager::GetInstance()),
+    ra(ResourceAccounter::GetInstance())
+{
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
 	if (logger)
@@ -81,13 +86,10 @@ DynamicRandomSchedPol::DynamicRandomSchedPol():
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
 }
 
+DynamicRandomSchedPol::~DynamicRandomSchedPol() { }
 
-DynamicRandomSchedPol::~DynamicRandomSchedPol() {
-
-}
-
-
-SchedulerPolicyIF::ExitCode_t DynamicRandomSchedPol::Init() {
+SchedulerPolicyIF::ExitCode_t DynamicRandomSchedPol::Init()
+{
 	// Build a string path for the resource state view
 	std::string token_path(MODULE_NAMESPACE);
 	++status_view_count;
@@ -110,28 +112,23 @@ SchedulerPolicyIF::ExitCode_t DynamicRandomSchedPol::Init() {
 	pe_ids = r_pe_ids_entry->second;
 	logger->Debug("Init: %d processing elements available", pe_ids.size());
 
-
-	// Available resources 
+	// Available CPU resources
 	nbr_av_res = sys->ResourceAvailable("sys.cpu.pe", sched_status_view);
-	if(nbr_av_res == 0)
-	{
+	if (nbr_av_res == 0) {
 		logger->Fatal("Init: no available resources");
 		return SCHED_ERROR;
 	}
 
-	nbr_app = sys->ApplicationsCount(bbque::app::ApplicationStatusIF::State_t::RUNNING) 
-			+ sys->ApplicationsCount(bbque::app::ApplicationStatusIF::State_t::READY);
-
-
+	nbr_app = sys->ApplicationsCount(bbque::app::ApplicationStatusIF::State_t::RUNNING)
+		+ sys->ApplicationsCount(bbque::app::ApplicationStatusIF::State_t::READY);
 
 	return SCHED_OK;
 }
 
-
 SchedulerPolicyIF::ExitCode_t
-DynamicRandomSchedPol::Schedule(
-		System & system,
-		RViewToken_t & status_view) {
+DynamicRandomSchedPol::Schedule(System & system,
+				RViewToken_t & status_view)
+{
 	SchedulerPolicyIF::ExitCode_t result = SCHED_DONE;
 
 	// Class providing query functions for applications and resources
@@ -140,7 +137,6 @@ DynamicRandomSchedPol::Schedule(
 
 	bbque::app::AppCPtr_t papp;
 	AppsUidMapIt app_it;
-
 
 	// Ready applications
 	papp = sys->GetFirstReady(app_it);
@@ -161,142 +157,156 @@ DynamicRandomSchedPol::Schedule(
 	return result;
 }
 
-
-
 SchedulerPolicyIF::ExitCode_t
-DynamicRandomSchedPol::AssignWorkingModeAndBind(bbque::app::AppCPtr_t papp) {
-
+DynamicRandomSchedPol::AssignWorkingModeAndBind(bbque::app::AppCPtr_t papp)
+{
 	// Define the upper bound for the application
-	uint16_t upper_bound = nbr_av_res * (float(lower_bound_perc)/float(100));
-	uint16_t lower_bound = nbr_av_res * (float(upper_bound_perc)/float(100));
+	uint16_t upper_bound = nbr_av_res * (float(lower_bound_perc) / float(100));
+	uint16_t lower_bound = nbr_av_res * (float(upper_bound_perc) / float(100));
 
 	// We check if upper bound is greater than lower bound, otherwise we swap the values
-	if(upper_bound < lower_bound)
-	{
+	if (upper_bound < lower_bound) {
 		uint16_t tmp = lower_bound;
 		lower_bound = upper_bound;
 		upper_bound = tmp;
 	}
 
 	// We check if the defined bounds are correct
-	if(upper_bound > nbr_av_res) upper_bound = nbr_av_res;
-	if(lower_bound < 1) lower_bound = 1;
+	if (upper_bound > nbr_av_res) upper_bound = nbr_av_res;
+	if (lower_bound < 1) lower_bound = 1;
 
-
-	uint16_t selected_nb_res = GenerateRandomValue(lower_bound, upper_bound);
-
+	// Generate a random amount of CPU resource
+	uint16_t next_cpu_quota = GenerateRandomValue(lower_bound, upper_bound);
 
 	// Build a new working mode featuring assigned resources
 	ba::AwmPtr_t pawm = papp->CurrentAWM();
 	if (pawm == nullptr) {
 		pawm = std::make_shared<ba::WorkingMode>(
-				papp->WorkingModes().size(),"Run-time", 1, papp);
+			papp->WorkingModes().size(), "Run-time", 1, papp);
 	}
 
 	// Define the resource path
-	std::string resource_path_str("sys0.cpu.pe");
-	auto resource_path = ra.GetPath(resource_path_str);
+	std::string resource_path_str("sys.cpu.pe");
 
 	// Resource request addition
-	pawm->AddResourceRequest(resource_path_str, selected_nb_res, br::ResourceAssignment::Policy::BALANCED);
-	int32_t ref_num = -1;
-	
+	pawm->AddResourceRequest(resource_path_str, next_cpu_quota, br::ResourceAssignment::Policy::BALANCED);
 
-	// The ResourceBitset object is used for the processing elements binding	
+	// The ResourceBitset object is used for the processing elements binding
 	br::ResourceBitset pes;
 	uint16_t pe_count = 0;
 
-	// We set processing elements ids to the ResourceBitset object	
-	for (auto & pe_id: pe_ids) {
+	// We set processing elements ids to the ResourceBitset object
+	for (auto & pe_id : pe_ids) {
 		pes.Set(pe_id);
-		logger->Info("AssignWorkingModeAndBind: binding refn: %d", ref_num);
+		logger->Debug("AssignWorkingModeAndBind: processing_element: %d", pe_id);
 		++pe_count;
-		if (pe_count * 100 >= selected_nb_res) break;
+		if (pe_count * 100 >= next_cpu_quota) break;
 	}
+
+	logger->Debug("AssignWorkingModeAndBind: processing elements set: %s",
+		pes.ToString().c_str());
+
+	auto resource_path = ra.GetPath(resource_path_str);
+	int32_t ref_num = -1;
 	ref_num = pawm->BindResource(resource_path, pes, ref_num);
+	logger->Info("AssignWorkingModeAndBind: reference number: %d", ref_num);
 
-
-	auto ret = papp->ScheduleRequest(pawm, sched_status_view, ref_num);
-	if (ret != ba::ApplicationStatusIF::APP_SUCCESS) {
-		logger->Error("AssignWorkingModeAndBind: schedule request failed for [%d]", papp->StrId());
+	// Schedule request validation
+	ApplicationManager & am(ApplicationManager::GetInstance());
+	auto am_ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
+	if (am_ret != ApplicationManager::AM_SUCCESS) {
+		logger->Error("AssignWorkingModeAndBind: schedule request failed for [%d]",
+			papp->StrId());
 		return SCHED_ERROR;
 	}
-	else
-	{
-		nbr_av_res -= selected_nb_res;
+	else {
+		nbr_av_res -= next_cpu_quota;
 	}
 
 	return SCHED_OK;
 }
-
-
 
 uint16_t DynamicRandomSchedPol::GenerateRandomValue(uint16_t lower_bound, uint16_t upper_bound)
 {
 	// Generate the random value
 	std::random_device seed;
 	std::default_random_engine generator(seed());
-	uint16_t selected_nb_res;
+	uint16_t next_cpu_quota;
 
-	if(distribution==UNIFORM)
-	{
-		std::uniform_int_distribution<int> res_dist(lower_bound, upper_bound);
-		selected_nb_res = res_dist(generator);
-	}
-	else if(distribution==NORMAL)
-	{
-		// parameter1 corresponds to the mean rate, parameter2 to the standard deviation
-		if(parameter1<0) parameter1=lower_bound/2 + upper_bound/2;
-		if(parameter2<0) parameter2=1;
+	switch (distribution) {
 
-		std::normal_distribution<double> res_dist(parameter1, parameter2);
-		do
-		{
-			selected_nb_res = res_dist(generator);
-		} while( selected_nb_res > upper_bound || selected_nb_res < lower_bound );
-	}
-	else if(distribution==POISSON)
+	case Distribution::UNIFORM:
 	{
-		// parameter1 corresponds to the mean rate
-		if(parameter1<0) parameter1=lower_bound/2 + upper_bound/2;
-	
-		std::poisson_distribution<int> res_dist( parameter1 );
-		do
-		{
-			selected_nb_res = res_dist(generator);
-		} while( selected_nb_res > upper_bound || selected_nb_res < lower_bound );
+		logger->Debug("GenerateRandomValue: UNIFORM distribution");
+		std::uniform_int_distribution<int> uni_dist(lower_bound, upper_bound);
+		next_cpu_quota = uni_dist(generator);
+		break;
 	}
-	else if(distribution==BINOMIAL)
+	case Distribution::NORMAL:
 	{
-		// parameter1 corresponds to p which is the probability of success, p has to be less than 1
-		if(parameter1>1 || parameter1<0) parameter1=0.5;
-
-		std::binomial_distribution<int> res_dist( upper_bound, parameter1 );
-		do
-		{
-			selected_nb_res = res_dist(generator);
-		} while( selected_nb_res > upper_bound || selected_nb_res < lower_bound );
-
+		logger->Debug("GenerateRandomValue: NORMAL distribution");
+		// Mean rate
+		if (parameter1 < 0)
+			parameter1 = lower_bound / 2 + upper_bound / 2;
+		// Standard deviation
+		if (parameter2 < 0)
+			parameter2 = 1;
+		std::normal_distribution<double> norm_dist(parameter1, parameter2);
+		do {
+			next_cpu_quota = norm_dist(generator);
+		}
+		while (next_cpu_quota > upper_bound || next_cpu_quota < lower_bound);
+		break;
 	}
-	else if(distribution==EXPONENTIAL)
+	case Distribution::POISSON:
 	{
-		// parameter1 corresponds to lambda
-		std::exponential_distribution<double> res_dist( parameter1 );
-		do
-		{
-			selected_nb_res = res_dist(generator);
-		} while( selected_nb_res > upper_bound || selected_nb_res < lower_bound );
-	
+		logger->Debug("GenerateRandomValue: POISSON distribution");
+		// Mean rate
+		if (parameter1 < 0)
+			parameter1 = lower_bound / 2 + upper_bound / 2;
+
+		std::poisson_distribution<int> pois_dist( parameter1 );
+		do {
+			next_cpu_quota = pois_dist(generator);
+		}
+		while (next_cpu_quota > upper_bound || next_cpu_quota < lower_bound);
+		break;
 	}
-	else
+	case Distribution::BINOMIAL:
 	{
-		selected_nb_res = lower_bound/2 + upper_bound/2;
+		logger->Debug("GenerateRandomValue: BINOMIAL distribution");
+		// Probability of success (must: p < 1)
+		if (parameter1 > 1 || parameter1 < 0)
+			parameter1 = 0.5;
+
+		std::binomial_distribution<int> bin_dist(upper_bound, parameter1);
+		do {
+			next_cpu_quota = bin_dist(generator);
+		}
+		while (next_cpu_quota > upper_bound || next_cpu_quota < lower_bound);
+		break;
+	}
+	case Distribution::EXPONENTIAL:
+	{
+		logger->Debug("GenerateRandomValue: EXPONENTIAL distribution");
+		// Lambda
+		std::exponential_distribution<double> exp_dist(parameter1);
+		do {
+			next_cpu_quota = exp_dist(generator);
+		}
+		while (next_cpu_quota > upper_bound || next_cpu_quota < lower_bound);
+		break;
+	}
+	default:
+		logger->Warn("GenerateRandomValue: invalid distribution value (%d)",
+			distribution);
+		next_cpu_quota = lower_bound / 2 + upper_bound / 2;
 	}
 
-	logger->Info("GenerateRandomValue: random value in interval [%d - %d] generated : %d", lower_bound, upper_bound, selected_nb_res);
+	logger->Debug("GenerateRandomValue: random value in interval [%d - %d] generated : %d",
+		lower_bound, upper_bound, next_cpu_quota);
 
-	return selected_nb_res;
-	
+	return next_cpu_quota;
 }
 
 

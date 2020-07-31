@@ -1,5 +1,5 @@
 config BBQUE_SCHEDPOL_DYNAMICRANDOM
-  bool "DynamicRandom"
+  bool "DynamicRandom (CPU)"
   default n
   depends on TARGET_NO_ACCELERATION
   ---help---
