@@ -116,8 +116,8 @@ private:
 	/** The chosen distribution */
 	Distribution distribution;
 
-	/** The two parameters read from config file and used for distribution */
-	float parameter1, parameter2;
+	/** The two parameters read from configuration file and used for distribution */
+	float param1, param2;
 
 	/** The two bounds used to generate number of resources to use */
 	int lower_bound_perc, upper_bound_perc;

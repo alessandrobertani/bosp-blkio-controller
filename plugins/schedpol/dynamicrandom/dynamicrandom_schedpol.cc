@@ -76,10 +76,10 @@ DynamicRandomSchedPol::DynamicRandomSchedPol() :
 	po::options_description opts_desc("Scheduling policy parameters");
 	opts_desc.add_options()
 		("DynamicRandomSchedPol.distribution", po::value<int> ((int*)&distribution)->default_value(1), "distribution")
-		("DynamicRandomSchedPol.lowerBound", po::value<int> (&lower_bound_perc)->default_value(10), "lowerBound")
-		("DynamicRandomSchedPol.upperBound", po::value<int> (&upper_bound_perc)->default_value(100), "upperBound")
-		("DynamicRandomSchedPol.parameter1", po::value<float> (&parameter1)->default_value(-1), "parameter1")
-		("DynamicRandomSchedPol.parameter2", po::value<float> (&parameter2)->default_value(-1), "parameter2")
+		("DynamicRandomSchedPol.perc_lb", po::value<int> (&lower_bound_perc)->default_value(10), "lowerBound")
+		("DynamicRandomSchedPol.perc_ub", po::value<int> (&upper_bound_perc)->default_value(100), "upperBound")
+		("DynamicRandomSchedPol.param1", po::value<float> (&param1)->default_value(-1), "parameter1")
+		("DynamicRandomSchedPol.param2", po::value<float> (&param2)->default_value(-1), "parameter2")
 		;
 
 	po::variables_map opts_vm;
@@ -209,7 +209,7 @@ DynamicRandomSchedPol::AssignWorkingModeAndBind(bbque::app::AppCPtr_t papp)
 	auto resource_path = ra.GetPath(resource_path_str);
 	int32_t ref_num = -1;
 	ref_num = pawm->BindResource(resource_path, pes, ref_num);
-	logger->Info("AssignWorkingModeAndBind: reference number: %d", ref_num);
+	logger->Debug("AssignWorkingModeAndBind: reference number: %d", ref_num);
 
 	// Schedule request validation
 	ApplicationManager & am(ApplicationManager::GetInstance());
@@ -246,12 +246,12 @@ uint16_t DynamicRandomSchedPol::GenerateRandomValue(uint16_t lower_bound, uint16
 	{
 		logger->Debug("GenerateRandomValue: NORMAL distribution");
 		// Mean rate
-		if (parameter1 < 0)
-			parameter1 = lower_bound / 2 + upper_bound / 2;
+		if (param1 < 0)
+			param1 = lower_bound / 2 + upper_bound / 2;
 		// Standard deviation
-		if (parameter2 < 0)
-			parameter2 = 1;
-		std::normal_distribution<double> norm_dist(parameter1, parameter2);
+		if (param2 < 0)
+			param2 = 1;
+		std::normal_distribution<double> norm_dist(param1, param2);
 		do {
 			next_cpu_quota = norm_dist(generator);
 		}
@@ -262,10 +262,10 @@ uint16_t DynamicRandomSchedPol::GenerateRandomValue(uint16_t lower_bound, uint16
 	{
 		logger->Debug("GenerateRandomValue: POISSON distribution");
 		// Mean rate
-		if (parameter1 < 0)
-			parameter1 = lower_bound / 2 + upper_bound / 2;
+		if (param1 < 0)
+			param1 = lower_bound / 2 + upper_bound / 2;
 
-		std::poisson_distribution<int> pois_dist( parameter1 );
+		std::poisson_distribution<int> pois_dist( param1 );
 		do {
 			next_cpu_quota = pois_dist(generator);
 		}
@@ -276,10 +276,10 @@ uint16_t DynamicRandomSchedPol::GenerateRandomValue(uint16_t lower_bound, uint16
 	{
 		logger->Debug("GenerateRandomValue: BINOMIAL distribution");
 		// Probability of success (must: p < 1)
-		if (parameter1 > 1 || parameter1 < 0)
-			parameter1 = 0.5;
+		if (param1 > 1 || param1 < 0)
+			param1 = 0.5;
 
-		std::binomial_distribution<int> bin_dist(upper_bound, parameter1);
+		std::binomial_distribution<int> bin_dist(upper_bound, param1);
 		do {
 			next_cpu_quota = bin_dist(generator);
 		}
@@ -290,7 +290,7 @@ uint16_t DynamicRandomSchedPol::GenerateRandomValue(uint16_t lower_bound, uint16
 	{
 		logger->Debug("GenerateRandomValue: EXPONENTIAL distribution");
 		// Lambda
-		std::exponential_distribution<double> exp_dist(parameter1);
+		std::exponential_distribution<double> exp_dist(param1);
 		do {
 			next_cpu_quota = exp_dist(generator);
 		}

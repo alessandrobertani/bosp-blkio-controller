@@ -96,16 +96,18 @@ client_attempts = 3
 # { 1 : uniform, 2 : normal, 3 : poisson, 4 : binomial, 5 : exponential }
 distribution = 2
 # Each distribution has its set of parameters and described as:
-# distribution(parameter1,parameter2) or distribution(parameter1)
-#
-# uniform(), binomial(probability_of_success), exponential(lambda), 
-# poisson(mean), normal(mean, standard_deviation)
-parameter1 = 110
-parameter2 = 10
+# distribution(param1,param2) or distribution(param1)
+# - uniform()
+# - binomial(probability_of_success)
+# - exponential(lambda)
+# - poisson(mean)
+# - normal(mean, standard_deviation)
+param1 = 110
+param2 = 10
 # Define the boundaries used for generate randomly the number of resources
-# in percentage
-lowerBound = 10
-upperBound = 50
+# (percentage values)
+perc_lb = 5
+perc_ub = 100
 
 [BindingManager]
 domains = cpu,gpu,acc,grp.gpu,grp.acc,sys
