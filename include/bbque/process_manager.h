@@ -179,6 +179,15 @@ public:
 	ProcPtr_t GetNext(app::Schedulable::State_t state, ProcessMapIterator & it);
 
 	/**
+	 * @brief The number of managed processes
+	 * @return An integer value
+	 */
+	uint32_t ProcessesCount()
+	{
+		return all_procs.size();
+	}
+
+	/**
 	 * @brief The number of processes in a given state queue
 	 * @param state the process state
 	 * @return An integer value
@@ -211,9 +220,10 @@ public:
 	 * not be scheduled. If the application is currently disabled this call
 	 * returns always AM_APP_DISABLED.
 	 */
-	ExitCode_t ScheduleRequest(
-				ProcPtr_t proc, app::AwmPtr_t awm,
-				br::RViewToken_t status_view, size_t b_refn);
+	ExitCode_t ScheduleRequest(ProcPtr_t proc,
+				app::AwmPtr_t awm,
+				br::RViewToken_t status_view,
+				size_t b_refn);
 
 	/**
 	 * @brief Re-schedule this application according to previous scheduling
@@ -228,8 +238,8 @@ public:
 	 * no longer
 	 * available.
 	 */
-	ExitCode_t ScheduleRequestAsPrev(
-					ProcPtr_t proc, br::RViewToken_t status_view)
+	ExitCode_t ScheduleRequestAsPrev(ProcPtr_t proc,
+					br::RViewToken_t status_view)
 	{
 		return ScheduleRequest(proc, proc->CurrentAWM(), status_view, 0);
 	}
