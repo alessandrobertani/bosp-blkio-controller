@@ -1,6 +1,7 @@
 config BBQUE_SCHEDPOL_ADAPTIVECPU
   bool "AdaptiveCPU"
   default n
+  depends on TARGET_NO_ACCELERATION
   ---help---
   The core of the policy is a configurable PID controller, assigning
   CPU quota to active applications on the basis of the amount actually

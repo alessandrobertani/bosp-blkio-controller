@@ -1,6 +1,7 @@
 config BBQUE_SCHEDPOL_DYNAMICRANDOM
   bool "DynamicRandom"
   default n
+  depends on TARGET_NO_ACCELERATION
   ---help---
   This policy allocates resources dynamically and randomly according to a 
   chosen distribution and to the available resources among applications. 

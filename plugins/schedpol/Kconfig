@@ -73,12 +73,10 @@ choice
     bool "Cloves"
 
   config BBQUE_SCHEDPOL_DEFAULT_MANGA
-    depends on TARGET_LINUX_MANGO
     depends on BBQUE_SCHEDPOL_MANGA
     bool "ManGA"
 
   config BBQUE_SCHEDPOL_DEFAULT_MANGAV2
-    depends on TARGET_LINUX_MANGO
     depends on BBQUE_SCHEDPOL_MANGAV2
     bool "ManGAv2"
 

@@ -1,6 +1,6 @@
 config BBQUE_SCHEDPOL_CONTREX
   depends on !TARGET_EMULATED_HOST
-  depends on !TARGET_LINUX_MANGO
+  depends on TARGET_NO_ACCELERATION
   bool "Contrex"
   default n
   ---help---
