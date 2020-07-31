@@ -34,10 +34,8 @@
 namespace ba = bbque::app;
 namespace br = bbque::res;
 
-namespace bbque
-{
-namespace plugins
-{
+namespace bbque {
+namespace plugins {
 
 /**
  * @class SchedulerPolicyIF
@@ -51,24 +49,24 @@ namespace plugins
  */
 class SchedulerPolicyIF
 {
-
 public:
 
 	/**
 	 * @brief Scheduling result
 	 */
-	typedef enum ExitCode {
-		SCHED_DONE = 0,        /** Scheduling regular termination */
-		SCHED_OK,              /** Successful return */
-		SCHED_R_NOT_FOUND,     /** Looking for not existing resource */
-		SCHED_R_UNAVAILABLE,   /** Not enough available resources */
-		SCHED_SKIP_APP,        /** Skip the applicaton (disabled or already running) */
-		SCHED_OPT_OVER,        /** No more static options to explore */
-		SCHED_ERROR_QUEUE,     /** Error while using queue data structures to order objects */
-		SCHED_ERROR_INIT,      /** Error during initialization */
-		SCHED_ERROR_VIEW,      /** Error in using the resource state view */
+	typedef enum ExitCode
+	{
+		SCHED_DONE = 0, /** Scheduling regular termination */
+		SCHED_OK, /** Successful return */
+		SCHED_R_NOT_FOUND, /** Looking for not existing resource */
+		SCHED_R_UNAVAILABLE, /** Not enough available resources */
+		SCHED_SKIP_APP, /** Skip the application (disabled or already running) */
+		SCHED_OPT_OVER, /** No more static options to explore */
+		SCHED_ERROR_QUEUE, /** Error while using queue data structures to order objects */
+		SCHED_ERROR_INIT, /** Error during initialization */
+		SCHED_ERROR_VIEW, /** Error in using the resource state view */
 		SCHED_ERROR_INCOMPLETE_ASSIGNMENT,
-		SCHED_ERROR            /** Unexpected error */
+		SCHED_ERROR /** Unexpected error */
 	} ExitCode_t;
 
 	/**
@@ -77,7 +75,8 @@ public:
 	 * A scheduling entity is characterized by the Application/EXC to schedule, a
 	 * Working Mode, and a Cluster ID referencing the resource binding
 	 */
-	struct EvalEntity_t {
+	struct EvalEntity_t
+	{
 
 		/**
 		 * @brief Constructor
@@ -86,10 +85,10 @@ public:
 		 * @param _pawm AWM to evaluate
 		 * @param _bid Cluster ID for resource binding
 		 */
-		EvalEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, BBQUE_RID_TYPE _bid):
-			papp(_papp),
-			pawm(_pawm),
-			bind_id(_bid)
+		EvalEntity_t(ba::AppCPtr_t _papp, ba::AwmPtr_t _pawm, BBQUE_RID_TYPE _bid) :
+		    papp(_papp),
+		    pawm(_pawm),
+		    bind_id(_bid)
 		{
 			_BuildStr();
 		};
@@ -128,12 +127,12 @@ public:
 
 			if ((bind_id != R_ID_NONE) && (bind_id != R_ID_ANY))
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B:%s%d}",
-				         papp->StrId(), awm_id,
-				         br::GetResourceTypeString(bind_type),
-				         bind_id);
+					papp->StrId(), awm_id,
+					br::GetResourceTypeString(bind_type),
+					bind_id);
 			else
 				snprintf(str_id, 40, "[%s] {AWM:%2d, B: -}",
-				         papp->StrId(), awm_id);
+					papp->StrId(), awm_id);
 		}
 
 		/** Set the working mode */
@@ -159,7 +158,7 @@ public:
 		bool IsMigrating(br::ResourceType r_type) const
 		{
 			return (papp->CurrentAWM() &&
-			        !(papp->CurrentAWM()->BindingSet(r_type).Test(bind_id)));
+				!(papp->CurrentAWM()->BindingSet(r_type).Test(bind_id)));
 		}
 
 		/**
@@ -170,7 +169,7 @@ public:
 		bool IsReconfiguring() const
 		{
 			return (!papp->CurrentAWM() ||
-			        papp->CurrentAWM()->Id() != pawm->Id());
+				papp->CurrentAWM()->Id() != pawm->Id());
 		}
 	};
 
@@ -181,7 +180,8 @@ public:
 	 * a scheduling for an application into a specific AWM, with the resource set
 	 * bound into a chosen cluster
 	 */
-	struct SchedEntity_t: public EvalEntity_t {
+	struct SchedEntity_t : public EvalEntity_t
+	{
 
 		/**
 		 * @brief Constructor
@@ -193,13 +193,11 @@ public:
 		 * value")
 		 */
 		SchedEntity_t(ba::AppCPtr_t _papp,
-		              ba::AwmPtr_t _pawm,
-		              BBQUE_RID_TYPE _bid,
-		              float _metr):
-			EvalEntity_t(_papp, _pawm, _bid),
-			metrics(_metr)
-		{
-		};
+			ba::AwmPtr_t _pawm,
+			BBQUE_RID_TYPE _bid,
+			float _metr) :
+		    EvalEntity_t(_papp, _pawm, _bid),
+		    metrics(_metr) { };
 
 		/** Metrics computed */
 		float metrics;
@@ -227,11 +225,10 @@ public:
 	/** List of scheduling entities */
 	typedef std::list<SchedEntityPtr_t> SchedEntityList_t;
 
-
 	/**
 	 * @brief Default destructor
 	 */
-	virtual ~SchedulerPolicyIF() {};
+	virtual ~SchedulerPolicyIF() { };
 
 	/**
 	 * @brief Return the name of the optimization policy
@@ -240,15 +237,15 @@ public:
 	virtual char const * Name() = 0;
 
 	/**
-	 * @brief Schedule a new set of applciation on available resources.
+	 * @brief Schedule a new set of application on available resources.
 	 *
 	 * @param system a reference to the system interfaces for retrieving
 	 * information related to both resources and applications.
 	 * @param rvt a token representing the view on resource allocation, if
-	 * the scheduling has been successfull.
+	 * the scheduling has been successful.
 	 */
 	virtual ExitCode_t Schedule(bbque::System & system,
-	                            bbque::res::RViewToken_t &rvt) = 0;
+				bbque::res::RViewToken_t &rvt) = 0;
 
 
 protected:
@@ -271,7 +268,6 @@ protected:
 
 	/** An High-Resolution timer */
 	Timer timer;
-
 
 	/**
 	 * @brief General scheduling policy initialization code
@@ -319,7 +315,10 @@ protected:
 		uint32_t slots = 0;
 		for (AppPrio_t prio = 0; prio <= sys->ApplicationLowestPriority(); prio++)
 			slots += (sys->ApplicationLowestPriority() + 1 - prio) *
-			         sys->ApplicationsCount(prio);
+			sys->ApplicationsCount(prio);
+		return slots;
+	}
+
 	/**
 	 * @brief The same as GetSlots() but considering all the types of schedulable
 	 * entities (adaptive applications, processes, ...)
@@ -339,7 +338,7 @@ protected:
 	 * (READY, THAWED, RUNNING)
 	 */
 	ExitCode_t ForEachApplicationToScheduleDo(
-	        std::function <ExitCode_t(bbque::app::AppCPtr_t) > do_func)
+						std::function <ExitCode_t(bbque::app::AppCPtr_t) > do_func)
 	{
 
 		AppsUidMapIt app_it;
@@ -374,7 +373,7 @@ protected:
 	 * (READY, THAWED, RUNNING)
 	 */
 	ExitCode_t ForEachProcessToScheduleDo(
-	        std::function <ExitCode_t(ProcPtr_t) > do_func)
+					std::function <ExitCode_t(ProcPtr_t) > do_func)
 	{
 
 		ProcessManager & prm(ProcessManager::GetInstance());
