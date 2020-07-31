@@ -29,6 +29,12 @@
 [SchedulerManager]
 #policy = test
 
+[AdaptiveCPUSchedPol]
+#neg_delta = -5
+#kp = 0.6
+#ki = 0.3
+#kd = 0.1
+
 [BindingManager]
 domains = cpu,gpu,acc,grp.gpu,grp.acc,sys
 

@@ -1,3 +1,4 @@
+add_subdirectory(adaptive_cpu)
 
 add_subdirectory(random)
 #add_subdirectory(yamca)

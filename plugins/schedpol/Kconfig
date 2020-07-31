@@ -39,6 +39,11 @@ endmenu #Advanced Options
 
 choice
   prompt "Default scheduling policy"
+
+  config BBQUE_SCHEDPOL_DEFAULT_ADAPTIVECPU
+    bool "Test"
+    depends on BBQUE_SCHEDPOL_ADAPTIVECPU
+
   config BBQUE_SCHEDPOL_DEFAULT_TEST
     bool "Test"
     depends on BBQUE_SCHEDPOL_TEST
@@ -83,6 +88,7 @@ choice
 
 endchoice
 
+source barbeque/plugins/schedpol/adaptive_cpu/Kconfig
 source barbeque/plugins/schedpol/random/Kconfig
 source barbeque/plugins/schedpol/test/Kconfig
 source barbeque/plugins/schedpol/tempura/Kconfig

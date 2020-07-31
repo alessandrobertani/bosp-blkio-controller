@@ -1,0 +1,8 @@
+config BBQUE_SCHEDPOL_ADAPTIVECPU
+  bool "AdaptiveCPU"
+  default n
+  ---help---
+  The core of the policy is a configurable PID controller, assigning
+  CPU quota to active applications on the basis of the amount actually
+  used by the application. Suitable for periodic or performance goal
+  driven executions.
