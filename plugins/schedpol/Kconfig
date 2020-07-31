@@ -41,28 +41,8 @@ choice
   prompt "Default scheduling policy"
 
   config BBQUE_SCHEDPOL_DEFAULT_ADAPTIVECPU
-    bool "Test"
+    bool "Adaptive CPU"
     depends on BBQUE_SCHEDPOL_ADAPTIVECPU
-
-  config BBQUE_SCHEDPOL_DEFAULT_TEST
-    bool "Test"
-    depends on BBQUE_SCHEDPOL_TEST
-
-  config BBQUE_SCHEDPOL_DEFAULT_RANDOM
-    depends on BBQUE_SCHEDPOL_RANDOM
-    bool "Random"
-
-  config BBQUE_SCHEDPOL_DEFAULT_TEMPURA
-    depends on BBQUE_SCHEDPOL_TEMPURA
-    bool "Tempura"
-
-  config BBQUE_SCHEDPOL_DEFAULT_TEMPBALANCE
-    depends on BBQUE_SCHEDPOL_TEMPBALANCE
-    bool "TempBalance"
-
-  config BBQUE_SCHEDPOL_DEFAULT_PERDETEMP
-    depends on BBQUE_SCHEDPOL_PERDETEMP
-    bool "Perdetemp"
 
   config BBQUE_SCHEDPOL_DEFAULT_CONTREX
     depends on BBQUE_SCHEDPOL_CONTREX
@@ -72,6 +52,10 @@ choice
     depends on BBQUE_SCHEDPOL_CLOVES
     bool "Cloves"
 
+  config BBQUE_SCHEDPOL_DEFAULT_DYNAMICRANDOM
+    bool "Dynamic Random (CPU)"
+    depends on BBQUE_SCHEDPOL_DYNAMICRANDOM
+
   config BBQUE_SCHEDPOL_DEFAULT_MANGA
     depends on BBQUE_SCHEDPOL_MANGA
     bool "ManGA"
@@ -80,6 +64,26 @@ choice
     depends on BBQUE_SCHEDPOL_MANGAV2
     bool "ManGAv2"
 
+  config BBQUE_SCHEDPOL_DEFAULT_PERDETEMP
+    depends on BBQUE_SCHEDPOL_PERDETEMP
+    bool "Perdetemp"
+
+  config BBQUE_SCHEDPOL_DEFAULT_RANDOM
+    depends on BBQUE_SCHEDPOL_RANDOM
+    bool "Random (AWM)"
+
+  config BBQUE_SCHEDPOL_DEFAULT_TEMPBALANCE
+    depends on BBQUE_SCHEDPOL_TEMPBALANCE
+    bool "TempBalance"
+
+  config BBQUE_SCHEDPOL_DEFAULT_TEMPURA
+    depends on BBQUE_SCHEDPOL_TEMPURA
+    bool "Tempura"
+
+  config BBQUE_SCHEDPOL_DEFAULT_TEST
+    bool "Test"
+    depends on BBQUE_SCHEDPOL_TEST
+
   config BBQUE_SCHEDPOL_DEFAULT_THROTTLE
     depends on BBQUE_SCHEDPOL_THROTTLE
     bool "Throttle"
@@ -87,13 +91,14 @@ choice
 endchoice
 
 source barbeque/plugins/schedpol/adaptive_cpu/Kconfig
-source barbeque/plugins/schedpol/random/Kconfig
-source barbeque/plugins/schedpol/test/Kconfig
-source barbeque/plugins/schedpol/tempura/Kconfig
-source barbeque/plugins/schedpol/tempbalance/Kconfig
-source barbeque/plugins/schedpol/perdetemp/Kconfig
 source barbeque/plugins/schedpol/contrex/Kconfig
 source barbeque/plugins/schedpol/cloves/Kconfig
+source barbeque/plugins/schedpol/dynamicrandom/Kconfig
 source barbeque/plugins/schedpol/manga/Kconfig
 source barbeque/plugins/schedpol/mangav2/Kconfig
+source barbeque/plugins/schedpol/perdetemp/Kconfig
+source barbeque/plugins/schedpol/random/Kconfig
+source barbeque/plugins/schedpol/tempura/Kconfig
+source barbeque/plugins/schedpol/tempbalance/Kconfig
+source barbeque/plugins/schedpol/test/Kconfig
 source barbeque/plugins/schedpol/throttle/Kconfig
