@@ -320,6 +320,17 @@ protected:
 		for (AppPrio_t prio = 0; prio <= sys->ApplicationLowestPriority(); prio++)
 			slots += (sys->ApplicationLowestPriority() + 1 - prio) *
 			         sys->ApplicationsCount(prio);
+	/**
+	 * @brief The same as GetSlots() but considering all the types of schedulable
+	 * entities (adaptive applications, processes, ...)
+	 * @return
+	 */
+	uint32_t GetSlotsForAllSchedulables()
+	{
+		uint32_t slots = 0;
+		for (AppPrio_t prio = 0; prio <= sys->ApplicationLowestPriority(); prio++)
+			slots += (sys->ApplicationLowestPriority() + 1 - prio) *
+			sys->SchedulablesCount(prio);
 		return slots;
 	}
 
