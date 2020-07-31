@@ -23,42 +23,11 @@
 ################################################################################
 
 [ResourceManager]
-# opt_interval is in milliseconds
+# opt_interval is in milliseconds (for periodic scheduling invocations)
 #opt_interval = 4000
-
-################################################################################
-# Scheduling Policy
-################################################################################
 
 [SchedulerManager]
 #policy = test
-
-[AdaptiveCPUSchedPol]
-#neg_delta = -5
-#kp = 0.6
-#ki = 0.3
-#kd = 0.1
-
-[DynamicRandomParameters]
-# Possible to use different type of distribution according to the chosen number. 
-# { 1 : uniform, 2 : normal, 3 : poisson, 4 : binomial, 5 : exponential }
-distribution=2
-
-# Each distribution has its set of parameters and described as:
-# distribution(parameter1,parameter2) or distribution(parameter1)
-#
-# uniform(), binomial(probability_of_success), exponential(lambda), 
-# poisson(mean), normal(mean, standard_deviation)
-parameter1=110
-parameter2=10
-
-# Define the boundaries used for generate randomly the number of resources
-# in percentage
-lowerBound=10
-upperBound=50
-
-[BindingManager]
-domains = cpu,gpu,acc,grp.gpu,grp.acc,sys
 
 [SynchronizationManager]
 #policy = sasb
@@ -111,6 +80,35 @@ updatetime.resources = 500   # In milliseconds
 [DataManager]
 server_port = 30200
 client_attempts = 3
+
+################################################################################
+# Scheduling Policies
+################################################################################
+
+[AdaptiveCPUSchedPol]
+#neg_delta = -5
+#kp = 0.6
+#ki = 0.3
+#kd = 0.1
+
+[DynamicRandomSchedPol]
+# Possible to use different type of distribution according to the chosen number. 
+# { 1 : uniform, 2 : normal, 3 : poisson, 4 : binomial, 5 : exponential }
+distribution = 2
+# Each distribution has its set of parameters and described as:
+# distribution(parameter1,parameter2) or distribution(parameter1)
+#
+# uniform(), binomial(probability_of_success), exponential(lambda), 
+# poisson(mean), normal(mean, standard_deviation)
+parameter1 = 110
+parameter2 = 10
+# Define the boundaries used for generate randomly the number of resources
+# in percentage
+lowerBound = 10
+upperBound = 50
+
+[BindingManager]
+domains = cpu,gpu,acc,grp.gpu,grp.acc,sys
 
 ################################################################################
 # Logger configuration

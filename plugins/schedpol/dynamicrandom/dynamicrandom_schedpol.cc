@@ -70,12 +70,12 @@ DynamicRandomSchedPol::DynamicRandomSchedPol():
 	// Parse the distribution and parameters for computing random values
 	po::options_description opts_desc("Scheduling policy parameters");
 	opts_desc.add_options()
-		("DynamicRandomParameters.distribution", po::value<int> ((int*)&distribution)->default_value(1), "distribution")
-		("DynamicRandomParameters.lowerBound", po::value<int> (&lower_bound_perc)->default_value(10), "lowerBound")
-		("DynamicRandomParameters.upperBound", po::value<int> (&upper_bound_perc)->default_value(100), "upperBound")
-		("DynamicRandomParameters.parameter1", po::value<float> (&parameter1)->default_value(-1), "parameter1")
-		("DynamicRandomParameters.parameter2", po::value<float> (&parameter2)->default_value(-1), "parameter2")
-	;
+		("DynamicRandomSchedPol.distribution", po::value<int> ((int*)&distribution)->default_value(1), "distribution")
+		("DynamicRandomSchedPol.lowerBound", po::value<int> (&lower_bound_perc)->default_value(10), "lowerBound")
+		("DynamicRandomSchedPol.upperBound", po::value<int> (&upper_bound_perc)->default_value(100), "upperBound")
+		("DynamicRandomSchedPol.parameter1", po::value<float> (&parameter1)->default_value(-1), "parameter1")
+		("DynamicRandomSchedPol.parameter2", po::value<float> (&parameter2)->default_value(-1), "parameter2")
+		;
 
 	po::variables_map opts_vm;
 	cm.ParseConfigurationFile(opts_desc, opts_vm);
