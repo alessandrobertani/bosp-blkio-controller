@@ -28,8 +28,7 @@
 namespace ba = bbque::app;
 namespace br = bbque::res;
 
-namespace bbque
-{
+namespace bbque {
 
 //extern std::set<ba::Schedulable::State_t> pending_states;
 
@@ -46,7 +45,6 @@ namespace bbque
  */
 class System
 {
-
 public:
 
 	/**
@@ -75,7 +73,6 @@ public:
 	{
 		return am.GetNext(prio, ait);
 	}
-
 
 	/**
 	 * @brief Return the map containing all the ready applications
@@ -237,18 +234,18 @@ public:
 	{
 		return (am.HasApplications(state)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		        || prm.HasProcesses(state)
+			|| prm.HasProcesses(state)
 #endif
-		       );
+			);
 	}
 
 	bool HasSchedulables(ba::Schedulable::SyncState_t sync_state) const
 	{
 		return (am.HasApplications(sync_state)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		        || prm.HasProcesses(sync_state)
+			|| prm.HasProcesses(sync_state)
 #endif
-		       );
+			);
 	}
 
 	/**
@@ -272,22 +269,22 @@ public:
 	 * @see ResourceAccounterStatusIF::Available()
 	 */
 	uint64_t ResourceAvailable(std::string const & path,
-	                           br::RViewToken_t status_view = 0,
-	                           ba::SchedPtr_t papp = ba::SchedPtr_t()) const
+				br::RViewToken_t status_view = 0,
+				ba::SchedPtr_t papp = ba::SchedPtr_t()) const
 	{
 		return ra.Available(path, status_view, papp);
 	}
 
 	uint64_t ResourceAvailable(ResourcePathPtr_t ppath,
-	                           br::RViewToken_t status_view = 0,
-	                           ba::SchedPtr_t papp = SchedPtr_t()) const
+				br::RViewToken_t status_view = 0,
+				ba::SchedPtr_t papp = SchedPtr_t()) const
 	{
 		return ra.Available(ppath, ResourceAccounter::UNDEFINED, status_view, papp);
 	}
 
 	uint64_t ResourceAvailable(br::ResourcePtrList_t & rsrc_list,
-	                           br::RViewToken_t status_view = 0,
-	                           ba::SchedPtr_t papp = ba::SchedPtr_t()) const
+				br::RViewToken_t status_view = 0,
+				ba::SchedPtr_t papp = ba::SchedPtr_t()) const
 	{
 		return ra.Available(rsrc_list, status_view, papp);
 	}
@@ -314,44 +311,43 @@ public:
 	 * @see ResourceAccounterStatusIF::Used()
 	 */
 	uint64_t ResourceUsed(std::string const & path,
-	                      br::RViewToken_t status_view = 0) const
+			br::RViewToken_t status_view = 0) const
 	{
 		return ra.Used(path, status_view);
 	}
 
 	uint64_t ResourceUsed(ResourcePathPtr_t ppath,
-	                      br::RViewToken_t status_view = 0) const
+			br::RViewToken_t status_view = 0) const
 	{
 		return ra.Used(ppath, ResourceAccounter::UNDEFINED, status_view);
 	}
 
 	uint64_t ResourceUsed(br::ResourcePtrList_t & rsrc_list,
-	                      br::RViewToken_t status_view = 0) const
+			br::RViewToken_t status_view = 0) const
 	{
 		return ra.Used(rsrc_list, status_view);
 	}
-
 
 	/**
 	 * @see ResourceAccounterStatusIF::Used()
 	 */
 	uint64_t ResourceUsedBy(std::string const & path,
-	                        ba::SchedPtr_t papp,
-	                        br::RViewToken_t status_view = 0) const
+				ba::SchedPtr_t papp,
+				br::RViewToken_t status_view = 0) const
 	{
 		return ra.UsedBy(path, papp, status_view);
 	}
 
 	uint64_t ResourceUsedBy(ResourcePathPtr_t ppath,
-	                        ba::SchedPtr_t papp,
-	                        br::RViewToken_t status_view = 0) const
+				ba::SchedPtr_t papp,
+				br::RViewToken_t status_view = 0) const
 	{
 		return ra.UsedBy(ppath, papp, ResourceAccounter::UNDEFINED, status_view);
 	}
 
 	uint64_t ResourceUsedBy(br::ResourcePtrList_t & rsrc_list,
-	                        ba::SchedPtr_t papp,
-	                        br::RViewToken_t status_view = 0) const
+				ba::SchedPtr_t papp,
+				br::RViewToken_t status_view = 0) const
 	{
 		return ra.UsedBy(rsrc_list, papp, status_view);
 	}
@@ -390,7 +386,7 @@ public:
 	 * @see ResourceAccounterStatusIF::GetPath()
 	 */
 	br::ResourcePathPtr_t const GetResourcePath(
-	        std::string const & path)
+						std::string const & path)
 	{
 		return ra.GetPath(path);
 	}
@@ -434,12 +430,11 @@ public:
 		return ra.ExistResource(ppath);
 	}
 
-
 	/**
 	 * @see ResourceAccounterConfIF::GetView()
 	 */
 	ResourceAccounterStatusIF::ExitCode_t GetResourceStateView(
-	        std::string req_id, br::RViewToken_t & tok)
+								std::string req_id, br::RViewToken_t & tok)
 	{
 		return ra.GetView(req_id, tok);
 	}
@@ -448,11 +443,10 @@ public:
 	 * @see ResourceAccounterConfIF::PutView()
 	 */
 	ResourceAccounterStatusIF::ExitCode_t PutResourceStateView(
-	        br::RViewToken_t tok)
+								br::RViewToken_t tok)
 	{
 		return ra.PutView(tok);
 	}
-
 
 	/***************************************************************
 	 * Utility functions
@@ -483,11 +477,11 @@ private:
 
 	/** Constructor */
 	System() :
-		am(ApplicationManager::GetInstance()),
-		ra(ResourceAccounter::GetInstance())
+	    am(ApplicationManager::GetInstance()),
+	    ra(ResourceAccounter::GetInstance())
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		,
-		prm(ProcessManager::GetInstance())
+	    ,
+	    prm(ProcessManager::GetInstance())
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 	{ }
 };
