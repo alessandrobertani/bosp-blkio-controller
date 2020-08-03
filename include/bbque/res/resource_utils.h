@@ -308,6 +308,13 @@ inline bool CompareCurrentDegradation(ResourcePtr_t const &  r1_ptr, ResourcePtr
 	return false;
 }
 
+inline bool CompareUsedAmount(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr)
+{
+	if (r1_ptr->Used() < r2_ptr->Used())
+		return true;
+	return false;
+}
+
 
 } // namespace res
 
