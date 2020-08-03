@@ -29,7 +29,8 @@
 #define POW_2_30 0x40000000
 
 
-namespace bbque { namespace res {
+namespace bbque {
+namespace res {
 
 /**
  * @brief Convert to unity
@@ -42,12 +43,13 @@ namespace bbque { namespace res {
  * @param units Units string
  * @return The value converted
  */
-inline uint64_t ConvertValue(uint64_t value, std::string const & units) {
+inline uint64_t ConvertValue(uint64_t value, std::string const & units)
+{
 
 	if (units.empty())
 		return value;
 
-	switch(toupper(units[0])) {
+	switch (toupper(units[0])) {
 	case 'K':
 		return value *= POW_2_10;
 	case 'M':
@@ -59,14 +61,13 @@ inline uint64_t ConvertValue(uint64_t value, std::string const & units) {
 	}
 }
 
-
 /**
  * @brief ResourcePathUtils
  *
  * This defines a set of utility functions specific for Resource descriptors
  */
-class ResourcePathUtils {
-
+class ResourcePathUtils
+{
 public:
 
 	/**
@@ -90,7 +91,8 @@ public:
 	 * path left.
 	 */
 	inline static std::string SplitAndPop(std::string & tail,
-			const char * pattern = ".") {
+					const char * pattern = ".")
+	{
 		// Head of the path to return
 		std::string head;
 
@@ -123,7 +125,8 @@ public:
 	 * @param path Resource complete path (ID-based)
 	 * @return The template path (without resource IDs)
 	 */
-	inline static std::string const GetTemplate(std::string const & path) {
+	inline static std::string const GetTemplate(std::string const & path)
+	{
 		std::string _templ_path;
 		std::string _tail(path);
 
@@ -131,7 +134,8 @@ public:
 		// head into the the path template
 		do {
 			_templ_path += SplitAndPop(_tail, "0123456789");
-		} while (!_tail.empty());
+		}
+		while (!_tail.empty());
 
 		return _templ_path;
 	}
@@ -142,7 +146,8 @@ public:
 	 *
 	 * @return True if it is, false otherwise
 	 */
-	inline static bool IsTemplate(std::string const & path) {
+	inline static bool IsTemplate(std::string const & path)
+	{
 		return (path.find_first_of("0123456789") == std::string::npos);
 	}
 
@@ -155,7 +160,8 @@ public:
 	 * @return The updated string
 	 */
 	inline static std::string AppendID(std::string const & orig_name,
-			BBQUE_RID_TYPE rid) {
+					BBQUE_RID_TYPE rid)
+	{
 		std::string ret_name(orig_name);
 
 		// Check ID validity
@@ -182,10 +188,11 @@ public:
 	 * @return The updated resource path
 	 */
 	inline static std::string ReplaceID(
-			std::string const & curr_path,
-			std::string const & rsrc_name,
-			BBQUE_RID_TYPE source_id,
-			BBQUE_RID_TYPE out_id) {
+					std::string const & curr_path,
+					std::string const & rsrc_name,
+					BBQUE_RID_TYPE source_id,
+					BBQUE_RID_TYPE out_id)
+	{
 
 		// Search the resource name in the current path
 		std::string bind_path(curr_path);
@@ -212,8 +219,9 @@ public:
 	 * R_ID_NONE otherwise.
 	 */
 	inline static BBQUE_RID_TYPE GetID(
-			std::string const & rsrc_path,
-			std::string const & rsrc_name) {
+					std::string const & rsrc_path,
+					std::string const & rsrc_name)
+	{
 		// Find the ID of the resource in the path
 		size_t start_pos = rsrc_path.find(rsrc_name);
 		if (start_pos == std::string::npos)
@@ -222,7 +230,7 @@ public:
 		// Extract and return the ID value
 		size_t dot_pos = rsrc_path.find(".", start_pos);
 		std::string id(rsrc_path.substr(start_pos + rsrc_name.length(),
-					dot_pos));
+						dot_pos));
 		return atoi(id.c_str());
 	}
 
@@ -240,7 +248,8 @@ public:
 	 *
 	 * @return The name of the resource
 	 */
-	inline static std::string const GetName(std::string const & rsrc_path) {
+	inline static std::string const GetName(std::string const & rsrc_path)
+	{
 		size_t dot_pos = rsrc_path.find_last_of(".");
 		return rsrc_path.substr(dot_pos + 1);
 	}
@@ -260,18 +269,20 @@ public:
 	 * @return The name of the resource, without ID
 	 */
 	inline static std::string const GetNameTemplate(
-			std::string const & rsrc_path) {
+							std::string const & rsrc_path)
+	{
 		std::string templ_name(GetName(rsrc_path));
 		size_t id_pos = templ_name.find_first_of("0123456");
 		return templ_name.substr(0, id_pos);
 	}
 
 	inline static void GetNameID(std::string const & rsrc_str,
-			std::string & rsrc_name, BBQUE_RID_TYPE & rsrc_id) {
+				std::string & rsrc_name, BBQUE_RID_TYPE & rsrc_id)
+	{
 		size_t id_pos, dot_pos;
 
 		rsrc_id = R_ID_NONE;
-		id_pos  = rsrc_str.find_first_of("0123456789");
+		id_pos = rsrc_str.find_first_of("0123456789");
 		dot_pos = rsrc_str.find_first_of(".");
 
 		if (id_pos == std::string::npos)
@@ -279,7 +290,7 @@ public:
 			id_pos = dot_pos;
 		else
 			// ID
-			rsrc_id   = atoi((rsrc_str.substr(id_pos, dot_pos)).c_str());
+			rsrc_id = atoi((rsrc_str.substr(id_pos, dot_pos)).c_str());
 		rsrc_name = rsrc_str.substr(0, id_pos);
 	}
 
@@ -287,22 +298,25 @@ public:
 
 #ifdef CONFIG_BBQUE_PM
 
-inline bool CompareTemperature(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr) {
+inline bool CompareTemperature(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr)
+{
 	if (r1_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE) <
-		r2_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE))
+	r2_ptr->GetPowerInfo(PowerManager::InfoType::TEMPERATURE))
 		return true;
 	return false;
 }
 
 #endif
 
-inline bool CompareMeanDegradation(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr) {
+inline bool CompareMeanDegradation(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr)
+{
 	if (r1_ptr->MeanDegradationPerc() < r2_ptr->MeanDegradationPerc())
 		return true;
 	return false;
 }
 
-inline bool CompareCurrentDegradation(ResourcePtr_t const &  r1_ptr, ResourcePtr_t const & r2_ptr) {
+inline bool CompareCurrentDegradation(ResourcePtr_t const & r1_ptr, ResourcePtr_t const & r2_ptr)
+{
 	if (r1_ptr->CurrentDegradationPerc() < r2_ptr->CurrentDegradationPerc())
 		return true;
 	return false;
