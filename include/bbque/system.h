@@ -208,18 +208,29 @@ public:
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 	}
 
-
 	/**************************************************************************
-	 *  Schedulables management                                               *
+	 *  Schedulable(s) management (Adaptive applications + Processes)         *
 	 **************************************************************************/
 
 	uint32_t SchedulablesCount(ba::Schedulable::State_t state)
 	{
 		return (am.AppsCount(state)
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
-		        + prm.ProcessesCount(state)
+			+ prm.ProcessesCount(state)
 #endif
-		       );
+			);
+	}
+
+	uint32_t SchedulablesCount(ba::AppPrio_t prio)
+	{
+		auto nr_apps = am.AppsCount(prio);
+#ifdef CONFIG_BBQUE_LINUX_PROC_MANAGE
+		// Processes are set at prio=0 by default
+		if (prio == 0) {
+			nr_apps + prm.ProcessesCount(prio);
+		}
+#endif
+		return nr_apps;
 	}
 
 	bool HasSchedulables(ba::Schedulable::State_t state) const
