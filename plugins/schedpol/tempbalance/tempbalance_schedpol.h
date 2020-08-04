@@ -39,10 +39,8 @@ using bbque::utils::Timer;
 // These are the parameters received by the PluginManager on create calls
 struct PF_ObjectParams;
 
-namespace bbque
-{
-namespace plugins
-{
+namespace bbque {
+namespace plugins {
 
 class LoggerIF;
 
@@ -50,9 +48,8 @@ class LoggerIF;
  * @class TempBalanceSchedPol
  * @brief Balance the load of the CPU cores according to the current temperature.
  */
-class TempBalanceSchedPol: public SchedulerPolicyIF
+class TempBalanceSchedPol : public SchedulerPolicyIF
 {
-
 public:
 
 	// :::::::::::::::::::::: Static plugin interface :::::::::::::::::::::::::
@@ -63,7 +60,7 @@ public:
 	static void * Create(PF_ObjectParams *);
 
 	/**
-	 * @brief Destroy the gridbalance plugin
+	 * @brief Destroy the tempbalance plugin
 	 */
 	static int32_t Destroy(void *);
 
@@ -117,7 +114,7 @@ private:
 	// ----- Policy core functions ---- //
 
 	uint64_t ComputeResourceQuota(
-	        std::string resource_path_str, bbque::app::AppCPtr_t papp) const;
+				std::string resource_path_str, bbque::app::AppCPtr_t papp) const;
 
 	ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);
 
