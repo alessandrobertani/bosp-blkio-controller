@@ -44,13 +44,13 @@ choice
     bool "Adaptive CPU"
     depends on BBQUE_SCHEDPOL_ADAPTIVECPU
 
-  config BBQUE_SCHEDPOL_DEFAULT_CONTREX
-    depends on BBQUE_SCHEDPOL_CONTREX
-    bool "Contrex"
-
   config BBQUE_SCHEDPOL_DEFAULT_CLOVES
     depends on BBQUE_SCHEDPOL_CLOVES
     bool "Cloves"
+
+  config BBQUE_SCHEDPOL_DEFAULT_CONTREX
+    depends on BBQUE_SCHEDPOL_CONTREX
+    bool "Contrex"
 
   config BBQUE_SCHEDPOL_DEFAULT_DYNAMICRANDOM
     bool "Dynamic Random (CPU)"
