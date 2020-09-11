@@ -4,7 +4,7 @@
 # - part of the BarbequeTOOLS componet
 # - have a name starting by "bbque-"
 
-set (BBQUE_TOOLS_INSTALL_DIR ${CONFIG_BOSP_RUNTIME_PATH}/sbin/bbque/)
+set (BBQUE_TOOLS_INSTALL_DIR "sbin/bbque/")
 
 #----- Deploy the PIL Layouts parser and CGroup generator script
 if (CONFIG_BBQUE_PIL_LEGACY)
