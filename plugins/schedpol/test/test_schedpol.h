@@ -99,9 +99,12 @@ private:
 
 	std::future<void> fut_tg;
 
-	std::set<BBQUE_RID_TYPE> pe_ids;
-
 	std::vector<uint32_t> sys_ids;
+
+	br::ResourcePtrList_t sys_list;
+
+	br::ResourcePtrList_t cpu_pe_list;
+	uint32_t local_sys_id;
 
 	uint32_t nr_apps;
 
@@ -133,7 +136,15 @@ private:
 
 	ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);
 
-	int32_t DoCPUBinding(bbque::app::AwmPtr_t pawm, BBQUE_RID_TYPE id);
+	ExitCode_t AddResourceRequests(bbque::app::AppCPtr_t papp, bbque::app::AwmPtr_t pawm);
+
+	ExitCode_t DoResourceBinding(bbque::app::AwmPtr_t pawm, int32_t & ref_num);
+
+	ExitCode_t BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
+						br::ResourcePtrList_t const & r_list,
+						br::ResourceType r_type,
+						uint64_t amount,
+						int32_t & ref_num);
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 

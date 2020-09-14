@@ -83,21 +83,22 @@ TestSchedPol::~TestSchedPol() { }
 
 SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 {
-	// Processing elements IDs
-	auto & resource_types = sys->ResourceTypes();
-	auto const & r_ids_entry = resource_types.find(br::ResourceType::PROC_ELEMENT);
-	pe_ids = r_ids_entry->second;
-	logger->Info("Init: %d processing elements available", pe_ids.size());
-	if (pe_ids.empty()) {
-		logger->Crit("Init: not available CPU cores!");
-		return SCHED_R_UNAVAILABLE;
+	PlatformManager & plm(PlatformManager::GetInstance());
+	local_sys_id = plm.GetPlatformDescription().GetLocalSystem().GetId();
+
+	if (this->sys_list.empty()) {
+		auto sys_list = sys->GetResources("sys");
+		for (auto const & sys_rsrc : sys_list) {
+			sys_ids.push_back(sys_rsrc->ID());
+		}
+		logger->Info("Init: %d systems node(s) available", sys_list.size());
 	}
 
-	// Get all the system nodes
-	auto sys_rsrcs = sys->GetResources("sys");
-	logger->Info("Init: %d systems node(s) available", sys_rsrcs.size());
-	for (auto & sys_rsrc : sys_rsrcs) {
-		sys_ids.push_back(sys_rsrc->ID());
+	if (this->cpu_pe_list.empty()) {
+		this->cpu_pe_list = sys->GetResources("sys.cpu.pe");
+		logger->Info("Init: %d CPU core(s) available", cpu_pe_list.size());
+	}
+
 	}
 
 	// Load all the applications task graphs
@@ -124,37 +125,31 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 	if (result != SCHED_OK)
 		return result;
 
-	/** INSERT YOUR CODE HERE **/
 	fut_tg.get();
+
+	// AEM integrated applications
 	auto assign_awm_app = std::bind(
 					static_cast<ExitCode_t (TestSchedPol::*)(ba::AppCPtr_t)>
 					(&TestSchedPol::AssignWorkingMode),
 					this, _1);
 
-	// Iterate over all the applications to schedule
 	ForEachApplicationToScheduleDo(assign_awm_app);
-	if (result != SCHED_OK) {
-		logger->Debug("Schedule: not SCHED_OK return [result=%d]", result);
-		return result;
-	}
 	logger->Debug("Schedule: done with applications");
 
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
+
+	// Not integrated processes
 	auto assign_awm_proc = std::bind(
 					static_cast<ExitCode_t (TestSchedPol::*)(ProcPtr_t)>
 					(&TestSchedPol::AssignWorkingMode),
 					this, _1);
 
-	// Iterate over all the processes to schedule
 	ForEachProcessToScheduleDo(assign_awm_proc);
-	if (result != SCHED_OK)
-		return result;
 	logger->Debug("Schedule: done with processes");
 
 #endif // CONFIG_BBQUE_LINUX_PROC_MANAGER
 
-	// Return the new resource status view according to the new resource
-	// allocation performed
+	// Update the resource status view
 	status_view = sched_status_view;
 	return SCHED_DONE;
 }
@@ -176,35 +171,25 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc)
 	// Resource request addition
 	AddResourceRequests(proc, pawm);
 
-	// Look for the first available CPU
-	ProcessManager & prm(ProcessManager::GetInstance());
-	BindingManager & bdm(BindingManager::GetInstance());
-	BindingMap_t & bindings(bdm.GetBindingDomains());
-	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
-	for (BBQUE_RID_TYPE cpu_id : cpu_ids) {
-		logger->Info("AssingWorkingMode: binding attempt CPU id = <%d>",
-			cpu_id);
-
-		// CPU binding
-		auto ref_num = DoCPUBinding(pawm, cpu_id);
-		if (ref_num < 0) {
-			logger->Error("AssingWorkingMode: CPU binding to <%d> failed",
-				cpu_id);
-			continue;
-		}
-
-		// Schedule request
-		auto prm_ret = prm.ScheduleRequest(proc, pawm, sched_status_view, ref_num);
-		if (prm_ret != ProcessManager::SUCCESS) {
-			logger->Error("AssignWorkingMode: schedule request failed for [%s]",
-				proc->StrId());
-			continue;
-		}
-
-		return SCHED_OK;
+	// Resource binding
+	int32_t ref_num;
+	auto ret = DoResourceBinding(pawm, ref_num);
+	if (ret != SCHED_OK) {
+		logger->Warn("AssignWorkingMode: [%s] resource binding failed",
+			proc->StrId());
+		return ret;
 	}
 
-	return SCHED_ERROR;
+	// Schedule request
+	ProcessManager & prm(ProcessManager::GetInstance());
+	auto prm_ret = prm.ScheduleRequest(proc, pawm, sched_status_view, ref_num);
+	if (prm_ret != ProcessManager::SUCCESS) {
+		logger->Error("AssignWorkingMode: schedule request failed for [%s]",
+			proc->StrId());
+		return ExitCode_t::SCHED_SKIP_APP;
+	}
+
+	return SCHED_OK;
 }
 
 SchedulerPolicyIF::ExitCode_t
@@ -217,14 +202,14 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 	if (cpu_quota == 0) {
 		pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
 					br::ResourceAssignment::Policy::BALANCED);
-		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %d",
+		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %lu",
 			proc->StrId(), CPU_QUOTA_TO_ALLOCATE);
 	}
 	else {
 		pawm->AddResourceRequest("sys.cpu.pe",
 					cpu_quota,
 					br::ResourceAssignment::Policy::BALANCED);
-		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %d",
+		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %lu",
 			proc->StrId(), cpu_quota);
 	}
 
@@ -246,8 +231,6 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 SchedulerPolicyIF::ExitCode_t
 TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 {
-	ApplicationManager & am(ApplicationManager::GetInstance());
-
 	if (papp == nullptr) {
 		logger->Error("AssignWorkingMode: null application descriptor!");
 		return SCHED_ERROR;
@@ -265,95 +248,172 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 			prof.is_valid);
 	}
 
-	// Build a new working mode featuring assigned resources
-	auto pawm = std::make_shared<ba::WorkingMode>(
-		papp->WorkingModes().size(), "Dynamic", 1, papp);
+	// Create or re-initialize the working mode data structure
+	auto pawm = papp->CurrentAWM();
+	if (pawm == nullptr) {
+		logger->Debug("AssignWorkingMode: [%s] "
+			"creating a new working mode...",
+			papp->StrId());
+		pawm = std::make_shared<ba::WorkingMode>(
+			papp->WorkingModes().size(),
+			"Dynamic",
+			1,
+			papp);
 
-	// Resource request addition
-	std::string pe_request("sys.cpu.pe");
-	logger->Debug("AssignWorkingMode: [%s] adding resource request <%s>",
-		papp->StrId(), pe_request.c_str());
-	pawm->AddResourceRequest(
-				pe_request,
-				CPU_QUOTA_TO_ALLOCATE,
-				br::ResourceAssignment::Policy::BALANCED);
+		AddResourceRequests(papp, pawm);
+	}
+	else {
+		logger->Debug("AssignWorkingMode: [%s] "
+			"clearing the bindings of the previous assignment...",
+			papp->StrId());
+		pawm->ClearResourceBinding();
+	}
 
-	// Look for the first available CPU
-	BindingManager & bdm(BindingManager::GetInstance());
-	BindingMap_t & bindings(bdm.GetBindingDomains());
-	auto & cpu_ids(bindings[br::ResourceType::CPU]->r_ids);
-	logger->Debug("AssignWorkingMode: [%s] nr. CPU ids: %d",
-		papp->StrId(), cpu_ids.size());
+	ApplicationManager & am(ApplicationManager::GetInstance());
 
-	for (BBQUE_RID_TYPE cpu_id : cpu_ids) {
-		logger->Info("AssingWorkingMode: [%s] binding attempt CPU id = %d",
-			papp->StrId(), cpu_id);
+	// Resource binding
+	int32_t ref_num = -1;
+	logger->Debug("AssignWorkingMode: [%s] performing resource binding...",
+		papp->StrId());
+	auto ret = DoResourceBinding(pawm, ref_num);
+	if (ret != SCHED_OK) {
+		logger->Debug("AssignWorkingMode: [%s] resource binding failed",
+			papp->StrId());
+		am.NoSchedule(papp);
+		return ret;
+	}
 
-		// CPU binding
-		auto ref_num = DoCPUBinding(pawm, cpu_id);
-		if (ref_num < 0) {
-			logger->Error("AssingWorkingMode: [%s] CPU binding to < %d > failed",
-				papp->StrId(), cpu_id);
-			continue;
-		}
-
-		// Schedule request
-		ApplicationManager::ExitCode_t am_ret;
-		am_ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
-		if (am_ret != ApplicationManager::AM_SUCCESS) {
-			logger->Error("AssignWorkingMode: [%s] schedule request failed",
-				papp->StrId());
-			continue;
-		}
+	// Schedule request
+	auto am_ret = am.ScheduleRequest(papp, pawm, sched_status_view, ref_num);
+	if (am_ret != ApplicationManager::AM_SUCCESS) {
+		logger->Error("AssignWorkingMode: [%s] schedule request failed",
+			papp->StrId());
+		return ExitCode_t::SCHED_SKIP_APP;
+	}
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
-		MapTaskGraph(papp); // Task level mapping
+	MapTaskGraph(papp); // Task level mapping
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
-		return SCHED_OK;
-	}
 
-	return SCHED_ERROR;
+	logger->Info("AssignWorkingMode: [%s] successfully scheduled",
+		papp->StrId());
+
+	return SCHED_OK;
 }
 
-int32_t TestSchedPol::DoCPUBinding(bbque::app::AwmPtr_t pawm,
-				   BBQUE_RID_TYPE cpu_id)
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
+				  bbque::app::AwmPtr_t pawm)
 {
-	// CPU-level binding: the processing elements are in the scope of the CPU 'cpu_id'
-	int32_t ref_num = -1;
-	ref_num = pawm->BindResource(br::ResourceType::CPU, R_ID_ANY, cpu_id, ref_num);
+	logger->Debug("AddResourceRequests: [%s] adding resource request "
+		"<sys.cpu.pe>",
+		papp->StrId());
+
+	pawm->AddResourceRequest("sys.cpu.pe",
+				CPU_QUOTA_TO_ALLOCATE,
+				br::ResourceAssignment::Policy::BALANCED);
+
+	}
+
+	return SCHED_OK;
+}
+
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
+				int32_t & ref_num)
+{
+	auto ret = this->BindResourceToFirstAvailable(pawm,
+						this->cpu_pe_list,
+						br::ResourceType::CPU,
+						pawm->GetRequestedAmount("sys.cpu.pe"),
+						ref_num);
+	if (ret != ExitCode_t::SCHED_OK) {
+		logger->Debug("DoResourceBinding: [%s] resource binding failed",
+			pawm->StrId());
+		return ret;
+	}
 
 	// The ResourceBitset object is used for the processing elements binding
 	// (CPU core mapping)
+
 	/*
+
 	auto resource_path = ra.GetPath("sys.cpu" + std::to_string(cpu_id) + ".pe");
 	br::ResourceBitset pes;
 	uint16_t pe_count = 0;
 	for (auto & pe_id : pe_ids) {
 		pes.Set(pe_id);
 		ref_num = pawm->BindResource(resource_path, pes, ref_num);
-		logger->Info("DoCPUBinding : [ % s] binding refn : % d",
-			     pawm->StrId(), ref_num);
+		logger->Info("DoCPUBinding : [ % s] binding refn : % d", pawm->StrId(), ref_num);
 		++pe_count;
 		if (pe_count == CPU_QUOTA_TO_ALLOCATE / 100) break;
 	}
+
 	 */
-	return ref_num;
+
+
+	return ExitCode_t::SCHED_OK;
 }
+
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
+					   br::ResourcePtrList_t const & r_list,
+					   br::ResourceType r_type,
+					   uint64_t amount,
+					   int32_t & ref_num)
+{
+	bool binding_done = false;
+
+	for (auto const & resource : r_list) {
+		auto bind_id = resource->Path()->GetID(r_type);
+		std::string resource_path_to_bind("sys"
+						+ std::to_string(local_sys_id) + "."
+						+ br::GetResourceTypeString(r_type) + std::to_string(bind_id)
+						+ ".pe");
+
+		auto curr_quota_available = sys->ResourceAvailable(resource_path_to_bind,
+								sched_status_view);
+		logger->Debug("DoResourceBinding: <sys.%s%d.pe> available: %lu",
+			br::GetResourceTypeString(r_type),
+			bind_id,
+			curr_quota_available);
+		if (curr_quota_available >= amount) {
+			ref_num = pawm->BindResource(
+						r_type,
+						R_ID_ANY,
+						bind_id,
+						ref_num);
+			binding_done = true;
+			logger->Debug("DoResourceBinding: <%s> -> <%s> done",
+				br::ResourcePathUtils::GetTemplate(resource_path_to_bind).c_str(),
+				resource_path_to_bind.c_str());
+			break;
+		}
+	}
+
+	if (!binding_done) {
+		logger->Debug("DoResourceBinding: <%s> not available",
+			br::GetResourceTypeString(r_type));
+		return ExitCode::SCHED_R_UNAVAILABLE;
+	}
+
+	return ExitCode_t::SCHED_OK;
+}
+
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
 {
-	logger->Info("MapTaskGraph: [%s] mapping the task graph...", papp->StrId());
-
 	auto task_graph = papp->GetTaskGraph();
 	if (task_graph == nullptr) {
 		logger->Warn("AssignWorkingMode: [%s] no task - graph to map",
 			papp->StrId());
 		return;
 	}
+	logger->Info("MapTaskGraph: [%s] mapping the task graph...", papp->StrId());
 
 	int unit_id = 3;          // An arbitrary processing unit number
 	unsigned short int i = 0; // task index
