@@ -133,7 +133,7 @@ WorkingMode::AddResourceRequest(std::string const & request_path,
 		logger->Debug("AddResourceRequest: request_path=<%s> ...",
 			resource_path->ToString().c_str());
 
-		// Check the existance of requested (?) resources
+		// Check the existence of requested (?) resources
 		if (!ra.ExistResource(resource_path)) {
 			logger->Debug("AddResourceRequest: <%s> does not exist",
 				resource_path->ToString().c_str());
@@ -186,6 +186,15 @@ uint64_t WorkingMode::GetRequestedAmount(ResourcePathPtr_t resource_path) const
 		if (resource_path->Compare(*(curr_path.get())) == br::ResourcePath::NOT_EQUAL)
 			continue;
 		return resource_entry.second->GetAmount();
+	}
+	return 0;
+}
+
+uint64_t WorkingMode::GetRequestedAmount(std::string const & str_path)
+{
+	auto request = GetResourceRequest(str_path);
+	if (request != nullptr) {
+		return request->GetAmount();
 	}
 	return 0;
 }

@@ -333,6 +333,14 @@ public:
 	uint64_t GetRequestedAmount(br::ResourcePathPtr_t resource_path) const;
 
 	/**
+	 * @brief Get the amount of requested resource
+	 *
+	 * @param resource_path Resource path in string format
+	 * @return the amount
+	 */
+	uint64_t GetRequestedAmount(std::string const & str_path);
+
+	/**
 	 * @brief Resource requests comparison
 	 *
 	 * @param awm2 A second AWM object to compare
