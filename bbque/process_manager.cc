@@ -125,6 +125,7 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 		("name,n", po::value<std::string>(&name), "Process name")
 		("pid,p", po::value<unsigned int>(&pid)->default_value(0), "Process id number")
 		("cpus,c", po::value<unsigned int>(&sched_req.cpu_cores), "CPU cores")
+		("gpus,g", po::value<unsigned int>(&sched_req.gpu_units), "CPU cores")
 		("acc,a", po::value<unsigned int>(&sched_req.acc_cores)->default_value(0), "Accelerator cores")
 		("mem,m", po::value<unsigned int>(&sched_req.memory_mb)->default_value(0), "Amount of memory");
 
@@ -147,10 +148,11 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 	}
 
 	logger->Notice("CommandManageSetSchedule: "
-		"<%s> (pid=%d) schedule request: cpus=%d accs=%d mem=%d",
+		"<%s> (pid=%d) schedule request: cpus=%d gpus=%d accs=%d mem=%d",
 		name.c_str(),
 		pid,
 		sched_req.cpu_cores,
+		sched_req.gpu_units,
 		sched_req.acc_cores,
 		sched_req.memory_mb);
 
@@ -191,7 +193,7 @@ void ProcessManager::CommandManageSetSchedule(int argc, char * argv[])
 void ProcessManager::CommandManageSetScheduleHelp() const
 {
 	logger->Notice("%s -n <process_name> [-p <pid>] -c <cpu_cores> "
-		"[-a <accelerator_cores>] [-m <memory_MB>]",
+		"[-g <gpu_units>] [-a <accelerator_cores>] [-m <memory_MB>]",
 		MODULE_NAMESPACE CMD_SETSCHED_PROCESS);
 }
 

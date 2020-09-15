@@ -51,6 +51,7 @@ public:
 		    cpu_cores(0), acc_cores(0), memory_mb(0) { }
 		uint32_t cpu_cores;
 		uint32_t acc_cores;
+		uint32_t gpu_units;
 		uint32_t memory_mb;
 	};
 
