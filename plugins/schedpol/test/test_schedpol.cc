@@ -35,6 +35,7 @@
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
 #define CPU_QUOTA_TO_ALLOCATE 100
+#define GPU_QUOTA_TO_ALLOCATE 10  // more than 1 app could run on GPU
 
 namespace bu = bbque::utils;
 namespace po = boost::program_options;
@@ -99,6 +100,9 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 		logger->Info("Init: %d CPU core(s) available", cpu_pe_list.size());
 	}
 
+	if (this->gpu_list.empty()) {
+		this->gpu_list = sys->GetResources("sys.gpu.pe");
+		logger->Info("Init: %d GPU(s) available", gpu_list.size());
 	}
 
 	// Load all the applications task graphs
@@ -213,6 +217,17 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 			proc->StrId(), cpu_quota);
 	}
 
+
+	// GPUs
+	uint32_t gpu_quota = proc->GetScheduleRequestInfo()->gpu_units * GPU_QUOTA_TO_ALLOCATE;
+	if (gpu_quota != 0) {
+		pawm->AddResourceRequest("sys.gpu.pe",
+					gpu_quota,
+					br::ResourceAssignment::Policy::BALANCED);
+		logger->Debug("AddResourceRequests: [%s] <sys.gpu.pe> = %lu",
+			proc->StrId(), gpu_quota);
+	}
+
 	// Accelerators
 	uint32_t acc_quota = proc->GetScheduleRequestInfo()->acc_cores * 100;
 	if (acc_quota != 0) {
@@ -315,6 +330,11 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 				CPU_QUOTA_TO_ALLOCATE,
 				br::ResourceAssignment::Policy::BALANCED);
 
+	if (!gpu_list.empty()) {
+		logger->Debug("AddResourceRequests: [%s] adding resource request"
+			" <sys.gpu.pe>",
+			papp->StrId());
+		pawm->AddResourceRequest("sys.gpu.pe", GPU_QUOTA_TO_ALLOCATE);
 	}
 
 	return SCHED_OK;
@@ -353,6 +373,14 @@ TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 
 	 */
 
+	auto gpu_amount = pawm->GetRequestedAmount("sys.gpu.pe");
+	if (gpu_amount > 0) {
+		ret = this->BindResourceToFirstAvailable(pawm,
+							this->gpu_list,
+							br::ResourceType::GPU,
+							gpu_amount,
+							ref_num);
+	}
 
 	return ExitCode_t::SCHED_OK;
 }

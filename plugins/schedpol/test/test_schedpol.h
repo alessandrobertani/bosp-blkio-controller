@@ -104,6 +104,9 @@ private:
 	br::ResourcePtrList_t sys_list;
 
 	br::ResourcePtrList_t cpu_pe_list;
+
+	br::ResourcePtrList_t gpu_list;
+
 	uint32_t local_sys_id;
 
 	uint32_t nr_apps;
