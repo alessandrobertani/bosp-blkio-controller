@@ -62,14 +62,14 @@ bool AwmIdLesser(const AwmPtr_t & wm1, const AwmPtr_t & wm2)
 }
 
 Application::Application(std::string const & _name,
-	AppPid_t _pid,
-	uint8_t _exc_id,
-	RTLIB_ProgrammingLanguage_t lang,
-	bool container) :
-	ApplicationStatusIF(_name, _pid, Schedulable::Type::ADAPTIVE),
-	exc_id(_exc_id),
-	language(lang),
-	container(container)
+			 AppPid_t _pid,
+			 uint8_t _exc_id,
+			 RTLIB_ProgrammingLanguage_t lang,
+			 bool container) :
+    ApplicationStatusIF(_name, _pid, Schedulable::Type::ADAPTIVE),
+    exc_id(_exc_id),
+    language(lang),
+    container(container)
 {
 	// Init the working modes vector
 	awms.recipe_vect.resize(MAX_NUM_AWM);
@@ -254,7 +254,7 @@ Application::ExitCode_t Application::SyncCommit()
 		// Reset GoalGap whether the Application has been scheduled into a AWM
 		// having a value higher than the previous one
 		if (schedule.awm &&
-			(schedule.awm->Value() < schedule.next_awm->Value())) {
+		(schedule.awm->Value() < schedule.next_awm->Value())) {
 			logger->Debug("Resetting GoalGap (%d%c) on [%s]",
 				rt_prof.ggap_percent, '%', StrId());
 			rt_prof.ggap_percent = 0;
@@ -305,7 +305,7 @@ Application::ExitCode_t Application::SyncContinue()
  ******************************************************************************/
 
 Application::ExitCode_t Application::SetWorkingModeConstraint(
-	RTLIB_Constraint & constraint)
+							      RTLIB_Constraint & constraint)
 {
 	// Get a lock. The assertion may invalidate the current AWM.
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
@@ -367,7 +367,7 @@ void Application::DumpValidAWMs() const
 }
 
 Application::ExitCode_t Application::AddWorkingModeConstraint(
-	RTLIB_Constraint & constraint)
+							      RTLIB_Constraint & constraint)
 {
 	// Check the type of constraint to set
 	switch (constraint.type) {
@@ -453,7 +453,7 @@ void Application::SetWorkingModesUpperBound(RTLIB_Constraint & constraint)
 }
 
 Application::ExitCode_t Application::RemoveWorkingModeConstraint(
-	RTLIB_Constraint & constraint)
+								 RTLIB_Constraint & constraint)
 {
 	// Check the type of constraint to remove
 	switch (constraint.type) {
@@ -526,8 +526,8 @@ void Application::RebuildEnabledWorkingModes()
 		// the AWM is hidden according to the current status of the hardware
 		// resources
 		if ((!awms.enabled_bset.test(j))
-			|| (UsageOutOfBounds(awms.recipe_vect[j]))
-			|| awms.recipe_vect[j]->Disabled())
+		|| (UsageOutOfBounds(awms.recipe_vect[j]))
+		|| awms.recipe_vect[j]->Disabled())
 			continue;
 
 		// Insert the working mode
@@ -542,7 +542,7 @@ void Application::FinalizeEnabledWorkingModes()
 {
 	// Check if the current AWM has been invalidated
 	if (schedule.awm &&
-		!awms.enabled_bset.test(schedule.awm->Id())) {
+	!awms.enabled_bset.test(schedule.awm->Id())) {
 		logger->Warn("WorkingMode constraints: current AWM (""%s"" ID:%d)"
 			" invalidated.", schedule.awm->Name().c_str(),
 			schedule.awm->Id());
@@ -569,7 +569,7 @@ bool Application::UsageOutOfBounds(AwmPtr_t & awm)
 		// Check if the usage value is out of the constraint bounds
 		br::ResourceAssignmentPtr_t const & r_assign(rsrc_amount);
 		if ((r_assign->GetAmount() < rsrc_constr_it->second->lower) ||
-			(r_assign->GetAmount() > rsrc_constr_it->second->upper))
+		(r_assign->GetAmount() > rsrc_constr_it->second->upper))
 			return true;
 	}
 
@@ -588,9 +588,9 @@ void Application::UpdateEnabledWorkingModes()
 }
 
 Application::ExitCode_t Application::SetResourceConstraint(
-	ResourcePathPtr_t r_path,
-	br::ResourceConstraint::BoundType_t b_type,
-	uint64_t _value)
+							   ResourcePathPtr_t r_path,
+							   br::ResourceConstraint::BoundType_t b_type,
+							   uint64_t _value)
 {
 
 	// Check the existance of the resource
@@ -635,8 +635,8 @@ Application::ExitCode_t Application::SetResourceConstraint(
 }
 
 Application::ExitCode_t Application::ClearResourceConstraint(
-	ResourcePathPtr_t r_path,
-	br::ResourceConstraint::BoundType_t b_type)
+							     ResourcePathPtr_t r_path,
+							     br::ResourceConstraint::BoundType_t b_type)
 {
 	// Lookup the constraint by resource pathname
 	auto const it_con(rsrc_constraints.find(r_path));
@@ -667,8 +667,8 @@ Application::ExitCode_t Application::ClearResourceConstraint(
 }
 
 uint64_t Application::GetResourceRequestStat(
-	std::string const & rsrc_path,
-	ApplicationStatusIF::ResourceUsageStatType_t stats_type)
+					     std::string const & rsrc_path,
+					     ApplicationStatusIF::ResourceUsageStatType_t stats_type)
 {
 	uint64_t min_val = UINT64_MAX;
 	uint64_t max_val = 0;
@@ -720,7 +720,7 @@ Application::ExitCode_t Application::LoadTaskGraph()
 			StrId(), tg_path.c_str(), tg_sem_name.c_str());
 		tg_sem = sem_open(tg_sem_name.c_str(), O_RDWR);
 		if (errno != 0) {
-			logger->Crit("LoadTaskGraph: [%s] error while opening semaphore [errno=%d]: %s",
+			logger->Warn("LoadTaskGraph: [%s] error while opening semaphore [errno=%d]: %s",
 				StrId(), errno, strerror(errno));
 			return APP_TG_SEM_ERROR;
 		}
