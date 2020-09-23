@@ -18,22 +18,17 @@
 #include "bbque/res/resource_assignment.h"
 #include "bbque/res/resource_path.h"
 
-namespace bbque
-{
-namespace res
-{
+namespace bbque {
+namespace res {
 
-ResourceAssignment::ResourceAssignment(uint64_t amount, Policy policy):
-	amount(amount),
-	fill_policy(policy)
-{
-}
+ResourceAssignment::ResourceAssignment(uint64_t amount, Policy policy) :
+    amount(amount),
+    fill_policy(policy) { }
 
 ResourceAssignment::~ResourceAssignment()
 {
 	resources.clear();
 }
-
 
 void ResourceAssignment::SetResourcesList(ResourcePtrList_t & r_list)
 {
@@ -43,16 +38,15 @@ void ResourceAssignment::SetResourcesList(ResourcePtrList_t & r_list)
 	resources.clear();
 	mask.Reset();
 
-	for (auto & resource: r_list) {
+	for (auto & resource : r_list) {
 		resources.push_back(resource);
 		mask.Set(resource->ID());
 	}
 }
 
-void ResourceAssignment::SetResourcesList(
-        ResourcePtrList_t & r_list,
-        br::ResourceType filter_rtype,
-        ResourceBitset & filter_mask)
+void ResourceAssignment::SetResourcesList(ResourcePtrList_t & r_list,
+					  br::ResourceType filter_rtype,
+					  ResourceBitset & filter_mask)
 {
 	if (r_list.empty())
 		return;
@@ -60,18 +54,14 @@ void ResourceAssignment::SetResourcesList(
 	resources.clear();
 	mask.Reset();
 
-	for (auto & assign_resource: r_list) {
-		if ((filter_rtype == assign_resource->Type()) &&
-		    (!filter_mask.Test((assign_resource->ID()))))
-			continue;
-		resources.push_back(assign_resource);
+	for (auto & candidate_resource : r_list) {
+		if ((filter_rtype == candidate_resource->Type()) && (filter_mask.Test((candidate_resource->ID()))))
+			resources.push_back(candidate_resource);
 	}
 }
 
-
-void ResourceAssignment::SetResourcesList(
-        ResourcePtrList_t & r_list,
-        ResourceBitset const & filter_mask)
+void ResourceAssignment::SetResourcesList(ResourcePtrList_t & r_list,
+					  ResourceBitset const & filter_mask)
 {
 	if (r_list.empty())
 		return;
@@ -79,10 +69,10 @@ void ResourceAssignment::SetResourcesList(
 	resources.clear();
 	mask.Reset();
 
-	for (auto & resource: r_list) {
-		if (filter_mask.Test(resource->ID())) {
-			resources.push_back(resource);
-			mask.Set(resource->ID());
+	for (auto & candidate_resource : r_list) {
+		if (filter_mask.Test(candidate_resource->ID())) {
+			resources.push_back(candidate_resource);
+			mask.Set(candidate_resource->ID());
 		}
 	}
 }

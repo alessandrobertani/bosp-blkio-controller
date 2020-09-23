@@ -81,7 +81,7 @@ void ResourceBinder::Bind(
 		logger->Debug("Bind: out=<%s> amount=%ld",
 			out_path->ToString().c_str(), out_assign->GetAmount());
 
-		// Retrive the list of resources to which the request can be bound
+		// Retrieve the list of resources to which the request can be bound
 		ResourcePtrList_t r_bindings = ra.GetResources(out_path);
 		logger->Debug("Bind: out=<%s> binding list length=%d",
 			out_path->ToString().c_str(), r_bindings.size());
@@ -97,10 +97,10 @@ void ResourceBinder::Bind(
 		}
 		else {
 			out_assign->SetResourcesList(r_bindings);
-			logger->Debug("Bind: <%s> set resources list [length=%d]",
-				out_path->ToString().c_str(),
-				out_assign->GetResourcesList().size());
 		}
+		logger->Debug("Bind: <%s> set resources list [length=%d]",
+			out_path->ToString().c_str(),
+			out_assign->GetResourcesList().size());
 
 		// Insert the resource usage object in the output map and exit
 		// from the loop
