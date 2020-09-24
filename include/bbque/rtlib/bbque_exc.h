@@ -111,12 +111,14 @@ public:
 	 * @param name the name of the EXC
 	 * @param recipe the recipe to run-time manage this EXC
 	 * @param rtlib a reference to the RTLib
+	 * @param lang the programming language or extension of the EXC
 	 *
 	 * @ingroup rtlib_sec02_aem_exc
 	 */
 	BbqueEXC(std::string const & name,
 	         std::string const & recipe,
-	         RTLIB_Services_t * rtlib);
+	         RTLIB_Services_t * rtlib,
+	         RTLIB_ProgrammingLanguage_t lang = RTLIB_LANG_CPP);
 
 	/**
 	 * @brief Destory the EXC

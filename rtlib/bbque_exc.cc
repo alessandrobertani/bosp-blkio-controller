@@ -41,18 +41,19 @@ namespace rtlib
 {
 
 BbqueEXC::BbqueEXC(
-        std::string const & name,
-        std::string const & recipe,
-        RTLIB_Services_t * const rtl) :
+		std::string const & name,
+		std::string const & recipe,
+		RTLIB_Services_t * const handler,
+		RTLIB_ProgrammingLanguage_t lang) :
 	exc_name(name),
 	rpc_name(recipe),
-	rtlib(rtl),
+	rtlib(handler),
 	config(*(rtlib->config)), cycles_count(0)
 {
 	// Note: EXC with the same recipe name are not allowed
 	RTLIB_EXCParameters_t exc_parameters = {
 		{RTLIB_VERSION_MAJOR, RTLIB_VERSION_MINOR},
-		RTLIB_LANG_CPP,
+		lang,
 		rpc_name.c_str()
 	};
 
