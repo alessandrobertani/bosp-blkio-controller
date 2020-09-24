@@ -85,8 +85,12 @@ typedef enum RTLIB_ProgrammingLanguage {
 	RTLIB_LANG_C,
 	/** CPP coded EXC */
 	RTLIB_LANG_CPP,
-	/** OpenCL coded EXC */
+	/** Applications using a task-graph based approach (e.g., libpmsl) */
+	RTLIB_LANG_TASKGRAPH,
+	/** OpenCL kernels included */
 	RTLIB_LANG_OPENCL,
+	/** NVIDIA CUDA kernels included */
+	RTLIB_LANG_CUDA,
 
 	RTLIB_LANG_COUNT
 } RTLIB_ProgrammingLanguage_t;
