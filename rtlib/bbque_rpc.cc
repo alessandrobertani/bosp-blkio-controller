@@ -394,8 +394,7 @@ uint8_t BbqueRPC::NextExcID()
 	return exc_id ++;
 }
 
-RTLIB_EXCHandler_t BbqueRPC::Register(
-				      const char * name,
+RTLIB_EXCHandler_t BbqueRPC::Register(const char * name,
 				      const RTLIB_EXCParameters_t * params)
 {
 	RTLIB_ExitCode_t result;
@@ -433,11 +432,9 @@ RTLIB_EXCHandler_t BbqueRPC::Register(
 	return (RTLIB_EXCHandler_t) & (new_exc->parameters);
 }
 
-RTLIB_ExitCode_t BbqueRPC::SetupCGroup(
-				       const RTLIB_EXCHandler_t exc_handler)
+RTLIB_ExitCode_t BbqueRPC::SetupCGroup(const RTLIB_EXCHandler_t exc_handler)
 {
 	auto exc = getRegistered(exc_handler);
-
 	if (! exc)
 		return RTLIB_EXC_NOT_REGISTERED;
 
@@ -445,8 +442,7 @@ RTLIB_ExitCode_t BbqueRPC::SetupCGroup(
 	return CGroupPathSetup(exc);
 }
 
-BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(
-						   const RTLIB_EXCHandler_t exc_handler)
+BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(const RTLIB_EXCHandler_t exc_handler)
 {
 	assert(exc_handler);
 
