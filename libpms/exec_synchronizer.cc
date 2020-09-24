@@ -29,7 +29,7 @@ ExecutionSynchronizer::ExecutionSynchronizer(
 		std::string const & name,
 		std::string const & recipe,
 		RTLIB_Services_t * rtlib):
-	BbqueEXC(name, recipe, rtlib),
+	BbqueEXC(name, recipe, rtlib, RTLIB_LANG_TASKGRAPH),
 	app_name(name) {
 
 	app_name.resize(RTLIB_APP_NAME_LENGTH-1);
