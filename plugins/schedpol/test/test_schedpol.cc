@@ -355,24 +355,6 @@ TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 		return ret;
 	}
 
-	// The ResourceBitset object is used for the processing elements binding
-	// (CPU core mapping)
-
-	/*
-
-	auto resource_path = ra.GetPath("sys.cpu" + std::to_string(cpu_id) + ".pe");
-	br::ResourceBitset pes;
-	uint16_t pe_count = 0;
-	for (auto & pe_id : pe_ids) {
-		pes.Set(pe_id);
-		ref_num = pawm->BindResource(resource_path, pes, ref_num);
-		logger->Info("DoCPUBinding : [ % s] binding refn : % d", pawm->StrId(), ref_num);
-		++pe_count;
-		if (pe_count == CPU_QUOTA_TO_ALLOCATE / 100) break;
-	}
-
-	 */
-
 	auto gpu_amount = pawm->GetRequestedAmount("sys.gpu.pe");
 	if (gpu_amount > 0) {
 		ret = this->BindResourceToFirstAvailable(pawm,
@@ -407,12 +389,23 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 			br::GetResourceTypeString(r_type),
 			bind_id,
 			curr_quota_available);
+
 		if (curr_quota_available >= amount) {
-			ref_num = pawm->BindResource(
-						r_type,
-						R_ID_ANY,
-						bind_id,
-						ref_num);
+			if (r_type == br::ResourceType::CPU) {
+				BindToFirstAvailableProcessingElements(
+								pawm,
+								r_type,
+								amount,
+								bind_id,
+								ref_num);
+			}
+			else {
+				ref_num = pawm->BindResource(
+							r_type,
+							R_ID_ANY,
+							bind_id,
+							ref_num);
+			}
 			binding_done = true;
 			logger->Debug("DoResourceBinding: <%s> -> <%s> done",
 				br::ResourcePathUtils::GetTemplate(resource_path_to_bind).c_str(),
@@ -430,6 +423,36 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 	return ExitCode_t::SCHED_OK;
 }
 
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::BindToFirstAvailableProcessingElements(bbque::app::AwmPtr_t pawm,
+						     br::ResourceType r_type,
+						     uint64_t amount,
+						     int32_t r_bind_id,
+						     int32_t & ref_num)
+{
+	br::ResourceBitset cpu_pes_bitset;
+	auto amount_to_assign = amount;
+
+	for (auto & pe_rsrc : this->cpu_pe_list) {
+		auto avail_amount = pe_rsrc->Available(nullptr, sched_status_view);
+		if (avail_amount == 0)
+			continue;
+		amount_to_assign -= std::min(amount_to_assign, avail_amount);
+		cpu_pes_bitset.Set(pe_rsrc->ID());
+		if (amount_to_assign == 0) break;
+	}
+
+	ref_num = pawm->BindResource(
+				r_type,
+				R_ID_ANY,
+				r_bind_id,
+				ref_num,
+				br::ResourceType::PROC_ELEMENT,
+				&cpu_pes_bitset);
+
+	return ExitCode_t::SCHED_OK;
+
+}
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 

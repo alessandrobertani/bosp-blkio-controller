@@ -149,6 +149,12 @@ private:
 						uint64_t amount,
 						int32_t & ref_num);
 
+	ExitCode_t BindToFirstAvailableProcessingElements(bbque::app::AwmPtr_t pawm,
+							br::ResourceType r_type,
+							uint64_t amount,
+							int32_t r_bind_id,
+							int32_t & ref_num);
+
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 	void MapTaskGraph(bbque::app::AppCPtr_t papp);
