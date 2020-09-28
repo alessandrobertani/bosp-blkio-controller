@@ -325,8 +325,9 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	}
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
-
-	MapTaskGraph(papp); // Task level mapping
+	// Task level mapping
+	if (papp->Language() & RTLIB_LANG_TASKGRAPH)
+		MapTaskGraph(papp);
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
