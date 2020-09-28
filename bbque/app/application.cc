@@ -587,13 +587,12 @@ void Application::UpdateEnabledWorkingModes()
 	logger->Debug("UpdateEnabledWorkingModes:", awms.enabled_list.size());
 }
 
-Application::ExitCode_t Application::SetResourceConstraint(
-							   ResourcePathPtr_t r_path,
+Application::ExitCode_t Application::SetResourceConstraint(ResourcePathPtr_t r_path,
 							   br::ResourceConstraint::BoundType_t b_type,
 							   uint64_t _value)
 {
 
-	// Check the existance of the resource
+	// Check the existence of the resource
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	if (!ra.ExistResource(r_path)) {
 		logger->Warn("SetResourceConstraint: %s not found", r_path->ToString().c_str());
@@ -634,8 +633,7 @@ Application::ExitCode_t Application::SetResourceConstraint(
 	return APP_SUCCESS;
 }
 
-Application::ExitCode_t Application::ClearResourceConstraint(
-							     ResourcePathPtr_t r_path,
+Application::ExitCode_t Application::ClearResourceConstraint(ResourcePathPtr_t r_path,
 							     br::ResourceConstraint::BoundType_t b_type)
 {
 	// Lookup the constraint by resource pathname
@@ -666,8 +664,7 @@ Application::ExitCode_t Application::ClearResourceConstraint(
 	return APP_SUCCESS;
 }
 
-uint64_t Application::GetResourceRequestStat(
-					     std::string const & rsrc_path,
+uint64_t Application::GetResourceRequestStat(std::string const & rsrc_path,
 					     ApplicationStatusIF::ResourceUsageStatType_t stats_type)
 {
 	uint64_t min_val = UINT64_MAX;
@@ -715,6 +712,7 @@ Application::ExitCode_t Application::LoadTaskGraph()
 {
 	logger->Debug("LoadTaskGraph: [%s] getting task-graph information...", StrId());
 
+	// Task-graph semaphore acquisition
 	if (tg_sem == nullptr) {
 		logger->Info("LoadTaskGraph: [%s] loading [path:%s sem=%s]...",
 			StrId(), tg_path.c_str(), tg_sem_name.c_str());
@@ -732,6 +730,7 @@ Application::ExitCode_t Application::LoadTaskGraph()
 		return APP_TG_SEM_ERROR;
 	}
 
+	// Semaphore synchronization
 	logger->Debug("LoadTaskGraph: [%s] waiting on task-graph semaphore...", StrId());
 	if (sem_wait(tg_sem) != 0) {
 		logger->Error("LoadTaskGraph: [%s] wait on semaphore failed [errno=%d]: %s",
