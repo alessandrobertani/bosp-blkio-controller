@@ -710,7 +710,14 @@ uint64_t Application::GetResourceRequestStat(std::string const & rsrc_path,
 
 Application::ExitCode_t Application::LoadTaskGraph()
 {
-	logger->Debug("LoadTaskGraph: [%s] getting task-graph information...", StrId());
+	// Check if the application language/extension provides the task-graph
+	if (this->language & RTLIB_LANG_TASKGRAPH) {
+		logger->Debug("LoadTaskGraph: [%s] getting task-graph information...", StrId());
+	}
+	else {
+		logger->Debug("LoadTaskGraph:[%s] is NOT task-graph programming", StrId());
+		return ExitCode_t::APP_SUCCESS;
+	}
 
 	// Task-graph semaphore acquisition
 	if (tg_sem == nullptr) {
