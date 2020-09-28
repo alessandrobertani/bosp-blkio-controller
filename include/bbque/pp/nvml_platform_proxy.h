@@ -16,6 +16,8 @@
 #define BBQUE_PP_NVML_PLATFORM_ID ".nvidia"
 #define BBQUE_PP_NVML_HARDWARE_ID "cuda"
 
+#define BBQUE_NVIDIA_GPU_PATH "sys.gpu.pe"
+
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
