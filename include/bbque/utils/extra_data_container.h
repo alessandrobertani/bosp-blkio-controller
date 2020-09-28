@@ -23,32 +23,34 @@
 #include <string>
 
 
-namespace bbque { namespace utils {
-
+namespace bbque {
+namespace utils {
 
 /**
- * struct PluginData
+ * @struct PluginData
  *
  * The structure must be inherited in order to implement a specific
  * attribute to manage. This provides just a string to classify the
  * attribute, and the identifying key string.
  */
-typedef struct PluginData {
-	/** Namespace */
+struct PluginDataKey
+{
+	/** Plugin identification string */
 	std::string plugin_name;
+
 	/** ID key  */
 	std::string key;
-	/** Constructor */
-	PluginData(std::string const & _pname, std::string const & _key):
-		plugin_name(_pname),
-		key(_key) {}
-} PluginData_t;
 
-/** Shared pointer to PluginData_t */
-typedef std::shared_ptr<PluginData_t> PluginDataPtr_t;
+	PluginDataKey(std::string const & _pname, std::string const & _key) :
+	    plugin_name(_pname),
+	    key(_key) { }
+
+};
+
+using PluginDataKeyPtr_t = std::shared_ptr<PluginDataKey>;
 
 /**
- * @brief A coontainer of module-specific attributes
+ * @brief A container of module-specific attributes
  *
  * The class provide an interface for setting and getting specific attributes.
  * We expect to use this class for extending classes as Recipe, Application
@@ -62,25 +64,19 @@ typedef std::shared_ptr<PluginData_t> PluginDataPtr_t;
  * instance how many times it has been re-scheduled, or in the WorkingMode
  * descriptor (e.g. How much that working mode is "good" for the scheduling).
  */
-class ExtraDataContainer {
-
+class ExtraDataContainer
+{
 public:
 
 	/** Data type for the structure storing the plugin-specific data */
-	typedef std::map<std::string, PluginDataPtr_t> PluginDataMap_t;
+	using PluginDataMap_t = std::map<std::string, PluginDataKeyPtr_t>;
 
 	/** Data type for the structure storing the attributes */
-	typedef std::map<std::string, std::string> AttributesMap_t;
+	using AttributesMap_t = std::map<std::string, std::string>;
 
 
-	/**
-	 * @brief Constructor
-	 */
 	ExtraDataContainer();
 
-	/**
-	 * @brief Destructor
-	 */
 	virtual ~ExtraDataContainer();
 
 	/******************************************************************
@@ -93,7 +89,8 @@ public:
 	 * @param pdata Shared pointer to the PluginData object (commonly a
 	 * derived class)
 	 */
-	inline void SetPluginData(PluginDataPtr_t pdata) {
+	void SetPluginData(PluginDataKeyPtr_t pdata)
+	{
 		plugin_data.emplace(pdata->plugin_name, pdata);
 	}
 
@@ -105,8 +102,7 @@ public:
 	 *
 	 * @return A shared pointer to the PluginData object
 	 */
-	PluginDataPtr_t GetPluginData(
-			std::string const & plugin_name, std::string const & key) const;
+	PluginDataKeyPtr_t GetPluginData(std::string const & plugin_name, std::string const & key) const;
 
 	/**
 	 * @brief Clear a plugin specific data
@@ -117,8 +113,7 @@ public:
 	 * @param plugin_name The attribute namespace
 	 * @param key The attribute key
 	 */
-	void ClearPluginData(
-			std::string const & plugin_name, std::string const & key = "");
+	void ClearPluginData(std::string const & plugin_name, std::string const & key = "");
 
 	/******************************************************************
 	 *                       Attributes                               *
@@ -132,8 +127,8 @@ public:
 	 * @param key The attribute key
 	 * @param value A string value
 	 */
-	inline void SetAttribute(
-			std::string const & key, std::string const & value) {
+	void SetAttribute(std::string const & key, std::string const & value)
+	{
 		attributes[key] = value;
 	}
 
@@ -144,7 +139,8 @@ public:
 	 *
 	 * @param key The attribute key
 	 */
-	inline std::string GetAttribute(std::string const & key) const {
+	std::string GetAttribute(std::string const & key) const
+	{
 		AttributesMap_t::const_iterator c_it(attributes.find(key));
 		if (c_it == attributes.end())
 			return "";
@@ -158,7 +154,8 @@ public:
 	 *
 	 * @param key The attribute key
 	 */
-	void ClearAttribute(std::string const & key) {
+	void ClearAttribute(std::string const & key)
+	{
 		attributes.erase(key);
 	}
 

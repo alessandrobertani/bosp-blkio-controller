@@ -31,70 +31,62 @@
 #define RECIPE_NAMESPACE "rcp"
 
 // Maximum number of Application Working Modes manageable
-#define MAX_NUM_AWM 	255
+#define MAX_NUM_AWM  255
 
 namespace bu = bbque::utils;
 namespace br = bbque::res;
 
-namespace bbque
-{
+namespace bbque {
 
-namespace res
-{
+namespace res {
 class ResourcePath;
-typedef std::shared_ptr<ResourcePath> ResourcePathPtr_t;
+using ResourcePathPtr_t = std::shared_ptr<ResourcePath>;
 }
 
 using bbque::res::ResourcePathPtr_t;
 using bbque::res::ResourceType;
 
-namespace app
-{
+namespace app {
 
-// Forward declarations
 class Application;
 class WorkingMode;
 
-/** Shared pointer to Working Mode descriptor */
 using AwmPtr_t = std::shared_ptr<WorkingMode>;
-/** Vector of shared pointer to WorkingMode*/
 using AwmPtrVect_t = std::vector<AwmPtr_t>;
-/** Shared pointer to Constraint object */
 using ConstrPtr_t = std::shared_ptr<br::ResourceConstraint>;
-/** Map of Constraints pointers, with the resource path as key*/
 using ConstrMap_t = std::map<ResourcePathPtr_t, ConstrPtr_t>;
-
 
 /**
  * @brief Attribute structure for plugin specific data
  */
-typedef struct AppPluginData: public bu::PluginData_t {
-	/** Constructor */
-	AppPluginData(std::string const & _pname, std::string const & _key):
-		bu::PluginData_t(_pname, _key) {}
+struct AppPluginData : public bu::PluginDataKey
+{
+
+	AppPluginData(std::string const & _pname, std::string const & _key) :
+	    bu::PluginDataKey(_pname, _key) { }
+
 	/** Value: a string object */
-	std::string str;
-} AppPluginData_t;
+	std::string value;
 
-/// Shared pointer to AppPluginData_t
-typedef std::shared_ptr<AppPluginData_t> AppPluginDataPtr_t;
+};
 
+typedef std::shared_ptr<AppPluginData> AppPluginDataPtr_t;
 
 /**
  * @brief An application recipe
  *
  * Applications need the set of working mode definitions, plus (optionally)
- * constraints) and other information in order to be managed by Barbeque.
+ * constraints) and other information in order to be managed by BarbequeRTRM.
  * Such stuff is stored in a Recipe object. Each application can use more than
  * one recipe, but a single instance must specify the one upon which base its
  * execution.
  */
-class Recipe: public bu::ExtraDataContainer
+class Recipe : public bu::ExtraDataContainer
 {
-
 	friend class Application;
 
 public:
+
 	/**
 	 * @class MappingData
 	 * @brief Resource mapping info associated to a task or a buffer
@@ -102,10 +94,11 @@ public:
 	class MappingData
 	{
 	public:
-		MappingData() {}
-		MappingData(ResourceType _t, uint32_t _id, uint32_t _f):
-			type(_t), id(_id), freq_khz(_f)
-		{}
+
+		MappingData() { }
+
+		MappingData(ResourceType _t, uint32_t _id, uint32_t _f) :
+		    type(_t), id(_id), freq_khz(_f) { }
 
 		ResourceType type;
 		uint32_t id;
@@ -119,9 +112,9 @@ public:
 	class TaskGraphMapping
 	{
 	public:
-		uint32_t exec_time_ms;  /// Profiled execution time
-		uint32_t power_mw;      /// Power consumption
-		uint32_t mem_bw;        /// Memory bandwidth utilization
+		uint32_t exec_time_ms; /// Profiled execution time
+		uint32_t power_mw; /// Power consumption
+		uint32_t mem_bw; /// Memory bandwidth utilization
 		std::map<uint32_t, MappingData> tasks;
 		std::map<uint32_t, MappingData> buffers;
 	};
@@ -143,7 +136,8 @@ public:
 	 * @brief Get the path of the recipe
 	 * @return The recipe path string (or an info for retrieving it)
 	 */
-	inline std::string const & Path() {
+	std::string const & Path()
+	{
 		return pathname;
 	}
 
@@ -151,14 +145,16 @@ public:
 	 * @brief Get the priority parsed from the recipe
 	 * @return Priority value
 	 */
-	inline uint8_t GetPriority() const {
+	uint8_t GetPriority() const
+	{
 		return priority;
 	}
 
 	/**
 	 * @brief Set the priority value
 	 */
-	inline void SetPriority(uint8_t prio) {
+	void SetPriority(uint8_t prio)
+	{
 		priority = prio;
 	}
 
@@ -166,11 +162,13 @@ public:
 	 * @brief Insert an application working mode
 	 *
 	 * @param id Working mode ID
-	 * @param name Working mode descripting name
+	 * @param name Working mode descriptive name
 	 * @param value The user QoS value of the working mode
 	 */
-	AwmPtr_t const AddWorkingMode(uint8_t id, std::string const & name,
-	                              uint8_t value);
+	AwmPtr_t const AddWorkingMode(
+				uint8_t id,
+				std::string const & name,
+				uint8_t value);
 
 	/**
 	 * @brief Return an application working mode object by specifying
@@ -179,7 +177,8 @@ public:
 	 * @param id Working mode ID
 	 * @return A shared pointer to the application working mode searched
 	 */
-	inline AwmPtr_t GetWorkingMode(uint8_t id) {
+	AwmPtr_t GetWorkingMode(uint8_t id)
+	{
 		if (last_awm_id == 0)
 			return AwmPtr_t();
 		return working_modes[id];
@@ -189,7 +188,8 @@ public:
 	 * @brief All the working modes defined into the recipe
 	 * @return A vector containing all the working modes
 	 */
-	inline AwmPtrVect_t const & WorkingModesAll() {
+	AwmPtrVect_t const & WorkingModesAll()
+	{
 		return working_modes;
 	}
 
@@ -198,7 +198,8 @@ public:
 	 * @param task_id Task identification number
 	 * @param tr Task requirements structure
 	 */
-	inline void AddTaskRequirements(uint32_t id, TaskRequirements tr) {
+	void AddTaskRequirements(uint32_t id, TaskRequirements tr)
+	{
 		tg_reqs[id] = tr;
 	}
 
@@ -207,7 +208,8 @@ public:
 	 * @param task_id Task identification number
 	 * @return Task requirements structure
 	 */
-	inline TaskRequirements & GetTaskRequirements(uint32_t id) {
+	TaskRequirements & GetTaskRequirements(uint32_t id)
+	{
 		return tg_reqs[id];
 	}
 
@@ -216,7 +218,8 @@ public:
 	 * @param id Mapping choice number
 	 * @param tg_map A TaskGraphMapping structure
 	 */
-	inline void AddTaskGraphMapping(uint32_t id, TaskGraphMapping tg_map) {
+	void AddTaskGraphMapping(uint32_t id, TaskGraphMapping tg_map)
+	{
 		tg_mappings[id] = tg_map;
 	}
 
@@ -225,11 +228,14 @@ public:
 	 * @param id Mapping choice number
 	 * @return A TaskGraphMapping structure
 	 */
-	inline TaskGraphMapping GetTaskGraphMapping(uint32_t id) const {
+	TaskGraphMapping GetTaskGraphMapping(uint32_t id) const
+	{
 		TaskGraphMapping mapping_opt;
 		try {
 			mapping_opt = tg_mappings.at(id);
-		} catch(std::exception & ex) { }
+		}
+		catch (std::out_of_range & ex) {
+		}
 		return mapping_opt;
 	}
 
@@ -237,7 +243,8 @@ public:
 	 * @brief Get the map of all the task-graph mappings
 	 * @return A map of ids and TaskGraphMapping data structures
 	 */
-	inline TaskGraphMappingsMap_t const & GetTaskGraphMappingAll() const {
+	TaskGraphMappingsMap_t const & GetTaskGraphMappingAll() const
+	{
 		return tg_mappings;
 	}
 
@@ -260,7 +267,8 @@ public:
 	 * @brief Get all the static constraints
 	 * @return The map of static constraints
 	 */
-	inline ConstrMap_t const & ConstraintsAll() {
+	ConstrMap_t const & ConstraintsAll()
+	{
 		return constraints;
 	}
 
@@ -305,17 +313,18 @@ private:
 	/** Design-time task graph mappings */
 	TaskGraphMappingsMap_t tg_mappings;
 
-
 	/** AWM attribute type flag */
-	enum AwmAttrType_t {
-	    VALUE,
-	    CONFIG_TIME
+	enum AwmAttrType_t
+	{
+		VALUE,
+		CONFIG_TIME
 	};
 
 	/**
 	 * Store information to support the normalization of the AWM attributes
 	 */
-	struct AwmNormalInfo {
+	struct AwmNormalInfo
+	{
 		/** The AWM attribute to normalize */
 		AwmAttrType_t attr;
 		/** Maximum value parsed */
@@ -331,7 +340,7 @@ private:
 		uint32_t delta;
 	};
 
-	/** Normalization support fot the AWM values */
+	/** Normalization support for the AWM values */
 	AwmNormalInfo values;
 
 	/** Normalization support for the configuration times */

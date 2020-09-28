@@ -94,7 +94,7 @@ struct RLinuxBindings_t
 
 using RLinuxBindingsPtr_t = std::shared_ptr<RLinuxBindings_t>;
 
-struct CGroupData_t : public bbque::utils::PluginData_t
+struct CGroupData_t : public bbque::utils::PluginDataKey
 {
 	bbque::app::SchedPtr_t papp; /** The controlled application */
 #define BBQUE_PP_LINUX_CGROUP_PATH_MAX 128 // "user.slice/res/12345:ABCDEF:00";
@@ -109,7 +109,7 @@ struct CGroupData_t : public bbque::utils::PluginData_t
 	bool cfs_quota_available = false; /** Target system supports CFS quota management? */
 
 	CGroupData_t(bbque::app::SchedPtr_t sched_app) :
-	    bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
+	    bu::PluginDataKey(LINUX_PP_NAMESPACE, "cgroup"),
 	    papp(sched_app), pcg(NULL), pc_cpu(NULL),
 	    pc_cpuset(NULL), pc_memory(NULL)
 	{
@@ -119,7 +119,7 @@ struct CGroupData_t : public bbque::utils::PluginData_t
 	}
 
 	CGroupData_t(const char *cgp) :
-	    bu::PluginData_t(LINUX_PP_NAMESPACE, "cgroup"),
+	    bu::PluginDataKey(LINUX_PP_NAMESPACE, "cgroup"),
 	    pcg(NULL), pc_cpu(NULL),
 	    pc_cpuset(NULL), pc_memory(NULL)
 	{

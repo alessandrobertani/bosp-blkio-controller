@@ -32,7 +32,7 @@ ExtraDataContainer::~ExtraDataContainer() {
 	attributes.clear();
 }
 
-PluginDataPtr_t ExtraDataContainer::GetPluginData(
+PluginDataKeyPtr_t ExtraDataContainer::GetPluginData(
 		std::string const & _plugin_name,
 		std::string const & _key) const {
 
@@ -41,7 +41,7 @@ PluginDataPtr_t ExtraDataContainer::GetPluginData(
 			if (data.second->key.c_str() == _key)
 				return data.second;
 	// Null return
-	return PluginDataPtr_t();
+	return PluginDataKeyPtr_t();
 }
 
 void ExtraDataContainer::ClearPluginData(
