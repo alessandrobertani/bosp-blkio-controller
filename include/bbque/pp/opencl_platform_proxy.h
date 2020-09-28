@@ -41,6 +41,9 @@
 #define BBQUE_PP_OPENCL_PLATFORM_ID   ".opencl"
 #define BBQUE_PP_OPENCL_HARDWARE_ID   "khronos"
 
+#define BBQUE_OPENCL_GPU_PATH "sys.grp.gpu.pe"
+
+
 namespace ba = bbque::app;
 namespace br = bbque::res;
 namespace bu = bbque::utils;
