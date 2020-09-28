@@ -149,8 +149,7 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 	fut_tg.get();
 
 	// AEM integrated applications
-	auto assign_awm_app = std::bind(
-					static_cast<ExitCode_t (TestSchedPol::*)(ba::AppCPtr_t)>
+	auto assign_awm_app = std::bind(static_cast<ExitCode_t (TestSchedPol::*)(ba::AppCPtr_t)>
 					(&TestSchedPol::AssignWorkingMode),
 					this, _1);
 
@@ -160,8 +159,7 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 #ifdef CONFIG_BBQUE_LINUX_PROC_MANAGER
 
 	// Not integrated processes
-	auto assign_awm_proc = std::bind(
-					static_cast<ExitCode_t (TestSchedPol::*)(ProcPtr_t)>
+	auto assign_awm_proc = std::bind(static_cast<ExitCode_t (TestSchedPol::*)(ProcPtr_t)>
 					(&TestSchedPol::AssignWorkingMode),
 					this, _1);
 
@@ -331,9 +329,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
-	logger->Info("AssignWorkingMode: [%s] successfully scheduled",
-		papp->StrId());
-
+	logger->Info("AssignWorkingMode: [%s] successfully scheduled", papp->StrId());
 	return SCHED_OK;
 }
 
@@ -495,6 +491,8 @@ TestSchedPol::BindToFirstAvailableProcessingElements(bbque::app::AwmPtr_t pawm,
 				br::ResourceType::PROC_ELEMENT,
 				&cpu_pes_bitset);
 
+	if (ref_num > 0) return ExitCode_t::SCHED_OK;
+
 	return ExitCode_t::SCHED_OK;
 
 }
@@ -528,6 +526,7 @@ TestSchedPol::BindToFirstAvailableOpenCL(bbque::app::AwmPtr_t pawm,
 
 	return ExitCode_t::SCHED_R_UNAVAILABLE;
 }
+
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
