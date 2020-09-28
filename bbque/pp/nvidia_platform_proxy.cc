@@ -17,13 +17,13 @@
 
 #include <string>
 
-#include "bbque/pp/nvml_platform_proxy.h"
+#include "bbque/pp/nvidia_platform_proxy.h"
 #include "bbque/platform_manager.h"
 #include "bbque/power_monitor.h"
 #include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
 
-#define MODULE_NAMESPACE "bq.pp.nvml"
+#define MODULE_NAMESPACE "bq.pp.nvidia"
 
 namespace br = bbque::res;
 namespace po = boost::program_options;
@@ -32,15 +32,15 @@ namespace bbque {
 
 namespace pp {
 
-NVMLPlatformProxy * NVMLPlatformProxy::GetInstance()
+NVIDIAPlatformProxy * NVIDIAPlatformProxy::GetInstance()
 {
-	static NVMLPlatformProxy * instance;
+	static NVIDIAPlatformProxy * instance;
 	if (instance == nullptr)
-		instance = new NVMLPlatformProxy();
+		instance = new NVIDIAPlatformProxy();
 	return instance;
 }
 
-NVMLPlatformProxy::NVMLPlatformProxy()
+NVIDIAPlatformProxy::NVIDIAPlatformProxy()
 {
 	logger = bu::Logger::GetLogger(MODULE_NAMESPACE);
 	assert(logger);
@@ -48,9 +48,9 @@ NVMLPlatformProxy::NVMLPlatformProxy()
 	this->hardware_id = BBQUE_PP_NVML_HARDWARE_ID;
 }
 
-NVMLPlatformProxy::~NVMLPlatformProxy() { }
+NVIDIAPlatformProxy::~NVIDIAPlatformProxy() { }
 
-PlatformProxy::ExitCode_t NVMLPlatformProxy::LoadPlatformData()
+PlatformProxy::ExitCode_t NVIDIAPlatformProxy::LoadPlatformData()
 {
 	nvmlReturn_t result;
 
@@ -61,18 +61,18 @@ PlatformProxy::ExitCode_t NVMLPlatformProxy::LoadPlatformData()
 	// Initialization
 	result = nvmlInit();
 	if (NVML_SUCCESS != result) {
-		logger->Error("NVML: initialization error %s", nvmlErrorString(result));
+		logger->Error("NVIDIA: initialization error %s", nvmlErrorString(result));
 		return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
 	}
-	logger->Info("NVML: NVML initialized correctly");
+	logger->Info("NVIDIA: NVML initialized correctly");
 
 	// Get devices
 	result = nvmlDeviceGetCount(&device_count);
 	if (NVML_SUCCESS != result) {
-		logger->Error("NVML: Device error %s", nvmlErrorString(result));
+		logger->Error("NVIDIA: Device error %s", nvmlErrorString(result));
 		return PlatformProxy::PLATFORM_ENUMERATION_FAILED;
 	}
-	logger->Info("NVML: Number of device(s) found: %d", device_count);
+	logger->Info("NVIDIA: Number of device(s) found: %d", device_count);
 	nv_devices = new nvmlDevice_t[device_count];
 
 	for (uint i = 0; i < device_count; ++i) {
@@ -97,19 +97,18 @@ PlatformProxy::ExitCode_t NVMLPlatformProxy::LoadPlatformData()
 	return PlatformProxy::PLATFORM_OK;
 }
 
-PlatformProxy::ExitCode_t NVMLPlatformProxy::MapResources(
-							  ba::SchedPtr_t papp,
-							  br::ResourceAssignmentMapPtr_t assign_map,
-							  bool excl)
+PlatformProxy::ExitCode_t NVIDIAPlatformProxy::MapResources(ba::SchedPtr_t papp,
+							    br::ResourceAssignmentMapPtr_t assign_map,
+							    bool excl)
 {
 	(void) papp;
 	(void) assign_map;
 	(void) excl;
-	logger->Warn("NVML: No mapping action implemented");
+	logger->Warn("NVIDIA: No mapping action implemented");
 	return PlatformProxy::PLATFORM_OK;
 }
 
-PlatformProxy::ExitCode_t NVMLPlatformProxy::RegisterDevices()
+PlatformProxy::ExitCode_t NVIDIAPlatformProxy::RegisterDevices()
 {
 	nvmlReturn_t result;
 	char dev_name[NVML_DEVICE_NAME_BUFFER_SIZE];
@@ -162,13 +161,13 @@ PlatformProxy::ExitCode_t NVMLPlatformProxy::RegisterDevices()
 	return PlatformProxy::PLATFORM_OK;
 }
 
-void NVMLPlatformProxy::Exit()
+void NVIDIAPlatformProxy::Exit()
 {
 	logger->Debug("Exiting the Nvml Proxy...");
 
 	nvmlReturn_t result = nvmlShutdown();
 	if (NVML_SUCCESS != result) {
-		logger->Warn("NVML: Failed to shutdown NVML: [Err:%s]",
+		logger->Warn("NVIDIA: Failed to shutdown NVML: [Err:%s]",
 			nvmlErrorString(result));
 	}
 	logger->Notice("NVML shutdownend correctly");

@@ -25,16 +25,16 @@ namespace bu = bbque::utils;
 namespace bbque {
 namespace pp {
 
-class NVMLPlatformProxy : public OpenCLPlatformProxy
+class NVIDIAPlatformProxy : public OpenCLPlatformProxy
 {
 public:
 
-	static NVMLPlatformProxy * GetInstance();
+	static NVIDIAPlatformProxy * GetInstance();
 
 	/**
 	 * @brief Destructor
 	 */
-	virtual ~NVMLPlatformProxy();
+	virtual ~NVIDIAPlatformProxy();
 
 	/**
 	 * @brief Load NVML device data function
@@ -65,7 +65,7 @@ private:
 	std::unique_ptr<bu::Logger> logger;
 
 	/*** Constructor */
-	NVMLPlatformProxy();
+	NVIDIAPlatformProxy();
 
 	ExitCode_t RegisterDevices();
 };

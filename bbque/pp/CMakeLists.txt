@@ -57,7 +57,7 @@ if (CONFIG_TARGET_OPENCL)
 endif ()
 
 if (CONFIG_TARGET_NVIDIA)
-	set (BBQUE_PP_SRC nvml_platform_proxy ${BBQUE_PP_SRC})
+	set (BBQUE_PP_SRC nvidia_platform_proxy ${BBQUE_PP_SRC})
 endif ()
 
 

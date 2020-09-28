@@ -44,7 +44,7 @@
 #endif
 
 #ifdef CONFIG_TARGET_NVIDIA
-#include "bbque/pp/nvml_platform_proxy.h"
+#include "bbque/pp/nvidia_platform_proxy.h"
 #endif
 
 namespace bbque {
@@ -86,7 +86,7 @@ LocalPlatformProxy::LocalPlatformProxy()
 #endif
 
 #ifdef CONFIG_TARGET_NVIDIA
-	this->accl.push_back(std::unique_ptr<NVMLPlatformProxy>(NVMLPlatformProxy::GetInstance()));
+	this->accl.push_back(std::unique_ptr<NVIDIAPlatformProxy>(NVIDIAPlatformProxy::GetInstance()));
 #endif
 
 	for (auto & p : this->accl) {

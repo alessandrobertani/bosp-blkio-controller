@@ -37,7 +37,7 @@
 #endif
 
 #ifdef CONFIG_TARGET_NVIDIA
-#include "bbque/pp/nvml_platform_proxy.h"
+#include "bbque/pp/nvidia_platform_proxy.h"
 #endif
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME

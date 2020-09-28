@@ -34,25 +34,24 @@ namespace br = bbque::res;
 
 namespace bbque {
 
-
 /**
  * @class NVIDIAPowerManager
  *
  * @brief Provide power management related API for NVIDIA GPU devices,
  * by extending @ref PowerManager class.
  */
-class NVIDIAPowerManager: public PowerManager {
-
+class NVIDIAPowerManager : public PowerManager
+{
 public:
 
 	NVIDIAPowerManager();
 
 	~NVIDIAPowerManager();
 
-    static NVIDIAPowerManager & GetInstance();
+	static NVIDIAPowerManager & GetInstance();
 
 
-    PMResult GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc);
+	PMResult GetLoad(br::ResourcePathPtr_t const & rp, uint32_t & perc);
 
 
 	PMResult GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t & celsius);
@@ -65,16 +64,16 @@ public:
 
 
 	PMResult GetClockFrequencyInfo(br::ResourcePathPtr_t const & rp,
-	                               uint32_t & khz_min, uint32_t & khz_max,
-	                               uint32_t & khz_step);
+				uint32_t & khz_min, uint32_t & khz_max,
+				uint32_t & khz_step);
 
 
 	PMResult GetAvailableFrequencies(br::ResourcePathPtr_t const & rp,
-	                                 std::vector<uint32_t> & freqs);
+					std::vector<uint32_t> & freqs);
 
 
 	PMResult GetFanSpeed(br::ResourcePathPtr_t const & rp, FanSpeedType fs_type,
-	                     uint32_t & value);
+			uint32_t & value);
 
 
 	PMResult GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mwatt);
@@ -84,24 +83,25 @@ public:
 
 
 	PMResult GetPowerInfo(br::ResourcePathPtr_t const & rp, uint32_t & mwatt_min,
-	                      uint32_t & mwatt_max);
+			uint32_t & mwatt_max);
 
 
 	PMResult GetPowerStatesInfo(br::ResourcePathPtr_t const & rp, uint32_t & min,
-	                            uint32_t & max, int & step);
+				uint32_t & max, int & step);
 
 
 	PMResult GetPerformanceState(br::ResourcePathPtr_t const & rp,
-	                             uint32_t & state);
+				uint32_t & state);
 
 	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
-	                                   uint32_t & count);
+					uint32_t & count);
 
 private:
 
 	bool initialized = false;
 
-	struct DeviceInfo {
+	struct DeviceInfo
+	{
 		char name[NVML_DEVICE_NAME_BUFFER_SIZE];
 		nvmlPciInfo_t pci;
 		nvmlComputeMode_t compute_mode;
