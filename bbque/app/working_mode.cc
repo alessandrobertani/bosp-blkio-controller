@@ -161,7 +161,7 @@ WorkingMode::GetResourceRequest(std::string const & str_path)
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	auto resource_path = ra.GetPath(str_path);
 	if (resource_path == nullptr) {
-		logger->Warn("GetResourcePath: resource <%s> not included", str_path.c_str());
+		logger->Debug("GetResourcePath: resource <%s> not included", str_path.c_str());
 		return nullptr;
 	}
 	return GetResourceRequest(resource_path);
