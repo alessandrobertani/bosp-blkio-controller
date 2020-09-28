@@ -310,7 +310,6 @@ rapidxml::xml_node<> * RXMLRecipeLoader::LoadPlatform(rapidxml::xml_node<> * _xm
 
 std::time_t RXMLRecipeLoader::LastModifiedTime(std::string const & _name)
 {
-
 	boost::filesystem::path p(recipe_dir + "/" + _name + ".recipe");
 	return boost::filesystem::last_write_time(p);
 }
@@ -399,7 +398,6 @@ RXMLRecipeLoader::LoadWorkingModes(rapidxml::xml_node<> * _xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 		return RL_ABORTED;
 	}
@@ -428,7 +426,6 @@ void RXMLRecipeLoader::LoadTaskGraphInfo(rapidxml::xml_node<> *_xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 		return;
 	}
@@ -508,7 +505,6 @@ void RXMLRecipeLoader::LoadTasksRequirements(rapidxml::xml_node<> *_xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 		return;
 	}
@@ -573,7 +569,6 @@ void RXMLRecipeLoader::LoadTaskGraphMappings(rapidxml::xml_node<> *_xml_elem)
 
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 		return;
 	}
@@ -626,7 +621,6 @@ void RXMLRecipeLoader::LoadTaskGraphMapping(rapidxml::xml_node<> *_xml_elem,
 
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 		return;
 	}
@@ -692,7 +686,7 @@ uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 	rapidxml::xml_node<> * res_elem = nullptr;
 
 	try {
-		// Get the resource xml element
+		// Get the resource XML element
 		res_elem = _xml_elem->first_node(0, 0, true);
 		CheckMandatoryNode(res_elem, "", _xml_elem);
 		while (res_elem) {
@@ -709,7 +703,8 @@ uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 			if (res_elem->first_node(0, 0, true)) {
 				result |= LoadResources(res_elem, _wm, res_path);
 				if (result >= __RSRC_WEAK_LOAD) {
-					logger->Warn("Weak load case (N): %s", res_path.c_str());
+					logger->Warn("Weak load case (N): %s",
+						res_path.c_str());
 					return result;
 				}
 			}
@@ -719,7 +714,6 @@ uint8_t RXMLRecipeLoader::LoadResources(rapidxml::xml_node<> * _xml_elem,
 		}
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 		return __RSRC_FORMAT_ERR;
 	}
@@ -747,11 +741,11 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(rapidxml::xml_node<> * _res_elem
 						AwmPtr_t & _wm,
 						std::string & _res_path)
 {
-	uint64_t res_usage = 0;
+	uint64_t quantity_value = 0;
 	std::string res_units;
 	std::string res_id;
-	std::string read_usage;
-	rapidxml::xml_attribute<> * attribute_usage;
+	std::string quantity_str;
+	rapidxml::xml_attribute<> * attr_quantity;
 	rapidxml::xml_attribute<> * attribute_id;
 
 	// Resource ID
@@ -766,31 +760,32 @@ uint8_t RXMLRecipeLoader::GetResourceAttributes(rapidxml::xml_node<> * _res_elem
 	_res_path += _res_elem->name() + res_id;
 
 	// Resource quantity request and units
-	attribute_usage = _res_elem->first_attribute("qty", 0, true);
-	if (attribute_usage != 0) {
-		read_usage = attribute_usage->value();
-		res_usage = (uint64_t) atoi(read_usage.c_str());
+	attr_quantity = _res_elem->first_attribute("qty", 0, true);
+	if (attr_quantity != 0) {
+		quantity_str = attr_quantity->value();
+		quantity_value = (uint64_t) atoi(quantity_str.c_str());
 	}
 	res_units = loadAttribute("units", false, _res_elem);
 
 	// The usage requested must be > 0
-	if (!(attribute_usage == 0) && res_usage <= 0) {
-		logger->Error("Resource ""%s"": usage value not valid (%" PRIu64 ")",
-			_res_path.c_str(), res_usage);
+	if (!(attr_quantity == 0) && quantity_value <= 0) {
+		logger->Error("GetResourceAttributes <%s>: usage value not valid (%" PRIu64 ")",
+			_res_path.c_str(), quantity_value);
 		return __RSRC_FORMAT_ERR;
 	}
 
 	// If the quantity is 0 return without adding the resource request to the
 	// current AWM
-	if (res_usage == 0) {
-
+	if (quantity_value == 0) {
+		logger->Warn("GetResourceAttributes <%s>: empty resource quantity",
+			_res_path.c_str());
 		return __RSRC_SUCCESS;
 	}
 
 	// Convert the usage value accordingly to the units, and then append the
 	// request to the working mode.
-	res_usage = br::ConvertValue(res_usage, res_units);
-	return AppendToWorkingMode(_wm, _res_path, res_usage);
+	quantity_value = br::ConvertValue(quantity_value, res_units);
+	return AppendToWorkingMode(_wm, _res_path, quantity_value);
 }
 
 
@@ -814,14 +809,12 @@ void RXMLRecipeLoader::LoadPluginsData(T _container,
 	try {
 		// Parse the <plugin> tags
 		plug_node = plugins_node->first_node("plugin", 0, true);
-
 		while (plug_node) {
 			ParsePluginTag<T>(_container, plug_node);
 			plug_node = plug_node->next_sibling("plugin", 0, true);
 		}
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 	}
 }
@@ -843,10 +836,8 @@ void RXMLRecipeLoader::ParsePluginTag(T _container,
 			GetPluginData<T>(_container, plugdata_node, name);
 			plugdata_node = plugdata_node->next_sibling(0, 0, false);
 		}
-
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 	}
 
@@ -859,14 +850,11 @@ void RXMLRecipeLoader::GetPluginData(T _container,
 {
 	try {
 		// Set the plugin data
-		auto pattr = std::make_shared<ba::AppPluginData_t>(
-			_plug_name,
-			plugdata_node->name());
-		pattr->str = plugdata_node->value();
+		auto pattr = std::make_shared<ba::AppPluginData>(_plug_name, plugdata_node->name());
+		pattr->value = plugdata_node->value();
 		_container->SetPluginData(pattr);
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 	}
 }
@@ -920,7 +908,6 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node)
 		}
 	}
 	catch (rapidxml::parse_error &ex) {
-
 		logger->Error(ex.what());
 	}
 
@@ -929,28 +916,25 @@ void RXMLRecipeLoader::LoadConstraints(rapidxml::xml_node<> * _xml_node)
 
 // =======================[ Utils ]=======================================
 
-void RXMLRecipeLoader::CheckMandatoryNode (
-					   rapidxml::xml_node<> * _nodeToCheck,
-					   const char * _nodeToCheckName,
-					   rapidxml::xml_node<> * _nodeParent)
+void RXMLRecipeLoader::CheckMandatoryNode(rapidxml::xml_node<> * node_to_check,
+					  const char * node_to_check_name,
+					  rapidxml::xml_node<> * parent_node)
 {
-
-	if (_nodeParent == nullptr) {
+	if (parent_node == nullptr) {
 		std::string exception_message("Null parent node");
-		throw rapidxml::parse_error(exception_message.c_str(), _nodeParent);
+		throw rapidxml::parse_error(exception_message.c_str(), parent_node);
 	}
 
-	std::string parent_name(_nodeParent->name());
-	std::string child_name(_nodeToCheckName);
+	std::string parent_name(parent_node->name());
+	std::string child_name(node_to_check_name);
 
-
-	//Throwing an exception if the mandatory node doesn't exist
-	if (_nodeToCheck == 0) {
-
-		std::string exception_message("The mandatory node doesn't exist in this"
-					"recipe. The node name is: " + child_name + "."
+	// Throwing an exception if the mandatory node does not exist
+	if (node_to_check == 0) {
+		std::string exception_message(
+					"The mandatory node doesn't exist in this recipe."
+					"The node name is: " + child_name + "."
 					"The parent name is: " + parent_name);
-		throw rapidxml::parse_error(exception_message.c_str(), _nodeParent);
+		throw rapidxml::parse_error(exception_message.c_str(), parent_node);
 	}
 }
 
