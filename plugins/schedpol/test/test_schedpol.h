@@ -105,7 +105,9 @@ private:
 
 	br::ResourcePtrList_t cpu_pe_list;
 
-	br::ResourcePtrList_t gpu_list;
+	br::ResourcePtrList_t gpu_cuda_list;
+
+	br::ResourcePtrList_t gpu_opencl_list;
 
 	uint32_t local_sys_id;
 
@@ -154,6 +156,11 @@ private:
 							uint64_t amount,
 							int32_t r_bind_id,
 							int32_t & ref_num);
+
+	ExitCode_t BindToFirstAvailableOpenCL(bbque::app::AwmPtr_t pawm,
+					br::ResourceType r_type,
+					uint64_t amount,
+					int32_t & ref_num);
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 

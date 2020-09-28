@@ -32,6 +32,14 @@
 #include "bbque/res/resource_path.h"
 #include "tg/task_graph.h"
 
+#ifdef CONFIG_TARGET_OPENCL
+#include "bbque/pp/opencl_platform_proxy.h"
+#endif
+
+#ifdef CONFIG_TARGET_NVIDIA
+#include "bbque/pp/nvml_platform_proxy.h"
+#endif
+
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
 #define CPU_QUOTA_TO_ALLOCATE 100
@@ -100,10 +108,19 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 		logger->Info("Init: %d CPU core(s) available", cpu_pe_list.size());
 	}
 
-	if (this->gpu_list.empty()) {
-		this->gpu_list = sys->GetResources("sys.gpu.pe");
-		logger->Info("Init: %d GPU(s) available", gpu_list.size());
+#ifdef CONFIG_TARGET_NVIDIA
+	if (this->gpu_cuda_list.empty()) {
+		this->gpu_cuda_list = sys->GetResources(BBQUE_NVIDIA_GPU_PATH);
+		logger->Info("Init: %d NVIDIA GPU(s) available", gpu_cuda_list.size());
 	}
+#endif
+
+#ifdef CONFIG_TARGET_OPENCL
+	if (this->gpu_opencl_list.empty()) {
+		this->gpu_opencl_list = sys->GetResources(BBQUE_OPENCL_GPU_PATH);
+		logger->Info("Init: %d OpenCL GPU(s) available", gpu_opencl_list.size());
+	}
+#endif
 
 	// Load all the applications task graphs
 	logger->Info("Init: loading the applications task graphs");
@@ -217,16 +234,17 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 			proc->StrId(), cpu_quota);
 	}
 
-
 	// GPUs
+#ifdef CONFIG_TARGET_NVIDIA
 	uint32_t gpu_quota = proc->GetScheduleRequestInfo()->gpu_units * GPU_QUOTA_TO_ALLOCATE;
 	if (gpu_quota != 0) {
 		pawm->AddResourceRequest("sys.gpu.pe",
 					gpu_quota,
 					br::ResourceAssignment::Policy::BALANCED);
-		logger->Debug("AddResourceRequests: [%s] <sys.gpu.pe> = %lu",
-			proc->StrId(), gpu_quota);
+		logger->Debug("AddResourceRequests: [%s] <%s> = %lu",
+			proc->StrId(), BBQUE_NVIDIA_GPU_PATH, gpu_quota);
 	}
+#endif
 
 	// Accelerators
 	uint32_t acc_quota = proc->GetScheduleRequestInfo()->acc_cores * 100;
@@ -330,12 +348,26 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 				CPU_QUOTA_TO_ALLOCATE,
 				br::ResourceAssignment::Policy::BALANCED);
 
-	if (!gpu_list.empty()) {
-		logger->Debug("AddResourceRequests: [%s] adding resource request"
-			" <sys.gpu.pe>",
-			papp->StrId());
-		pawm->AddResourceRequest("sys.gpu.pe", GPU_QUOTA_TO_ALLOCATE);
+	logger->Debug("AddResourceRequests: [%s] language = %d",
+		papp->StrId(), papp->Language());
+
+#ifdef CONFIG_TARGET_NVIDIA
+	// NVIDIA CUDA devices (GPUs)
+	if (!gpu_cuda_list.empty() && (papp->Language() & RTLIB_LANG_CUDA)) {
+		logger->Debug("AddResourceRequests: [%s] adding resource request <%s>",
+			papp->StrId(), BBQUE_NVIDIA_GPU_PATH);
+		pawm->AddResourceRequest(BBQUE_NVIDIA_GPU_PATH, GPU_QUOTA_TO_ALLOCATE);
 	}
+#endif
+
+#ifdef CONFIG_TARGET_OPENCL
+	// OpenCL applications are under a different resource path
+	if (!gpu_opencl_list.empty() && (papp->Language() & RTLIB_LANG_OPENCL)) {
+		logger->Debug("AddResourceRequests: [%s] adding resource request <%s>",
+			papp->StrId(), BBQUE_OPENCL_GPU_PATH);
+		pawm->AddResourceRequest(BBQUE_OPENCL_GPU_PATH, GPU_QUOTA_TO_ALLOCATE);
+	}
+#endif
 
 	return SCHED_OK;
 }
@@ -355,14 +387,26 @@ TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 		return ret;
 	}
 
-	auto gpu_amount = pawm->GetRequestedAmount("sys.gpu.pe");
-	if (gpu_amount > 0) {
+#ifdef CONFIG_TARGET_NVIDIA
+	auto gpu_cuda_amount = pawm->GetRequestedAmount(BBQUE_NVIDIA_GPU_PATH);
+	if (gpu_cuda_amount > 0) {
 		ret = this->BindResourceToFirstAvailable(pawm,
-							this->gpu_list,
+							this->gpu_cuda_list,
 							br::ResourceType::GPU,
-							gpu_amount,
+							gpu_cuda_amount,
 							ref_num);
 	}
+#endif
+
+#ifdef CONFIG_TARGET_OPENCL
+	auto gpu_opencl_amount = pawm->GetRequestedAmount(BBQUE_OPENCL_GPU_PATH);
+	if (gpu_opencl_amount > 0) {
+		ret = this->BindToFirstAvailableOpenCL(pawm,
+						br::ResourceType::GPU,
+						gpu_opencl_amount,
+						ref_num);
+	}
+#endif
 
 	return ExitCode_t::SCHED_OK;
 }
@@ -454,6 +498,35 @@ TestSchedPol::BindToFirstAvailableProcessingElements(bbque::app::AwmPtr_t pawm,
 
 }
 
+TestSchedPol::ExitCode_t
+TestSchedPol::BindToFirstAvailableOpenCL(bbque::app::AwmPtr_t pawm,
+					 br::ResourceType dev_type,
+					 uint64_t amount,
+					 int32_t & ref_num)
+{
+	uint32_t opencl_platform_id;
+	br::ResourceBitset opencl_devs_bitset;
+
+	for (auto const & ocl_gpu : this->gpu_opencl_list) {
+		if (amount > ocl_gpu->Available(nullptr, this->sched_status_view)) {
+			continue;
+		}
+
+		opencl_platform_id = ocl_gpu->Path()->GetID(br::ResourceType::GROUP);
+		opencl_devs_bitset.Set(ocl_gpu->Path()->GetID(dev_type));
+
+		ref_num = pawm->BindResource(br::ResourceType::GROUP,
+					R_ID_ANY,
+					opencl_platform_id,
+					ref_num,
+					dev_type,
+					&opencl_devs_bitset);
+
+		if (ref_num > 0) return ExitCode_t::SCHED_OK;
+	}
+
+	return ExitCode_t::SCHED_R_UNAVAILABLE;
+}
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
