@@ -172,7 +172,7 @@ WorkingMode::GetResourceRequest(br::ResourcePathPtr_t resource_path)
 {
 	auto it_req = resources.requested.find(resource_path);
 	if (it_req == resources.requested.end()) {
-		logger->Error("GetResourcePath: path <%> not in requested set",
+		logger->Debug("GetResourcePath: path <%s> not in requested set",
 			resource_path->ToString().c_str());
 		return nullptr;
 	}
