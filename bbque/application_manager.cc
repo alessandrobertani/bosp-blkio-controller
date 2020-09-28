@@ -1363,8 +1363,7 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
-void
-ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id)
+void ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id)
 {
 	AppPtr_t papp(GetApplication(Application::Uid(pid, exc_id)));
 	if (!papp) {
@@ -1373,11 +1372,12 @@ ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id)
 		assert(papp);
 		return;
 	}
-	return LoadTaskGraph(papp);
+
+	logger->Debug("LoadTaskGraph: [%d:*:%d] task-graph loading...", pid, exc_id);
+	LoadTaskGraph(papp);
 }
 
-void
-ApplicationManager::LoadTaskGraphAll()
+void ApplicationManager::LoadTaskGraphAll()
 {
 	AppsUidMapIt app_it;
 
