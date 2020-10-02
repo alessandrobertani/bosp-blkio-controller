@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include <tg/hw.h>
+
 #define MAX_R_NAME_LEN       6
 
 #define R_TYPE_SYSTEM        1
@@ -52,18 +54,26 @@ enum class ResourceType
 /**
  * @brief Return a char string form resource type
  *
- * @param type The resource type
+ * @param type The resource type value
  * @return A raw char string
  */
 const char * GetResourceTypeString(ResourceType type);
 
 /**
- * @brief Return a string describing a resource type
+ * @brief Return the resource type enumerated value
  *
- * @param _str The string form resource type
+ * @param str The string form of the resource type
+ * @return A resource type value
+ */
+ResourceType GetResourceTypeFromString(std::string const & str);
+
+/**
+ * @brief Return the resource type enumerated value
+ *
+ * @param arch_type The architecture type of the processing unit
  * @return A resource type
  */
-ResourceType GetResourceTypeFromString(std::string const & _str);
+ResourceType GetResourceTypeFromArchitecture(ArchType_t arch_type);
 
 }  // namespace res
 

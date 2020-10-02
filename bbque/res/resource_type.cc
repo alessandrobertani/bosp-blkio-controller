@@ -31,6 +31,33 @@ ResourceType GetResourceTypeFromString(std::string const & _str) {
 	return ResourceType::UNDEFINED;
 }
 
+
+ResourceType GetResourceTypeFromArchitecture(ArchType_t arch_type)
+{
+	switch (arch_type) {
+
+	case ArchType::NONE:
+		return ResourceType::UNDEFINED;
+
+	case ArchType::X86:
+	case ArchType::X86_64:
+	case ArchType::ARM_V7:
+	case ArchType::ARM_V8:
+		return ResourceType::CPU;
+
+	case ArchType::NVIDIA:
+		return ResourceType::GPU;
+
+	case ArchType::GN:
+		return ResourceType::ACCELERATOR;
+
+	default:
+		return ResourceType::ACCELERATOR;
+	}
+
+	return ResourceType::UNDEFINED;
+}
+
 } // namespace res
 
 } // namespace bbque
