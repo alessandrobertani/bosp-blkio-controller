@@ -113,8 +113,16 @@ public:
 	 */
 	inline int GetAssignedSystem() const { return system_node_id; }
 
+	/**
+	 * \brief Set the IP address of the system node assigned to the task
+	 * \param ip The IP address in string format
+	 */
 	inline void SetAssignedSystemIp(const std::string& ip) { system_node_ip = ip; }
 
+	/**
+	 * \brief Get the IP address of the system node assigned to the task
+	 * \return The IP address in string format
+	 */
 	inline std::string const GetAssignedSystemIp() const { return system_node_ip; }
 
 	/**
