@@ -29,9 +29,16 @@ namespace bbque {
 
 typedef enum class ArchType {
 	NONE,
+	// Emulated processor
 	GN,
-	GPU,
-	ARM,
+	// CPUs
+	X86,
+	X86_64,
+	ARM_V7,
+	ARM_V8,
+	// GPUs
+	NVIDIA,
+	// MANGO accelerators
 	PEAK,
 	NUPLUS,
 	DCT,
@@ -50,15 +57,24 @@ inline ArchType GetArchTypeFromString(std::string const & str) {
 	switch(ConstHashString(arch_str.c_str())) {
 		case ConstHashString("GN"):
 			return ArchType::GN;
-		case ConstHashString("GPU"):
-			return ArchType::GPU;
+
+		case ConstHashString("X86"):
+			return ArchType::X86;
+		case ConstHashString("X86_64"):
+			return ArchType::X86_64;
+		case ConstHashString("ARM_V7"):
+			return ArchType::ARM_V7;
+		case ConstHashString("ARM_V8"):
+			return ArchType::ARM_V8;
+
+		case ConstHashString("NVIDIA"):
+			return ArchType::NVIDIA;
+
 		case ConstHashString("PEAK"):
 			return ArchType::PEAK;
 		case ConstHashString("NUP"):
 		case ConstHashString("NUPLUS"):
 			return ArchType::NUPLUS;
-		case ConstHashString("ARM"):
-			return ArchType::ARM;
 		case ConstHashString("DCT"):
 			return ArchType::DCT;
 		case ConstHashString("TETRAPOD"):
@@ -73,9 +89,16 @@ inline ArchType GetArchTypeFromString(std::string const & str) {
 inline const char* GetStringFromArchType(ArchType type) {
 	switch(type) {
 		case ArchType::NONE:  return "NONE";
-		case ArchType::GN:    return "GN";
-		case ArchType::GPU:   return "GPU";
-		case ArchType::ARM:   return "ARM";
+
+		case ArchType::GN: return "GN";
+
+		case ArchType::X86:    return "X86";
+		case ArchType::X86_64: return "X86_64";
+		case ArchType::ARM_V7: return "ARM_V7";
+		case ArchType::ARM_V8: return "ARM_V8";
+
+		case ArchType::NVIDIA: return "NVIDIA";
+
 		case ArchType::PEAK:  return "PEAK";
 		case ArchType::NUPLUS:return "NUP";
 		case ArchType::DCT:   return "DCT";
