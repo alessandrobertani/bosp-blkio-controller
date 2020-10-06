@@ -43,11 +43,9 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::Setup(SchedPtr_t papp)
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData()
 {
-	logger->Info("LoadPlatformData...");
+	logger->Info("LoadPlatformData: loading...");
 	if (platformLoaded)
 		return PLATFORM_OK;
-
-	logger->Warn("Loading TEST platform data");
 
 	const PlatformDescription *pd;
 	try {
@@ -55,43 +53,44 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::LoadPlatformData()
 	}
 	catch (const std::runtime_error& e) {
 		UNUSED(e);
-		logger->Fatal("Unable to get the PlatformDescription object");
+		logger->Fatal("LoadPlatformData: PlatformDescription object missing");
 		return PLATFORM_LOADING_FAILED;
 	}
 
 	for (const auto & sys_entry : pd->GetSystemsAll()) {
 		auto & sys = sys_entry.second;
-		logger->Debug("[%s@%s] Scanning the CPUs...",
+		logger->Debug("LoadPlatformData: [%s@%s] CPUs...",
 			sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu);
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
-				logger->Fatal("Register CPU %d failed", cpu.GetId());
+				logger->Fatal("LoadPlatformData: CPU %d registration failed", cpu.GetId());
 				return result;
 			}
 		}
-		logger->Debug("[%s@%s] Scanning the memories...",
+		logger->Debug("LoadPlatformData: [%s@%s] memories...",
 			sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
 		for (const auto mem : sys.GetMemoriesAll()) {
 			ExitCode_t result = this->RegisterMEM(*mem);
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
-				logger->Fatal("Register MEM %d failed", mem->GetId());
+				logger->Fatal("LoadPlatformData: MEM %d registration failed", mem->GetId());
 				return result;
 			}
 
 			if (sys.IsLocal()) {
-				logger->Debug("[%s@%s] is local",
-					sys.GetHostname().c_str(), sys.GetNetAddress().c_str());
+				logger->Info("LoadPlatformData: [%s@%s] is the local node",
+					sys.GetHostname().c_str(),
+					sys.GetNetAddress().c_str());
 			}
 		}
 
-		logger->Debug("ScanPlatformDescription: [%s@%s] IO storages...",
+		logger->Debug("LoadPlatformData: [%s@%s] IO storages...",
 			sys.GetHostname().c_str(),
 			sys.GetNetAddress().c_str());
 		for (const auto storage : sys.GetStoragesAll()) {
 			ExitCode_t result = this->RegisterIODev(*storage);
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
-				logger->Fatal("ScanPlatformDescription: STORAGE %d "
+				logger->Fatal("LoadPlatformData: storage device %d "
 					"registration failed",
 					storage->GetId());
 				return result;
@@ -111,9 +110,7 @@ TestPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu)
 
 	for (const auto pe : cpu.GetProcessingElementsAll()) {
 		auto pe_type = pe.GetPartitionType();
-		if (PlatformDescription::MDEV == pe_type ||
-		PlatformDescription::SHARED == pe_type) {
-
+		if (PlatformDescription::MDEV == pe_type || PlatformDescription::SHARED == pe_type) {
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
 
@@ -123,7 +120,7 @@ TestPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu)
 					resource_path.c_str());
 				return PLATFORM_DATA_PARSING_ERROR;
 			}
-			logger->Debug("Registration of <%s>: %d", resource_path.c_str(), share);
+			logger->Debug("RegisterCPU: <%s> = %d succeded", resource_path.c_str(), share);
 		}
 	}
 
@@ -141,7 +138,7 @@ TestPlatformProxy::RegisterMEM(const PlatformDescription::Memory &mem)
 	if (ra.RegisterResource(resource_path, "", q_bytes)  == nullptr)
 		return PLATFORM_DATA_PARSING_ERROR;
 
-	logger->Debug("Registration of <%s> %d bytes done",
+	logger->Debug("RegisterMEM: <%s> [size=%dB] done",
 		resource_path.c_str(), q_bytes);
 
 	return PLATFORM_OK;
@@ -158,7 +155,7 @@ TestPlatformProxy::RegisterIODev(const PlatformDescription::IO &io_dev)
 	if (ra.RegisterResource(resource_path, "", q_bytes)  == nullptr)
 		return PLATFORM_DATA_PARSING_ERROR;
 
-	logger->Debug("Registration of <%s> %d bytes done",
+	logger->Debug("RegisterIODev: <%s> [size=%dB] done",
 		resource_path.c_str(), q_bytes);
 
 	return PLATFORM_OK;
@@ -172,13 +169,13 @@ TestPlatformProxy::ExitCode_t TestPlatformProxy::Refresh()
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::Release(SchedPtr_t papp)
 {
-	logger->Info("Release: %s", papp->StrId());
+	logger->Info("Release: [%s]", papp->StrId());
 	return PLATFORM_OK;
 }
 
 TestPlatformProxy::ExitCode_t TestPlatformProxy::ReclaimResources(SchedPtr_t papp)
 {
-	logger->Info("ReclaimResources: %s", papp->StrId());
+	logger->Info("ReclaimResources: [%s]", papp->StrId());
 	return PLATFORM_OK;
 }
 
@@ -189,7 +186,7 @@ TestPlatformProxy::MapResources(SchedPtr_t papp,
 {
 	(void) pres;
 	(void) excl;
-	logger->Info(" MapResources: %s", papp->StrId());
+	logger->Info("MapResources: [%s]", papp->StrId());
 	return PLATFORM_OK;
 }
 
