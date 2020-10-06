@@ -374,7 +374,7 @@ void ResourceManager::Optimize()
 
 		logger->Notice("Optimize: scheduling time: %11.3f[us]",
 			optimization_tmr.getElapsedTimeUs());
-		sys.PrintStatus(true);
+		sys.PrintStatus(true, sys.GetScheduledResourceStateView());
 	}
 
 #ifdef CONFIG_BBQUE_PM

@@ -448,13 +448,18 @@ public:
 		return ra.PutView(tok);
 	}
 
+	br::RViewToken_t GetScheduledResourceStateView() const
+	{
+		return ra.GetScheduledView();
+	}
+
 	/***************************************************************
 	 * Utility functions
 	 ***************************************************************/
 
-	void PrintStatus(bool verbose) const
+	void PrintStatus(bool verbose, br::RViewToken_t sched_status_view = 0) const
 	{
-		ra.PrintStatus(0, verbose);
+		ra.PrintStatus(sched_status_view, verbose);
 		am.PrintStatus(verbose);
 		am.PrintStatusQ();
 		am.PrintSyncQ();

@@ -237,8 +237,17 @@ void ResourceAccounter::PrintApplicationInfo(br::ResourcePtr_t resource_ptr,
 			continue;
 		}
 
-		// Warning: unfinished application without AWM...
-		if (!papp->CurrentAWM()) {
+		// Get the working mode for resource assignments info.
+		// If the status view is 0 we expect the application to have working mode
+		// currently set, otherwise the function has been called to print the status
+		// of an intermediate (scheduled) resources state view. In such
+		// a case, we could have the application in a pre-synchronization
+		// state, and working mode set in the 'next' attribute.
+		auto pawm = papp->CurrentAWM();
+		if (!pawm && (status_view != 0))
+			pawm = papp->NextAWM();
+
+		if (!pawm) {
 			logger->Warn("[pid=%d, uid=%d, state=%s] no working mode",
 				papp->Pid(), app_uid,
 				Application::StateStr(papp->State()));
@@ -256,7 +265,7 @@ void ResourceAccounter::PrintApplicationInfo(br::ResourcePtr_t resource_ptr,
 		info_ss << "| > "
 			<< std::setw(15) << papp->StrId() << ","
 			<< "pr:" << std::setw(2) << papp->Priority() << ","
-			<< "wm:" << std::setw(2) << papp->CurrentAWM()->Id() << " | "
+			<< "wm:" << std::setw(2) << pawm->Id() << " | "
 			<< std::setw(6) << std::setfill(' ') << " | "
 			<< std::setw(9) << bu::GetValueUnitStr(app_usage, percent).c_str() << " | "
 			<< std::setw(RA_PROGRESS_BAR_LEN) << prog_bar << " |";

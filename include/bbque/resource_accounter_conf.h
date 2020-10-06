@@ -65,6 +65,13 @@ public:
 	 */
 	virtual ExitCode_t PutView(br::RViewToken_t tok) = 0;
 
+	/**
+	 * @brief Get the current scheduled resource state view
+	 *
+	 * @return The token of the scheduled view
+	 */
+	virtual br::RViewToken_t GetScheduledView() const = 0;
+
 };
 
 } // namespace bbque
