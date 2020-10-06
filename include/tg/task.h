@@ -139,6 +139,19 @@ public:
 	inline int GetAssignedProcessor() const { return processor_id; }
 
 	/**
+	 * \brief Set the processor group assigned to the task
+	 * \param p_id Identification number of the processor group
+	 */
+	inline void SetAssignedProcessorGroup(int g_id) { processor_group_id = g_id; }
+
+	/**
+	 * \brief Get the processor group assigned to the task
+	 * \return The identification number of the processor group (-1 if not
+	 * assigned)
+	 */
+	inline int GetAssignedProcessorGroup() const { return processor_group_id; }
+
+	/**
 	 * \brief Get the number of assigned cores
 	 * \param The number of assigned cores
 	 */
@@ -269,10 +282,11 @@ private:
 
 	std::string name;
 
-	int thread_count = 0;
-
+	int thread_count = 1;
 
 	int processor_id = -1;
+
+	int processor_group_id = -1;
 
 	int system_node_id = -1;
 
@@ -306,6 +320,7 @@ private:
 		ar & name;
 		ar & thread_count;
 		ar & processor_id;
+		ar & processor_group_id;
 		ar & system_node_id;
 		ar & system_node_ip;
 		ar & nr_cores;
