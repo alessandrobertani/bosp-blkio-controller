@@ -337,6 +337,7 @@ public:
 	 * @param path Resource path in char string format
 	 * @param units Units for the amount value (i.e. "1", "Kbps", "Mb", ...)
 	 * @param amount The total amount available
+	 * @param model The resource model or architecture description
 	 *
 	 * @return RA_SUCCESS if the resource has been successfully registered.
 	 * RA_ERR_MISS_PATH if the path string is empty. RA_ERR_MEM if the
@@ -345,7 +346,8 @@ public:
 	br::ResourcePtr_t RegisterResource(
 					std::string const & path,
 					std::string const & units,
-					uint64_t amount);
+					uint64_t amount,
+					std::string const & model="");
 
 	/**
 	 * @brief Update the total amount of the specified resource

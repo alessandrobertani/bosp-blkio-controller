@@ -687,7 +687,8 @@ br::ResourcePath const & ResourceAccounter::GetPrefixPath() const
 br::ResourcePtr_t
 ResourceAccounter::RegisterResource(std::string const & strpath,
 				    std::string const & units,
-				    uint64_t amount)
+				    uint64_t amount,
+				    std::string const & model)
 {
 	// Build a resource path object (from the string)
 	auto resource_path_ptr = std::make_shared<br::ResourcePath>(strpath);
@@ -707,6 +708,12 @@ ResourceAccounter::RegisterResource(std::string const & strpath,
 	}
 	resource_ptr->SetTotal(br::ConvertValue(amount, units));
 	resource_ptr->SetPath(resource_path_ptr);
+	resource_ptr->SetModel(model);
+	logger->Debug("RegisterResource: <%s> [model=%s] total = %llu %s",
+		strpath.c_str(),
+		resource_ptr->Model().c_str(),
+		resource_ptr->Total(),
+		units.c_str());
 	logger->Debug("Register R<%s>: total = %llu %s",
 		strpath.c_str(), resource_ptr->Total(), units.c_str());
 
