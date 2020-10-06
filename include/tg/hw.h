@@ -29,9 +29,8 @@ namespace bbque {
 
 typedef enum class ArchType {
 	NONE,
-	// Emulated processor
-	GN,
 	// CPUs
+	CPU, // Generic test CPU
 	X86,
 	X86_64,
 	ARM_V7,
@@ -39,6 +38,7 @@ typedef enum class ArchType {
 	// GPUs
 	NVIDIA,
 	// MANGO accelerators
+	GN, // Emulated accelerator
 	PEAK,
 	NUPLUS,
 	DCT,
@@ -55,9 +55,9 @@ typedef struct Bandwidth_t {
 inline ArchType GetArchTypeFromString(std::string const & str) {
 	std::string arch_str(utils::UpperString(str));
 	switch(ConstHashString(arch_str.c_str())) {
-		case ConstHashString("GN"):
-			return ArchType::GN;
 
+		case ConstHashString("CPU"):
+			return ArchType::CPU;
 		case ConstHashString("X86"):
 			return ArchType::X86;
 		case ConstHashString("X86_64"):
@@ -70,6 +70,8 @@ inline ArchType GetArchTypeFromString(std::string const & str) {
 		case ConstHashString("NVIDIA"):
 			return ArchType::NVIDIA;
 
+		case ConstHashString("GN"):
+			return ArchType::GN;
 		case ConstHashString("PEAK"):
 			return ArchType::PEAK;
 		case ConstHashString("NUP"):
@@ -92,6 +94,7 @@ inline const char* GetStringFromArchType(ArchType type) {
 
 		case ArchType::GN: return "GN";
 
+		case ArchType::CPU:    return "CPU";
 		case ArchType::X86:    return "X86";
 		case ArchType::X86_64: return "X86_64";
 		case ArchType::ARM_V7: return "ARM_V7";

@@ -39,6 +39,7 @@ ResourceType GetResourceTypeFromArchitecture(ArchType_t arch_type)
 	case ArchType::NONE:
 		return ResourceType::UNDEFINED;
 
+	case ArchType::CPU:
 	case ArchType::X86:
 	case ArchType::X86_64:
 	case ArchType::ARM_V7:
@@ -49,7 +50,11 @@ ResourceType GetResourceTypeFromArchitecture(ArchType_t arch_type)
 		return ResourceType::GPU;
 
 	case ArchType::GN:
+#ifdef CONFIG_MANGO_GN_EMULATION
 		return ResourceType::ACCELERATOR;
+#else
+		return ResourceType::CPU;
+#endif
 
 	default:
 		return ResourceType::ACCELERATOR;
