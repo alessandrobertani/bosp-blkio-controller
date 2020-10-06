@@ -54,6 +54,7 @@ public:
 	 */
 	inline uint32_t CompletionTime() const noexcept { return ctime_ms; }
 
+
 	/**
 	 * @brief Input bandwidth: data fetching rate (read memory)
 	 * @return Kbps value
@@ -65,6 +66,23 @@ public:
 	 * @return Kbps value
 	 */
 	inline uint32_t OutBandwidth() const noexcept { return bandwidth.out_kbps; }
+
+	/**
+	 * \brief Get the selected HW architecture for this task  by the policy
+	 */
+	inline Bandwidth_t GetAssignedBandwidth() const {
+		return bandwidth;
+	}
+
+
+	/**
+	 * @brief The task (kernel) target architectures in ascendent order of
+	 * preferences
+	 * @return a reference to the vector of target architectures
+	 */
+	inline std::vector<ArchType> const & ArchPreferences() const {
+		return hw_prefs;
+	}
 
 	/**
 	 * @brief The preferences related to HW architecture types
@@ -89,14 +107,10 @@ public:
 	 * @brief Number of HW architecture preference
 	 * @param How many HW architecture preferences have been specified
 	 */
-	inline size_t NumArchPreferences() const noexcept { return hw_prefs.size(); }
-
-	/**
-	 * \brief Get the selected HW architecture for this task  by the policy
-	 */
-	inline Bandwidth_t GetAssignedBandwidth() const {
-		return bandwidth;
+	inline size_t NumArchPreferences() const noexcept {
+		return hw_prefs.size();
 	}
+
 
 private:
 
@@ -104,7 +118,7 @@ private:
 
 	uint32_t ctime_ms;
 
-	Bandwidth_t bandwidth; 
+	Bandwidth_t bandwidth;
 
 	std::vector<ArchType> hw_prefs;
 };
