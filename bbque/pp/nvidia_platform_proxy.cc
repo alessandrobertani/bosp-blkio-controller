@@ -139,18 +139,18 @@ PlatformProxy::ExitCode_t NVIDIAPlatformProxy::RegisterDevices()
 		// Add to resource accounter
 		ResourceAccounter & ra(ResourceAccounter::GetInstance());
 		auto resource = ra.RegisterResource(r_path, "", 100, "NVIDIA");
-		auto r_path_ptr = resource->Path();
-		bbque_assert(r_path_ptr);
-		logger->Debug("RegisterDevices: r_path_ptr=<%s>",
-			r_path_ptr->ToString().c_str());
+		auto resource_path = resource->Path();
+		bbque_assert(resource_path);
+		logger->Debug("RegisterDevices: resource path = <%s>",
+			resource_path->ToString().c_str());
 
 #ifdef CONFIG_BBQUE_WM
 		PowerMonitor & wm(PowerMonitor::GetInstance());
-		wm.Register(r_path_ptr);
+		wm.Register(resource_path);
 #endif
 		// Keep track of device IDs and resource paths relationship
-		InsertDeviceID(0, r_path_ptr, dev_id);
-		InsertDevicePath(0, dev_id, r_path_ptr);
+		InsertDeviceID(0, resource_path, dev_id);
+		InsertDevicePath(0, dev_id, resource_path);
 		logger->Info("RegisterDevices: id=%d type=<%s> model=%s",
 			dev_id,
 			GetResourceTypeString(br::ResourceType::GPU),
@@ -162,14 +162,14 @@ PlatformProxy::ExitCode_t NVIDIAPlatformProxy::RegisterDevices()
 
 void NVIDIAPlatformProxy::Exit()
 {
-	logger->Debug("Exiting the Nvml Proxy...");
+	logger->Debug("Exiting the NVIDIA Platform Proxy...");
 
 	nvmlReturn_t result = nvmlShutdown();
 	if (NVML_SUCCESS != result) {
-		logger->Warn("NVIDIA: Failed to shutdown NVML: [Err:%s]",
+		logger->Warn("NVIDIA: Failed to shutdown NVML [Err:%s]",
 			nvmlErrorString(result));
 	}
-	logger->Notice("NVML shutdownend correctly");
+	logger->Notice("NVIDIA Platform Proxy.shutdownend correctly");
 
 	delete nv_devices;
 	device_ids.clear();
