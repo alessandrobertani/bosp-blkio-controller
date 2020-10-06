@@ -693,7 +693,7 @@ ResourceAccounter::RegisterResource(std::string const & strpath,
 	// Build a resource path object (from the string)
 	auto resource_path_ptr = std::make_shared<br::ResourcePath>(strpath);
 	if (!resource_path_ptr) {
-		logger->Fatal("Register R<%s>: Invalid resource path",
+		logger->Fatal("RegisterResource: <%s> is an invalid path",
 			strpath.c_str());
 		return nullptr;
 	}
@@ -701,8 +701,8 @@ ResourceAccounter::RegisterResource(std::string const & strpath,
 	// Insert a new resource in the tree
 	auto resource_ptr(resources.insert(*(resource_path_ptr.get())));
 	if (!resource_ptr) {
-		logger->Crit("Register R<%s>: "
-			"Unable to allocate a new resource descriptor",
+		logger->Crit("RegisterResource: <%s> - "
+			"unable to allocate a new resource descriptor",
 			strpath.c_str());
 		return nullptr;
 	}
@@ -714,10 +714,8 @@ ResourceAccounter::RegisterResource(std::string const & strpath,
 		resource_ptr->Model().c_str(),
 		resource_ptr->Total(),
 		units.c_str());
-	logger->Debug("Register R<%s>: total = %llu %s",
-		strpath.c_str(), resource_ptr->Total(), units.c_str());
 
-	// Insert the path in the paths set
+	// Insert the path in the overall resource path set
 	resource_set.emplace(resource_ptr);
 	r_paths.emplace(strpath, resource_path_ptr);
 	path_max_len = std::max((int) path_max_len, (int) strpath.length());
