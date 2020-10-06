@@ -1119,7 +1119,7 @@ void LinuxPlatformProxy::InitPowerInfo(const char * resourcePath,
 		rsrc->SetModel("ARM Cortex A15");
 	else
 		rsrc->SetModel("ARM Cortex A7");
-	logger->Info("InitPowerInfo: [%s] CPU model = %s",
+		logger->Info("InitPowerInfo: [%s] CPU model = %s",
 		rsrc->Path()->ToString().c_str(), rsrc->Model().c_str());
 #else
 	(void) resourcePath;
