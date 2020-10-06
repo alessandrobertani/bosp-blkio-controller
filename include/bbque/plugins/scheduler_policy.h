@@ -66,6 +66,7 @@ public:
 		SCHED_ERROR_INIT, /** Error during initialization */
 		SCHED_ERROR_VIEW, /** Error in using the resource state view */
 		SCHED_ERROR_INCOMPLETE_ASSIGNMENT,
+		SCHED_ERROR_TASKGRAPH_MISSING,
 		SCHED_ERROR /** Unexpected error */
 	} ExitCode_t;
 
