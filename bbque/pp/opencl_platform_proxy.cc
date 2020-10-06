@@ -289,8 +289,7 @@ PlatformProxy::ExitCode_t OpenCLPlatformProxy::RegisterDevices(uint32_t platform
 		// platform proxy)
 		if (r_type != br::ResourceType::CPU) {
 			ResourceAccounter & ra(ResourceAccounter::GetInstance());
-			auto resource = ra.RegisterResource(r_path, "", 100);
-			resource->SetModel(dev_name);
+			auto resource = ra.RegisterResource(r_path, "", 100, dev_name);
 			r_path_ptr = resource->Path();
 #ifdef CONFIG_BBQUE_WM
 			PowerMonitor & wm(PowerMonitor::GetInstance());

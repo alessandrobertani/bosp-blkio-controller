@@ -138,8 +138,7 @@ PlatformProxy::ExitCode_t NVIDIAPlatformProxy::RegisterDevices()
 
 		// Add to resource accounter
 		ResourceAccounter & ra(ResourceAccounter::GetInstance());
-		auto resource = ra.RegisterResource(r_path, "", 100);
-		resource->SetModel("NVIDIA");
+		auto resource = ra.RegisterResource(r_path, "", 100, "NVIDIA");
 		auto r_path_ptr = resource->Path();
 		bbque_assert(r_path_ptr);
 		logger->Debug("RegisterDevices: r_path_ptr=<%s>",

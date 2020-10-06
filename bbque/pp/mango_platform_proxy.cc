@@ -1123,10 +1123,8 @@ MangoPlatformProxy::RegisterTiles(uint32_t cluster_id) noexcept
 			logger->Debug("RegisterTiles: cluster=<%d> tile=<%d> core=<%d>: path=%s",
 				cluster_id, tile_id, i, pe.GetPath().c_str());
 			mt.AddProcessingElement(pe);
+			ra.RegisterResource(pe.GetPath(), "", 100, hn_to_str_unit_family(tile_info.unit_family));
 
-			// Register the processor core for resource accounting
-			auto rsrc_ptr = ra.RegisterResource(pe.GetPath(), "", 100);
-			rsrc_ptr->SetModel(hn_to_str_unit_family(tile_info.unit_family));
 #ifdef CONFIG_BBQUE_WM
 #ifdef CONFIG_BBQUE_PM_MANGO
 			// Register the processor core for power monitoring

@@ -117,8 +117,12 @@ TestPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu)
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
 
-			if (ra.RegisterResource(resource_path, "", share) == nullptr)
+			auto resource = ra.RegisterResource(resource_path, "", share, "CPU");
+			if (resource == nullptr) {
+				logger->Fatal("RegisterCPU: <%s> registration failed",
+					resource_path.c_str());
 				return PLATFORM_DATA_PARSING_ERROR;
+			}
 			logger->Debug("Registration of <%s>: %d", resource_path.c_str(), share);
 		}
 	}
