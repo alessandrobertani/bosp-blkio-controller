@@ -382,11 +382,13 @@ static void RTLIB_Exit(void)
 		return;
 	}
 
-	// Close the RPC FIFO channel thus releasing all BBQUE resource used by
-	// this application
+	// Ensure all the EXCs are unregistered
 	assert(rpc);
 	logger->Debug("RTLIB_Exit: unregistering all the contexts...");
-	rpc->UnregisterAll(); // Ensure all the EXCs are unregistered
+	rpc->UnregisterAll();
+
+	// Send exit message to the resource manager daemon and close the
+	// communication channel
 	delete rpc;
 
 	if (0) RTLIB_Exit(); // Fix compilation warning

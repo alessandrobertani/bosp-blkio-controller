@@ -512,8 +512,7 @@ BbqueRPC::pRegisteredEXC_t BbqueRPC::getRegistered(uint8_t exc_id)
 	return exc;
 }
 
-void BbqueRPC::Unregister(
-			  const RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::Unregister(const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -561,9 +560,12 @@ void BbqueRPC::UnregisterAll()
 
 		// Jumping already un-registered EXC
 		if (! isRegistered(exc)) {
-			logger->Warn("UnregisterAll: EXC already unregistered");
+			logger->Debug("UnregisterAll: EXC [%s] already unregistered",
+				exc->name.c_str());
 			continue;
 		}
+
+		logger->Warn("UnregisterAll: EXC [%s] not unregistered yet?", exc->name.c_str());
 
 		// Calling the low-level unregistration
 		result = _Unregister(exc);
@@ -578,8 +580,7 @@ void BbqueRPC::UnregisterAll()
 	}
 }
 
-RTLIB_ExitCode_t BbqueRPC::Enable(
-				  const RTLIB_EXCHandler_t exc_handler)
+RTLIB_ExitCode_t BbqueRPC::Enable(const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -611,8 +612,7 @@ RTLIB_ExitCode_t BbqueRPC::Enable(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::Disable(
-				   const RTLIB_EXCHandler_t exc_handler)
+RTLIB_ExitCode_t BbqueRPC::Disable(const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	assert(exc_handler);
@@ -3408,7 +3408,6 @@ void BbqueRPC::NotifyExit(RTLIB_EXCHandler_t exc_handler)
 {
 	assert(exc_handler);
 	auto exc = getRegistered(exc_handler);
-
 	if (! exc) {
 		logger->Error("NotifyExit EXC [%p] FAILED "
 			"(EXC not registered)", (void *) exc_handler);

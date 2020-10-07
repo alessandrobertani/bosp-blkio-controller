@@ -64,7 +64,7 @@ BbqueRPC_FIFO_Client::BbqueRPC_FIFO_Client() :
 	logger->Debug("Building FIFO RPC channel");
 }
 
-BbqueRPC_FIFO_Client::~ BbqueRPC_FIFO_Client()
+BbqueRPC_FIFO_Client::~BbqueRPC_FIFO_Client()
 {
 	logger = bu::ConsoleLogger::GetInstance(BBQUE_LOG_MODULE);
 	logger->Debug("BbqueRPC_FIFO_Client dtor");
@@ -507,23 +507,29 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Disable(pRegisteredEXC_t prec)
 }
 
 RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Set(pRegisteredEXC_t prec,
-					    RTLIB_Constraint_t * constraints, uint8_t count)
+					    RTLIB_Constraint_t * constraints,
+					    uint8_t count)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
+
 	// Here the message is dynamically allocate to make room for a variable
 	// number of constraints...
 	rpc_fifo_EXC_SET_t * prf_EXC_SET;
 	size_t msg_size;
+
 	// At least 1 constraint it is expected
 	assert(count);
+
 	// Allocate the buffer to hold all the contraints
 	msg_size = FIFO_PKT_SIZE(EXC_SET) +
 		((count - 1) * sizeof (RTLIB_Constraint_t));
 	prf_EXC_SET = (rpc_fifo_EXC_SET_t *)::malloc(msg_size);
+
 	// Init FIFO header
 	prf_EXC_SET->hdr.fifo_msg_size = msg_size;
 	prf_EXC_SET->hdr.rpc_msg_offset = FIFO_PYL_OFFSET(EXC_SET);
 	prf_EXC_SET->hdr.rpc_msg_type = RPC_EXC_SET;
+
 	// Init RPC header
 	prf_EXC_SET->pyl.hdr.typ = RPC_EXC_SET;
 	prf_EXC_SET->pyl.hdr.token = RpcMsgToken();
@@ -533,10 +539,12 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Set(pRegisteredEXC_t prec,
 		"of [%" PRIu64 "] Bytes...",
 		count, (void *) & (prf_EXC_SET->pyl.constraints),
 		(count) * sizeof (RTLIB_Constraint_t));
+
 	// Init RPC header
 	prf_EXC_SET->pyl.count = count;
 	::memcpy(&(prf_EXC_SET->pyl.constraints), constraints,
 		(count) * sizeof (RTLIB_Constraint_t));
+
 	// Sending RPC Request
 	volatile rpc_fifo_EXC_SET_t & rf_EXC_SET = (*prf_EXC_SET);
 	logger->Debug("_Set: Set [%d] constraints on EXC [%d:%d]...",
@@ -544,6 +552,7 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Set(pRegisteredEXC_t prec,
 		rf_EXC_SET.pyl.hdr.app_pid,
 		rf_EXC_SET.pyl.hdr.exc_id);
 	RPC_FIFO_SEND_SIZE(EXC_SET, msg_size);
+
 	// Clean-up the FIFO message
 	::free(prf_EXC_SET);
 	logger->Debug("_Set: Waiting BBQUE response...");
@@ -652,8 +661,9 @@ void BbqueRPC_FIFO_Client::_Exit()
  * Synchronization Protocol Messages - PreChange
  ******************************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPreChangeResp(
-							   rpc_msg_token_t token, pRegisteredEXC_t prec, uint32_t syncLatency)
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPreChangeResp(rpc_msg_token_t token,
+							   pRegisteredEXC_t prec,
+							   uint32_t syncLatency)
 {
 	rpc_fifo_BBQ_SYNCP_PRECHANGE_RESP_t rf_BBQ_SYNCP_PRECHANGE_RESP = {
 		{
@@ -732,8 +742,9 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpPreChange()
  * Synchronization Protocol Messages - SyncChange
  ******************************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpSyncChangeResp(
-							    rpc_msg_token_t token, pRegisteredEXC_t prec, RTLIB_ExitCode_t sync)
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpSyncChangeResp(rpc_msg_token_t token,
+							    pRegisteredEXC_t prec,
+							    RTLIB_ExitCode_t sync)
 {
 	rpc_fifo_BBQ_SYNCP_SYNCCHANGE_RESP_t rf_BBQ_SYNCP_SYNCCHANGE_RESP = {
 		{
@@ -805,8 +816,8 @@ void BbqueRPC_FIFO_Client::RpcBbqSyncpDoChange()
  * Synchronization Protocol Messages - PostChange
  ******************************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPostChangeResp(
-							    rpc_msg_token_t token, pRegisteredEXC_t prec,
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_SyncpPostChangeResp(rpc_msg_token_t token,
+							    pRegisteredEXC_t prec,
 							    RTLIB_ExitCode_t result)
 {
 	rpc_fifo_BBQ_SYNCP_POSTCHANGE_RESP_t rf_BBQ_SYNCP_POSTCHANGE_RESP = {
@@ -875,8 +886,7 @@ void BbqueRPC_FIFO_Client::RpcBbqGetRuntimeProfile()
 	GetRuntimeProfile(msg);
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GetRuntimeProfileResp(
-							      rpc_msg_token_t token,
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_GetRuntimeProfileResp(rpc_msg_token_t token,
 							      pRegisteredEXC_t prec,
 							      uint32_t exc_time,
 							      uint32_t mem_time)

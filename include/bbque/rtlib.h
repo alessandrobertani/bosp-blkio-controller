@@ -424,8 +424,7 @@ typedef RTLIB_ExitCode_t(*RTLIB_SetupCGroups_t)(
  * call returns, the application must issue a GetWorkingMode() to actually get
  * an AWM assigned.
  */
-typedef RTLIB_ExitCode_t(*RTLIB_Enable_t)(
-					  const RTLIB_EXCHandler_t exc_handler);
+typedef RTLIB_ExitCode_t(*RTLIB_Enable_t)(const RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Pointer to an EXC disabling function.
@@ -444,8 +443,7 @@ typedef RTLIB_ExitCode_t(*RTLIB_Enable_t)(
  * @note This call ask the Barbeque RTRM to release schedule resources for
  * this EXC as soon as possible.
  */
-typedef RTLIB_ExitCode_t(*RTLIB_Disable_t)(
-					   const RTLIB_EXCHandler_t exc_handler);
+typedef RTLIB_ExitCode_t(*RTLIB_Disable_t)(const RTLIB_EXCHandler_t exc_handler);
 
 /**
  * @brief Pointer to an EXC un-registration function.
@@ -457,8 +455,7 @@ typedef RTLIB_ExitCode_t(*RTLIB_Disable_t)(
  *
  * @param ech the handler of the EXCs to undergister.
  */
-typedef void (*RTLIB_Unregister_t)(
-				   const RTLIB_EXCHandler_t exc_handler);
+typedef void (*RTLIB_Unregister_t)(const RTLIB_EXCHandler_t exc_handler);
 
 /**@}*/
 

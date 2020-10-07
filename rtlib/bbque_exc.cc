@@ -142,13 +142,14 @@ RTLIB_ExitCode_t BbqueEXC::Disable()
 	assert(exc_status.is_registered == true);
 
 	// Check if the EXC is already disable (which, btw, shouldn't happen)
-	if (! exc_status.is_enabled)
+	if (! exc_status.is_enabled) {
+		logger->Warn("Disable: EXC [%s] (@%p) already unregistered",
+		             exc_name.c_str(), (void *) exc_handler);
 		return RTLIB_OK;
+	}
 
-	logger->Info("Disabling control loop for EXC [%s] (@%p)...",
-	             exc_name.c_str(), (void *) exc_handler);
 	// Disable the EXC
-	logger->Info("Disabling EXC [%s] (@%p)...",
+	logger->Info("Disable: EXC [%s] (@%p)...",
 	             exc_name.c_str(), (void *) exc_handler);
 	assert(rtlib->Disable);
 	result = rtlib->Disable(exc_handler);
@@ -165,11 +166,13 @@ RTLIB_ExitCode_t BbqueEXC::Start()
 	std::unique_lock<std::mutex> control_u_lock(control_mutex);
 	RTLIB_ExitCode_t result;
 	assert(exc_status.is_registered == true);
-	// Enable the working mode to get resources
-	result = _Enable();
 
+	// Enable the EXC to get resources
+	result = _Enable();
 	if (result != RTLIB_OK)
 		return result;
+	logger->Info("Enable: EXC [%s] (@%p) enabled",
+		     exc_name.c_str(), (void *) exc_handler);
 
 	// Notify the control-thread we are STARTED
 	exc_status.has_started = true;
@@ -182,11 +185,14 @@ RTLIB_ExitCode_t BbqueEXC::Terminate()
 	std::unique_lock<std::mutex> control_u_lock(control_mutex);
 
 	// Check if we are already terminating
-	if (! exc_status.is_registered)
+	if (! exc_status.is_registered) {
+		logger->Warn("Terminate: EXC [%s] (@%p) already unregistered",
+		             exc_name.c_str(), (void *) exc_handler);
 		return RTLIB_OK;
+	}
 
 	// Unregister the EXC
-	logger->Info("Unregistering EXC [%s] (@%p)...",
+	logger->Debug("Terminate: EXC [%s] (@%p) unregistering...",
 	             exc_name.c_str(), (void *) exc_handler);
 	assert(rtlib->Unregister);
 	rtlib->Unregister(exc_handler);
