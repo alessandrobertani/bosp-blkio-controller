@@ -254,6 +254,15 @@ public:
 	}
 
 	/**
+	 * \brief Check if the task includes a kernel implementation of the
+	 * given target architecture
+	 * \return true if so, false otherwise
+	 */
+	inline bool HasTarget(ArchType arch) const {
+		return (hw_targets.find(arch) != hw_targets.end());
+	}
+
+	/**
 	 * \brief Add a HW target architectures supported (i.e., for which
 	 * the binary is available)
 	 * \return A reference to the map of target architectures
