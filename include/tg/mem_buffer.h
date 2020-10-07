@@ -184,7 +184,7 @@ private:
 
 	size_t size_in_bytes;
 
-	uint32_t mem_bank = -1;
+	int32_t mem_bank = 0;
 
 
 	std::list<uint32_t> writer_tasks;
