@@ -30,6 +30,10 @@ ApplicationController::ApplicationController(std::string _name, std::string _rec
 	logger->Info("[%s] controller created", app_name.c_str());
 }
 
+ApplicationController::~ApplicationController() {
+	logger->Info("[%s] controller destroyed", app_name.c_str());
+}
+
 ApplicationController::ExitCode ApplicationController::Init() noexcept {
 	RTLIB_Services_t * rtlib_handler = nullptr;
 

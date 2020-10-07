@@ -65,10 +65,10 @@ public:
 	 * \param _recipe Recipe file name (withouth .recipe extension)
 	 */
 	ApplicationController(
-		std::string _name = std::string("app"),
+		std::string _name = std::string("app_ctrl"),
 		std::string _recipe = std::string("generic"));
 
-	virtual ~ApplicationController() {}
+	virtual ~ApplicationController();
 
 
 	/**
