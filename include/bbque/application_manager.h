@@ -442,7 +442,7 @@ public:
 
 
 	/*******************************************************************************
-	 *     Run-time Profiling and Task-graph Functions
+	 *     Run-time Profiling
 	 ******************************************************************************/
 
 	/**
@@ -508,6 +508,10 @@ public:
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
+	/******************************************************************************
+	 *     Task-graph functions
+	 ******************************************************************************/
+
 	/**
 	 * @brief Load the task-graph of an application
 	 * @param pid the processi ID of the application
@@ -519,15 +523,21 @@ public:
 	 * @brief Load the task-graph of an application
 	 * @param The application descriptor
 	 */
-	inline void LoadTaskGraph(AppPtr_t papp)
-	{
-		papp->LoadTaskGraph();
-	}
+	void LoadTaskGraph(AppPtr_t papp);
 
 	/**
 	 * @brief Load the task-graphs of all the active applications (ready and running)
 	 */
 	void LoadTaskGraphAll();
+
+	/**
+	 * @brief Total number of tasks from all the managed applications
+	 */
+	uint32_t TasksCount() const
+	{
+		std::lock_guard<std::mutex> lck(tg_mutex);
+		return this->tasks_count;
+	}
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
@@ -703,6 +713,20 @@ private:
 	 * method.
 	 */
 	Deferrable cleanup_dfr;
+
+
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
+	/**
+	 * Mutex for protecting task-graph related data
+	 */
+	mutable std::mutex tg_mutex;
+
+	/**
+	 * Total count of the tasks of the managed applications
+	 */
+	uint32_t tasks_count = 0;
+#endif
 
 	/** The constructor */
 	ApplicationManager();

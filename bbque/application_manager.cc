@@ -1097,9 +1097,19 @@ ApplicationManager::DestroyEXC(AppPtr_t papp)
 	cleanup_dfr.Schedule(milliseconds(timeout));
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
-	// Destroy the task-graph object
-	papp->ClearTaskGraph();
-	logger->Debug("DestroyEXC: [%s] task-graph cleared", papp->StrId());
+
+	auto task_graph = papp->GetTaskGraph();
+	uint32_t prev_tc = this->tasks_count;
+	if (task_graph) {
+		std::lock_guard<std::mutex> lck(tg_mutex);
+		this->tasks_count -= task_graph->TaskCount();
+		logger->Debug("DestroyEXC: [%s] tasks count from %d to %d",
+			papp->StrId(), prev_tc, tasks_count);
+
+		papp->ClearTaskGraph();
+		logger->Debug("DestroyEXC: [%s] task-graph destroyed", papp->StrId());
+	}
+
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 	logger->Info("DestroyEXC: [%s] FINISHED", papp->StrId());
@@ -1377,18 +1387,29 @@ void ApplicationManager::LoadTaskGraph(AppPid_t pid, uint8_t exc_id)
 	LoadTaskGraph(papp);
 }
 
+void ApplicationManager::LoadTaskGraph(AppPtr_t papp)
+{
+	papp->LoadTaskGraph();
+	auto task_graph = papp->GetTaskGraph();
+	if (task_graph) {
+		std::lock_guard<std::mutex> lck(tg_mutex);
+		tasks_count += task_graph->TaskCount();
+		logger->Debug("LoadTaskGraph: tasks count up to %d", tasks_count);
+	}
+}
+
 void ApplicationManager::LoadTaskGraphAll()
 {
 	AppsUidMapIt app_it;
 
 	AppPtr_t papp = GetFirst(ba::Schedulable::READY, app_it);
 	for (; papp; papp = GetNext(ba::Schedulable::READY, app_it)) {
-		papp->LoadTaskGraph();
+		LoadTaskGraph(papp);
 	}
 
 	papp = GetFirst(ba::Schedulable::RUNNING, app_it);
 	for (; papp; papp = GetNext(ba::Schedulable::RUNNING, app_it)) {
-		papp->LoadTaskGraph();
+		LoadTaskGraph(papp);
 	}
 }
 

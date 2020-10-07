@@ -188,21 +188,27 @@ public:
 	}
 
 	/**
-	 * @brief Maximum integer value for the minimum application priority
+	 * @see ApplicationManagerStatusIF
 	 */
 	uint16_t ApplicationLowestPriority() const
 	{
 		return am.LowestPriority();
 	}
 
-	/**
-	 * @brief Load all the application task-graphs
-	 */
+
 	void LoadTaskGraphs()
 	{
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 		return am.LoadTaskGraphAll();
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
+#endif
+	}
+
+	uint32_t ApplicationsTasksCount() const
+	{
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+		return am.TasksCount();
+#endif
+		return 0;
 	}
 
 	/**************************************************************************

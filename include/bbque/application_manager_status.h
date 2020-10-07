@@ -388,9 +388,16 @@ public:
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
 	/**
-	 * @brief Load the task-graphs of all the active applications (ready and running)
+	 * @brief Load the task-graphs of all the active applications (ready
+	 * and running)
 	 */
 	virtual void LoadTaskGraphAll() = 0;
+
+	/**
+	 * @brief Total count of the tasks
+	 */
+	virtual uint32_t TasksCount() const = 0;
+
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
