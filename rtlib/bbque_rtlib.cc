@@ -314,6 +314,7 @@ RTLIB_ExitCode_t RTLIB_Init(
 	rtlib_services.SetGoalGap = rtlib_ggap;
 	rtlib_services.Disable = rtlib_disable;
 	rtlib_services.Unregister = rtlib_unregister;
+	rtlib_services.Terminate = RTLIB_Exit;
 
 	// Utility functions interface
 	rtlib_services.Utils.GetUniqueID_String = rtlib_utils_getchuid;
@@ -366,7 +367,6 @@ RTLIB_ExitCode_t RTLIB_Init(
 	rtlib_initialized = 1; // Marking library as intialized
 	rtlib_app_name = name;
 	(*rtlib) = & rtlib_services;
-	atexit(RTLIB_Exit);
 
 	logger->Debug("RTLIB_Init: initialized [tid=%d]", gettid());
 	return RTLIB_OK;

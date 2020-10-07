@@ -457,6 +457,8 @@ typedef RTLIB_ExitCode_t(*RTLIB_Disable_t)(const RTLIB_EXCHandler_t exc_handler)
  */
 typedef void (*RTLIB_Unregister_t)(const RTLIB_EXCHandler_t exc_handler);
 
+typedef void (*RTLIB_Terminate_t)();
+
 /**@}*/
 
 /**
@@ -1183,6 +1185,9 @@ struct RTLIB_Services
 	 * Applications use this function to un-register an "execution
 	 * context" */
 	RTLIB_Unregister_t Unregister;
+	/** Termination function to close the communication with the resource
+	 * manager daemon */
+	RTLIB_Terminate_t Terminate;
 
 	/* Utility function interface */
 	struct

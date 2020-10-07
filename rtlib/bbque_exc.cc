@@ -92,8 +92,6 @@ BbqueEXC::BbqueEXC(
 
 BbqueEXC::~ BbqueEXC()
 {
-	// Disable the EXC and the Control-Loop
-	Disable();
 	// Unregister the EXC and Terminate the control loop thread
 	Terminate();
 }
@@ -190,6 +188,10 @@ RTLIB_ExitCode_t BbqueEXC::Terminate()
 		             exc_name.c_str(), (void *) exc_handler);
 		return RTLIB_OK;
 	}
+	control_u_lock.unlock();
+
+	// Statistics final update and dump
+	rtlib->Notify.Exit(exc_handler);
 
 	// Unregister the EXC
 	logger->Debug("Terminate: EXC [%s] (@%p) unregistering...",
@@ -197,24 +199,16 @@ RTLIB_ExitCode_t BbqueEXC::Terminate()
 	assert(rtlib->Unregister);
 	rtlib->Unregister(exc_handler);
 
-	// Check if the control loop has already terminated
-	if (exc_status.has_finished_processing) {
-		// Notify the WaitCompletion before exiting
-		control_thread.join();
-		//waitid(P_PID, control_thread, &infop, WEXITED);
-		// Joining the terminated thread (for a clean exit)
-		control_cond_variable.notify_all();
-		return RTLIB_OK;
-	}
-
-	logger->Info("Terminating control loop for EXC [%s] (@%p)...",
-	             exc_name.c_str(), (void *) exc_handler);
-	// Notify the control thread we are done
-	exc_status.has_finished_processing = true;
+	logger->Debug("Terminate: EXC [%s] (@%p) waiting for control loop termination...",
+		     exc_name.c_str(), (void *) exc_handler);
 	control_cond_variable.notify_all();
-	control_u_lock.unlock();
-	// Wait for the control thread to finish
 	control_thread.join();
+	logger->Info("Terminate: EXC [%s] (@%p) control loop thread joined",
+		     exc_name.c_str(), (void *) exc_handler);
+
+	// Exit message and daemon communication channel closure
+	rtlib->Terminate();
+
 	return RTLIB_OK;
 }
 
@@ -617,18 +611,16 @@ void BbqueEXC::ControlLoop()
 		logger->Error("ControlLoop: EXC [%s] setup FAILED!", exc_name.c_str());
 	}
 
-	Disable();
-	logger->Debug("ControlLoop: EXC [%s] disabled", exc_name.c_str());
-
 	Release();
 	logger->Debug("ControlLoop: EXC [%s] release", exc_name.c_str());
 
-	rtlib->Notify.Exit(exc_handler);
-	logger->Debug("ControlLoop: EXC [%s] notified exit", exc_name.c_str());
+	Disable();
+	logger->Debug("ControlLoop: EXC [%s] disabled", exc_name.c_str());
 
 	exc_status.is_terminated = true;
 	logger->Debug("ControlLoop: EXC [%s] TERMINATED", exc_name.c_str());
 	control_cond_variable.notify_all();
+
 }
 
 } // namespace rtlib

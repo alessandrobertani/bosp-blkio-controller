@@ -526,10 +526,6 @@ void BbqueRPC::Unregister(const RTLIB_EXCHandler_t exc_handler)
 	}
 
 	assert(isRegistered(exc) == true);
-
-	// Dump (verbose) execution statistics
-	DumpStats(exc, true);
-
 	logger->Debug("Unregister: unregistering [%s]...", exc->name.c_str());
 	result = _Unregister(exc);
 	if (result != RTLIB_OK) {
@@ -3423,6 +3419,9 @@ void BbqueRPC::NotifyExit(RTLIB_EXCHandler_t exc_handler)
 		PerfDisable(exc);
 		PerfCollectStats(exc);
 	}
+
+	// Dump (verbose) execution statistics
+	DumpStats(exc, true);
 }
 
 void BbqueRPC::NotifyPreConfigure(RTLIB_EXCHandler_t exc_handler)
