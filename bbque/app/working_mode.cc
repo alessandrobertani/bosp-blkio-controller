@@ -547,6 +547,106 @@ bool WorkingMode::BindingChanged(const br::ResourceType & r_type) const
 }
 
 
+void WorkingMode::AddResource(int system_id,
+			      int group_id,
+			      br::ResourceType parent_type,
+			      int parent_id,
+			      br::ResourceType resource_type,
+			      uint32_t amount,
+			      int32_t & binding_refnum)
+{
+	br::ResourceBitset per_group_ids;
+
+	std::string resource_path(br::GetResourceTypeString(br::ResourceType::SYSTEM));
+	resource_path += std::to_string(system_id) + ".";
+	if (group_id >= 0) {
+		resource_path += br::GetResourceTypeString(br::ResourceType::GROUP);
+		resource_path += std::to_string(group_id) + ".";
+		per_group_ids.Set(parent_id);
+	}
+
+	if (parent_type != br::ResourceType::UNDEFINED) {
+		resource_path += br::GetResourceTypeString(parent_type);
+		resource_path += std::to_string(parent_id) + ".";
+	}
+
+	if (resource_type != br::ResourceType::UNDEFINED) {
+		resource_path += br::GetResourceTypeString(resource_type);
+	}
+
+	// Adding or updating the resource request
+	auto resource_request = GetResourceRequest(resource_path);
+	if (resource_request == nullptr) {
+		logger->Info("AddResource: %s -> adding <%s>:<%u> request...",
+			StrId(), resource_path.c_str(), amount);
+		AddResourceRequest(resource_path, amount);
+	}
+	else {
+		logger->Info("AddResource: %s -> increasing <%s> request [+%u]...",
+			StrId(), resource_path.c_str(), amount);
+		resource_request->SetAmount(resource_request->GetAmount() + amount);
+	}
+
+	// Resource binding of the request
+	if (group_id < 0)
+		binding_refnum = BindResource(parent_type, parent_id, parent_id, binding_refnum);
+	else
+		binding_refnum = BindResource(br::ResourceType::GROUP,
+					      group_id, group_id,
+					      binding_refnum,
+					      parent_type, &per_group_ids);
+	logger->Info("AddResource: %s -> resource <%s> binding completed",
+		StrId(), resource_path.c_str());
+}
+
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
+WorkingMode::ExitCode_t
+WorkingMode::AddResourcesFromTaskGraph(std::shared_ptr<TaskGraph> task_graph, int32_t & binding_refnum)
+{
+	// Convert the task mapping into a set of processing resource requests
+	for (auto & task_entry : task_graph->Tasks()) {
+		auto & id(task_entry.first);
+		auto & task(task_entry.second);
+
+		// Task mapping information
+		int system_id           = task->GetAssignedSystem();
+		ArchType processor_arch = task->GetAssignedArch();
+		int processor_group_id  = task->GetAssignedProcessorGroup();
+		int processor_id        = task->GetAssignedProcessor();
+		int processor_amount    = task->GetAssignedProcessingQuota();
+		br::ResourceType processor_type = br::GetResourceTypeFromArchitecture(processor_arch);
+		logger->Info("AddResourcesFromTaskGraph: %s task id=%d -> system=%d processor=%d group=%d arch=%s",
+			StrId(), id, system_id, processor_id, processor_group_id,
+			GetStringFromArchType(processor_arch));
+
+		AddResource(system_id, processor_group_id, processor_type, processor_id,
+			    br::ResourceType::PROC_ELEMENT, processor_amount,
+			    binding_refnum);
+	}
+
+	// Convert the buffer allocation into a set of memory resource requests
+	for (auto & b : task_graph->Buffers()) {
+		auto & id(b.first);
+		auto & buffer(b.second);
+
+		// Buffer mapping information
+		int system_id       = buffer->GetAssignedSystem();
+		int mem_group_id    = buffer->GetAssignedMemoryGroup();
+		uint32_t mem_id     = buffer->MemoryBank();
+		uint32_t mem_amount = buffer->Size();
+		logger->Info("AddResourcesFromTaskGraph: %s buffer id=%d -> mem=%d",
+			StrId(), id, mem_id);
+
+		AddResource(system_id, mem_group_id, br::ResourceType::MEMORY, mem_id,
+			    br::ResourceType::UNDEFINED, mem_amount, binding_refnum);
+	}
+
+	return ExitCode_t::WM_SUCCESS;
+}
+
+#endif
+
 } // namespace app
 
 } // namespace bbque

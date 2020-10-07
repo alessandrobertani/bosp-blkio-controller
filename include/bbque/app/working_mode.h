@@ -25,6 +25,8 @@
 #include "bbque/res/resource_assignment.h"
 #include "bbque/utils/logging/logger.h"
 
+#include "tg/task_graph.h"
+
 #define AWM_NAMESPACE "bq.awm"
 
 namespace br = bbque::res;
@@ -607,6 +609,33 @@ public:
 	{
 		return rt_prof;
 	}
+
+	/******************************************************************************
+	 * Task-graph based application support
+	 *******************************************************************************/
+
+	void AddResource(int system_id,
+			      int group_id,
+			      br::ResourceType parent_type,
+			      int parent_id,
+			      br::ResourceType resource_type,
+			      uint32_t amount,
+			      int32_t & binding_refnum);
+
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
+	/**
+	 * @brief Fill the resource requests and perform the bindings, starting
+	 * from the task-graph mapping information
+	 *
+	 * @param task_graph The application task_graph
+	 * @param task_graph [out] The reference binding number set at the end
+	 * of the inner resource binding process
+	 */
+	ExitCode_t AddResourcesFromTaskGraph(std::shared_ptr<bbque::TaskGraph> task_graph,
+						  int32_t & binding_refnum);
+
+#endif
 
 private:
 
