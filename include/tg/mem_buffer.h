@@ -102,6 +102,33 @@ public:
 	}
 
 	/**
+	 * \brief Set the system node assigned to the task
+	 * \param p_id Identification number of the processing unit
+	 */
+	inline void SetAssignedSystem(int sys_id) { system_node_id = sys_id; }
+
+	/**
+	 * \brief Get the system node assigned to the task
+	 * \return The identification number of the system node (-1 if not
+	 * assigned)
+	 */
+	inline int GetAssignedSystem() const { return system_node_id; }
+
+	/**
+	 * \brief Set the memory group assigned to the task
+	 * \param mg_id) Identification number of the memory group
+	 */
+	inline void SetAssignedMemoryGroup(int mg_id) { mem_group = mg_id; }
+
+	/**
+	 * \brief Get the memory group assigned to the task
+	 * \return The identification number of the memory group (-1 if not
+	 * assigned)
+	 */
+	inline int GetAssignedMemoryGroup() const { return mem_group; }
+
+
+	/**
 	 * \brief The list of tasks writing into the buffer
 	 * \return A list of task ids
 	 */
@@ -186,6 +213,10 @@ private:
 
 	int32_t mem_bank = 0;
 
+	int32_t mem_group = -1;
+
+	int system_node_id = -1;
+
 
 	std::list<uint32_t> writer_tasks;
 
@@ -204,6 +235,7 @@ private:
 		ar & phy_addr;
 		ar & size_in_bytes;
 		ar & mem_bank;
+		ar & mem_group;
 		ar & writer_tasks;
 		ar & reader_tasks;
 		ar & event_id;
