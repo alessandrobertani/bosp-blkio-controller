@@ -620,10 +620,7 @@ private:
 	{
 	public:
 
-		BindingInfo()
-		{
-			changed = false;
-		}
+		BindingInfo(): changed(false) { };
 
 		virtual ~BindingInfo() { };
 
