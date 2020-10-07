@@ -152,16 +152,26 @@ public:
 	inline int GetAssignedProcessorGroup() const { return processor_group_id; }
 
 	/**
-	 * \brief Get the number of assigned cores
-	 * \param The number of assigned cores
+	 * \brief Set the amount of processing quota
+	 * \param The quota assigned by the policy
 	 */
-	inline void SetAssignedCoresCount(int nr) { nr_cores = nr; }
+	inline void SetAssignedProcessingQuota(int pq) {
+		processing_quota = pq;
+		nr_processing_cores  = ceil(pq / 100.0);
+	}
+
+	/**
+	 * \brief Get the amount of processing quota
+	 * \return The quota assigned by the policy
+	 */
+	inline uint32_t GetAssignedProcessingQuota() const { return processing_quota; }
+
 
 	/**
 	 * \brief Get the number of assigned cores
 	 * \return The number of assigned cores (0 if not assigned)
 	 */
-	inline int GetAssignedCoresCount() const { return nr_cores; }
+	inline int GetAssignedProcessingCoresCount() const { return nr_processing_cores; }
 
 	/**
 	 * \brief Set the amount of interconnect bandwidth reserved to this task
@@ -288,11 +298,14 @@ private:
 
 	int processor_group_id = -1;
 
+	uint32_t processing_quota = 0;
+
+	int nr_processing_cores = 0;
+
 	int system_node_id = -1;
 
 	std::string system_node_ip;
 
-	int nr_cores = 0;
 
 
 	ArchType assigned_arch;
@@ -321,9 +334,10 @@ private:
 		ar & thread_count;
 		ar & processor_id;
 		ar & processor_group_id;
+		ar & processing_quota;
+		ar & nr_processing_cores;
 		ar & system_node_id;
 		ar & system_node_ip;
-		ar & nr_cores;
 		ar & assigned_arch;
 		ar & in_buffers;
 		ar & out_buffers;
