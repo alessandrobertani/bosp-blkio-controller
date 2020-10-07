@@ -458,10 +458,10 @@ public:
 	 * @param task_id Task identification number
 	 * @return A reference to TaskRequirements stored in the recipe object
 	 */
-	const TaskRequirements & GetTaskRequirements(uint32_t task_id)
+	TaskRequirements const & GetTaskRequirements(uint32_t task_id) const
 	{
 		return recipe->GetTaskRequirements(task_id);
-	};
+	}
 
 	/**
 	 * @brief Return the current partition

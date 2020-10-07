@@ -179,7 +179,7 @@ public:
 	/**
 	 * @brief Performance requirements of a task (if specified in the recipe)
 	 */
-	virtual const TaskRequirements & GetTaskRequirements(uint32_t task_id) = 0;
+	virtual TaskRequirements const & GetTaskRequirements(uint32_t task_id) const = 0;
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
