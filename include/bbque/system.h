@@ -436,6 +436,15 @@ public:
 		return ra.ExistResource(ppath);
 	}
 
+	bool ExistResourcePathsOfArch(ArchType arch_type) const
+	{
+		return ra.ExistResourcePathsOfArch(arch_type);
+	}
+
+	std::list<br::ResourcePathPtr_t> const & GetResourcePathListByArch(ArchType arch_type) const {
+		return ra.GetResourcePathListByArch(arch_type);
+	}
+
 	/**
 	 * @see ResourceAccounterConfIF::GetView()
 	 */

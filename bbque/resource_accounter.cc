@@ -378,6 +378,22 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath)
 	return (*rp_it).second;
 }
 
+
+bool ResourceAccounter::ExistResourcePathsOfArch(ArchType arch_type) const
+{
+	return (per_arch_resource_path_list.find(arch_type) != per_arch_resource_path_list.end());
+}
+
+
+std::list<br::ResourcePathPtr_t> const &
+ResourceAccounter::GetResourcePathListByArch(ArchType arch_type) const
+{
+	logger->Debug("GetResourcePathListByArch: looking for architecture '%s'",
+		GetStringFromArchType(arch_type));
+	auto const & entry(per_arch_resource_path_list.find(arch_type));
+	return entry->second;
+}
+
 /************************************************************************
  *                   QUERY METHODS                                      *
  ************************************************************************/
@@ -727,6 +743,7 @@ ResourceAccounter::RegisterResource(std::string const & strpath,
 	// Insert the path in the overall resource path set
 	resource_set.emplace(resource_ptr);
 	resource_paths.emplace(strpath, resource_path_ptr);
+	per_arch_resource_path_list[GetArchTypeFromString(model)].push_back(resource_path_ptr);
 	path_max_len = std::max((int) path_max_len, (int) strpath.length());
 
 	// Track the number of resources per type

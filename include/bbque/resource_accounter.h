@@ -227,6 +227,10 @@ public:
 	 */
 	br::ResourcePathPtr_t const GetPath(std::string const & path_str);
 
+	bool ExistResourcePathsOfArch(ArchType atype) const;
+
+	std::list<br::ResourcePathPtr_t> const & GetResourcePathListByArch(ArchType atype) const;
+
 	/**
 	 * @brief Get the cumulative amount of resource usage
 	 *
@@ -687,6 +691,9 @@ private:
 
 	/** The resource paths registered (strings and objects) */
 	std::map<std::string, br::ResourcePathPtr_t> resource_paths;
+
+	/** The resource paths grouped in lists per architecture type (derived from the model string) */
+	std::map<ArchType, std::list<br::ResourcePathPtr_t>> per_arch_resource_path_list;
 
 	/** The resource paths registered (strings and objects) */
 	std::set<br::ResourcePtr_t> resource_set;

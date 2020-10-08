@@ -26,6 +26,8 @@
 #include "bbque/res/identifier.h"
 #include "bbque/res/resource_assignment.h"
 
+#include "tg/hw.h"
+
 namespace bbque
 {
 
@@ -394,6 +396,10 @@ public:
 	virtual bool ExistResource(std::string const & path) = 0;
 
 	virtual bool ExistResource(br::ResourcePathPtr_t ppath) const = 0;
+
+	virtual bool ExistResourcePathsOfArch(ArchType arch_type) const = 0;
+
+	virtual std::list<br::ResourcePathPtr_t> const & GetResourcePathListByArch(ArchType arch_type) const = 0;
 
 	/**
 	 * @brief Show the system resources status
