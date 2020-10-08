@@ -134,8 +134,7 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 	return SCHED_OK;
 }
 
-SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
-						     System & system,
+SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(System & system,
 						     RViewToken_t & status_view)
 {
 	SchedulerPolicyIF::ExitCode_t result = SCHED_DONE;
@@ -170,6 +169,7 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::Schedule(
 
 	// Update the resource status view
 	status_view = sched_status_view;
+	logger->Debug("Schedule: status view id=%ld", status_view);
 	return SCHED_DONE;
 }
 
@@ -281,7 +281,13 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 
 	// Create or re-initialize the working mode data structure
 	auto pawm = papp->CurrentAWM();
-	if (pawm == nullptr) {
+	if (pawm != nullptr) {
+		logger->Debug("AssignWorkingMode: [%s] "
+			"clearing the bindings of the previous assignment...",
+			papp->StrId());
+		pawm->ClearResourceBinding();
+	}
+	else {
 		logger->Debug("AssignWorkingMode: [%s] "
 			"creating a new working mode...",
 			papp->StrId());
@@ -290,23 +296,12 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 			"Dynamic",
 			1,
 			papp);
-
-		AddResourceRequests(papp, pawm);
-	}
-	else {
-		logger->Debug("AssignWorkingMode: [%s] "
-			"clearing the bindings of the previous assignment...",
-			papp->StrId());
-		pawm->ClearResourceBinding();
 	}
 
 	ApplicationManager & am(ApplicationManager::GetInstance());
 
-	// Resource binding
 	int32_t ref_num = -1;
-	logger->Debug("AssignWorkingMode: [%s] performing resource binding...",
-		papp->StrId());
-	auto ret = DoResourceBinding(pawm, ref_num);
+	auto ret = AssignResources(papp, pawm, ref_num);
 	if (ret != SCHED_OK) {
 		logger->Debug("AssignWorkingMode: [%s] resource binding failed",
 			papp->StrId());
@@ -322,15 +317,186 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 		return ExitCode_t::SCHED_SKIP_APP;
 	}
 
+	logger->Info("AssignWorkingMode: [%s] successfully scheduled", papp->StrId());
+	return SCHED_OK;
+}
+
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::AssignResources(bbque::app::AppCPtr_t papp,
+			      bbque::app::AwmPtr_t pawm,
+			      int32_t & ref_num)
+{
+
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
-	// Task level mapping
-	if (papp->Language() & RTLIB_LANG_TASKGRAPH)
-		MapTaskGraph(papp);
+	if (papp->Language() & RTLIB_LANG_TASKGRAPH) {
+		return AssignResourcesWithTaskGraphMapping(papp, pawm, ref_num);
+	}
+#endif // CONFIG_BBQUE_TG_PROG_MODEL
+
+	auto ret = AddResourceRequests(papp, pawm);
+	if (ret != ExitCode_t::SCHED_OK) {
+		return ret;
+	}
+
+	logger->Debug("AssignResources: [%s] performing resource binding...",
+		papp->StrId());
+	return DoResourceBinding(pawm, ref_num);
+}
+
+
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::AssignResourcesWithTaskGraphMapping(bbque::app::AppCPtr_t papp,
+						  bbque::app::AwmPtr_t pawm,
+						  int32_t & ref_num)
+{
+	auto task_graph = papp->GetTaskGraph();
+	if (task_graph == nullptr) {
+		logger->Warn("AssignResourcesWithTaskGraphMapping: [%s] no task-graph to map",
+			papp->StrId());
+		return ExitCode_t::SCHED_ERROR_TASKGRAPH_MISSING;
+	}
+	logger->Debug("AssignResourcesWithTaskGraphMapping [%s] mapping the task graph...",
+		papp->StrId());
+
+//	unsigned short int task_index = 0; // task index
+	unsigned short int sys_index  = 0; // system index
+
+	PlatformManager & plm(PlatformManager::GetInstance());
+	const auto systems = plm.GetPlatformDescription().GetSystemsAll();
+
+	// Application-level runtime profiling information
+	uint16_t throughput;
+	uint32_t c_time;
+	task_graph->GetProfiling(throughput, c_time);
+	logger->Info("[%s] Task-graph throughput: %d [CPS],  ctime: %d [ms]",
+		papp->StrId(), throughput, c_time);
+
+	// Task mapping
+	for (auto t_entry : task_graph->Tasks()) {
+		auto & task(t_entry.second);
+		auto const & task_reqs(papp->GetTaskRequirements(task->Id()));
+
+		// Task-level runtime profiling information
+		task->GetProfiling(throughput, c_time);
+		logger->Info("[%s] <task: %d> throughput: %.2f / %.2f [CPS],  ctime: %d / %d [ms]",
+			papp->StrId(), t_entry.first,
+			static_cast<float> (throughput) / 100.0, task_reqs.Throughput(),
+			c_time, task_reqs.CompletionTime());
+
+		// System node
+		task->SetAssignedSystem(sys_ids[sys_index]);
+		auto const & ip_addr = systems.at(sys_ids[sys_index]).GetNetAddress();
+		task->SetAssignedSystemIp(ip_addr);
+
+		// Processing unit (CPU, GPU or ACCELERATOR)
+		MapTaskToFirstPrefProcessor(task, task_reqs);
+
+/*
+		// Increment the system id index to dispatch the next task on a
+		// different system node (for multi-system platform testing)
+		++task_index;
+		if (task_index > ceil( task_index / sys_ids.size() ))
+			++sys_index;
+*/
+	}
+
+	// Buffer allocation
+	for (auto & b_entry : task_graph->Buffers()) {
+		auto & buffer(b_entry.second);
+		buffer->SetAssignedSystem(0);
+		//buffer->SetiAssignedMemoryGroup(0);
+		buffer->SetMemoryBank(0);
+	}
+
+	// Working mode filling
+	pawm->AddResourcesFromTaskGraph(task_graph,ref_num);
+
+	// Update task-graph on disk
+	papp->SetTaskGraph(task_graph);
+	logger->Info("[%s] Task-graph updated", papp->StrId());
+
+	return SCHED_OK;
+}
+
+
+SchedulerPolicyIF::ExitCode_t
+TestSchedPol::MapTaskToFirstPrefProcessor(TaskPtr_t task, TaskRequirements const & task_reqs)
+{
+	for (auto const & arch: task_reqs.ArchPreferences()) {
+
+		logger->Debug("MapTaskToFirstPrefProcessor: task=%d target preference=%s",
+			task->Id(), GetStringFromArchType(arch));
+
+		if (task->HasTarget(arch)) {
+			logger->Info("MapTaskToFirstPrefProcessor: task=%d target=%s loaded",
+				task->Id(), GetStringFromArchType(arch));
+
+			// Transitional mapping of GN to CPU
+			ArchType trans_arch;
+			if (arch == ArchType::GN) {
+				trans_arch = ArchType::CPU;
+				logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s (using CPU)",
+					task->Id(), GetStringFromArchType(arch));
+			}
+
+			if (!sys->ExistResourcePathsOfArch(trans_arch)) {
+				logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s not available",
+					task->Id(), GetStringFromArchType(arch));
+				continue;
+			}
+
+			auto resource_path_list = sys->GetResourcePathListByArch(trans_arch);
+			logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s: %d options",
+				task->Id(), GetStringFromArchType(arch), resource_path_list.size());
+
+			auto resource_path = GetFirstAvailable(resource_path_list, 100);
+
+			br::ResourceType processor_type = br::GetResourceTypeFromArchitecture(trans_arch);
+			logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s is a <%s> resource",
+				task->Id(),
+				GetStringFromArchType(arch),
+				br::GetResourceTypeString(processor_type));
+
+			int processor_id = resource_path->GetID(processor_type);
+			task->SetAssignedProcessor(processor_id);
+			task->SetAssignedProcessingQuota(100);
+			task->SetAssignedArch(arch);
+
+			int processor_group = resource_path->GetID(br::ResourceType::GROUP);
+			if (processor_group >= 0)
+				task->SetAssignedProcessorGroup(processor_group);
+
+			logger->Debug("MapTaskToFirstPrefProcessor: task=%d assigned target=%s id=%d "
+				"group=%d ",
+				task->Id(), GetStringFromArchType(arch), processor_id, processor_group);
+
+			return SCHED_OK;
+		}
+		else {
+			logger->Debug("MapTaskToFirstPrefProcessor: task=%d kernel for %s not loaded",
+				task->Id(), GetStringFromArchType(arch));
+		}
+	}
+
+	return SCHED_R_UNAVAILABLE;
+}
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
-	logger->Info("AssignWorkingMode: [%s] successfully scheduled", papp->StrId());
-	return SCHED_OK;
+
+
+br::ResourcePathPtr_t
+TestSchedPol::GetFirstAvailable(std::list<br::ResourcePathPtr_t> const & resource_path_list,
+				uint32_t amount) const
+{
+	for (auto const & rp: resource_path_list) {
+		if (sys->ResourceAvailable(rp, sched_status_view) >= amount)
+			return rp;
+	}
+	logger->Debug("GetFirstAvailable: resources in the list are fully allocated");
+	return nullptr;
 }
 
 SchedulerPolicyIF::ExitCode_t
@@ -421,7 +587,8 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 		auto bind_id = resource->Path()->GetID(r_type);
 		std::string resource_path_to_bind("sys"
 						+ std::to_string(local_sys_id) + "."
-						+ br::GetResourceTypeString(r_type) + std::to_string(bind_id)
+						+ br::GetResourceTypeString(r_type)
+						+ std::to_string(bind_id)
 						+ ".pe");
 
 		auto curr_quota_available = sys->ResourceAvailable(resource_path_to_bind,
@@ -526,65 +693,6 @@ TestSchedPol::BindToFirstAvailableOpenCL(bbque::app::AwmPtr_t pawm,
 
 	return ExitCode_t::SCHED_R_UNAVAILABLE;
 }
-
-#ifdef CONFIG_BBQUE_TG_PROG_MODEL
-
-void TestSchedPol::MapTaskGraph(bbque::app::AppCPtr_t papp)
-{
-	auto task_graph = papp->GetTaskGraph();
-	if (task_graph == nullptr) {
-		logger->Warn("AssignWorkingMode: [%s] no task - graph to map",
-			papp->StrId());
-		return;
-	}
-	logger->Info("MapTaskGraph: [%s] mapping the task graph...", papp->StrId());
-
-	int unit_id = 3;          // An arbitrary processing unit number
-	unsigned short int i = 0; // task index
-	unsigned short int j = 0; // system index
-
-	PlatformManager & plm(PlatformManager::GetInstance());
-	const auto systems = plm.GetPlatformDescription().GetSystemsAll();
-
-	uint16_t throughput;
-	uint32_t c_time;
-	for (auto t_entry : task_graph->Tasks()) {
-		unit_id++;
-		auto & task(t_entry.second);
-		auto const & tr(papp->GetTaskRequirements(task->Id()));
-
-		task->SetAssignedProcessor(unit_id);
-		task->SetAssignedSystem(sys_ids[j]);
-		auto const & ip_addr = systems.at(sys_ids[j]).GetNetAddress();
-		task->SetAssignedSystemIp(ip_addr);
-
-		task->GetProfiling(throughput, c_time);
-		logger->Info("[%s] < T %d > throughput : %.2f / %.2f  ctime : %d / %d [ms]",
-			papp->StrId(), t_entry.first,
-			static_cast<float> (throughput) / 100.0, tr.Throughput(),
-			c_time, tr.CompletionTime());
-		++i;
-
-		// Increment the system id index to dispatch the next task on a
-		// different system node
-		if (i > ceil( i / sys_ids.size() ))
-			++j;
-	}
-
-	for (auto & b_entry : task_graph->Buffers()) {
-		auto & buffer(b_entry.second);
-		buffer->SetMemoryBank(0);
-	}
-
-	task_graph->GetProfiling(throughput, c_time);
-	logger->Info("[%s] Task - graph throughput : %d  ctime : %d [app = %p]",
-		papp->StrId(), throughput, c_time, papp.get());
-
-	papp->SetTaskGraph(task_graph);
-	logger->Info("[%s] Task - graph updated", papp->StrId());
-}
-
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 } // namespace plugins
 

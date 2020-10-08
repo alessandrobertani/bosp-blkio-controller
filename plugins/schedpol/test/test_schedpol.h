@@ -141,6 +141,24 @@ private:
 
 	ExitCode_t AssignWorkingMode(bbque::app::AppCPtr_t papp);
 
+	ExitCode_t AssignResources(bbque::app::AppCPtr_t papp,
+				   bbque::app::AwmPtr_t pawm,
+				   int32_t & ref_num);
+
+
+#ifdef CONFIG_BBQUE_TG_PROG_MODEL
+
+	ExitCode_t AssignResourcesWithTaskGraphMapping(bbque::app::AppCPtr_t papp,
+						       bbque::app::AwmPtr_t pawm,
+						       int32_t & ref_num);
+
+	ExitCode_t MapTaskToFirstPrefProcessor(TaskPtr_t task,
+					       TaskRequirements const & task_reqs);
+#endif
+
+	br::ResourcePathPtr_t GetFirstAvailable(std::list<br::ResourcePathPtr_t> const & resource_path_list,
+						uint32_t amount) const;
+
 	ExitCode_t AddResourceRequests(bbque::app::AppCPtr_t papp, bbque::app::AwmPtr_t pawm);
 
 	ExitCode_t DoResourceBinding(bbque::app::AwmPtr_t pawm, int32_t & ref_num);
@@ -152,21 +170,16 @@ private:
 						int32_t & ref_num);
 
 	ExitCode_t BindToFirstAvailableProcessingElements(bbque::app::AwmPtr_t pawm,
-							br::ResourceType r_type,
-							uint64_t amount,
-							int32_t r_bind_id,
-							int32_t & ref_num);
+							  br::ResourceType r_type,
+							  uint64_t amount,
+							  int32_t r_bind_id,
+							  int32_t & ref_num);
 
 	ExitCode_t BindToFirstAvailableOpenCL(bbque::app::AwmPtr_t pawm,
-					br::ResourceType r_type,
-					uint64_t amount,
-					int32_t & ref_num);
+					      br::ResourceType r_type,
+					      uint64_t amount,
+					      int32_t & ref_num);
 
-#ifdef CONFIG_BBQUE_TG_PROG_MODEL
-
-	void MapTaskGraph(bbque::app::AppCPtr_t papp);
-
-#endif // CONFIG_BBQUE_TG_PROG_MODEL
 
 };
 
