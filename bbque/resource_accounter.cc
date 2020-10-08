@@ -93,7 +93,7 @@ ResourceAccounter::~ResourceAccounter()
 	resource_set.clear();
 	assign_per_views.clear();
 	rsrc_per_views.clear();
-	r_ids_per_type.clear();
+	per_type_resource_ids.clear();
 }
 
 /************************************************************************
@@ -280,7 +280,7 @@ void ResourceAccounter::PrintCountPerType() const
 	logger->Debug("======================");
 	logger->Debug("| Resources per type |");
 	logger->Debug("|--------------------|");
-	for (auto const & entry : r_ids_per_type) {
+	for (auto const & entry : per_type_resource_ids) {
 		auto & type(entry.first);
 		auto & ids(entry.second);
 		logger->Debug("| <%3s> : %9d  |",
@@ -296,7 +296,7 @@ void ResourceAccounter::PrintCountPerType() const
 br::ResourcePtr_t ResourceAccounter::GetResource(std::string const & strpath)
 {
 	// Build a resource path object.
-	// It can be a MIXED path(not inserted in r_paths)
+	// It can be a MIXED path(not inserted in resource_paths)
 	ResourcePathPtr_t resource_path_ptr = GetPath(strpath);
 	if (!resource_path_ptr)
 		return nullptr;
@@ -353,8 +353,8 @@ bool ResourceAccounter::ExistResource(ResourcePathPtr_t resource_path_ptr) const
 
 ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath)
 {
-	auto rp_it = r_paths.find(strpath);
-	if (rp_it == r_paths.end()) {
+	auto rp_it = resource_paths.find(strpath);
+	if (rp_it == resource_paths.end()) {
 		// Create a new resource path object
 		logger->Debug("GetPath: no resource path object for <%s>",
 			strpath.c_str());
@@ -367,7 +367,7 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath)
 
 		// ...it must actually refer to a registered resource
 		if (ExistResource(new_path)) {
-			r_paths.emplace(strpath, new_path);
+			resource_paths.emplace(strpath, new_path);
 			logger->Debug("GetPath: resource path object for <%s> added",
 				strpath.c_str());
 			return new_path;
@@ -506,8 +506,8 @@ uint16_t ResourceAccounter::Count(ResourcePathPtr_t resource_path_ptr) const
 
 uint16_t ResourceAccounter::CountPerType(br::ResourceType type) const
 {
-	auto it = r_ids_per_type.find(type);
-	if (it == r_ids_per_type.end())
+	auto it = per_type_resource_ids.find(type);
+	if (it == per_type_resource_ids.end())
 		return 0;
 	return it->second.size();
 }
@@ -726,17 +726,17 @@ ResourceAccounter::RegisterResource(std::string const & strpath,
 
 	// Insert the path in the overall resource path set
 	resource_set.emplace(resource_ptr);
-	r_paths.emplace(strpath, resource_path_ptr);
+	resource_paths.emplace(strpath, resource_path_ptr);
 	path_max_len = std::max((int) path_max_len, (int) strpath.length());
 
 	// Track the number of resources per type
 	for (auto const & id : resource_path_ptr->GetIdentifiers()) {
-		if (r_ids_per_type.find(id->Type()) == r_ids_per_type.end()) {
+		if (per_type_resource_ids.find(id->Type()) == per_type_resource_ids.end()) {
 			std::set<BBQUE_RID_TYPE> ids = { id->ID() };
-			r_ids_per_type.emplace(id->Type(), ids);
+			per_type_resource_ids.emplace(id->Type(), ids);
 		}
 		else
-			r_ids_per_type[id->Type()].insert(id->ID());
+			per_type_resource_ids[id->Type()].insert(id->ID());
 	}
 
 	return resource_ptr;

@@ -185,7 +185,7 @@ public:
 
 	uint16_t CountTypes() const
 	{
-		return r_ids_per_type.size();
+		return per_type_resource_ids.size();
 	}
 
 	/**
@@ -193,7 +193,7 @@ public:
 	 */
 	std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> const & GetTypes() const
 	{
-		return r_ids_per_type;
+		return per_type_resource_ids;
 	}
 
 	/**
@@ -686,13 +686,13 @@ private:
 	br::ResourceTree resources;
 
 	/** The resource paths registered (strings and objects) */
-	std::map<std::string, br::ResourcePathPtr_t> r_paths;
+	std::map<std::string, br::ResourcePathPtr_t> resource_paths;
 
 	/** The resource paths registered (strings and objects) */
 	std::set<br::ResourcePtr_t> resource_set;
 
 	/** Id numbers set for each type of registered resource */
-	std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> r_ids_per_type;
+	std::map<br::ResourceType, std::set<BBQUE_RID_TYPE>> per_type_resource_ids;
 
 #ifdef CONFIG_BBQUE_PM
 
