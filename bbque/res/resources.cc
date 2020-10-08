@@ -129,7 +129,7 @@ uint64_t Resource::UsedBy(SchedPtr_t const & papp, RViewToken_t view_id) const
 {
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
-		DB(fprintf(stderr, FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
+		DB(fprintf(stderr, FD("Resource {%s}: cannot find view %" PRIu64 "\n"),
 			name.c_str(), view_id));
 		return 0;
 	}
@@ -163,7 +163,7 @@ uint64_t Resource::Release(SchedPtr_t const & papp, RViewToken_t view_id)
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
 		DB(fprintf(stderr,
-			FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
+			FD("Resource {%s}: cannot find view %" PRIu64 "\n"),
 			name.c_str(), view_id));
 		return 0;
 	}
@@ -175,7 +175,7 @@ uint64_t Resource::Release(AppUid_t app_uid, RViewToken_t view_id)
 	ResourceStatePtr_t view(GetStateView(view_id));
 	if (!view) {
 		DB(fprintf(stderr,
-			FW("Resource {%s}: cannot find view %" PRIu64 "\n"),
+			FD("Resource {%s}: cannot find view %" PRIu64 "\n"),
 			name.c_str(), view_id));
 		return 0;
 	}
