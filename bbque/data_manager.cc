@@ -829,7 +829,7 @@ void DataManager::UpdateApplicationsData()
 
 			// Resource mapping
 			int mapped_proc = task_ptr->GetAssignedProcessor();
-			temp_task.n_threads = task_ptr->GetAssignedCoresCount(); // # threads
+			temp_task.n_threads = task_ptr->GetAssignedProcessingCoresCount(); // # threads
 
 			// Build complete resource path
 			std::string assigned_res_path =
