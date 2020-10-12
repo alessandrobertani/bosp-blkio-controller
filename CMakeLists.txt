@@ -131,11 +131,14 @@ set (BOSP_SYSROOT ${CMAKE_INSTALL_PREFIX})
 # Barbeque DAEMON configuraiton
 set (BBQUE_DAEMON_NAME     "bbqued")
 set (BBQUE_DAEMON_UID      "root")
-set (BBQUE_DAEMON_LOCKFILE "${BOSP_SYSROOT}/var/lock/bbqued.lock")
-set (BBQUE_DAEMON_PIDFILE  "${BOSP_SYSROOT}/var/run/bbqued.pid")
-set (BBQUE_DAEMON_LOGFILE  "${BOSP_SYSROOT}/var/bbque.log")
-set (BBQUE_DAEMON_RUNDIR   "${BOSP_SYSROOT}/sbin")
+set (BBQUE_DAEMON_LOCKFILE "var/lock/bbqued.lock")
+set (BBQUE_DAEMON_PIDFILE  "var/run/bbqued.pid")
+set (BBQUE_DAEMON_LOGFILE  "var/bbque.log")
+set (BBQUE_DAEMON_RUNDIR   "sbin")
 set (BBQUE_PATH_TEMP       "/tmp")
+
+set (BBQUE_CONF_FILE        "bbque.conf")
+set (BBQUE_RTLIB_CONF_FILE  "rtlib.conf")
 
 # Barbeque installation paths
 set (BBQUE_PATH_BBQ        "sbin")
@@ -153,6 +156,8 @@ set (BBQUE_PATH_APPS       "usr/bin")
 set (BBQUE_PATH_DOCS       "usr/share/bbque")
 set (BBQUE_PATH_CMAKE      "usr/share/bbque")
 set (BBQUE_PATH_VAR        "var/bbque")
+
+
 
 # Setup the RPATH and RWPATH
 if ("${CONFIG_BOSP_RUNTIME_PATH}" STREQUAL "")
@@ -172,10 +177,6 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/.cmake"
 
 # Barbeque RPC configuration
 set (BBQUE_RPC_TIMEOUT       ${CONFIG_BBQUE_RPC_TIMEOUT})
-
-# Barbeque configuration file
-set (BBQUE_CONF_FILE        "${BOSP_SYSROOT}/etc/bbque.conf")
-set (BBQUE_RTLIB_CONF_FILE  "${BOSP_SYSROOT}/etc/rtlib.conf")
 
 # Setup the CGroup-based Platform Integration Layers (PIL)
 set (BBQUE_PIL_CGROUP_MOUNT "${BOSP_SYSROOT}/mnt/cgroup")
@@ -373,6 +374,7 @@ message ( STATUS "   Plugins............ ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_PL
 message ( STATUS "   Var(RPC-Channel)... ${CONFIG_BOSP_RUNTIME_RWPATH}" )
 message ( STATUS "   Headers............ ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_HEADERS}" )
 message ( STATUS "   RTLib library...... ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RTLIB}" )
+message ( STATUS "       Configuration.. ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_CONF}/${BBQUE_RTLIB_CONF_FILE}" )
 message ( STATUS "   Documentation...... ${CMAKE_BINARY_DIR}/${BBQUE_PATH_DOCS}" )
 message ( STATUS )
 message ( STATUS "======================================================"

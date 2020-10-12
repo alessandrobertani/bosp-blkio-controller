@@ -156,7 +156,7 @@ namespace mpirun {
     }
 
     void Config::parse_config_file() {
-        std::ifstream in(BBQUE_PATH_PREFIX "/" BBQUE_PATH_CONF "/" BBQUE_CONF_FILE);
+        std::ifstream in(BBQUE_CONF_FILE);
 
         // Parse configuration file (allowing for unregistered options)
         po::store(po::parse_config_file(in, *opts_desc, true), opts_varmap);

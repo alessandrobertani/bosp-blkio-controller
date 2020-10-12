@@ -94,10 +94,10 @@
 #define BBQUE_SYNCP_TIMEOUT ${BBQUE_RPC_TIMEOUT}
 
 /** The Barbeque configuration file */
-#define BBQUE_CONF_FILE "${BBQUE_CONF_FILE}"
+#define BBQUE_CONF_FILE "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_CONF}/${BBQUE_CONF_FILE}"
 
 /** The RTLib configuration file */
-#define BBQUE_RTLIB_CONF_FILE "${BBQUE_RTLIB_CONF_FILE}"
+#define BBQUE_RTLIB_CONF_FILE "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_CONF}/${BBQUE_RTLIB_CONF_FILE}"
 
 /** The platform description root file */
 #define BBQUE_PIL_FILE "${BBQUE_PIL_FILE}"
