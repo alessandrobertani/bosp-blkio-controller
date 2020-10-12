@@ -226,15 +226,9 @@ install (TARGETS barbeque RUNTIME
 install (FILES "${PROJECT_BINARY_DIR}/config/bbque.conf"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeRTRM)
-install (FILES "${PROJECT_BINARY_DIR}/config/bbque.conf_dbg"
-		DESTINATION ${BBQUE_PATH_CONF}
-		COMPONENT BarbequeRTRM)
 install (FILES "${PROJECT_BINARY_DIR}/config/rtlib.conf"
 		DESTINATION ${BBQUE_PATH_CONF}
 		COMPONENT BarbequeRTRM)
-install (FILES "${PROJECT_BINARY_DIR}/config/bbque_2parma_demo2.conf"
-		DESTINATION ${BBQUE_PATH_CONF}
-		COMPONENT BarbequeDEMOS)
 
 # Install the daemon init script and its configuration file
 install (PROGRAMS "${PROJECT_BINARY_DIR}/config/bbqued"

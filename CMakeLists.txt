@@ -8,101 +8,14 @@ cmake_minimum_required (VERSION 2.6 FATAL_ERROR)
 # The name of this project.
 project (BarbequeRTRM)
 
-
-INCLUDE (${CONFIGPATH})
+include (${CONFIGPATH})
 include (${PROJECT_SOURCE_DIR}/../build/platforms/BbquePMConfig.cmake)
-
-################################################################################
-# Installation items
-################################################################################
-
-# Barbeque DAEMON configuraiton
-set (BBQUE_DAEMON_NAME     "bbqued")
-set (BBQUE_DAEMON_UID      "root")
-set (BBQUE_DAEMON_LOCKFILE "var/lock/bbqued.lock")
-set (BBQUE_DAEMON_PIDFILE  "var/run/bbqued.pid")
-set (BBQUE_DAEMON_LOGFILE  "var/bbque.log")
-set (BBQUE_DAEMON_RUNDIR   "")
-
-# Barbeque RPC configuration
-set (BBQUE_RPC_TIMEOUT     ${CONFIG_BBQUE_RPC_TIMEOUT})
-
-# Barbeque installation paths
-set (BBQUE_PATH_BBQ        "sbin")
-set (BBQUE_PATH_INIT       "etc/init.d")
-set (BBQUE_PATH_DEFAULTS   "etc/default")
-set (BBQUE_PATH_CONF       "etc/bbque")
-set (BBQUE_PATH_PILS       "etc/bbque/pil")
-set (BBQUE_PATH_RECIPES    "etc/bbque/recipes")
-set (BBQUE_PATH_HEADERS    "include/bbque")
-set (BBQUE_PATH_LIBS       "lib")
-set (BBQUE_PATH_RTLIB      "lib/bbque")
-set (BBQUE_PATH_PLUGINS    "lib/bbque/plugins")
-set (BBQUE_PATH_BINDINGS   "lib/bbque/bindings")
-set (BBQUE_PATH_APPS       "usr/bin")
-set (BBQUE_PATH_DOCS       "usr/share/bbque")
-set (BBQUE_PATH_CMAKE      "usr/share/bbque")
-set (BBQUE_PATH_VAR        "var/bbque")
-set (BBQUE_PATH_TEMP       "/tmp")
-
-# Barbeque configuration file
-set (BBQUE_CONF_FILE "bbque.conf")
-set (BBQUE_RTLIB_CONF_FILE "rtlib.conf")
-
-# Setup the CGroup-based Platform Integration Layers (PIL)
-set (BBQUE_PIL_CGROUP_MOUNT "mnt/cgroup")
-set (BBQUE_PIL_FILE         "systems.xml")
-
-if (CONFIG_TARGET_EMULATED_HOST)
-  set (CONFIG_TARGET_ID "tpd")
-  set (BBQUE_PIL_FILE   "symsys.xml")
-  message(STATUS "Setting CONFIG_TARGET_ID=${CONFIG_TARGET_ID}")
-endif (CONFIG_TARGET_EMULATED_HOST)
-
-if (CONFIG_TARGET_ID AND
-  EXISTS "${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}")
-	install (FILES
-		${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}/${BBQUE_PIL_FILE}
-		${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}/${CONFIG_TARGET_ID}.xml
-		DESTINATION ${BBQUE_PATH_PILS}
-		COMPONENT BarbequeRTRM)
-endif(CONFIG_TARGET_ID AND
-  EXISTS "${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}")
-
-
-# Setup the RPATH and RWPATH
-if ("${CONFIG_BOSP_RUNTIME_PATH}" STREQUAL "")
-	set (CONFIG_BOSP_RUNTIME_PATH "${PROJECT_SOURCE_DIR}/../out")
-endif ("${CONFIG_BOSP_RUNTIME_PATH}" STREQUAL "")
-if ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
-	set (CONFIG_BOSP_RUNTIME_RWPATH "${PROJECT_SOURCE_DIR}/../out/var/bbque")
-endif ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
-
-# Barbeque CGroups path
-if(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
-	set (BBQUE_CGMOUNT_DIR "/sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls")
-else(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
-	set (BBQUE_CGMOUNT_DIR "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PIL_CGROUP_MOUNT}")
-endif(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
 
 ################################################################################
 # Common initialization settings
 ################################################################################
 
-# Load additional CMake modules
 list (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/.cmake/")
-install(DIRECTORY "${PROJECT_SOURCE_DIR}/.cmake"
-			DESTINATION "${BBQUE_PATH_CMAKE}"
-			FILES_MATCHING PATTERN "*.cmake*")
-
-# Make sure the compiler can find include files
-include_directories (
-	${PROJECT_BINARY_DIR}/include
-	${PROJECT_SOURCE_DIR}/include
-)
-
-message ( STATUS )
-message ( STATUS "Checking dependencies..." )
 
 # Setup the source tree versioning number
 include (GetGitRevisionDescription)
@@ -196,29 +109,128 @@ endif (BBQUE_DEBUG)
 # Installation locations
 ################################################################################
 
-# set default install prefix to project root directory
-#set (CMAKE_INSTALL_PREFIX ${CONFIG_BOSP_RUNTIME_PATH})
-if (CMAKE_INSTALL_PREFIX STREQUAL "")
-	set (CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/out" )
-endif (CMAKE_INSTALL_PREFIX STREQUAL "")
+if ("${CONFIG_BOSP_RUNTIME_PATH}" STREQUAL "")
+	set (CONFIG_BOSP_RUNTIME_PATH "${PROJECT_SOURCE_DIR}/../out")
+endif ()
 
-if (BOSP_SYSROOT STREQUAL "")
-	set (BOSP_SYSROOT ${CMAKE_INSTALL_PREFIX})
-endif (BOSP_SYSROOT STREQUAL "")
+if ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
+	set (CONFIG_BOSP_RUNTIME_RWPATH "${PROJECT_SOURCE_DIR}/../out/var/bbque")
+endif ()
+
+# set default install prefix to project root directory
+if (CMAKE_INSTALL_PREFIX STREQUAL "")
+	set (CMAKE_INSTALL_PREFIX "${CONFIG_BOSP_RUNTIME_PATH}" )
+endif ()
+
+set (BOSP_SYSROOT ${CMAKE_INSTALL_PREFIX})
+
+################################################################################
+# Installation items
+################################################################################
+
+# Barbeque DAEMON configuraiton
+set (BBQUE_DAEMON_NAME     "bbqued")
+set (BBQUE_DAEMON_UID      "root")
+set (BBQUE_DAEMON_LOCKFILE "${BOSP_SYSROOT}/var/lock/bbqued.lock")
+set (BBQUE_DAEMON_PIDFILE  "${BOSP_SYSROOT}/var/run/bbqued.pid")
+set (BBQUE_DAEMON_LOGFILE  "${BOSP_SYSROOT}/var/bbque.log")
+set (BBQUE_DAEMON_RUNDIR   "${BOSP_SYSROOT}/sbin")
+set (BBQUE_PATH_TEMP       "/tmp")
+
+# Barbeque installation paths
+set (BBQUE_PATH_BBQ        "sbin")
+set (BBQUE_PATH_INIT       "etc/init.d")
+set (BBQUE_PATH_DEFAULTS   "etc/default")
+set (BBQUE_PATH_CONF       "etc/bbque")
+set (BBQUE_PATH_PILS       "etc/bbque/pil")
+set (BBQUE_PATH_RECIPES    "etc/bbque/recipes")
+set (BBQUE_PATH_HEADERS    "include/bbque")
+set (BBQUE_PATH_LIBS       "lib")
+set (BBQUE_PATH_RTLIB      "lib/bbque")
+set (BBQUE_PATH_PLUGINS    "lib/bbque/plugins")
+set (BBQUE_PATH_BINDINGS   "lib/bbque/bindings")
+set (BBQUE_PATH_APPS       "usr/bin")
+set (BBQUE_PATH_DOCS       "usr/share/bbque")
+set (BBQUE_PATH_CMAKE      "usr/share/bbque")
+set (BBQUE_PATH_VAR        "var/bbque")
+
+# Setup the RPATH and RWPATH
+if ("${CONFIG_BOSP_RUNTIME_PATH}" STREQUAL "")
+	set (CONFIG_BOSP_RUNTIME_PATH "${PROJECT_SOURCE_DIR}/../out")
+endif ()
+if ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
+	set (CONFIG_BOSP_RUNTIME_RWPATH "${BBQUE_PATH_VAR}")
+endif ()
+
+set (CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib;${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque")
+set (CMAKE_INSTALL_RPATH_USE_LINK TRUE)
+
+# Additional CMake modules
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/.cmake"
+		DESTINATION "${BBQUE_PATH_CMAKE}"
+		FILES_MATCHING PATTERN "*.cmake*")
+
+# Barbeque RPC configuration
+set (BBQUE_RPC_TIMEOUT       ${CONFIG_BBQUE_RPC_TIMEOUT})
+
+# Barbeque configuration file
+set (BBQUE_CONF_FILE        "${BOSP_SYSROOT}/etc/bbque.conf")
+set (BBQUE_RTLIB_CONF_FILE  "${BOSP_SYSROOT}/etc/rtlib.conf")
+
+# Setup the CGroup-based Platform Integration Layers (PIL)
+set (BBQUE_PIL_CGROUP_MOUNT "${BOSP_SYSROOT}/mnt/cgroup")
+set (BBQUE_PIL_FILE         "systems.xml")
+
+if (CONFIG_TARGET_EMULATED_HOST)
+	set (CONFIG_TARGET_ID "tpd")
+	set (BBQUE_PIL_FILE   "symsys.xml")
+	message(STATUS "Setting CONFIG_TARGET_ID=${CONFIG_TARGET_ID}")
+endif ()
+
+if (CONFIG_TARGET_ID AND
+	EXISTS "${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}")
+	install (FILES
+		${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}/${BBQUE_PIL_FILE}
+		${PROJECT_SOURCE_DIR}/config/pil/${CONFIG_TARGET_ID}/${CONFIG_TARGET_ID}.xml
+		DESTINATION ${BBQUE_PATH_PILS}
+		COMPONENT BarbequeRTRM)
+endif()
+
+
+# Barbeque CGroups path
+if(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+	set (BBQUE_CGMOUNT_DIR "/sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls")
+else(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+	set (BBQUE_CGMOUNT_DIR "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PIL_CGROUP_MOUNT}")
+endif(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+
 
 ################################################################################
 # Lookup for library dependencies
 ################################################################################
 
+# Make sure the compiler can find include files
+include_directories (
+	${PROJECT_BINARY_DIR}/include
+	${PROJECT_SOURCE_DIR}/include
+)
+
+message ( STATUS )
+message ( STATUS "Checking dependencies..." )
 
 # Force usage of BOSP provided BOOST installation
-set (Boost_NO_SYSTEM_PATHS ON)
-set (Boost_DETAILED_FAILURE_MSG ON)
-set (BOOST_ROOT ${CMAKE_INSTALL_PREFIX})
-set (BOOST_INCLUDEDIR ${CMAKE_INSTALL_PREFIX})
+set (BOOST_NO_SYSTEM_PATHS      ON)
+set (BOOST_DETAILED_FAILURE_MSG ON)
+set (BOOST_ROOT       ${BOSP_SYSROOT})
+set (BOOST_LIBRARYDIR ${BOSP_SYSROOT}/lib)
+set (BOOST_INCLUDEDIR ${BOSP_SYSROOT}/include/boost)
+find_package (Boost 1.64 REQUIRED
+	system
+	program_options
+	filesystem
+	serialization
+)
 
-# Check for required libs and packages (headers + lib)
-find_package(Boost 1.55.0 REQUIRED system program_options filesystem serialization)
 if (CONFIG_EXTERNAL_LIBCG)
 	find_package(CGroup REQUIRED)
 endif (CONFIG_EXTERNAL_LIBCG)
@@ -264,13 +276,9 @@ link_directories(
 	${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RTLIB}
 )
 
-
 if (CONFIG_BBQUE_CR_FPGA)
 	link_directories(${CONFIG_BBQUE_LIBACRE_PATH}/lib)
 endif ()
-
-set (CMAKE_INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib;${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque")
-set (CMAKE_INSTALL_RPATH_USE_LINK TRUE)
 
 
 ################################################################################
@@ -333,6 +341,7 @@ install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/html
 install (DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/man/man3
 	DESTINATION ${DOC_PATH} OPTIONAL)
 
+
 ################################################################################
 # Configuration resume
 ################################################################################
@@ -351,6 +360,12 @@ message ( STATUS "   CFLAGS............. ${CMAKE_C_FLAGS}")
 message ( STATUS " CXXFLAGS............. ${CMAKE_CXX_FLAGS}")
 message ( STATUS "Binary directory...... ${CMAKE_BINARY_DIR}" )
 message ( STATUS "Installation prefix... ${CMAKE_INSTALL_PREFIX}" )
+message ( STATUS "Dependencies")
+message ( STATUS "   Boost library...... ${Boost_LIBRARY_DIRS}" )
+message ( STATUS "BOSP Configuration:")
+message ( STATUS "   Base dir........... ${BASE_DIR}" )
+message ( STATUS "   Sysroot............ ${BOSP_SYSROOT}" )
+message ( STATUS "   CMake Modules...... ${BOSP_CMAKE_MODULES}" )
 message ( STATUS "   BarbequeRTRM....... ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_BBQ}" )
 message ( STATUS "   Configuration...... ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_CONF}/${BBQUE_CONF_FILE}" )
 message ( STATUS "   Recipes............ ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RECIPES}" )
@@ -359,12 +374,6 @@ message ( STATUS "   Var(RPC-Channel)... ${CONFIG_BOSP_RUNTIME_RWPATH}" )
 message ( STATUS "   Headers............ ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_HEADERS}" )
 message ( STATUS "   RTLib library...... ${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_RTLIB}" )
 message ( STATUS "   Documentation...... ${CMAKE_BINARY_DIR}/${BBQUE_PATH_DOCS}" )
-message ( STATUS "Dependencies:")
-message ( STATUS "   Boost library...... ${Boost_LIBRARY_DIRS}" )
-message ( STATUS "BOSP Configuration:")
-message ( STATUS "   Base dir........... ${BASE_DIR}" )
-message ( STATUS "   SySroot............ ${BOSP_SYSROOT}" )
-message ( STATUS "   CMake Modules...... ${BOSP_CMAKE_MODULES}" )
 message ( STATUS )
 message ( STATUS "======================================================"
                  "==========================" )
