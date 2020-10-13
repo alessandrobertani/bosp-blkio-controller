@@ -117,11 +117,7 @@ if ("${CONFIG_BOSP_RUNTIME_RWPATH}" STREQUAL "")
 	set (CONFIG_BOSP_RUNTIME_RWPATH "${PROJECT_SOURCE_DIR}/../out/var/bbque")
 endif ()
 
-# set default install prefix to project root directory
-if (CMAKE_INSTALL_PREFIX STREQUAL "")
-	set (CMAKE_INSTALL_PREFIX "${CONFIG_BOSP_RUNTIME_PATH}" )
-endif ()
-
+# CMAKE_INSTALL_PREFIX is set in build/core/envsetup.mk
 set (BOSP_SYSROOT ${CMAKE_INSTALL_PREFIX})
 
 ################################################################################
@@ -157,7 +153,8 @@ set (BBQUE_PATH_DOCS       "usr/share/bbque")
 set (BBQUE_PATH_CMAKE      "usr/share/bbque")
 set (BBQUE_PATH_VAR        "var/bbque")
 
-
+# Barbeque <--> RTLib RPC timeout
+set (BBQUE_RPC_TIMEOUT       ${CONFIG_BBQUE_RPC_TIMEOUT})
 
 # Setup the RPATH and RWPATH
 if ("${CONFIG_BOSP_RUNTIME_PATH}" STREQUAL "")
@@ -175,14 +172,13 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/.cmake"
 		DESTINATION "${BBQUE_PATH_CMAKE}"
 		FILES_MATCHING PATTERN "*.cmake*")
 
-# Barbeque RPC configuration
-set (BBQUE_RPC_TIMEOUT       ${CONFIG_BBQUE_RPC_TIMEOUT})
 
-# Setup the CGroup-based Platform Integration Layers (PIL)
-set (BBQUE_PIL_CGROUP_MOUNT "${BOSP_SYSROOT}/mnt/cgroup")
-set (BBQUE_PIL_FILE         "systems.xml")
+# Setup the platform description paths
+
+set (BBQUE_PIL_FILE   "systems.xml")
 
 if (CONFIG_TARGET_EMULATED_HOST)
+	message (WARNING "Emulated host enabled")
 	set (CONFIG_TARGET_ID "tpd")
 	set (BBQUE_PIL_FILE   "symsys.xml")
 	message(STATUS "Setting CONFIG_TARGET_ID=${CONFIG_TARGET_ID}")
@@ -197,13 +193,15 @@ if (CONFIG_TARGET_ID AND
 		COMPONENT BarbequeRTRM)
 endif()
 
+# Barbeque CGroups paths
 
-# Barbeque CGroups path
-if(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+set (BBQUE_PIL_CGROUP_MOUNT "${BOSP_SYSROOT}/mnt/cgroup")
+
+if (CONFIG_BBQUE_LINUX_CG_SYSTEMD)
 	set (BBQUE_CGMOUNT_DIR "/sys/fs/cgroup/cpu,cpuset,cpuacct,memory,net_cls")
-else(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+else ()
 	set (BBQUE_CGMOUNT_DIR "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PIL_CGROUP_MOUNT}")
-endif(CONFIG_BBQUE_LINUX_CG_SYSTEMD)
+endif ()
 
 
 ################################################################################
