@@ -7,14 +7,25 @@
 # CGroup_LIBRARIES, the libraries to link against to use libcgroup.
 # CGroup_FOUND, If false, don't try to use libcgroup.
 
-find_path(CGroup_INCLUDE_DIR libcgroup.h)
-find_library(CGroup_LIBRARIES cgroup)
+find_path(CGroup_INCLUDE_DIR libcgroup.h
+	HINTS ${BOSP_SYSROOT}
+	PATH_SUFFIXES include
+	NO_DEFAULT_PATH
+	NO_SYSTEM_ENVIRONMENT_PATH
+)
+
+find_library(CGroup_LIBRARIES cgroup
+	HINTS ${BOSP_SYSROOT}
+	PATH_SUFFIXES lib lib/bbque
+	NO_DEFAULT_PATH
+	NO_SYSTEM_ENVIRONMENT_PATH
+)
 
 set(CGroup_FOUND 0)
 if (CGroup_INCLUDE_DIR)
   if (CGroup_LIBRARIES)
     set(CGroup_FOUND 1)
-    message(STATUS "Found CGroup: ${CGroup_LIBRARIES}")
+    message(STATUS "CGroup library.............: ${CGroup_LIBRARIES}")
   endif (CGroup_LIBRARIES)
 endif (CGroup_INCLUDE_DIR)
 
