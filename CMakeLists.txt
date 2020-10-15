@@ -239,6 +239,7 @@ find_package (Threads REQUIRED)
 
 # OpenCL support
 if (CONFIG_TARGET_OPENCL)
+	add_definitions(-DCL_TARGET_OPENCL_VERSION=${CONFIG_TARGET_OPENCL_VERSION})
 	find_package(OpenCL REQUIRED)
 endif (CONFIG_TARGET_OPENCL)
 

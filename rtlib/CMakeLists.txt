@@ -27,6 +27,7 @@ set (RTLIB_SRC bbque_exc ${RTLIB_SRC})
 
 # OpenCL support
 if (CONFIG_TARGET_OPENCL)
+	add_definitions(-DCL_TARGET_OPENCL_VERSION=${CONFIG_TARGET_OPENCL_VERSION})
 	include_directories(${OPENCL_INCLUDE_DIR})
 	set (RTLIB_SRC bbque_ocl ${RTLIB_SRC})
 endif (CONFIG_TARGET_OPENCL)
