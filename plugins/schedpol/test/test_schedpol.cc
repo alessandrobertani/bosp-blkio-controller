@@ -191,7 +191,7 @@ TestSchedPol::AssignWorkingMode(ProcPtr_t proc)
 	AddResourceRequests(proc, pawm);
 
 	// Resource binding
-	int32_t ref_num;
+	int32_t ref_num = -1;
 	auto ret = DoResourceBinding(pawm, ref_num);
 	if (ret != SCHED_OK) {
 		logger->Warn("AssignWorkingMode: [%s] resource binding failed",
