@@ -132,22 +132,23 @@ set (BARBEQUE_SRC platform_proxy ${BARBEQUE_SRC})
 # Process management
 if (CONFIG_BBQUE_LINUX_PROC_MANAGER)
 	set (BARBEQUE_SRC process_manager ${BARBEQUE_SRC})
-endif (CONFIG_BBQUE_LINUX_PROC_MANAGER)
+endif ()
 
 # Reliability management
 if (CONFIG_BBQUE_RELIABILITY)
 	set (BARBEQUE_SRC reliability_manager ${BARBEQUE_SRC})
-endif (CONFIG_BBQUE_RELIABILITY)
+endif ()
 
 # Data management
 if (CONFIG_BBQUE_DM)
 	set (BARBEQUE_SRC data_manager ${BARBEQUE_SRC})
-endif (CONFIG_BBQUE_DM)
+endif ()
 
 # Power monitoring
 if (CONFIG_BBQUE_PM)
 	set (BARBEQUE_SRC power_monitor ${BARBEQUE_SRC})
-endif (CONFIG_BBQUE_PM)
+endif ()
+
 # Energy monitoring
 if (CONFIG_BBQUE_ENERGY_MONITOR)
 	set (BARBEQUE_SRC energy_monitor ${BARBEQUE_SRC})
