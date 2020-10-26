@@ -190,6 +190,15 @@ private:
 
 	void InitPowerInfo(std::string const & resource_path, BBQUE_RID_TYPE core_id);
 
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+
+	/**
+	 * @brief Add the resource to the energy monitor
+	 * @param resource_path The resource path
+	 */
+	void RegisterForEnergyMonitoring(std::string const & resource_path);
+
+#endif
 	/**
 	 * @brief Load values from the configuration file
 	 */

@@ -52,6 +52,10 @@
 #include "bbque/power_monitor.h"
 #endif
 
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+#include "bbque/energy_monitor.h"
+#endif
+
 #ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 #include <asm/types.h>
 #include <linux/if_ether.h>
@@ -897,6 +901,13 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 				logger->Fatal("ScanPlatformDescription: register CPU %d failed", cpu.GetId());
 				return result;
 			}
+
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+			std::string strpath = cpu.GetPath()
+				+ std::string(".")
+				+ br::GetResourceTypeString(br::ResourceType::PROC_ELEMENT);
+			RegisterForEnergyMonitoring(strpath);
+#endif
 		}
 
 		logger->Debug("ScanPlatformDescription: [%s@%s] Memories...",
@@ -1138,6 +1149,26 @@ void LinuxPlatformProxy::InitPowerInfo(std::string const & resource_path, BBQUE_
 #endif
 
 }
+
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+
+void LinuxPlatformProxy::RegisterForEnergyMonitoring(std::string const & resource_path)
+{
+	logger->Info("RegisterForEnergyMonitoring: <%s>...", resource_path.c_str());
+
+	ResourceAccounter & ra(ResourceAccounter::GetInstance());
+	auto resource_path_ptr = ra.GetPath(resource_path);
+	if (resource_path_ptr != nullptr) {
+		logger->Notice("OK!");
+	}
+	else
+		logger->Error("Not OK");
+
+	EnergyMonitor & eym(EnergyMonitor::GetInstance());
+	eym.RegisterResource(resource_path_ptr);
+}
+
+#endif
 
 /******************************************************************************
  * cgroup manipulation
