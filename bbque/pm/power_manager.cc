@@ -385,6 +385,24 @@ PowerManager::GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t &mwatt)
 	return dm->GetPowerUsage(rp, mwatt);
 }
 
+int64_t
+PowerManager::StartEnergyMonitor(br::ResourcePathPtr_t const & rp)
+{
+	auto dm = GetDeviceManager(rp, "StartEnergyMonitor");
+	if (dm == nullptr)
+		return -100;
+	return dm->StartEnergyMonitor(rp);
+}
+
+uint64_t
+PowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
+{
+	auto dm = GetDeviceManager(rp, "StopEnergyMonitor");
+	if (dm == nullptr)
+		return 0;
+	return dm->StopEnergyMonitor(rp);
+}
+
 PowerManager::PMResult
 PowerManager::GetPowerInfo(br::ResourcePathPtr_t const & rp,
 			   uint32_t &mwatt_min,

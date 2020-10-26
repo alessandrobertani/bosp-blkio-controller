@@ -198,6 +198,21 @@ public:
 				uint32_t &mwatt_min,
 				uint32_t &mwatt_max);
 
+	/**
+	 * @brief Start the monitoring of the energy consumption of the given resource
+	 * @param The resource path object
+	 * @return A value lower than "0" in case of error. The initial value of the energy
+	 * consumption register otherwise.
+	 */
+	virtual int64_t StartEnergyMonitor(br::ResourcePathPtr_t const & rp);
+
+	/**
+	 * Stop the monitoring of the energy consumption of the given resource
+	 * @param The resource path object
+	 * @return The current energy consumption value observed
+	 */
+	virtual uint64_t StopEnergyMonitor(br::ResourcePathPtr_t const & rp);
+
 
 	/** Performance/power states */
 
