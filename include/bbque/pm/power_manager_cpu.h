@@ -35,8 +35,7 @@
 
 using namespace bbque::res;
 
-namespace bbque
-{
+namespace bbque {
 
 /**
  * @class CPUPowerManager
@@ -44,14 +43,14 @@ namespace bbque
  * Provide generic power management API related to CPUs, by extending @ref
  * PowerManager class.
  */
-class CPUPowerManager: public PowerManager
+class CPUPowerManager : public PowerManager
 {
-
 public:
 
-	enum class ExitStatus {
-		OK = 0,      /** Successful call */
-		ERR_GENERIC  /** A not specified error code */
+	enum class ExitStatus
+	{
+		OK = 0, /** Successful call */
+		ERR_GENERIC /** A not specified error code */
 	};
 
 	/**
@@ -84,15 +83,15 @@ public:
 	 */
 	PMResult SetClockFrequency(ResourcePathPtr_t const & rp, uint32_t khz);
 	PMResult SetClockFrequencyBoundaries(
-	        int pe_id, uint32_t khz_min, uint32_t khz_max);
+					int pe_id, uint32_t khz_min, uint32_t khz_max);
 
 	/**
 	 * @see class PowerManager
 	 */
 	PMResult SetClockFrequency(
-	        ResourcePathPtr_t const & rp,
-	        uint32_t khz_min,
-	        uint32_t khz_max);
+				ResourcePathPtr_t const & rp,
+				uint32_t khz_min,
+				uint32_t khz_max);
 
 
 
@@ -100,43 +99,41 @@ public:
 	 * @see class PowerManager
 	 */
 	PMResult GetClockFrequencyInfo(
-	        br::ResourcePathPtr_t const & rp,
-	        uint32_t &khz_min,
-	        uint32_t &khz_max,
-	        uint32_t &khz_step);
+				br::ResourcePathPtr_t const & rp,
+				uint32_t &khz_min,
+				uint32_t &khz_max,
+				uint32_t &khz_step);
 
 	PMResult GetClockFrequencyInfo(
-	        int pe_id, uint32_t & khz_min, uint32_t & khz_max);
+				int pe_id, uint32_t & khz_min, uint32_t & khz_max);
 
 	/**
 	 * @see class PowerManager
 	 */
-	PMResult GetAvailableFrequencies(
-	        ResourcePathPtr_t const & rp, std::vector<uint32_t> &freqs);
-	PMResult GetAvailableFrequencies(
-	        int pe_id, std::vector<uint32_t> &freqs);
+	PMResult GetAvailableFrequencies(br::ResourcePathPtr_t const & rp, std::vector<uint32_t> &freqs);
+
+	PMResult GetAvailableFrequencies(int pe_id, std::vector<uint32_t> &freqs);
 
 	/**
 	 * @see class PowerManager
 	 */
-	std::vector<std::string> const & GetAvailableFrequencyGovernors(
-	        br::ResourcePathPtr_t const & rp)
+	std::vector<std::string> const & GetAvailableFrequencyGovernors(br::ResourcePathPtr_t const & rp)
 	{
 		(void) rp;
 		return cpufreq_governors;
 	}
 
 	PMResult GetClockFrequencyGovernor(
-	        br::ResourcePathPtr_t const & rp,
-	        std::string & governor);
+					br::ResourcePathPtr_t const & rp,
+					std::string & governor);
 
 	PMResult SetClockFrequencyGovernor(
-	        br::ResourcePathPtr_t const & rp,
-	        std::string const & governor);
+					br::ResourcePathPtr_t const & rp,
+					std::string const & governor);
 
 	PMResult SetClockFrequencyGovernor(
-	        int pe_id,
-	        std::string const & governor);
+					int pe_id,
+					std::string const & governor);
 
 	/**  On/off status */
 
@@ -152,11 +149,9 @@ public:
 
 	bool IsOn(int pe_id) const;
 
+	/* ===========   Power and consumption  =========== */
 
-	/* ===========   Power consumption  =========== */
-
-	PMResult GetPowerUsage(
-	        br::ResourcePathPtr_t const & rp, uint32_t & mwatt)
+	PMResult GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t & mwatt)
 	{
 		(void) rp;
 		mwatt = 0;
@@ -169,7 +164,7 @@ public:
 	 * @brief Change the current CPU performance state
 	 *
 	 * This function has been implemented in order to provide an abstract
-	 * interface to the scheduling policy, such that it is possibile to get
+	 * interface to the scheduling policy, such that it is possible to get
 	 * the current frequency as the related position of the value in the
 	 * 'core_freqs' vector.
 	 *
@@ -230,9 +225,10 @@ protected:
 	 * @brief Save the information of a single /proc/stat sampling
 	 * (processor activity in 'jitters')
 	 */
-	struct LoadInfo {
+	struct LoadInfo
+	{
 		int32_t total = 0;
-		int32_t idle  = 0;
+		int32_t idle = 0;
 	};
 
 
@@ -259,7 +255,7 @@ protected:
 	ExitStatus GetLoadInfo(LoadInfo *info, BBQUE_RID_TYPE cpu_core_id) const;
 
 	/**
-	 *  Set Cpufreq scaling governor for PE pe_id
+	 *  Set cpufreq scaling governor for PE pe_id
 	 */
 	PMResult GetClockFrequencyGovernor(int pe_id, std::string & governor);
 

@@ -61,7 +61,7 @@ CPUPowerManager::CPUPowerManager() :
 	// Core ID <--> Processing Element ID mapping
 	InitCoreIdMapping();
 
-	// Thermal monitoring intialization:
+	// Thermal monitoring initialization:
 	// Get the per-socket thermal monitor directory
 	std::string prefix_coretemp;
 	po::variables_map opts_vm;
@@ -720,7 +720,7 @@ CPUPowerManager::GetAvailableFrequencies(ResourcePathPtr_t const & rp,
 
 void
 CPUPowerManager::_GetAvailableFrequencies(int pe_id,
-					  std::shared_ptr<std::vector<uint32_t>> cpu_freqs)
+					  std::shared_ptr<std::vector < uint32_t >> cpu_freqs)
 {
 	bu::IoFs::ExitCode_t result;
 	std::string sysfs_path(BBQUE_LINUX_SYS_CPU_PREFIX + std::to_string(pe_id) +
@@ -908,7 +908,7 @@ bool CPUPowerManager::IsOn(int pe_id) const
 
 PowerManager::PMResult
 CPUPowerManager::GetPerformanceState(br::ResourcePathPtr_t const & rp,
-				     uint32_t &value)
+				     uint32_t & value)
 {
 	PowerManager::PMResult result;
 
