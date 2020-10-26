@@ -97,6 +97,19 @@ CPUPowerManager::CPUPowerManager() :
 	if (ret != PowerManager::PMResult::OK) {
 		logger->Error("CPUPowerManager: cpufreq initialization failed");
 	}
+
+	// Check Intel RAPL support availability
+	std::ifstream ifs_r(BBQUE_LINUX_INTEL_RAPL_PREFIX"/enabled");
+	if (ifs_r.is_open()) {
+		char rapl_enabled_status;
+		ifs_r.get(rapl_enabled_status);
+		if (rapl_enabled_status == '1') {
+			this->is_rapl_supported = true;
+		}
+		ifs_r.close();
+	}
+	logger->Info("CPUPowerManager: Intel RAPL available: %s",
+		this->is_rapl_supported ? "YES" : "NO");
 }
 
 CPUPowerManager::~CPUPowerManager()
@@ -527,6 +540,81 @@ CPUPowerManager::GetTemperaturePerCore(int pe_id, uint32_t & celsius)
 
 	logger->Debug("GetTemperature: <pe%d> = %d C", pe_id, celsius);
 	return PMResult::OK;
+}
+
+int64_t CPUPowerManager::StartEnergyMonitor(br::ResourcePathPtr_t const & rp)
+{
+	if (!this->is_rapl_supported) {
+		logger->Warn("StartEnergyMonitor: Intel RAPL not available");
+		return -1;
+	}
+
+	auto init_value = GetEnergyFromIntelRAPL(rp);
+	if (init_value == 0) {
+		logger->Error("StartEnergyMonitor: error while reading energy value");
+		return -2;
+	}
+
+	std::lock_guard<std::mutex>(this->mutex_energy);
+	this->energy_start_values[rp] = init_value;
+	logger->Info("StartEnergyMonitor: <%s> init_value=%ld",
+		rp->ToString().c_str(), init_value);
+
+	return init_value;
+}
+
+uint64_t CPUPowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
+{
+	std::lock_guard<std::mutex>(this->mutex_energy);
+
+	auto curr_energy_value = GetEnergyFromIntelRAPL(rp);
+	float energy_diff_value = curr_energy_value - this->energy_start_values[rp];
+	logger->Info("StopEnergyMonitor: <%s> consumption=%.2fJ",
+		rp->ToString().c_str(), energy_diff_value / 1e6);
+
+	return energy_diff_value;
+}
+
+uint64_t CPUPowerManager::GetEnergyFromIntelRAPL(br::ResourcePathPtr_t const & rp)
+{
+	auto package_id = rp->GetID(br::ResourceType::CPU);
+	if (package_id < 0) {
+		logger->Error("StartEnergyMonitor: not CPU id in the resource path");
+		return 0;
+	}
+
+	unsigned int domain_id;
+	if (rp->Type() == br::ResourceType::PROC_ELEMENT)
+		// Core
+		domain_id = 0;
+	else if (rp->Type() == br::ResourceType::MEMORY)
+		// DRAM
+		domain_id = 2;
+	else
+		// Uncore
+		domain_id = 1;
+	logger->Debug("StartEnergyMonitor: <%s> -> package_id=%d domain_id=%d",
+		rp->ToString().c_str(), package_id, domain_id);
+
+	std::string rapl_path(BBQUE_LINUX_INTEL_RAPL_PREFIX"/intel-rapl:");
+	rapl_path += std::to_string(package_id) + "/intel-rapl:";
+	rapl_path += std::to_string(package_id) + ":";
+	rapl_path += std::to_string(domain_id) + "/energy_uj";
+	logger->Debug("StartEnergyMonitor: <%s> -> %s",
+		rp->ToString().c_str(), rapl_path.c_str());
+
+	std::ifstream ifs(rapl_path);
+	if (!ifs.is_open()) {
+		logger->Error("StartEnergyMonitor: cannot open <%s>",
+			rapl_path.c_str());
+		return 0;
+	}
+
+	uint64_t curr_energy_uj;
+	ifs >> curr_energy_uj;
+	ifs.close();
+
+	return curr_energy_uj;
 }
 
 /**********************************************************************

@@ -33,6 +33,9 @@
 #define BBQUE_LINUX_SYS_CPU_THERMAL  "/sys/bus/platform/drivers/coretemp/coretemp.0/hwmon/hwmon"
 #endif
 
+#define BBQUE_LINUX_INTEL_RAPL_PREFIX "/sys/class/powercap/intel-rapl"
+
+
 using namespace bbque::res;
 
 namespace bbque {
@@ -158,6 +161,10 @@ public:
 		return PMResult::ERR_API_NOT_SUPPORTED;
 	}
 
+	int64_t StartEnergyMonitor(br::ResourcePathPtr_t const & rp);
+
+	uint64_t StopEnergyMonitor(br::ResourcePathPtr_t const & rp);
+
 	/* ===========   Performance/power states  =========== */
 
 	/**
@@ -220,6 +227,14 @@ protected:
 	/*** SysFS CPU prefix path ***/
 	std::string prefix_sys_cpu;
 
+	/*** Boolean for checking Intel RAPL availability */
+	bool is_rapl_supported = false;
+
+	mutable std::mutex mutex_energy;
+
+	/*** Per-resource energy sampling start value */
+	std::map<br::ResourcePathPtr_t, uint64_t> energy_start_values;
+
 	/**
 	 * @struct LoadInfo
 	 * @brief Save the information of a single /proc/stat sampling
@@ -258,6 +273,13 @@ protected:
 	 *  Set cpufreq scaling governor for PE pe_id
 	 */
 	PMResult GetClockFrequencyGovernor(int pe_id, std::string & governor);
+
+	/**
+	 * Read the current energy consumption (in nJ) from the Intel RAPL sysfs
+	 * interface
+	 * @return The energy consumption in nJ
+	 */
+	uint64_t GetEnergyFromIntelRAPL(br::ResourcePathPtr_t const & rp);
 
 };
 
