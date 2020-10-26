@@ -194,7 +194,7 @@ PowerMonitor::PowerMonitor() :
 		triggers[PowerManager::InfoType::ENERGY]->threshold_high, '%', "-", batt_trig.c_str());
 	logger->Info("=====================================================================");
 
-	// Staus of the optimization policy execution request
+	// Status of the optimization policy execution request
 	opt_request_sent = false;
 
 	//---------- Setup Worker
@@ -251,8 +251,8 @@ void PowerMonitor::Task()
 					&PowerMonitor::SampleResourcesStatus, this,
 					nt * nr_resources_per_thread,
 					last_resource_id));
-
 	}
+
 	// The number of resources is not divisible by the number of threads...
 	// --> spawn one more thread
 	if (nr_resources_left > 0) {
@@ -304,8 +304,7 @@ int PowerMonitor::CommandsCb(int argc, char *argv[])
 	return -1;
 }
 
-PowerMonitor::ExitCode_t PowerMonitor::Register(
-						br::ResourcePathPtr_t rp,
+PowerMonitor::ExitCode_t PowerMonitor::Register(br::ResourcePathPtr_t rp,
 						PowerManager::SamplesArray_t const & samples_window)
 {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -331,8 +330,7 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 	return ExitCode_t::OK;
 }
 
-PowerMonitor::ExitCode_t PowerMonitor::Register(
-						const std::string & rp_str,
+PowerMonitor::ExitCode_t PowerMonitor::Register(const std::string & rp_str,
 						PowerManager::SamplesArray_t const & samples_window)
 {
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
@@ -342,11 +340,15 @@ PowerMonitor::ExitCode_t PowerMonitor::Register(
 void PowerMonitor::Start(uint32_t period_ms)
 {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
-	logger->Debug("Start: <%d> registered resources to monitor",
+	logger->Info("Start: logging %d registered resources to monitor:",
 		wm_info.resources.size());
 
 	if ((period_ms != 0) && (period_ms != wm_info.period_ms))
 		wm_info.period_ms = period_ms;
+
+	for (auto & rh : wm_info.resources) {
+		logger->Info("Start: \t<%s>", rh.path->ToString().c_str());
+	}
 
 	if (wm_info.started) {
 		logger->Warn("Start: power logging already started (T = %d ms)...",
@@ -372,8 +374,7 @@ void PowerMonitor::Stop()
 	worker_status_cv.notify_all();
 }
 
-void PowerMonitor::ManageRequest(
-				 PowerManager::InfoType info_type,
+void PowerMonitor::ManageRequest(PowerManager::InfoType info_type,
 				 double curr_value)
 {
 	// Return if optimization request already sent
@@ -413,8 +414,7 @@ void PowerMonitor::SendOptimizationRequest()
 	opt_request_sent = false;
 }
 
-void  PowerMonitor::SampleResourcesStatus(
-					  uint16_t first_resource_index,
+void  PowerMonitor::SampleResourcesStatus(uint16_t first_resource_index,
 					  uint16_t last_resource_index)
 {
 	PowerManager::SamplesArray_t samples;
@@ -497,8 +497,7 @@ void  PowerMonitor::SampleResourcesStatus(
 	logger->Notice("SampleResourcesStatus: [thread %d] terminating", thd_id);
 }
 
-void PowerMonitor::BuildLogString(
-				  br::ResourcePtr_t rsrc,
+void PowerMonitor::BuildLogString(br::ResourcePtr_t rsrc,
 				  uint info_idx,
 				  std::string & inst_values,
 				  std::string & mean_values)
@@ -633,8 +632,7 @@ int32_t PowerMonitor::GetSysPowerBudget()
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 
-int PowerMonitor::SystemLifetimeCmdHandler(
-					   const std::string action, const std::string hours)
+int PowerMonitor::SystemLifetimeCmdHandler(const std::string action, const std::string hours)
 {
 	std::unique_lock<std::mutex> ul(sys_lifetime.mtx);
 	std::chrono::system_clock::time_point now;

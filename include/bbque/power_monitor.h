@@ -49,13 +49,10 @@
 namespace bu = bbque::utils;
 namespace br = bbque::res;
 
-namespace bbque
+namespace bbque {
+
+class PowerMonitor : public CommandHandler, bu::Worker
 {
-
-
-class PowerMonitor: public CommandHandler, bu::Worker
-{
-
 public:
 
 	/**
@@ -92,16 +89,12 @@ public:
 	 * reference any resource, OK otherwise
 	 */
 	ExitCode_t Register(
-	        br::ResourcePathPtr_t rp,
-	        PowerManager::SamplesArray_t const & samples_window =
-	{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
-	);
+			br::ResourcePathPtr_t rp,
+			PowerManager::SamplesArray_t const & samples_window = {BBQUE_PM_DEFAULT_SAMPLES_WINSIZE});
 
 	ExitCode_t Register(
-	        const std::string & rp_str,
-	        PowerManager::SamplesArray_t const & samples_window =
-	{BBQUE_PM_DEFAULT_SAMPLES_WINSIZE}
-	);
+			const std::string & rp_str,
+			PowerManager::SamplesArray_t const & samples_window = {BBQUE_PM_DEFAULT_SAMPLES_WINSIZE});
 
 	/**
 	 * @brief Start the monitoring of the power-thermal status
@@ -116,7 +109,7 @@ public:
 	void Stop();
 
 	/**
-	 * @brief Thermal theshold
+	 * @brief Thermal threshold
 	 *
 	 * @return The temperature in Celsius degree
 	 */
@@ -141,6 +134,7 @@ public:
 	}
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
+
 	/**
 	 * @brief System lifetime left (in seconds)
 	 *
@@ -150,16 +144,15 @@ public:
 	inline std::chrono::seconds GetSysLifetimeLeft() const
 	{
 		std::chrono::system_clock::time_point now =
-		        std::chrono::system_clock::now();
-		return std::chrono::duration_cast<std::chrono::seconds>(
-		               sys_lifetime.target_time - now);
+			std::chrono::system_clock::now();
+		return std::chrono::duration_cast<std::chrono::seconds>(sys_lifetime.target_time - now);
 	}
 #endif
 
 	/**
 	 * @brief System power budget, given the target lifetime set
 	 *
-	 * @return The power value in milliwatts; 0: No target set; -1: Always on
+	 * @return The power value in mW; 0: No target set; -1: Always on
 	 * mode required
 	 */
 	int32_t GetSysPowerBudget();
@@ -193,7 +186,8 @@ private:
 	 * @struct SystemLifetimeInfo_t
 	 * @brief System power budget information
 	 */
-	struct SystemLifetimeInfo_t {
+	struct SystemLifetimeInfo_t
+	{
 		/** Mutex to protect concurrent accesses */
 		std::mutex mtx;
 		/** Time point of the required system lifetime */
@@ -236,18 +230,19 @@ private:
 	/**
 	 * @struct ResourceHandler
 	 */
-	struct ResourceHandler {
+	struct ResourceHandler
+	{
 		br::ResourcePathPtr_t path;
 		br::ResourcePtr_t resource_ptr;
 	};
-
 
 	/**
 	 * @struct PowerMonitorInfo_t
 	 * @brief Structure to collect support information for the power
 	 * monitoring activity
 	 */
-	struct PowerMonitorInfo_t {
+	struct PowerMonitorInfo_t
+	{
 		// Resource handlers
 		std::vector<ResourceHandler> resources;   /** Resources to monitor */
 		// Data logging
@@ -300,7 +295,7 @@ private:
 
 	/** Function pointer to PowerManager member functions */
 	using PMfunc = std::function <
-	               PowerManager::PMResult(PowerManager&, br::ResourcePathPtr_t const &, uint32_t &) >;
+		PowerManager::PMResult(PowerManager&, br::ResourcePathPtr_t const &, uint32_t &) >;
 
 	/**
 	 * @brief Array of Power Manager member functions
@@ -308,8 +303,8 @@ private:
 	std::array<PMfunc, size_t(PowerManager::InfoType::COUNT) > PowerMonitorGet;
 
 	/*** Log messages format settings */
-	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_w = { WM_STRW };
-	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_p = { WM_STRP };
+	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_w = {WM_STRW};
+	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_p = {WM_STRP};
 
 	/**
 	 * @brief Constructor
@@ -335,10 +330,10 @@ private:
 	virtual void Task();
 
 	void BuildLogString(
-	        br::ResourcePtr_t rsrsc,
-	        uint info_idx,
-	        std::string & inst_values,
-	        std::string & mean_values);
+			br::ResourcePtr_t rsrsc,
+			uint info_idx,
+			std::string & inst_values,
+			std::string & mean_values);
 
 	/**
 	 * @brief Log a data text line to file
@@ -348,9 +343,9 @@ private:
 	 * @param om C++ stream open mode
 	 */
 	void DataLogWrite(
-	        br::ResourcePathPtr_t rp,
-	        std::string const & data_line,
-	        std::ios_base::openmode om = std::ios::out | std::ios_base::app);
+			br::ResourcePathPtr_t rp,
+			std::string const & data_line,
+			std::ios_base::openmode om = std::ios::out | std::ios_base::app);
 
 	/**
 	 * @brief Clear data log files
@@ -404,7 +399,7 @@ private:
 		std::chrono::seconds secs_from_now = GetSysLifetimeLeft();
 		// System energy budget in mJ
 		uint32_t energy_budget = pbatt->GetChargeMAh() * 3600 *
-		                         pbatt->GetVoltage() / 1e3;
+			pbatt->GetVoltage() / 1e3;
 		return energy_budget / secs_from_now.count();
 	}
 
@@ -426,8 +421,8 @@ private:
 	 * @return 0 for success, a negative number in case of error
 	 */
 	int SystemLifetimeCmdHandler(
-	        const std::string action,
-	        const std::string arg);
+				const std::string action,
+				const std::string arg);
 
 	/**
 	 * @brief System target lifetime information report
