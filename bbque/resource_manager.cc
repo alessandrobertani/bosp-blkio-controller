@@ -178,8 +178,6 @@ ResourceManager::ResourceManager() :
 ResourceManager::ExitCode_t
 ResourceManager::Setup()
 {
-
-	//---------- Get a logger module
 	logger = bu::Logger::GetLogger(RESOURCE_MANAGER_NAMESPACE);
 	assert(logger);
 
@@ -389,7 +387,7 @@ void ResourceManager::Optimize()
 		RM_COUNT_EVENT(metrics, RM_SCHED_EMPTY);
 	}
 	else {
-		// Account for a new synchronizaiton activation
+		// Account for a new synchronization activation
 		RM_COUNT_EVENT(metrics, RM_SYNCH_TOTAL);
 		RM_GET_PERIOD(metrics, RM_SYNCH_PERIOD, period);
 		if (period)
@@ -402,7 +400,7 @@ void ResourceManager::Optimize()
 		optimization_tmr.stop();
 		if (syncResult != SynchronizationManager::OK) {
 			RM_COUNT_EVENT(metrics, RM_SYNCH_FAILED);
-			// FIXME here we should implement some counter-meaure to
+			// FIXME here we should implement some countermeasure to
 			// ensure consistency
 		}
 
@@ -451,7 +449,7 @@ void ResourceManager::EvtExcStart()
 	// current priority level of READY applications.
 	// When an application issue a Working Mode request it is expected to
 	// be in ready state. The optimization will be triggered in a
-	// timeframe which is _invese proportional_ to the highest priority
+	// time-frame which is _inverse proportional_ to the highest priority
 	// ready application.
 	// This should allows to have short latencies for high priority apps
 	// while still allowing for reduced rescheduling on applications
