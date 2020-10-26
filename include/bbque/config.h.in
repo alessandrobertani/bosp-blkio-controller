@@ -194,6 +194,9 @@
 /** Enable periodic Power monitoring */
 #cmakedefine CONFIG_BBQUE_WM
 
+/** Enable Energy monitor */
+#cmakedefine CONFIG_BBQUE_ENERGY_MONITOR
+
 /** Enable data management */
 #cmakedefine CONFIG_BBQUE_DM
 

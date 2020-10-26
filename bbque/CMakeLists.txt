@@ -148,6 +148,10 @@ endif (CONFIG_BBQUE_DM)
 if (CONFIG_BBQUE_PM)
 	set (BARBEQUE_SRC power_monitor ${BARBEQUE_SRC})
 endif (CONFIG_BBQUE_PM)
+# Energy monitoring
+if (CONFIG_BBQUE_ENERGY_MONITOR)
+	set (BARBEQUE_SRC energy_monitor ${BARBEQUE_SRC})
+endif ()
 
 
 # Add "barbeque" target binary

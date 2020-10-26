@@ -20,12 +20,13 @@ config BBQUE_PM_NOACPI
   Avoid using the ACPI interfaces. Probably required since kernel 4.x versions.
 
 
-config  BBQUE_PM_BATTERY
-  bool "Battery Management"
+config BBQUE_ENERGY_MONITOR
+  bool "Energy Monitor"
   depends on BBQUE_PM
   default n
   ---help---
-  Enable the interface with the system battery, if available.
+  Enable the support for run-time monitoring of the energy consumption of the
+  resources.
 
 config BBQUE_WM
   bool "Periodic Monitoring"
