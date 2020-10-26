@@ -695,7 +695,7 @@ LinuxPlatformProxy::SetCGNetworkBandwidth(SchedPtr_t papp, CGroupDataPtr_t pcgd,
 	// a class-specific identifier. More information in the "tc" documentation.
 	// Here, the major handle number is 0x10 and correspond to the parent qdisc
 	// handle and will be the same for all classes. The minor handle number is
-	// the procces PID
+	// the process PID
 	sstream_PID << std::hex << papp->Pid();
 	std::string PID("0x10" + sstream_PID.str());
 
@@ -894,7 +894,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 		for (const auto cpu : sys.GetCPUsAll()) {
 			ExitCode_t result = this->RegisterCPU(cpu, sys.IsLocal());
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
-				logger->Fatal("Register CPU %d failed", cpu.GetId());
+				logger->Fatal("ScanPlatformDescription: register CPU %d failed", cpu.GetId());
 				return result;
 			}
 		}
@@ -970,19 +970,23 @@ LinuxPlatformProxy::RegisterCPU(const PlatformDescription::CPU &cpu,
 		|| (PlatformDescription::SHARED == pe_type)) {
 			const std::string resource_path = pe.GetPath();
 			const int share = pe.GetShare();
-			logger->Debug("RegisterCPU: <%s>: total=%d", resource_path.c_str(), share);
+			logger->Debug("RegisterCPU: <%s>: total=%d",
+				resource_path.c_str(), share);
 
 			if (refreshMode) {
 				ra.UpdateResource(resource_path, "", share);
 			}
 			else {
 				ra.RegisterResource(resource_path, "", share);
-				if (is_local)
-					InitPowerInfo(resource_path.c_str(),
-						pe.GetId());
+				if (is_local) {
+					logger->Debug("RegisterCPU: <%s>: is local",
+						resource_path.c_str());
+					InitPowerInfo(resource_path, pe.GetId());
+				}
 			}
 		}
 	}
+
 
 	return PLATFORM_OK;
 }
@@ -1108,27 +1112,29 @@ LinuxPlatformProxy::RegisterIODev(const PlatformDescription::IO &io_dev,
 	return PLATFORM_OK;
 }
 
-void LinuxPlatformProxy::InitPowerInfo(const char * resourcePath,
-				       BBQUE_RID_TYPE core_id)
+void LinuxPlatformProxy::InitPowerInfo(std::string const & resource_path, BBQUE_RID_TYPE core_id)
 {
 
 #ifdef CONFIG_TARGET_ARM_BIG_LITTLE
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
-	br::ResourcePtr_t rsrc(ra.GetResource(resourcePath));
-	if (high_perf_cores[core_id])
+	br::ResourcePtr_t rsrc(ra.GetResource(resource_path));
+	if (high_perf_cores[core_id]) {
 		rsrc->SetModel("ARM Cortex A15");
-	else
+	}
+	else {
 		rsrc->SetModel("ARM Cortex A7");
 		logger->Info("InitPowerInfo: [%s] CPU model = %s",
-		rsrc->Path()->ToString().c_str(), rsrc->Model().c_str());
+			rsrc->Path()->ToString().c_str(), rsrc->Model().c_str());
+	}
 #else
-	(void) resourcePath;
-	(void) core_id;
+	UNUSED(core_id);
 #endif
+
+
 #ifdef CONFIG_BBQUE_WM
 	PowerMonitor & wm(PowerMonitor::GetInstance());
-	wm.Register(resourcePath);
-	logger->Debug("InitPowerInfo: [%s] registered for monitoring", resourcePath);
+	wm.Register(resource_path);
+	logger->Debug("InitPowerInfo: [%s] registered for monitoring", resource_path.c_str());
 #endif
 
 }

@@ -132,9 +132,9 @@ private:
 	/**
 	 * @brief The "silos" CGroup
 	 *
-	 * The "silos" is a control group where are placed processe which have
-	 * been scheduled. This CGroup is indended to be a resource constrained
-	 * group which grants a bare minimun of resources for the controlling
+	 * The "silos" is a control group where are placed processes which have
+	 * been scheduled. This CGroup is intended to be a resource constrained
+	 * group which grants a bare minimum of resources for the controlling
 	 * application to run the RTLib
 	 */
 	CGroupDataPtr_t psilos;
@@ -188,7 +188,7 @@ private:
 	LinuxPlatformProxy();
 
 
-	void InitPowerInfo(const char * resourcePath, BBQUE_RID_TYPE core_id);
+	void InitPowerInfo(std::string const & resource_path, BBQUE_RID_TYPE core_id);
 
 	/**
 	 * @brief Load values from the configuration file
