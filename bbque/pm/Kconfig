@@ -15,7 +15,7 @@ config BBQUE_PM
 config BBQUE_PM_NOACPI
   bool "NO ACPI Interface"
   depends on BBQUE_PM
-  default n
+  default y
    ---help---
   Avoid using the ACPI interfaces. Probably required since kernel 4.x versions.
 
