@@ -15,8 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #include "bbque/resource_manager.h"
+
 #include "bbque/configuration_manager.h"
+#include "bbque/energy_monitor.h"
 #include "bbque/signals_manager.h"
 #include "bbque/utils/utility.h"
 
@@ -340,6 +343,11 @@ void ResourceManager::Optimize()
 	}
 	plat_event = false;
 
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+	EnergyMonitor & eym(EnergyMonitor::GetInstance());
+	eym.StopSamplingResourceConsumption();
+#endif
+
 	if (active_apps) {
 		sys.PrintStatus(true);
 		logger->Info("Optimize: scheduler invocation...");
@@ -408,6 +416,12 @@ void ResourceManager::Optimize()
 		logger->Notice("Optimize: synchronization time: %11.3f[us]",
 			optimization_tmr.getElapsedTimeUs());
 	}
+
+
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+	// (Re-)start energy monitoring
+	eym.StartSamplingResourceConsumption();
+#endif
 
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
 	//--- Profiling
