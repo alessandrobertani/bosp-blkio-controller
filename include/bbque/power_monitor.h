@@ -133,30 +133,6 @@ public:
 		return v->second->threshold_high;
 	}
 
-#ifdef CONFIG_BBQUE_PM_BATTERY
-
-	/**
-	 * @brief System lifetime left (in seconds)
-	 *
-	 * @return Chrono duration object (seconds) with the count of the
-	 * remaining seconds
-	 */
-	inline std::chrono::seconds GetSysLifetimeLeft() const
-	{
-		std::chrono::system_clock::time_point now =
-			std::chrono::system_clock::now();
-		return std::chrono::duration_cast<std::chrono::seconds>(sys_lifetime.target_time - now);
-	}
-#endif
-
-	/**
-	 * @brief System power budget, given the target lifetime set
-	 *
-	 * @return The power value in mW; 0: No target set; -1: Always on
-	 * mode required
-	 */
-	int32_t GetSysPowerBudget();
-
 	/**
 	 * @brief Return the length of the sampling period (in milliseconds)
 	 */
@@ -171,34 +147,6 @@ private:
 	 * @brief Power manager instance
 	 */
 	PowerManager & pm;
-
-#ifdef CONFIG_BBQUE_PM_BATTERY
-	/**
-	 * @brief Battery manager instance
-	 */
-	BatteryManager & bm;
-	/**
-	 * @brief Battery object instance
-	 */
-	BatteryPtr_t pbatt;
-
-	/**
-	 * @struct SystemLifetimeInfo_t
-	 * @brief System power budget information
-	 */
-	struct SystemLifetimeInfo_t
-	{
-		/** Mutex to protect concurrent accesses */
-		std::mutex mtx;
-		/** Time point of the required system lifetime */
-		std::chrono::system_clock::time_point target_time;
-		/** System power budget for guarateeing the required lifetime */
-		int32_t power_budget_mw = 0;
-		/** If true the request is to keep the system always on */
-		bool always_on;
-	} sys_lifetime;
-
-#endif // CONFIG_BBQUE_PM_BATTERY
 
 	/**
 	 * @brief Command manager instance
@@ -381,55 +329,6 @@ private:
 	 * @brief Send an optimization request to execute the resource allocation policy
 	 */
 	void SendOptimizationRequest();
-
-
-#ifdef CONFIG_BBQUE_PM_BATTERY
-	/**
-	 * @brief Sample the battery status
-	 */
-	void SampleBatteryStatus();
-
-	/**
-	 * @brief Compute the system power budget
-	 * @return The power value in milliwatts.
-	 */
-	inline uint32_t ComputeSysPowerBudget() const
-	{
-		// How many seconds remains before lifetime target is reached?
-		std::chrono::seconds secs_from_now = GetSysLifetimeLeft();
-		// System energy budget in mJ
-		uint32_t energy_budget = pbatt->GetChargeMAh() * 3600 *
-			pbatt->GetVoltage() / 1e3;
-		return energy_budget / secs_from_now.count();
-	}
-
-	/**
-	 * @brief Trigger execution for the battery status.
-	 * The optimization is required in case of battery level under
-	 * a given threshold
-	 */
-	void ExecuteTriggerForBattery();
-
-	/**
-	 * @brief System target lifetime setting
-	 * @param action The control actions:
-	 *		set   (to set the amount of hours)
-	 *		info  (to get the current information)
-	 *		clear (to clear the target)
-	 *		help  (command help)
-	 * @param hours For the action 'set' only
-	 * @return 0 for success, a negative number in case of error
-	 */
-	int SystemLifetimeCmdHandler(
-				const std::string action,
-				const std::string arg);
-
-	/**
-	 * @brief System target lifetime information report
-	 */
-	void PrintSystemLifetimeInfo() const;
-
-#endif // CONFIG_BBQUE_PM_BATTERY
 
 };
 

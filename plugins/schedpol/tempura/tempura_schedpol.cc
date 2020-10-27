@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <iostream>
 
+#include "bbque/energy_monitor.h"
 #include "bbque/modules_factory.h"
 #include "bbque/power_monitor.h"
 #include "bbque/utils/logging/logger.h"
@@ -30,6 +31,7 @@
 #include "bbque/res/identifier.h"
 #include "bbque/res/resource_assignment.h"
 #include "bbque/res/resource_path.h"
+#include "bbque/energy_monitor.h"
 
 #define MODULE_CONFIG SCHEDULER_POLICY_CONFIG "." SCHEDULER_POLICY_NAME
 
@@ -175,7 +177,8 @@ SchedulerPolicyIF::ExitCode_t TempuraSchedPol::_Init()
 		crit_temp = wm.GetThermalThreshold();
 
 	// System power budget
-	sys_power_budget = wm.GetSysPowerBudget();
+	EnergyMonitor & eym(PowerMonitor::GetInstance());
+	sys_power_budget = eym.GetSystemPowerBudget();
 	if (sys_power_budget > 0) {
 		tot_resource_power_budget =
 			pmodel_sys->GetResourcePowerFromSystem(
@@ -341,10 +344,8 @@ inline uint32_t TempuraSchedPol::GetPowerBudget(
 
 	// Current status
 	for (auto & rsrc : budget_ptr->r_list) {
-		curr_temp += rsrc->GetPowerInfo(
-						PowerManager::InfoType::TEMPERATURE, br::Resource::MEAN);
-		curr_load += rsrc->GetPowerInfo(
-						PowerManager::InfoType::LOAD, br::Resource::MEAN);
+		curr_temp += rsrc->GetPowerInfo(PowerManager::InfoType::TEMPERATURE, br::Resource::MEAN);
+		curr_load += rsrc->GetPowerInfo(PowerManager::InfoType::LOAD, br::Resource::MEAN);
 #ifdef CONFIG_TARGET_ODROID_XU
 		curr_power = rsrc->GetPowerInfo(PowerManager::InfoType::POWER);
 #endif

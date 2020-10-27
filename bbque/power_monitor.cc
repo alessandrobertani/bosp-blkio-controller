@@ -64,9 +64,6 @@ PowerMonitor & PowerMonitor::GetInstance()
 PowerMonitor::PowerMonitor() :
     Worker(),
     pm(PowerManager::GetInstance()),
-#ifdef CONFIG_BBQUE_PM_BATTERY
-    bm(BatteryManager::GetInstance()),
-#endif
     cm(CommandManager::GetInstance()),
 #ifdef CONFIG_BBQUE_DM
     dm(DataManager::GetInstance()),
@@ -74,7 +71,6 @@ PowerMonitor::PowerMonitor() :
     cfm(ConfigurationManager::GetInstance()),
     optimize_dfr("wm.opt", std::bind(&PowerMonitor::SendOptimizationRequest, this))
 {
-
 	// Initialization
 	logger = bu::Logger::GetLogger(POWER_MONITOR_NAMESPACE);
 	assert(logger);
@@ -84,10 +80,8 @@ PowerMonitor::PowerMonitor() :
 	// Configuration options
 	uint32_t temp_crit  = 0, temp_crit_arm  = 0;
 	uint32_t power_cons = 0, power_cons_arm = 0;
-	uint32_t batt_level = 0, batt_rate = 0;
-
-	float temp_margin = 0.05, power_margin = 0.05, batt_rate_margin = 0.05;
-	std::string temp_trig, power_trig, batt_trig;
+	float temp_margin = 0.05, power_margin = 0.05;
+	std::string temp_trig, power_trig;
 
 	try {
 		po::options_description opts_desc("Power Monitor options");
@@ -102,12 +96,7 @@ PowerMonitor::PowerMonitor() :
 		LOAD_CONFIG_OPTION("power.threshold_high", uint32_t, power_cons, 150000);
 		LOAD_CONFIG_OPTION("power.threshold_low", uint32_t, power_cons_arm, 0);
 		LOAD_CONFIG_OPTION("power.margin", float, power_margin, 0.05);
-		LOAD_CONFIG_OPTION("batt.trigger", std::string, batt_trig, "");
-		LOAD_CONFIG_OPTION("batt.threshold_level", uint32_t, batt_level, 15);
-		LOAD_CONFIG_OPTION("batt.threshold_rate",  uint32_t, batt_rate,  0);
-		LOAD_CONFIG_OPTION("batt.margin_rate", float, batt_rate_margin, 0.05);
 		LOAD_CONFIG_OPTION("nr_threads", uint16_t, nr_threads, 1);
-
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
 	}
@@ -137,18 +126,6 @@ PowerMonitor::PowerMonitor() :
 	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_DATALOG,
 			static_cast<CommandHandler*>(this),
 			"Start/stop power monitor data logging");
-#ifdef CONFIG_BBQUE_PM_BATTERY
-#define CMD_WM_SYSLIFETIME "syslifetime"
-	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_SYSLIFETIME,
-			static_cast<CommandHandler*>(this),
-			"Set the system target lifetime");
-
-	pbatt = bm.GetBattery();
-	if (pbatt == nullptr)
-		logger->Warn("Battery available: NO");
-	else
-		logger->Info("Battery available: %s", pbatt->StrId().c_str());
-#endif // CONFIG_BBQUE_PM_BATTERY
 
 	bbque::trig::TriggerFactory & tgf(TriggerFactory::GetInstance());
 	// Temperature scheduling policy trigger setting
@@ -169,14 +146,6 @@ PowerMonitor::PowerMonitor() :
 	triggers[PowerManager::InfoType::POWER]->threshold_high = power_cons;
 	triggers[PowerManager::InfoType::POWER]->threshold_low = power_cons_arm;
 	triggers[PowerManager::InfoType::POWER]->margin = power_margin;
-	logger->Debug("Battery current scheduling policy trigger setting");
-	// Battery status scheduling policy trigger setting
-	triggers[PowerManager::InfoType::CURRENT] = tgf.GetTrigger(batt_trig);
-	triggers[PowerManager::InfoType::CURRENT]->threshold_high = batt_rate;
-	triggers[PowerManager::InfoType::CURRENT]->margin    = batt_rate_margin;
-	logger->Debug("Battery energy scheduling policy trigger setting");
-	triggers[PowerManager::InfoType::ENERGY] = tgf.GetTrigger(batt_trig);
-	triggers[PowerManager::InfoType::ENERGY]->threshold_high  = batt_level;
 
 	logger->Info("=====================================================================");
 	logger->Info("| THRESHOLDS             | VALUE       | MARGIN  |      TRIGGER     |");
@@ -187,11 +156,6 @@ PowerMonitor::PowerMonitor() :
 	logger->Info("| Power consumption      | %6d mW   | %6.0f%%  | %16s |",
 		triggers[PowerManager::InfoType::POWER]->threshold_high,
 		triggers[PowerManager::InfoType::POWER]->margin * 100, power_trig.c_str());
-	logger->Info("| Battery discharge rate | %6d %%/h  | %6.0f%% | %16s |",
-		triggers[PowerManager::InfoType::CURRENT]->threshold_high,
-		triggers[PowerManager::InfoType::CURRENT]->margin * 100, batt_trig.c_str());
-	logger->Info("| Battery charge level   | %6d %c/100|  %6s | %16s |",
-		triggers[PowerManager::InfoType::ENERGY]->threshold_high, '%', "-", batt_trig.c_str());
 	logger->Info("=====================================================================");
 
 	// Status of the optimization policy execution request
@@ -263,9 +227,6 @@ void PowerMonitor::Task()
 					nr_resources_to_monitor));
 	}
 
-#ifdef CONFIG_BBQUE_PM_BATTERY
-	samplers.push_back(std::thread(&PowerMonitor::SampleBatteryStatus, this));
-#endif
 	while (!done)
 		Wait();
 	std::for_each(samplers.begin(), samplers.end(), std::mem_fn(&std::thread::join));
@@ -286,20 +247,7 @@ int PowerMonitor::CommandsCb(int argc, char *argv[])
 		}
 		return DataLogCmdHandler(argv[1]);
 	}
-#ifdef CONFIG_BBQUE_PM_BATTERY
-	// System life-time target
-	if (!strncmp(CMD_WM_SYSLIFETIME , command_id, strlen(CMD_WM_SYSLIFETIME))) {
-		if (argc < 2) {
-			logger->Error("CommandsCb: command [%s] missing argument"
-				"[set/clear/info/help]", command_id);
-			return 1;
-		}
-		if (argc > 2)
-			return SystemLifetimeCmdHandler(argv[1], argv[2]);
-		else
-			return SystemLifetimeCmdHandler(argv[1], "");
-	}
-#endif
+
 	logger->Error("CommandsCb: unknown command [%s]", command_id);
 	return -1;
 }
@@ -594,135 +542,6 @@ int PowerMonitor::DataLogCmdHandler(const char * arg)
 		action.c_str());
 	return -1;
 }
-
-/*******************************************************************
- *                 ENERGY BUDGET MANAGEMENT                        *
- *******************************************************************/
-
-
-int32_t PowerMonitor::GetSysPowerBudget()
-{
-#ifndef CONFIG_BBQUE_PM_BATTERY
-	return 0;
-#else
-	std::unique_lock<std::mutex> ul(sys_lifetime.mtx);
-	/*
-		if (!pbatt->IsDischarging() && pbatt->GetChargePerc() == 100) {
-			logger->Debug("System battery full charged and power plugged");
-			return 0;
-		}
-	 */
-
-	if (sys_lifetime.always_on) {
-		logger->Debug("GetSysPowerBudget: system lifetime target = 'always_on'");
-		return -1;
-	}
-
-	if (sys_lifetime.power_budget_mw == 0) {
-		logger->Debug("GetSysPowerBudget: no system lifetime target");
-		return 0;
-	}
-
-	// Compute power budget
-	sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
-	return sys_lifetime.power_budget_mw;
-#endif
-}
-
-
-#ifdef CONFIG_BBQUE_PM_BATTERY
-
-int PowerMonitor::SystemLifetimeCmdHandler(const std::string action, const std::string hours)
-{
-	std::unique_lock<std::mutex> ul(sys_lifetime.mtx);
-	std::chrono::system_clock::time_point now;
-	logger->Info("SystemLifetimeCmdHandler: action=[%s], hours=[%s]",
-		action.c_str(), hours.c_str());
-	// Help
-	if (action.compare("help") == 0) {
-		logger->Notice("SystemLifetimeCmdHandler: %s set <HOURS> (set hours)", CMD_WM_SYSLIFETIME);
-		logger->Notice("SystemLifetimeCmdHandler: %s info  (target lifetime)", CMD_WM_SYSLIFETIME);
-		logger->Notice("SystemLifetimeCmdHandler: %s clear (clear setting)",   CMD_WM_SYSLIFETIME);
-		logger->Notice("SystemLifetimeCmdHandler: %s help  (this help)",  CMD_WM_SYSLIFETIME);
-		return 0;
-	}
-	// Clear the target lifetime setting
-	if (action.compare("clear") == 0) {
-		logger->Notice("SystemLifetimeCmdHandler: clearing system target lifetime...");
-		sys_lifetime.power_budget_mw = 0;
-		sys_lifetime.always_on   = false;
-		return 0;
-	}
-	// Return information about last target lifetime set
-	if (action.compare("info") == 0) {
-		logger->Notice("SystemLifetimeCmdHandler: system target lifetime information...");
-		sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
-		PrintSystemLifetimeInfo();
-		return 0;
-	}
-	// Set the target lifetime
-	if (action.compare("set") == 0) {
-		logger->Notice("SystemLifetimeCmdHandler: setting system target lifetime...");
-		// Argument check
-		if (!IsNumber(hours)) {
-			logger->Error("SystemLifetimeCmdHandler: invalid argument");
-			return -1;
-		}
-		else if (hours.compare("always_on") == 0) {
-			logger->Info("SystemLifetimeCmdHandler: set to 'always on'");
-			sys_lifetime.power_budget_mw = -1;
-			sys_lifetime.always_on     = true;
-			return 0;
-		}
-		// Compute system clock target lifetime
-		now = std::chrono::system_clock::now();
-		std::chrono::hours h(std::stoi(hours));
-		sys_lifetime.target_time     = now + h;
-		sys_lifetime.always_on       = false;
-		sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
-		PrintSystemLifetimeInfo();
-	}
-	return 0;
-}
-
-void PowerMonitor::SampleBatteryStatus()
-{
-	while (pbatt && !done) {
-		if (events.none())
-			Wait();
-		if (events.test(WM_EVENT_UPDATE)) {
-			logger->Debug("SampleBatteryStatus: battery power = %dmW", pbatt->GetPower());
-			ExecuteTriggerForBattery();
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(wm_info.period_ms));
-	}
-}
-
-void PowerMonitor::ExecuteTriggerForBattery()
-{
-	// Do not require other policy execution (due battery level) until the charge
-	// is not above the threshold value again
-	if (pbatt->IsDischarging()) {
-		// Battery level
-		ManageRequest(
-			PowerManager::InfoType::ENERGY, static_cast<float>(pbatt->GetChargePerc()));
-		// Discharging rate check
-		ManageRequest(PowerManager::InfoType::CURRENT, pbatt->GetDischargingRate());
-	}
-}
-
-void PowerMonitor::PrintSystemLifetimeInfo() const
-{
-	std::chrono::seconds secs_from_now;
-	// Print output
-	std::time_t time_out = std::chrono::system_clock::to_time_t(sys_lifetime.target_time);
-	logger->Notice("System target lifetime    : %s", ctime(&time_out));
-	secs_from_now = GetSysLifetimeLeft();
-	logger->Notice("System target lifetime [s]: %d", secs_from_now.count());
-	logger->Notice("System power budget   [mW]: %d", sys_lifetime.power_budget_mw);
-}
-
-#endif // CONFIG_BBQUE_PM_BATTERY
 
 
 } // namespace bbque

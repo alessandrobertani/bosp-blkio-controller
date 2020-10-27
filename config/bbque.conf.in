@@ -53,10 +53,13 @@ temp.trigger   = over_threshold
 #power.threshold_low = 15000
 power.trigger   = over_threshold
 #power.margin    = 0.05
+
+[EnergyMonitor]
 #batt.threshold_rate = 16000
 #batt.margin_rate     = 0.05
 #batt.threshold_level = 15
-batt.trigger   = under_threshold
+#batt.trigger   = under_threshold
+batt.sampling_period = 10000
 
 # CGroups CFS bandwidth enforcement parameters
 [LinuxPlatformProxy]
