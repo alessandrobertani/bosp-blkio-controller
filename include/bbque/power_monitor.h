@@ -62,10 +62,11 @@ public:
 	 * @enum ExitCode_t
 	 * @brief Class specific return codes
 	 */
-	enum class ExitCode_t {
-		OK = 0,           /** Successful call */
-		ERR_RSRC_MISSING, /** Not valid resource specified */
-		ERR_UNKNOWN       /** A not specified error code   */
+	enum class ExitCode_t
+	{
+		OK = 0, /// Successful call
+		ERR_RSRC_MISSING, /// Not valid resource specified
+		ERR_UNKNOWN /// A not specified error code
 	};
 
 
@@ -180,14 +181,14 @@ private:
 	struct PowerMonitorInfo_t
 	{
 		// Resource handlers
-		std::vector<ResourceHandler> resources;   /** Resources to monitor */
+		std::vector<ResourceHandler> resources; /// Resources to monitor
 		// Data logging
-		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp; /** Output file descriptors  */
-		std::string log_dir;       /** Output file directory    */
-		bool log_enabled = false;  /** Enable / disable         */
+		std::map<br::ResourcePathPtr_t, std::ofstream *> log_fp; /// Output file descriptors
+		std::string log_dir; /// Output file directory
+		bool log_enabled = false; /// Enable / disable
 		// Monitoring status
-		bool started = false;      /** Monitoring start/stop            */
-		uint32_t period_ms;        /** Monitoring period (milliseconds) */
+		bool started = false; /// Monitoring start/stop
+		uint32_t period_ms; /// Monitoring period (milliseconds)
 	} wm_info;
 
 
