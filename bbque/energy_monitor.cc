@@ -92,8 +92,8 @@ EnergyMonitor::EnergyMonitor() :
 	logger->Info("=====================================================================");
 
 	// Commands
-#define CMD_WM_SYSLIFETIME "syslifetime"
-	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_WM_SYSLIFETIME,
+#define CMD_EYM_SYSLIFETIME "syslifetime"
+	cm.RegisterCommand(MODULE_NAMESPACE "." CMD_EYM_SYSLIFETIME,
 			static_cast<CommandHandler*>(this),
 			"Set the system target lifetime");
 
@@ -191,7 +191,7 @@ int EnergyMonitor::CommandsCb(int argc, char *argv[])
 
 #ifdef CONFIG_BBQUE_PM_BATTERY
 	// System life-time target
-	if (!strncmp(CMD_WM_SYSLIFETIME , command_id, strlen(CMD_WM_SYSLIFETIME))) {
+	if (!strncmp(CMD_EYM_SYSLIFETIME , command_id, strlen(CMD_EYM_SYSLIFETIME))) {
 		if (argc < 2) {
 			logger->Error("CommandsCb: command [%s] missing argument"
 				"[set/clear/info/help]", command_id);
@@ -266,10 +266,10 @@ int EnergyMonitor::SystemLifetimeCmdHandler(const std::string action, const std:
 		action.c_str(), hours.c_str());
 	// Help
 	if (action.compare("help") == 0) {
-		logger->Notice("SystemLifetimeCmdHandler: %s set <HOURS> (set hours)", CMD_WM_SYSLIFETIME);
-		logger->Notice("SystemLifetimeCmdHandler: %s info  (target lifetime)", CMD_WM_SYSLIFETIME);
-		logger->Notice("SystemLifetimeCmdHandler: %s clear (clear setting)",   CMD_WM_SYSLIFETIME);
-		logger->Notice("SystemLifetimeCmdHandler: %s help  (this help)",  CMD_WM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s set <HOURS> (set hours)", CMD_EYM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s info  (target lifetime)", CMD_EYM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s clear (clear setting)",   CMD_EYM_SYSLIFETIME);
+		logger->Notice("SystemLifetimeCmdHandler: %s help  (this help)",  CMD_EYM_SYSLIFETIME);
 		return 0;
 	}
 	// Clear the target lifetime setting
