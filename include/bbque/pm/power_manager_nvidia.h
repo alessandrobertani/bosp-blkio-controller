@@ -122,7 +122,7 @@ private:
 	/*** Mapping BBQ resource id -> NVML device id */
 	std::map<BBQUE_RID_TYPE, nvmlDevice_t> devices_map;
 
-	/*** Information retreived for each device */
+	/*** Information retrieved for each device */
 	std::map<nvmlDevice_t, DeviceInfo> info_map;
 
 	std::map<nvmlDevice_t, unsigned long long> energy_values;
