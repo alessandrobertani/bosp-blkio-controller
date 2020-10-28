@@ -527,18 +527,21 @@ CPUPowerManager::GetTemperaturePerCore(int pe_id, uint32_t & celsius)
 	// sensor is referenced at "core" level
 	int phy_core_id = phy_core_ids[pe_id];
 	if (core_therms[phy_core_id] == nullptr) {
-		logger->Debug("GetTemperature: sensor for <pe%d> not available", pe_id);
+		logger->Debug("GetTemperaturePerCore: sensor for <pe%d> not available", pe_id);
 		return PMResult::ERR_INFO_NOT_SUPPORTED;
 	}
 
 	io_result = bu::IoFs::ReadIntValueFrom<uint32_t>(
 		core_therms[phy_core_id]->c_str(), celsius);
 	if (io_result != bu::IoFs::OK) {
-		logger->Error("GetTemperature: cannot read <pe%d> temperature", pe_id);
+		logger->Error("GetTemperaturePerCore: cannot read <pe%d> temperature", pe_id);
 		return PMResult::ERR_SENSORS_ERROR;
 	}
 
-	logger->Debug("GetTemperature: <pe%d> = %d C", pe_id, celsius);
+	if (celsius > 1000)
+		celsius = celsius / 1000; // on Linux the temperature is reported in mC
+
+	logger->Debug("GetTemperaturePerCore: <pe%d> = %d C", pe_id, celsius);
 	return PMResult::OK;
 }
 
