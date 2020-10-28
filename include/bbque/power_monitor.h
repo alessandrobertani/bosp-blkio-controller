@@ -122,21 +122,6 @@ public:
 	}
 
 	/**
-	 * @brief Get the current threshold
-	 *
-	 * @return For TEMP the temperature in Celsius degree.
-	 * For POWER the power consumption upper bound.
-	 * For BATTERY_LEVEL the charge level under which a policy execution could be triggered.
-	 * For BATTERY_RATE the maximum discharging rate tolerated.
-	 */
-	inline uint32_t GetThreshold(PowerManager::InfoType t) const
-	{
-		auto v = triggers.find(t);
-		if (BBQUE_UNLIKELY(v == triggers.end())) return 0;
-		return v->second->threshold_high;
-	}
-
-	/**
 	 * @brief Return the length of the sampling period (in milliseconds)
 	 */
 	uint32_t GetPeriodLengthMs() const
@@ -252,6 +237,18 @@ private:
 	 * @param last_resource_index Last resource to monitor (from reg. array)
 	 */
 	void SampleResourcesStatus(uint16_t first_resource_index, uint16_t last_resource_index);
+
+	/**
+	 * @brief Get the current threshold for a given power information
+	 *
+	 * @return For TEMPERATURE the temperature in Celsius degree
+	 */
+	inline uint32_t GetThreshold(PowerManager::InfoType t) const
+	{
+		auto v = triggers.find(t);
+		if (BBQUE_UNLIKELY(v == triggers.end())) return 0;
+		return v->second->GetThresholdHigh();
+	}
 
 	/**
 	 * @brief Periodic task
