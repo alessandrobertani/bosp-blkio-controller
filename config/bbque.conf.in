@@ -44,22 +44,28 @@ log.dir       = /tmp/bbque/power
 period_ms     = 4000
 # number of monitoring threads to spawn
 nr_threads    = 1
-# trigger types: over_threshold, ...
-temp.threshold_high  = 80
-temp.threshold_low = 75
-temp.trigger   = over_threshold
-#temp.margin    = 0.01
-#power.threshold_high = 16000
-#power.threshold_low = 15000
-power.trigger   = over_threshold
-#power.margin    = 0.05
+# Enable the following lines for triggering the policy
+temp.threshold_high   = 80
+temp.threshold_low    = 75
+temp.trigger          = over_threshold # options: over_threshold, under_threshold
+temp.margin           = 0.05
 
 [EnergyMonitor]
-#batt.threshold_rate = 16000
-#batt.margin_rate     = 0.05
-#batt.threshold_level = 15
-#batt.trigger   = under_threshold
-batt.sampling_period = 10000
+# Enable the following lines for triggering the resource allocation policy on
+# the basis of the amount of current drained from the battery
+#batt.curr_trigger           = over_threshold
+#batt.curr_threshold_high    = 16000  # trigger condition value!
+#batt.curr_threshold_low     = 8000   # trigger rearm value
+#batt.curr_threshold_margin  = 0.10
+
+# Enable the following lines for triggering the resource allocation policy on
+# the basis of charge level of the battery
+#batt.charge_trigger          = under_threshold
+#batt.charge_threshold_high   = 40   # trigger rearm value
+#batt.charge_threshold_low    = 15   # trigger condition value!
+#batt.charge_threshold_margin = 0.05
+
+batt.sampling_period          = 10000 #milliseconds
 
 # CGroups CFS bandwidth enforcement parameters
 [LinuxPlatformProxy]

@@ -78,25 +78,23 @@ PowerMonitor::PowerMonitor() :
 	Init();
 
 	// Configuration options
-	uint32_t temp_crit  = 0, temp_crit_arm  = 0;
-	uint32_t power_cons = 0, power_cons_arm = 0;
-	float temp_margin = 0.05, power_margin = 0.05;
-	std::string temp_trig, power_trig;
+	uint32_t temp_crit     = 0;
+	uint32_t temp_crit_arm = 0;
+	float temp_margin      = 0.05;
+	std::string temp_trig_type;
 
 	try {
 		po::options_description opts_desc("Power Monitor options");
-		LOAD_CONFIG_OPTION("period_ms", uint32_t,  wm_info.period_ms, WM_DEFAULT_PERIOD_MS);
+		LOAD_CONFIG_OPTION("period_ms", uint32_t,  wm_info.period_ms, BBQUE_WM_DEFAULT_PERIOD_MS);
 		LOAD_CONFIG_OPTION("log.dir", std::string, wm_info.log_dir, "/tmp/");
 		LOAD_CONFIG_OPTION("log.enabled", bool,    wm_info.log_enabled, false);
-		LOAD_CONFIG_OPTION("temp.trigger", std::string, temp_trig, "");
+		LOAD_CONFIG_OPTION("nr_threads", uint16_t, nr_threads, 1);
+
+		LOAD_CONFIG_OPTION("temp.trigger", std::string, temp_trig_type, "");
 		LOAD_CONFIG_OPTION("temp.threshold_high", uint32_t, temp_crit, 0);
 		LOAD_CONFIG_OPTION("temp.threshold_low", uint32_t, temp_crit_arm, 0);
 		LOAD_CONFIG_OPTION("temp.margin", float, temp_margin, 0.05);
-		LOAD_CONFIG_OPTION("power.trigger", std::string, power_trig, "");
-		LOAD_CONFIG_OPTION("power.threshold_high", uint32_t, power_cons, 150000);
-		LOAD_CONFIG_OPTION("power.threshold_low", uint32_t, power_cons_arm, 0);
-		LOAD_CONFIG_OPTION("power.margin", float, power_margin, 0.05);
-		LOAD_CONFIG_OPTION("nr_threads", uint16_t, nr_threads, 1);
+
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
 	}
@@ -128,38 +126,25 @@ PowerMonitor::PowerMonitor() :
 			"Start/stop power monitor data logging");
 
 	bbque::trig::TriggerFactory & tgf(TriggerFactory::GetInstance());
-	// Temperature scheduling policy trigger setting
-	logger->Debug("Temperature scheduling policy trigger setting");
-	triggers[PowerManager::InfoType::TEMPERATURE] = tgf.GetTrigger(temp_trig);
-	triggers[PowerManager::InfoType::TEMPERATURE]->threshold_high = temp_crit * 1000;
-	triggers[PowerManager::InfoType::TEMPERATURE]->threshold_low = temp_crit_arm * 1000;
-	triggers[PowerManager::InfoType::TEMPERATURE]->margin = temp_margin;
-#ifdef CONFIG_BBQUE_DM
-	triggers[PowerManager::InfoType::TEMPERATURE]->SetActionFunction(
-									[&, this]() {
-										dm.NotifyUpdate(stat::EVT_RESOURCE);
-									});
-#endif // CONFIG_BBQUE_DM
-	// Power consumption scheduling policy trigger setting
-	logger->Debug("Power consumption scheduling policy trigger setting");
-	triggers[PowerManager::InfoType::POWER] = tgf.GetTrigger(power_trig);
-	triggers[PowerManager::InfoType::POWER]->threshold_high = power_cons;
-	triggers[PowerManager::InfoType::POWER]->threshold_low = power_cons_arm;
-	triggers[PowerManager::InfoType::POWER]->margin = power_margin;
-
-	logger->Info("=====================================================================");
-	logger->Info("| THRESHOLDS             | VALUE       | MARGIN  |      TRIGGER     |");
-	logger->Info("+------------------------+-------------+---------+------------------+");
-	logger->Info("| Temperature            | %6d C    | %6.0f%%  | %16s |",
-		triggers[PowerManager::InfoType::TEMPERATURE]->threshold_high / 1000,
-		triggers[PowerManager::InfoType::TEMPERATURE]->margin * 100, temp_trig.c_str());
-	logger->Info("| Power consumption      | %6d mW   | %6.0f%%  | %16s |",
-		triggers[PowerManager::InfoType::POWER]->threshold_high,
-		triggers[PowerManager::InfoType::POWER]->margin * 100, power_trig.c_str());
-	logger->Info("=====================================================================");
-
-	// Status of the optimization policy execution request
-	opt_request_sent = false;
+	logger->Notice("================================================================================");
+	logger->Notice("| THRESHOLDS             | HIGH       | LOW       | MARGIN  | TRIGGER TYPE     |");
+	logger->Notice("+------------------------+------------+-----------+---------+------------------+");
+	if (!temp_trig_type.empty()) {
+		auto temp_trigger = tgf.GetTrigger(temp_trig_type,
+						temp_crit,
+						temp_crit_arm,
+						temp_margin,
+						std::bind(&PowerMonitor::ScheduleOptimizationRequest, this));
+		// Temperature scheduling policy trigger setting
+		logger->Debug("Temperature scheduling policy trigger setting");
+		triggers[PowerManager::InfoType::TEMPERATURE] = temp_trigger;
+		logger->Notice("| Temperature            |   %6d°C |  %6d°C | %6.0f%%  | %16s |",
+			triggers[PowerManager::InfoType::TEMPERATURE]->GetThresholdHigh(),
+			triggers[PowerManager::InfoType::TEMPERATURE]->GetThresholdLow(),
+			triggers[PowerManager::InfoType::TEMPERATURE]->GetThresholdMargin(),
+			temp_trig_type.c_str());
+	}
+	logger->Notice("================================================================================");
 
 	//---------- Setup Worker
 	Worker::Setup(BBQUE_MODULE_NAME("wm"), POWER_MONITOR_NAMESPACE);
@@ -313,6 +298,7 @@ void PowerMonitor::Stop()
 {
 	std::unique_lock<std::mutex> worker_status_ul(worker_status_mtx);
 	if (!wm_info.started) {
+
 		logger->Warn("Stop: power logging already stopped");
 		return;
 	}
@@ -322,44 +308,16 @@ void PowerMonitor::Stop()
 	worker_status_cv.notify_all();
 }
 
-void PowerMonitor::ManageRequest(PowerManager::InfoType info_type,
-				 double curr_value)
+void PowerMonitor::ScheduleOptimizationRequest()
 {
-	// Return if optimization request already sent
-	if (opt_request_sent) return;
-
-	// Check the required trigger is available
-	auto & trigger = triggers[info_type];
-	if (trigger == nullptr)
-		return;
-
-	// Check and execute the trigger (i.e., the trigger function or the
-	// schedule the optimization request)
-	//	logger->Debug("ManageRequest: (before) trigger armed: %d",trigger->IsArmed());
-	bool request_to_send = trigger->Check(curr_value);
-	//	logger->Debug("ManageRequest: (after)  trigger armed: %d",trigger->IsArmed());
-	if (request_to_send) {
-		logger->Info("ManageRequest: trigger <InfoType: %d> current = %d, threshold = %u [m=%0.f]",
-			info_type, curr_value, trigger->threshold_high, trigger->margin);
-		auto trigger_func = trigger->GetActionFunction();
-		if (trigger_func) {
-			trigger_func();
-			opt_request_sent = false;
-		}
-		else {
-			opt_request_sent = true;
-			optimize_dfr.Schedule(milliseconds(WM_OPT_REQ_TIME_FACTOR * wm_info.period_ms));
-		}
-	}
+	this->optimize_dfr.Schedule(milliseconds(BBQUE_WM_OPT_REQUEST_TIME_FACTOR * wm_info.period_ms));
 }
 
 void PowerMonitor::SendOptimizationRequest()
 {
 	ResourceManager & rm(ResourceManager::GetInstance());
 	rm.NotifyEvent(ResourceManager::BBQ_PLAT);
-	logger->Info("Trigger: optimization request sent [generic: %d, battery: %d]",
-		opt_request_sent.load(), opt_request_for_battery);
-	opt_request_sent = false;
+	logger->Info("SendOptimizationRequest: triggered optimization request");
 }
 
 void  PowerMonitor::SampleResourcesStatus(uint16_t first_resource_index,
@@ -399,9 +357,7 @@ void  PowerMonitor::SampleResourcesStatus(uint16_t first_resource_index,
 			logger->Debug("SampleResourcesStatus: [thread %d] monitoring <%s>",
 				thd_id, r_path->ToString().c_str());
 
-			for (; info_idx < PowerManager::InfoTypeIndex.size() &&
-			info_count < rsrc->GetPowerInfoEnabledCount();
-			++info_idx, ++info_count) {
+			for (; info_idx < PowerManager::InfoTypeIndex.size() && (info_count < rsrc->GetPowerInfoEnabledCount()); ++info_idx, ++info_count) {
 				// Check if the power profile information has been required
 				info_type = PowerManager::InfoTypeIndex[info_idx];
 				if (rsrc->GetPowerInfoSamplesWindowSize(info_type) <= 0) {
@@ -420,15 +376,22 @@ void  PowerMonitor::SampleResourcesStatus(uint16_t first_resource_index,
 						thd_id, PowerManager::InfoTypeStr[info_idx]);
 					continue;
 				}
+
+				// Update value in the power info structure of the resource
+				// descriptor
 				PowerMonitorGet[info_idx](pm, r_path, samples[info_idx]);
 				rsrc->UpdatePowerInfo(info_type, samples[info_idx]);
 
+				// Trigger an action
+				auto trigger_it = triggers.find(info_type);
+				if (trigger_it != triggers.end()) {
+					logger->Debug("SampleResourcesStatus: check trigger for [%s]",
+						PowerManager::InfoTypeStr[info_idx]);
+					trigger_it->second->NotifyUpdatedValue(samples[info_idx]);
+				}
+
 				// Log messages
 				BuildLogString(rsrc, info_idx, i_values, m_values);
-
-				// Policy execution trigger (ENERGY is for the battery monitor thread)
-				if (info_type != PowerManager::InfoType::ENERGY)
-					ExecuteTrigger(rsrc, info_type);
 			}
 
 			logger->Debug("SampleResourcesStatus: [thread %d] sampling %s ",

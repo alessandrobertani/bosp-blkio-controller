@@ -20,49 +20,53 @@
 
 #include "bbque/app/application.h"
 #include "bbque/res/resources.h"
+#include "trigger.h"
 
 namespace bbque {
 
 namespace trig {
 
 /**
- * @class ThresholdTrigger
- * @brief Type of trigger based on threshold values
+ * @class OverThresholdTrigger
+ * @brief Trigger an action function call when the update value is below a
+ * threshold value
  */
-class UnderThresholdTrigger: public Trigger {
-
+class UnderThresholdTrigger : public Trigger
+{
 public:
 
-	UnderThresholdTrigger() {}
-
 	UnderThresholdTrigger(uint32_t threshold_high,
-		uint32_t threshold_low,
-		float margin,
-		bool armed = true) :
-		Trigger(threshold_high, threshold_low, margin,armed){}
+			uint32_t threshold_low,
+			float margin,
+			std::function<void() > action_fn = nullptr,
+			bool armed = true) :
+	    Trigger(threshold_high, threshold_low, margin, action_fn, armed) { }
 
-	virtual ~UnderThresholdTrigger() {}
+	virtual ~UnderThresholdTrigger() { }
+
+
+protected:
 
 	/**
-	 * @brief The condition is verified if the current value is above the reference value
-	 * for a given margin
+	 * @brief The condition is verified if the current value is above the
+	 * reference value for a given margin
 	 * @return true in case of condition verified, false otherwise
 	 */
-	inline bool Check(float curr_value) {
-		if(check_func)
-			return check_func(curr_value);
-		return DefaultCheck(curr_value);
-	}
+	inline bool Check(float curr_value) override
+	{
+		float t_low_with_margin = static_cast<float> (this->threshold_low) * (1.0 - margin);
+		float t_high_with_margin = static_cast<float> (this->threshold_high) * (1.0 - margin);
+		t_low_with_margin = std::max<float>(0.0, t_low_with_margin);
 
-	/**
-	 * @brief Default check function provided if no custom check function are set
-	 *
-	 * @brief true in case of condition verified, false otherwise
-	 */
-	inline bool DefaultCheck(float curr_value) {
-		float thres_high_with_margin = static_cast<float>(threshold_high) * (1.0 - margin);
-		if (curr_value < thres_high_with_margin)
+		// Trigger!
+		if (curr_value < t_low_with_margin && this->armed) {
+			this->armed = false;
 			return true;
+		}
+		// Rearm
+		if (curr_value > t_high_with_margin && !this->armed) {
+			this->armed = true;
+		}
 		return false;
 	}
 
@@ -73,4 +77,4 @@ public:
 } // namespace bbque
 
 
- #endif // BBQUE_TRIGGER_UNDERTHRESHOLD_H_
+#endif // BBQUE_TRIGGER_UNDERTHRESHOLD_H_

@@ -39,15 +39,17 @@ namespace trig {
  * @class TriggerFactory
  * @brief The component responsible of collecting the instances of Trigger
  */
-class TriggerFactory {
-
+class TriggerFactory
+{
 public:
-	static TriggerFactory & GetInstance() {
+
+	static TriggerFactory & GetInstance()
+	{
 		static TriggerFactory instance;
 		return instance;
 	}
 
-	virtual ~TriggerFactory() {}
+	virtual ~TriggerFactory() { }
 
 	/**
 	 * @brief Get a trigger instance
@@ -55,23 +57,32 @@ public:
 	 * @return The shared pointer to the trigger instance, if no id
 	 * is provided it instantiates a default OverThresholdTrigger
 	 */
-	inline std::shared_ptr<Trigger> GetTrigger(std::string const & id) {
-		if (id.compare(OVER_THRESHOLD_TRIGGER) == 0){
-			logger->Debug("Built 'over_threshold' trigger");
-			return std::make_shared<OverThresholdTrigger>();
+	inline std::shared_ptr<Trigger> GetTrigger(
+						std::string const & id,
+						uint32_t t_high,
+						uint32_t t_low,
+						float t_margin,
+						std::function<void() > action_fn = nullptr,
+						bool armed = true)
+	{
+		if (id.compare(OVER_THRESHOLD_TRIGGER) == 0) {
+			logger->Debug("GetTrigger: built a 'over_threshold' trigger");
+			return std::make_shared<OverThresholdTrigger>(t_high, t_low, t_margin, action_fn, armed);
 		}
-		if (id.compare(UNDER_THRESHOLD_TRIGGER) == 0){
-			logger->Debug("Built 'under_threshold' trigger");
-			return std::make_shared<UnderThresholdTrigger>();
+		if (id.compare(UNDER_THRESHOLD_TRIGGER) == 0) {
+			logger->Debug("GetTrigger: built a 'under_threshold' trigger");
+			return std::make_shared<UnderThresholdTrigger>(t_high, t_low, t_margin, action_fn, armed);
 		}
-		return std::make_shared<OverThresholdTrigger>();
+		logger->Error("GetTrigger: unknown trigger type specified [%s]", id.c_str());
+		return nullptr;
 	}
 
 private:
 
 	std::unique_ptr<bu::Logger> logger;
 
-	TriggerFactory() {
+	TriggerFactory()
+	{
 		logger = bbque::utils::Logger::GetLogger(TRIGGER_MODULE_NAME);
 
 	}

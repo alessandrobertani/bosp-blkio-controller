@@ -51,18 +51,32 @@ EnergyMonitor::EnergyMonitor() :
 #ifdef CONFIG_BBQUE_PM_BATTERY
 
 	// Configuration options for the battery management
-	std::string batt_trig;
-	uint32_t batt_thrs_level = 0;
-	uint32_t batt_thrs_rate = 0;
-	float  batt_thrs_rate_margin = 0.05;
+
+	std::string batt_curr_trigger_type;
+	uint32_t batt_curr_threshold_high = 0;
+	uint32_t batt_curr_threshold_low = 0;
+	float batt_curr_threshold_margin = 0.10;
+
+	std::string batt_charge_trigger_type;
+	uint32_t batt_charge_threshold_low = 0;
+	uint32_t batt_charge_threshold_high = 0;
+	float batt_charge_threshold_margin = 0.05;
 
 	try {
 		po::options_description opts_desc("Energy Monitor options");
-		LOAD_CONFIG_OPTION("batt.trigger", std::string, batt_trig, "under_threshold");
-		LOAD_CONFIG_OPTION("batt.threshold_level", uint32_t, batt_thrs_level, 15);
-		LOAD_CONFIG_OPTION("batt.threshold_rate",  uint32_t, batt_thrs_rate,  0);
-		LOAD_CONFIG_OPTION("batt.margin_rate", float, batt_thrs_rate_margin, 0.05);
 		LOAD_CONFIG_OPTION("batt.sampling_period", uint32_t, this->batt_sampling_period, 20000);
+
+		// Current consumption trigger parameters
+		LOAD_CONFIG_OPTION("batt.curr_trigger",  std::string, batt_curr_trigger_type, "");
+		LOAD_CONFIG_OPTION("batt.curr_threshold_high",  uint32_t, batt_curr_threshold_high,  10000);
+		LOAD_CONFIG_OPTION("batt.curr_threshold_low",  uint32_t, batt_curr_threshold_low,  5000);
+		LOAD_CONFIG_OPTION("batt.curr_threshold_margin", float, batt_curr_threshold_margin, 0.10);
+
+		// Charge level trigger parameters
+		LOAD_CONFIG_OPTION("batt.charge_trigger", std::string, batt_charge_trigger_type, "");
+		LOAD_CONFIG_OPTION("batt.charge_threshold_high", uint32_t, batt_charge_threshold_high, 40);
+		LOAD_CONFIG_OPTION("batt.charge_threshold_low", uint32_t, batt_charge_threshold_low, 15);
+		LOAD_CONFIG_OPTION("batt.charge_threshold_margin", float, batt_charge_threshold_margin, 0.05);
 		po::variables_map opts_vm;
 		cfm.ParseConfigurationFile(opts_desc, opts_vm);
 	}
@@ -71,25 +85,41 @@ EnergyMonitor::EnergyMonitor() :
 	}
 
 	// Triggers registration
+	logger->Notice("================================================================================");
+	logger->Notice("| THRESHOLDS             | HIGH       | LOW       | MARGIN  | TRIGGER TYPE     |");
+	logger->Notice("+------------------------+------------+-----------+---------+------------------+");
 	bbque::trig::TriggerFactory & tgf(bbque::trig::TriggerFactory::GetInstance());
-	logger->Debug("Battery current scheduling policy trigger setting");
-	// Battery status scheduling policy trigger setting
-	triggers[PowerManager::InfoType::CURRENT] = tgf.GetTrigger(batt_trig);
-	triggers[PowerManager::InfoType::CURRENT]->threshold_high = batt_thrs_rate;
-	triggers[PowerManager::InfoType::CURRENT]->margin = batt_thrs_rate_margin;
-	logger->Debug("Battery energy scheduling policy trigger setting");
-	triggers[PowerManager::InfoType::ENERGY] = tgf.GetTrigger(batt_trig);
-	triggers[PowerManager::InfoType::ENERGY]->threshold_high = batt_thrs_level;
+	if (!batt_curr_trigger_type.empty()) {
+		logger->Debug("Battery current output policy trigger settings");
+		auto curr_trigger = tgf.GetTrigger(batt_curr_trigger_type,
+						batt_curr_threshold_high,
+						batt_curr_threshold_low,
+						batt_curr_threshold_margin);
 
-	logger->Info("=====================================================================");
-	logger->Info("| THRESHOLDS             | VALUE       | MARGIN  |      TRIGGER     |");
-	logger->Info("+------------------------+-------------+---------+------------------+");
-	logger->Info("| Battery discharge rate | %6d %%/h  | %6.0f%% | %16s |",
-		triggers[PowerManager::InfoType::CURRENT]->threshold_high,
-		triggers[PowerManager::InfoType::CURRENT]->margin * 100, batt_trig.c_str());
-	logger->Info("| Battery charge level   | %6d %c/100|  %6s | %16s |",
-		triggers[PowerManager::InfoType::ENERGY]->threshold_high, '%', "-", batt_trig.c_str());
-	logger->Info("=====================================================================");
+		triggers[PowerManager::InfoType::CURRENT] = curr_trigger;
+		logger->Notice("| Battery current output |   %6dmA |  %6dmA | %6.1f%% | %16s |",
+			triggers[PowerManager::InfoType::CURRENT]->GetThresholdHigh(),
+			triggers[PowerManager::InfoType::CURRENT]->GetThresholdLow(),
+			triggers[PowerManager::InfoType::CURRENT]->GetThresholdMargin() * 100,
+			batt_curr_trigger_type.c_str());
+	}
+
+	if (!batt_charge_trigger_type.empty()) {
+		logger->Debug("Battery charger level policy trigger settings");
+		auto energy_trigger = tgf.GetTrigger(batt_charge_trigger_type,
+						batt_charge_threshold_high,
+						batt_charge_threshold_low,
+						batt_charge_threshold_margin);
+
+		triggers[PowerManager::InfoType::ENERGY] = energy_trigger;
+		logger->Notice("| Battery charge level   |    %6d%%  |   %6d%%  | %6.1f%% | %16s |",
+			triggers[PowerManager::InfoType::ENERGY]->GetThresholdHigh(),
+			triggers[PowerManager::InfoType::ENERGY]->GetThresholdLow(),
+			triggers[PowerManager::InfoType::ENERGY]->GetThresholdMargin() * 100,
+			batt_charge_trigger_type.c_str());
+	}
+
+	logger->Notice("================================================================================");
 
 	// Commands
 #define CMD_EYM_SYSLIFETIME "syslifetime"
@@ -215,10 +245,17 @@ void EnergyMonitor::Task()
 {
 	logger->Debug("Task: battery status monitoring...");
 	while (pbatt && !this->terminated) {
-		logger->Debug("Task: battery power=%d mW charge=%d",
+		logger->Debug("Task: battery power=%dmW discharging=[%s]",
 			pbatt->GetPower(),
-			pbatt->GetChargePerc());
-		ExecuteTriggerForBattery();
+			pbatt->IsDischarging() ? "YES" : "NO");
+
+		// Battery level and discharging rate check
+		if (pbatt->IsDischarging()) {
+
+			logger->Debug("Task: battery charge=%d[%%] discharging_rate=%dmA", pbatt->GetChargePerc(), pbatt->GetDischargingRate());
+			triggers[PowerManager::InfoType::ENERGY]->NotifyUpdatedValue(pbatt->GetChargePerc());
+			triggers[PowerManager::InfoType::CURRENT]->NotifyUpdatedValue(pbatt->GetDischargingRate());
+		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(this->batt_sampling_period));
 	}
 }
@@ -308,23 +345,11 @@ int EnergyMonitor::SystemLifetimeCmdHandler(const std::string action, const std:
 		sys_lifetime.power_budget_mw = ComputeSysPowerBudget();
 		PrintSystemLifetimeInfo();
 	}
-	return 0;
-}
+	else {
 
-void EnergyMonitor::ExecuteTriggerForBattery()
-{
-	// Do not require other policy execution (due battery level) until the charge
-	// is not above the threshold value again
-	if (pbatt->IsDischarging()) {
-		/*
-			// Battery level
-			ManageRequest(
-				PowerManager::InfoType::ENERGY, static_cast<float>(pbatt->GetChargePerc()));
-			// Discharging rate check
-			ManageRequest(PowerManager::InfoType::CURRENT, pbatt->GetDischargingRate());
-		 */
-		logger->Debug("ExecuteTriggerForBattery: %d", pbatt->GetChargePerc());
+		logger->Error("SystemLifetimeCmdHandler: undefined option=%s", action.c_str());
 	}
+	return 0;
 }
 
 void EnergyMonitor::PrintSystemLifetimeInfo() const

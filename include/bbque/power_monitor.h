@@ -38,8 +38,10 @@
 #define POWER_MONITOR_NAMESPACE "bq.wm"
 
 #define WM_DEFAULT_PERIOD_MS    1000
-#define WM_OPT_REQ_TIME_FACTOR     4
 
+// (Triggered) optimization requests are grouped in a time frame equal to
+// the monitoring period length multiplied by this factor
+#define BBQUE_WM_OPT_REQUEST_TIME_FACTOR     1
 #define WM_EVENT_UPDATE      0
 #define WM_EVENT_COUNT       1
 
@@ -209,30 +211,8 @@ private:
 	uint16_t nr_threads = 1;
 
 	/**
-	 * @brief Keep track of sending status of an optimization request
-	 */
-	std::atomic<bool> opt_request_sent;
-
-	/**
-	 * @brief Track it an optimization request is due to the battery charge level
-	 */
-	bool opt_request_for_battery = false;
-
-
-	/**
-	 * @struct Data to manage the triggers execution
-	 */
-	//struct TriggerInfo_t {
-	//	std::shared_ptr<bbque::trig::Trigger> obj;   /** Trigger object to call */
-	//	uint32_t threshold_high = 0;                      /** Threshold high value */
-	//	uint32_t threshold_low = 0;                  /** Threshold low armed value */
-	//	float margin       = 0.1;                    /** Margin [0..1) */
-	//};
-
-	/**
 	 * @brief Threshold values for triggering an optimization request
 	 */
-	//std::map<PowerManager::InfoType, TriggerInfo_t> triggers;
 	std::map<PowerManager::InfoType, std::shared_ptr<bbque::trig::Trigger>> triggers;
 
 	/**
@@ -308,25 +288,15 @@ private:
 	 */
 	int DataLogCmdHandler(const char * arg);
 
-
 	/**
-	 * @brief Manage a trigger and conditionally send an optimization request
-	 * @param info_type Type of runtime information
-	 * @param curr_value Current value (e.g. of temperature)
+	 * @brief Schedule an optimization request through a Deferrable
+	 * object to coalesce multiple requests in the same time window
 	 */
-	void ManageRequest(PowerManager::InfoType info_type, double curr_value);
+	void ScheduleOptimizationRequest();
 
 	/**
-	 * @brief Trigger execution: check if the current monitored value worth an
-	 * optimization policy execution request
-	 */
-	inline void ExecuteTrigger(br::ResourcePtr_t rsrc, PowerManager::InfoType info_type)
-	{
-		ManageRequest(info_type, rsrc->GetPowerInfo(info_type, br::Resource::MEAN));
-	}
-
-	/**
-	 * @brief Send an optimization request to execute the resource allocation policy
+	 * @brief Send an optimization request to execute the resource allocation
+	 * policy
 	 */
 	void SendOptimizationRequest();
 

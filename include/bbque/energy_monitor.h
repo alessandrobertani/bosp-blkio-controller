@@ -187,13 +187,6 @@ private:
 	}
 
 	/**
-	 * @brief Trigger execution for the battery status.
-	 * The optimization is required in case of battery level under
-	 * a given threshold
-	 */
-	void ExecuteTriggerForBattery();
-
-	/**
 	 * @brief System target lifetime setting
 	 * @param action The control actions:
 	 *		set   (to set the amount of hours)

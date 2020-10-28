@@ -31,66 +31,72 @@ namespace trig {
  * the monitoring of hardware resources status and the detection of condition for which
  * an execution of the optimization policy must be triggered.
  */
-class Trigger {
-
+class Trigger
+{
 public:
 
-	Trigger() {}
-
 	Trigger(uint32_t threshold_high,
-		uint32_t threshold_low,
-		float margin,
+		uint32_t threshold_low = 0,
+		float margin = 0.1,
+		std::function<void() > action_fn = nullptr,
 		bool armed = true) :
-		threshold_high(threshold_high),
-		threshold_low(threshold_low),
-		margin(margin),
-		armed(armed){}
+	    threshold_high(threshold_high),
+	    threshold_low(threshold_low),
+	    margin(margin),
+	    action_func(action_fn),
+	    armed(armed) { }
 
-	virtual ~Trigger() {}
+	virtual ~Trigger() { }
+
+	uint32_t GetThresholdHigh() const
+	{
+		return this->threshold_high;
+	}
+
+	uint32_t GetThresholdLow() const
+	{
+		return this->threshold_low;
+	}
+
+	float GetThresholdMargin() const
+	{
+		return this->margin;
+	}
+
+	virtual bool IsArmed() const
+	{
+		return this->armed;
+	}
+
+	virtual void NotifyUpdatedValue(uint32_t value)
+	{
+		if ((Check(value)) && this->action_func) {
+			this->action_func();
+		}
+	}
+
+protected:
+
+	/// Threshold high value
+	uint32_t threshold_high;
+
+	/// Threshold low armed value
+	uint32_t threshold_low;
+
+	/// Margin [0..1)
+	float margin;
+
+	/// Callback function in case of trigger activation
+	std::function<void() > action_func;
+
+	/// Flag to verify if the trigger is armed
+	bool armed;
 
 	/**
 	 * @brief Check if a condition is verified given a current value
 	 * @return true in case of condition verified, false otherwise
 	 */
-	//virtual bool Check(float ref_value, float curr_value, float margin = 0.0) const = 0;
 	virtual bool Check(float curr_value) = 0;
-
-	virtual bool DefaultCheck(float curr_value) = 0;
-
-	inline const std::function<void()> & GetActionFunction() const {
-		return this->action_func;
-	}
-
-	inline const std::function<bool(float)> & GetCheckFunction() const {
-		return this->check_func;
-	}
-
-	inline void SetActionFunction(std::function<void()> func) {
-		this->action_func = func;
-	}
-
-	inline void SetCheckFunction(std::function<bool(float)> func) {
-		this->check_func = func;
-	}
-
-	inline bool IsArmed() const {
-		return this->armed;
-	}
-
-	/// Threshold high value
-	uint32_t threshold_high = 0;
-	/// Threshold low armed value
-	uint32_t threshold_low  = 0;
-	/// Margin [0..1)
-	float margin            = 0.1;
-	/// Flag to verify if the trigger is armed
-	bool armed              = true;
-
-protected:
-
-	std::function<bool(float)> check_func;
-
-	std::function<void()> action_func;
 };
 
 } // namespace trig
@@ -98,4 +104,4 @@ protected:
 } // namespace bbque
 
 
- #endif // BBQUE_TRIGGER_H_
+#endif // BBQUE_TRIGGER_H_
