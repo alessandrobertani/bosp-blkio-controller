@@ -243,6 +243,7 @@ int EnergyMonitor::CommandsCb(int argc, char *argv[])
 
 void EnergyMonitor::Task()
 {
+#ifdef CONFIG_BBQUE_PM_BATTERY
 	logger->Debug("Task: battery status monitoring...");
 	while (pbatt && !this->terminated) {
 		logger->Debug("Task: battery power=%dmW discharging=[%s]",
@@ -258,6 +259,7 @@ void EnergyMonitor::Task()
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(this->batt_sampling_period));
 	}
+#endif
 }
 
 #ifndef CONFIG_BBQUE_PM_BATTERY
