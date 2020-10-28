@@ -38,7 +38,7 @@ config BBQUE_ENERGY_MONITOR
 
 config  BBQUE_PM_BATTERY
   bool "Battery Management"
-  depends on BBQUE_PM
+  depends on BBQUE_ENERGY_MONITOR
   default n
   ---help---
   Enable the interface with the system battery, if available.
