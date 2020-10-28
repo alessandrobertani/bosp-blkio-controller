@@ -174,8 +174,7 @@ PowerManager::~PowerManager()
 	device_managers.clear();
 }
 
-PowerManager::PMResult PowerManager::GetLoad(
-					     br::ResourcePathPtr_t const & rp, uint32_t &perc)
+PowerManager::PMResult PowerManager::GetLoad(br::ResourcePathPtr_t const & rp, uint32_t &perc)
 {
 	auto dm = GetDeviceManager(rp, "GetLoad");
 	if (dm == nullptr) {
@@ -185,8 +184,7 @@ PowerManager::PMResult PowerManager::GetLoad(
 	return dm->GetLoad(rp, perc);
 }
 
-PowerManager::PMResult PowerManager::GetTemperature(
-						    br::ResourcePathPtr_t const & rp, uint32_t &celsius)
+PowerManager::PMResult PowerManager::GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t &celsius)
 {
 	auto dm = GetDeviceManager(rp, "GetTemperature");
 	if (dm == nullptr) {
@@ -241,8 +239,7 @@ PowerManager::SetClockFrequency(br::ResourcePathPtr_t const & rp, uint32_t khz)
 }
 
 PowerManager::PMResult
-PowerManager::SetClockFrequency(
-				br::ResourcePathPtr_t const & rp,
+PowerManager::SetClockFrequency(br::ResourcePathPtr_t const & rp,
 				uint32_t min_khz, uint32_t max_khz)
 {
 	auto dm = GetDeviceManager(rp, "SetClockFrequency");
@@ -261,8 +258,7 @@ PowerManager::GetAvailableFrequencyGovernors(br::ResourcePathPtr_t const & rp)
 }
 
 PowerManager::PMResult
-PowerManager::GetClockFrequencyGovernor(
-					br::ResourcePathPtr_t const & rp,
+PowerManager::GetClockFrequencyGovernor(br::ResourcePathPtr_t const & rp,
 					std::string & governor)
 {
 	auto dm = GetDeviceManager(rp, "GetClockFrequencyGovernor");
@@ -272,8 +268,7 @@ PowerManager::GetClockFrequencyGovernor(
 }
 
 PowerManager::PMResult
-PowerManager::SetClockFrequencyGovernor(
-					br::ResourcePathPtr_t const & rp,
+PowerManager::SetClockFrequencyGovernor(br::ResourcePathPtr_t const & rp,
 					std::string const & governor)
 {
 	auto dm = GetDeviceManager(rp, "SetClockFrequencyGovernor");
@@ -292,8 +287,7 @@ PowerManager::GetVoltage(br::ResourcePathPtr_t const & rp, uint32_t &volt)
 }
 
 PowerManager::PMResult
-PowerManager::GetVoltageInfo(
-			     br::ResourcePathPtr_t const & rp,
+PowerManager::GetVoltageInfo(br::ResourcePathPtr_t const & rp,
 			     uint32_t &volt_min,
 			     uint32_t &volt_max,
 			     uint32_t &volt_step)
@@ -331,8 +325,7 @@ bool PowerManager::IsOn(br::ResourcePathPtr_t const & rp) const
 }
 
 PowerManager::PMResult
-PowerManager::GetFanSpeed(
-			  br::ResourcePathPtr_t const & rp,
+PowerManager::GetFanSpeed(br::ResourcePathPtr_t const & rp,
 			  FanSpeedType fs_type,
 			  uint32_t &value)
 {
@@ -343,8 +336,7 @@ PowerManager::GetFanSpeed(
 }
 
 PowerManager::PMResult
-PowerManager::GetFanSpeedInfo(
-			      br::ResourcePathPtr_t const & rp,
+PowerManager::GetFanSpeedInfo(br::ResourcePathPtr_t const & rp,
 			      uint32_t &rpm_min,
 			      uint32_t &rpm_max,
 			      uint32_t &rpm_step)
@@ -356,8 +348,7 @@ PowerManager::GetFanSpeedInfo(
 }
 
 PowerManager::PMResult
-PowerManager::SetFanSpeed(
-			  br::ResourcePathPtr_t const & rp,
+PowerManager::SetFanSpeed(br::ResourcePathPtr_t const & rp,
 			  FanSpeedType fs_type,
 			  uint32_t value)
 {
