@@ -23,6 +23,10 @@
 #include "bbque/resource_accounter.h"
 #include "bbque/res/resource_path.h"
 
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+#include "bbque/energy_monitor.h"
+#endif
+
 #define MODULE_NAMESPACE "bq.pp.nvidia"
 
 namespace br = bbque::res;
@@ -147,6 +151,11 @@ PlatformProxy::ExitCode_t NVIDIAPlatformProxy::RegisterDevices()
 #ifdef CONFIG_BBQUE_WM
 		PowerMonitor & wm(PowerMonitor::GetInstance());
 		wm.Register(resource_path);
+#endif
+
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+		EnergyMonitor & eym(EnergyMonitor::GetInstance());
+		eym.RegisterResource(resource_path);
 #endif
 		// Keep track of device IDs and resource paths relationship
 		InsertDeviceID(0, resource_path, dev_id);
