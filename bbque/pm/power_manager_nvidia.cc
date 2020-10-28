@@ -150,6 +150,8 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 				info_map.insert(std::pair<nvmlDevice_t, DeviceInfo>(device, device_info));
 			}
 		}
+		// Initialize energy consumption monitoring
+		this->energy_values[device] = 0;
 	}
 	initialized = true;
 	logger->Notice("NVIDIA: Devices [#=%d] information initialized",
@@ -590,7 +592,51 @@ NVIDIAPowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
 	return PMResult::OK;
 }
 
+int64_t NVIDIAPowerManager::StartEnergyMonitor(br::ResourcePathPtr_t const & rp)
+{
+	GET_DEVICE_ID(rp, device);
+	unsigned long long curr_energy;
+	result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
+	if (NVML_SUCCESS != result) {
+		logger->Warn("StartEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
+			id_num, nvmlErrorString(result));
+		return -1;
+	}
 
+	this->energy_values[device] = curr_energy;
+	logger->Debug("StartEnergyMonitor: [GPU-%d] start energy value=%llu",
+		id_num, curr_energy);
+
+	return -1;
+}
+
+uint64_t NVIDIAPowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
+{
+	GET_DEVICE_ID(rp, device);
+	if (this->energy_values[device] == 0) {
+		logger->Warn("StopEnergyMonitor: [GPU-%d] energy sampling not started",
+			id_num);
+		return 0;
+	}
+
+	unsigned long long curr_energy;
+	result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
+	if (NVML_SUCCESS != result) {
+		logger->Warn("StopEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
+			id_num, nvmlErrorString(result));
+		return 0;
+	}
+	logger->Debug("StopEnergyMonitor: [GPU-%d] stop energy value=%llu",
+		id_num, curr_energy);
+
+	uint64_t energy_cons = curr_energy - this->energy_values[device];
+	energy_cons *= 1e6; // mJ -> nJ
+
+	// Reset energy value reading for the next sampling
+	this->energy_values[device] = 0;
+
+	return energy_cons;
+}
 
 } // namespace bbque
 

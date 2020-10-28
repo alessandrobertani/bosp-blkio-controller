@@ -96,6 +96,10 @@ public:
 	PMResult GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
 					uint32_t & count);
 
+	int64_t StartEnergyMonitor(br::ResourcePathPtr_t const & rp);
+
+	uint64_t StopEnergyMonitor(br::ResourcePathPtr_t const & rp);
+
 private:
 
 	bool initialized = false;
@@ -121,6 +125,7 @@ private:
 	/*** Information retreived for each device */
 	std::map<nvmlDevice_t, DeviceInfo> info_map;
 
+	std::map<nvmlDevice_t, unsigned long long> energy_values;
 
 	/**
 	 * @brief Load devices information
