@@ -98,7 +98,7 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 		}
 
 		// Devices ID mapping and resource path
-		devices_map.emplace(devices_map.size(), device));
+		devices_map.emplace(devices_map.size(), device);
 
 		result = nvmlDeviceGetName(device, device_info.name,
 					NVML_DEVICE_NAME_BUFFER_SIZE);
@@ -147,7 +147,7 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 				//All is gone correctly
 				logger->Debug("LoadDevicesInfo: device initialized");
 				// Mapping information Devices per devices
-				info_map.emplace(device, device_info));
+				info_map.emplace(device, device_info);
 			}
 		}
 
@@ -282,7 +282,7 @@ NVIDIAPowerManager::GetTemperature(br::ResourcePathPtr_t const & rp,
 		return PMResult::ERR_API_INVALID_VALUE;
 	}
 	celsius = temp;
-	logger->Debug("GetTemperature: [GPU-%d] temperature=%d C", id_num, temp)
+	logger->Debug("GetTemperature: [GPU-%d] temperature=%d C", id_num, temp);
 
 	return PMResult::OK;
 }
@@ -600,25 +600,37 @@ NVIDIAPowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
 
 int64_t NVIDIAPowerManager::StartEnergyMonitor(br::ResourcePathPtr_t const & rp)
 {
-	GET_DEVICE_ID(rp, device);
+	nvmlDevice_t device;
+	unsigned int id_num = GetDeviceId(rp, device);
+	if (device == NULL) {
+		logger->Error("GetDeviceId: The path does not resolve a resource"); \
+		return -1;
+	}
+
 	unsigned long long curr_energy;
-	result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
+	nvmlReturn_t result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
 	if (NVML_SUCCESS != result) {
 		logger->Warn("StartEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
 			id_num, nvmlErrorString(result));
-		return -1;
+		return -2;
 	}
 
 	this->energy_values[device] = curr_energy;
 	logger->Debug("StartEnergyMonitor: [GPU-%d] start energy value=%llu",
 		id_num, curr_energy);
 
-	return -1;
+	return 0;
 }
 
 uint64_t NVIDIAPowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
 {
-	GET_DEVICE_ID(rp, device);
+	nvmlDevice_t device;
+	unsigned int id_num = GetDeviceId(rp, device);
+	if (device == NULL) {
+		logger->Error("GetDeviceId: The path does not resolve a resource"); \
+		return 0;
+	}
+
 	if (this->energy_values[device] == 0) {
 		logger->Warn("StopEnergyMonitor: [GPU-%d] energy sampling not started",
 			id_num);
@@ -626,7 +638,7 @@ uint64_t NVIDIAPowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
 	}
 
 	unsigned long long curr_energy;
-	result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
+	nvmlReturn_t result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
 	if (NVML_SUCCESS != result) {
 		logger->Warn("StopEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
 			id_num, nvmlErrorString(result));
