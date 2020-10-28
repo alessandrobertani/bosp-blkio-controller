@@ -1154,16 +1154,15 @@ void LinuxPlatformProxy::InitPowerInfo(std::string const & resource_path, BBQUE_
 
 void LinuxPlatformProxy::RegisterForEnergyMonitoring(std::string const & resource_path)
 {
-	logger->Info("RegisterForEnergyMonitoring: <%s>...", resource_path.c_str());
-
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	auto resource_path_ptr = ra.GetPath(resource_path);
-	if (resource_path_ptr != nullptr) {
-		logger->Notice("OK!");
+	if (resource_path_ptr == nullptr) {
+		logger->Error("RegisterForEnergyMonitoring: invalid path specified <%s>",
+			resource_path.c_str());
+		return;
 	}
-	else
-		logger->Error("Not OK");
 
+	logger->Info("RegisterForEnergyMonitoring: <%s>...", resource_path.c_str());
 	EnergyMonitor & eym(EnergyMonitor::GetInstance());
 	eym.RegisterResource(resource_path_ptr);
 }
