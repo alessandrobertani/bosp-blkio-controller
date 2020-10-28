@@ -37,16 +37,17 @@
 
 #define POWER_MONITOR_NAMESPACE "bq.wm"
 
-#define WM_DEFAULT_PERIOD_MS    1000
+#define BBQUE_WM_DEFAULT_PERIOD_MS        1000
 
 // (Triggered) optimization requests are grouped in a time frame equal to
 // the monitoring period length multiplied by this factor
 #define BBQUE_WM_OPT_REQUEST_TIME_FACTOR     1
-#define WM_EVENT_UPDATE      0
-#define WM_EVENT_COUNT       1
 
-#define WM_STRW  { 5,10,10,9,6,3,3,3}
-#define WM_STRP  { 1, 1, 0,1,1,1,1,1}
+#define BBQUE_WM_EVENT_UPDATE      0
+#define BBQUE_WM_EVENT_COUNT       1
+
+#define BBQUE_WM_STRW  { 5,10,10,9,6,3,3,3}
+#define BBQUE_WM_STRP  { 1, 1, 0,1,1,1,1,1}
 
 namespace bu = bbque::utils;
 namespace br = bbque::res;
@@ -175,7 +176,7 @@ private:
 	/**
 	 * @brief The set of flags related to pending monitoring events to handle
 	 */
-	std::bitset<WM_EVENT_COUNT> events;
+	std::bitset<BBQUE_WM_EVENT_COUNT> events;
 
 	/**
 	 * @struct ResourceHandler
@@ -231,8 +232,8 @@ private:
 	std::array<PMfunc, size_t(PowerManager::InfoType::COUNT) > PowerMonitorGet;
 
 	/*** Log messages format settings */
-	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_w = {WM_STRW};
-	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_p = {WM_STRP};
+	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_w = {BBQUE_WM_STRW};
+	std::array<int, size_t(PowerManager::InfoType::COUNT) > str_p = {BBQUE_WM_STRP};
 
 	/**
 	 * @brief Constructor

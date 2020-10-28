@@ -290,7 +290,7 @@ void PowerMonitor::Start(uint32_t period_ms)
 	}
 
 	logger->Info("Start: starting power logging (T = %d ms)...", wm_info.period_ms);
-	events.set(WM_EVENT_UPDATE);
+	events.set(BBQUE_WM_EVENT_UPDATE);
 	worker_status_cv.notify_all();
 }
 
@@ -304,7 +304,7 @@ void PowerMonitor::Stop()
 	}
 
 	logger->Info("Stop: stopping power logging...");
-	events.reset(WM_EVENT_UPDATE);
+	events.reset(BBQUE_WM_EVENT_UPDATE);
 	worker_status_cv.notify_all();
 }
 
@@ -340,7 +340,7 @@ void  PowerMonitor::SampleResourcesStatus(uint16_t first_resource_index,
 				first_resource_index);
 			Wait();
 		}
-		if (!events.test(WM_EVENT_UPDATE))
+		if (!events.test(BBQUE_WM_EVENT_UPDATE))
 			continue;
 
 		// Power status monitoring over all the registered resources
