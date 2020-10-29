@@ -551,8 +551,10 @@ void ResourceManager::EvtBbqUsr2()
 
 void ResourceManager::EvtBbqExit()
 {
-	AppsUidMapIt apps_it;
-	AppPtr_t papp;
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+	EnergyMonitor & eym(EnergyMonitor::GetInstance());
+	eym.StopSamplingResourceConsumption();
+#endif
 
 	logger->Notice("EvtBbqExit: terminating BarbequeRTRM...");
 	done = true;
@@ -563,6 +565,8 @@ void ResourceManager::EvtBbqExit()
 	EvtBbqUsr2();
 
 	// Stop applications
+	AppsUidMapIt apps_it;
+	AppPtr_t papp;
 	papp = am.GetFirst(apps_it);
 	for ( ; papp; papp = am.GetNext(apps_it)) {
 		logger->Notice("EvtBbqExit: terminating application: %s",
