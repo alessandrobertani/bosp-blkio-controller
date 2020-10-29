@@ -19,6 +19,7 @@
 #define BBQUE_POWER_MANAGER_NVIDIA_H_
 
 #include <map>
+#include <thread>
 
 #include "nvml.h"
 
@@ -28,6 +29,8 @@
 
 #define NVIDIA_VENDOR     "NVIDIA"
 #define NVML_NAME         "libnvidia-ml.so"
+
+#define BBQUE_NVIDIA_T_MS  1000
 
 
 namespace br = bbque::res;
@@ -125,7 +128,18 @@ private:
 	/*** Information retrieved for each device */
 	std::map<nvmlDevice_t, DeviceInfo> info_map;
 
+	bool power_read_supported = false;
+
+	bool energy_read_supported = false;
+
+	/*** Start energy values samples for each device */
 	std::map<nvmlDevice_t, unsigned long long> energy_values;
+
+	/*** Per-device energy monitor threads */
+	std::map<nvmlDevice_t, std::thread> energy_threads;
+
+	/*** Per-device energy monitor thread status */
+	std::map<nvmlDevice_t, std::atomic<bool> > is_sampling;
 
 	/**
 	 * @brief Load devices information
@@ -140,6 +154,15 @@ private:
 	 * @return PMResult::OK if success
 	 */
 	int GetDeviceId(br::ResourcePathPtr_t const & rp, nvmlDevice_t & device) const;
+
+	/**
+	 * @brief Sample the power consumption values in time intervals of
+	 * length BBQUE_NVIDIA_T_MS (milliseconds).
+	 * It terminates once the @see is_sampling is set to false.
+	 *
+	 * @param device is the variable where will be placed the device ID
+	 */
+	void ProfileEnergyConsumption(nvmlDevice_t device);
 
 };
 

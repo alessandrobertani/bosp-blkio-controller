@@ -149,11 +149,36 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 				// Mapping information Devices per devices
 				info_map.emplace(device, device_info);
 			}
+
 		}
 
+		// Check power reading availability
+		unsigned int power;
+		result = nvmlDeviceGetPowerUsage(device, power);
+		if (result == NVML_ERROR_NOT_SUPPORTED)
+			power_read_supported = false;
+		else
+			power_read_supported = true;
+
+		logger->Info("LoadDevicesInfo: device=%d power read supported: %s", i,
+			energy_read_supported ? "YES" : "NO");
+
+
 		// Initialize energy consumption monitoring
+		unsigned long long curr_energy;
+		result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
+		if (result == NVML_ERROR_NOT_SUPPORTED)
+			energy_read_supported = false;
+		else
+			energy_read_supported = true;
+
+		logger->Info("LoadDevicesInfo: device=%d energy read supported: %s", i,
+			energy_read_supported ? "YES" : "NO");
+
 		this->energy_values[device] = 0;
+		this->is_sampling[device] = false;
 	}
+
 	initialized = true;
 	logger->Notice("LoadDevicesInfo: Devices [#=%d] information initialized",
 		devices_map.size());
@@ -197,6 +222,9 @@ NVIDIAPowerManager::~NVIDIAPowerManager()
 		else
 			logger->Warn("NVIDIAPowerManager: error inside the matching between device_map and info_map");
 
+		auto & device(it->second);
+		this->is_sampling[device] = false;
+		this->energy_threads[device].join();
 	}
 
 	result = nvmlShutdown();
@@ -600,24 +628,42 @@ NVIDIAPowerManager::GetPerformanceStatesCount(br::ResourcePathPtr_t const & rp,
 
 int64_t NVIDIAPowerManager::StartEnergyMonitor(br::ResourcePathPtr_t const & rp)
 {
-	nvmlDevice_t device;
-	unsigned int id_num = GetDeviceId(rp, device);
-	if (device == NULL) {
-		logger->Error("GetDeviceId: The path does not resolve a resource"); \
+	if (!this->power_read_supported) {
+		logger->Error("StartEnergyMonitor: power reading not supported");
 		return -1;
 	}
 
-	unsigned long long curr_energy;
-	nvmlReturn_t result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
-	if (NVML_SUCCESS != result) {
-		logger->Warn("StartEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
-			id_num, nvmlErrorString(result));
-		return -2;
+	nvmlDevice_t device;
+	unsigned int id_num = GetDeviceId(rp, device);
+	if (device == NULL) {
+		logger->Error("StartEnergyMonitor: invalid path <%s>", rp->ToString().c_str());
+		return -1;
 	}
 
-	this->energy_values[device] = curr_energy;
-	logger->Debug("StartEnergyMonitor: [GPU-%d] start energy value=%llu",
-		id_num, curr_energy);
+	if (this->is_sampling[device]) {
+		logger->Warn("StartEnergyMonitor: device id=%d already started", id_num);
+		return -2;
+	}
+	this->is_sampling[device] = true;
+
+	if (this->energy_read_supported) {
+		unsigned long long curr_energy;
+		nvmlReturn_t result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
+		if (NVML_SUCCESS != result) {
+			logger->Warn("StartEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
+				id_num, nvmlErrorString(result));
+			return -3;
+		}
+		this->energy_values[device] = curr_energy;
+		logger->Debug("StartEnergyMonitor: [GPU-%d] start energy value=%llu",
+			id_num, curr_energy);
+	}
+	else {
+		energy_threads.emplace(device, std::thread(
+						&NVIDIAPowerManager::ProfileEnergyConsumption,
+						this,
+						device));
+	}
 
 	return 0;
 }
@@ -627,33 +673,79 @@ uint64_t NVIDIAPowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
 	nvmlDevice_t device;
 	unsigned int id_num = GetDeviceId(rp, device);
 	if (device == NULL) {
-		logger->Error("GetDeviceId: The path does not resolve a resource"); \
+		logger->Error("StopEnergyMonitor: invalid path <%s>", rp->ToString().c_str());
 		return 0;
 	}
 
-	if (this->energy_values[device] == 0) {
+	if (!this->is_sampling[device]) {
 		logger->Warn("StopEnergyMonitor: [GPU-%d] energy sampling not started",
 			id_num);
 		return 0;
 	}
+	this->is_sampling[device] = false;
 
-	unsigned long long curr_energy;
-	nvmlReturn_t result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
-	if (NVML_SUCCESS != result) {
-		logger->Warn("StopEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
-			id_num, nvmlErrorString(result));
-		return 0;
+	uint64_t energy_cons;
+	if (this->energy_read_supported) {
+		unsigned long long curr_energy;
+		nvmlReturn_t result = nvmlDeviceGetTotalEnergyConsumption(device, &curr_energy);
+		if (NVML_SUCCESS != result) {
+			logger->Warn("StopEnergyMonitor: [GPU-%d] failed to start energy sampling: %s",
+				id_num, nvmlErrorString(result));
+			return 0;
+		}
+		logger->Debug("StopEnergyMonitor: [GPU-%d] stop energy value=%llu [mJ]",
+			id_num, curr_energy);
+
+		uint64_t energy_cons = curr_energy - this->energy_values[device];
+		energy_cons *= 1e3; // mJ -> uJ
 	}
-	logger->Debug("StopEnergyMonitor: [GPU-%d] stop energy value=%llu",
-		id_num, curr_energy);
-
-	uint64_t energy_cons = curr_energy - this->energy_values[device];
-	energy_cons *= 1e6; // mJ -> nJ
+	else {
+		logger->Debug("StopEnergyMonitor: <%s> waiting for the profiler termination...",
+			id_num);
+		this->energy_threads[device].join();
+		this->energy_threads.erase(device);
+		energy_cons = this->energy_values[device];
+	}
 
 	// Reset energy value reading for the next sampling
 	this->energy_values[device] = 0;
+	logger->Info("StopEnergyMonitor: [GPU-%d] consumption=%llu [uJ]",
+		id_num, energy_cons);
 
 	return energy_cons;
+}
+
+void NVIDIAPowerManager::ProfileEnergyConsumption(nvmlDevice_t device)
+{
+	logger->Debug("ProfileEnergyConsumption: started for device %p: ", device);
+
+	unsigned int power1, power2;
+	while (this->is_sampling[device]) {
+
+		logger->Debug("ProfileEnergyConsumption: sampling for device %p: ", device);
+
+		nvmlReturn_t result = nvmlDeviceGetPowerUsage(device, &power1);
+		if (NVML_SUCCESS != result) {
+			logger->Error("ProfileEnergyConsumption: error in power reading #1: %s",
+				nvmlErrorString(result));
+			return;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(BBQUE_NVIDIA_T_MS));
+
+		result = nvmlDeviceGetPowerUsage(device, &power2);
+		if (NVML_SUCCESS != result) {
+			logger->Error("ProfileEnergyConsumption: error in power reading #2: %s",
+				nvmlErrorString(result));
+			power2 = power1;
+		}
+		logger->Debug("ProfileEnergyConsumption: p1=%lu p2=%lu [mW]", power1, power2);
+
+		// The energy additional contribution is given by the area of the trapezium
+		this->energy_values[device] += ((power1 + power2) * BBQUE_NVIDIA_T_MS) / 2;
+	}
+
+	logger->Debug("ProfileEnergyConsumption: terminated for device %p: ", device);
 }
 
 } // namespace bbque
