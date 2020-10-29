@@ -129,8 +129,7 @@ PlatformProxy::ExitCode_t NVIDIAPlatformProxy::RegisterDevices()
 				dev_id, nvmlErrorString(result));
 		}
 		else {
-			logger->Warn("RegisterDevices:  device id=%d name=%s",
-				dev_id, dev_name);
+			logger->Warn("RegisterDevices: device id=%d name=%s", dev_id, dev_name);
 		}
 
 		// Build the resource path
