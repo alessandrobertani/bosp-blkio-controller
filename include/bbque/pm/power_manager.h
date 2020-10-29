@@ -209,7 +209,7 @@ public:
 	/**
 	 * Stop the monitoring of the energy consumption of the given resource
 	 * @param The resource path object
-	 * @return The current energy consumption value observed
+	 * @return The current energy consumption value [uJ] observed
 	 */
 	virtual uint64_t StopEnergyMonitor(br::ResourcePathPtr_t const & rp);
 

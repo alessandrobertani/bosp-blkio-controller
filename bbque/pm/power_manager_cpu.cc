@@ -572,8 +572,8 @@ uint64_t CPUPowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
 
 	auto curr_energy_value = GetEnergyFromIntelRAPL(rp);
 	float energy_diff_value = curr_energy_value - this->energy_start_values[rp];
-	logger->Info("StopEnergyMonitor: <%s> consumption=%.2fJ",
-		rp->ToString().c_str(), energy_diff_value / 1e6);
+	logger->Info("StopEnergyMonitor: <%s> consumption=%llu [uJ]",
+		rp->ToString().c_str(), energy_diff_value);
 
 	return energy_diff_value;
 }

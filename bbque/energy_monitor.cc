@@ -167,6 +167,8 @@ void EnergyMonitor::StartSamplingResourceConsumption()
 	std::lock_guard<std::mutex> lck(this->m);
 	this->is_sampling = true;
 	for (auto & e_entry : values) {
+		logger->Debug("StartResourceConsumptionSampling: <%s>...",
+			e_entry.first->ToString().c_str());
 		this->pm.StartEnergyMonitor(e_entry.first);
 	}
 }
@@ -184,9 +186,9 @@ void EnergyMonitor::StopSamplingResourceConsumption()
 	for (auto & e_entry : values) {
 		br::ResourcePathPtr_t const & resource_path(e_entry.first);
 		e_entry.second = this->pm.StopEnergyMonitor(resource_path);
-		logger->Info("StopResourceConsumptionSampling: <%s> value=%ldnJ",
+		logger->Info("StopResourceConsumptionSampling: <%s> value=%.3f [J]",
 			resource_path->ToString().c_str(),
-			e_entry.second);
+			e_entry.second / 1e6);
 	}
 
 	this->is_sampling = false;
