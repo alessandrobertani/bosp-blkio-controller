@@ -153,6 +153,11 @@ private:
 	  EventNotifier intrEn;
 
 	  /**
+	   * @brief Notify an TERM system event
+	   */
+	  EventNotifier termEn;
+
+	  /**
 	   * @brief Notify a QUIT system event
 	   */
 	  EventNotifier quitEn;
