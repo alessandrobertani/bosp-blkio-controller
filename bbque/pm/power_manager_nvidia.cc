@@ -154,7 +154,7 @@ void NVIDIAPowerManager::LoadDevicesInfo()
 
 		// Check power reading availability
 		unsigned int power;
-		result = nvmlDeviceGetPowerUsage(device, power);
+		result = nvmlDeviceGetPowerUsage(device, &power);
 		if (result == NVML_ERROR_NOT_SUPPORTED)
 			power_read_supported = false;
 		else
