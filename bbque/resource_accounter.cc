@@ -663,10 +663,12 @@ ResourceAccounter::CheckAvailability(br::ResourceAssignmentMapPtr_t const & assi
 		avail = QueryStatus(r_assign->GetResourcesList(), RA_AVAIL, status_view, papp);
 		if (avail < r_assign->GetAmount()) {
 			logger->Debug("CheckAvailability: <%s> exceeding request"
-				"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "] ",
+				"[USG:%" PRIu64 " | AV:%" PRIu64 " | TOT:%" PRIu64 "] "
+				" status_view=%lu ",
 				rsrc_path->ToString().c_str(),
 				r_assign->GetAmount(), avail,
-				QueryStatus(r_assign->GetResourcesList(), RA_TOTAL));
+				QueryStatus(r_assign->GetResourcesList(), RA_TOTAL),
+				status_view);
 			return RA_ERR_USAGE_EXC;
 		}
 	}
