@@ -287,6 +287,10 @@ int32_t WorkingMode::BindResource(br::ResourceType r_type,
 	logger->Debug("BindResource: %s R{%-3s} map size = %d [refn = %d]",
 		str_id, br::GetResourceTypeString(r_type),
 		out_map->size(), refn);
+
+
+	PrintBindingMap(out_map);
+
 	return refn;
 }
 
@@ -326,7 +330,28 @@ int32_t WorkingMode::BindResource(br::ResourcePathPtr_t resource_path,
 	int32_t refn = StoreBinding(out_map, prev_refn);
 	logger->Debug("BindResource: <%s> map size = %d [prev_refn = %d]",
 		resource_path->ToString().c_str(), out_map->size(), refn);
+
+
+	PrintBindingMap(out_map);
+
 	return refn;
+}
+
+
+
+void WorkingMode::PrintBindingMap(br::ResourceAssignmentMapPtr_t bind_map) const
+{
+	for (auto & b_entry : *bind_map) {
+		auto const & resource_path(b_entry.first);
+		auto const & resource_assig(b_entry.second);
+
+		logger->Debug("PrintBindingMap: <%s>: ",
+			resource_path->ToString().c_str());
+		for (auto const & ar: resource_assig->GetResourcesList()) {
+			logger->Debug("PrintBindingMap: |--> <%s> ",
+				ar->Path()->ToString().c_str());
+		}
+	}
 }
 
 uint32_t

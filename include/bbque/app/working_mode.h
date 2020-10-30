@@ -814,6 +814,8 @@ private:
 
 	} resources;
 
+	void PrintBindingMap(br::ResourceAssignmentMapPtr_t bind_map) const;
+
 };
 
 } // namespace app
