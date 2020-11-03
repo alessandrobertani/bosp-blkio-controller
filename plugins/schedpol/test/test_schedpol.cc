@@ -440,16 +440,21 @@ TestSchedPol::MapTaskToFirstPrefProcessor(TaskPtr_t task, TaskRequirements const
 				logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s (using CPU)",
 					task->Id(), GetStringFromArchType(arch));
 			}
+			else {
+				trans_arch = arch;
+			}
+			logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s",
+				task->Id(), GetStringFromArchType(trans_arch));
 
 			if (!sys->ExistResourcePathsOfArch(trans_arch)) {
 				logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s not available",
-					task->Id(), GetStringFromArchType(arch));
+					task->Id(), GetStringFromArchType(trans_arch));
 				continue;
 			}
 
 			auto resource_path_list = sys->GetResourcePathListByArch(trans_arch);
 			logger->Debug("MapTaskToFirstPrefProcessor: task=%d target=%s: %d options",
-				task->Id(), GetStringFromArchType(arch), resource_path_list.size());
+				task->Id(), GetStringFromArchType(trans_arch), resource_path_list.size());
 
 			auto resource_path = GetFirstAvailable(resource_path_list, 100);
 
