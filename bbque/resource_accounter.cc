@@ -378,17 +378,26 @@ ResourcePathPtr_t const ResourceAccounter::GetPath(std::string const & strpath)
 	return (*rp_it).second;
 }
 
-
 bool ResourceAccounter::ExistResourcePathsOfArch(ArchType arch_type) const
 {
+	logger->Debug("ExistResourcePathsOfArch: arch_type=[%s] exist?",
+		GetStringFromArchType(arch_type));
+#ifdef BBQUE_DEBUG
+	for (auto & per_arch_entry : per_arch_resource_path_list) {
+		logger->Debug("ExistResourcePathsOfArch: arch=[%s] ",
+			GetStringFromArchType(per_arch_entry.first));
+		for (auto & resource_path : per_arch_entry.second)
+			logger->Debug("ExistResourcePathsOfArch: |---> path=<%s>",
+				resource_path->ToString().c_str());
+	}
+#endif
 	return (per_arch_resource_path_list.find(arch_type) != per_arch_resource_path_list.end());
 }
-
 
 std::list<br::ResourcePathPtr_t> const &
 ResourceAccounter::GetResourcePathListByArch(ArchType arch_type) const
 {
-	logger->Debug("GetResourcePathListByArch: looking for architecture '%s'",
+	logger->Debug("GetResourcePathListByArch: looking for architecture [%s]",
 		GetStringFromArchType(arch_type));
 	auto const & entry(per_arch_resource_path_list.find(arch_type));
 	return entry->second;
