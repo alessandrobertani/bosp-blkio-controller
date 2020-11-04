@@ -80,10 +80,9 @@ RecipePlatformProxy::MapResources(SchedPtr_t psched,
 	for (auto & task_entry : tg->Tasks()) {
 		auto & id(task_entry.first);
 		auto & task(task_entry.second);
-		ArchType arch = ArchType::GN;
+		ArchType arch = task->GetAssignedArch();
 		logger->Info("MapResources: [%s] task id=%d -> arch=%s",
 			papp->StrId(), id, GetStringFromArchType(arch));
-		task->SetAssignedArch(arch);
 	}
 
 	// Memory
