@@ -90,7 +90,7 @@ config  BBQUE_PM_MANGO
   bool "H2020-MANGO Platform Power Management"
   depends on BBQUE_PM
   depends on TARGET_LINUX_MANGO
-  depends on !MANGO_GN_EMULATION
+  depends on !TARGET_EMULATED_ACCELERATION
   default n
   ---help---
   Enable the support for the management of a H2020-MANGO platform from the
@@ -100,7 +100,7 @@ config  BBQUE_PM_RECIPE
   bool "H2020-RECIPE Platform Power Management"
   depends on BBQUE_PM
   depends on TARGET_LINUX_RECIPE
-  depends on !MANGO_GN_EMULATION
+  depends on !TARGET_EMULATED_ACCELERATION
   default n
   ---help---
   Enable the support for the management of a H2020-RECIPE platform from the
@@ -117,3 +117,5 @@ config BBQUE_LIBFPGAMON_PATH
 config BBQUE_PM_GPU
   bool
   default n
+
+

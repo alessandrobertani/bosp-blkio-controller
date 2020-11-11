@@ -50,7 +50,7 @@ ResourceType GetResourceTypeFromArchitecture(ArchType_t arch_type)
 		return ResourceType::GPU;
 
 	case ArchType::GN:
-#ifdef CONFIG_MANGO_GN_EMULATION
+#ifdef CONFIG_TARGET_EMULATED_ACCELERATION
 		return ResourceType::ACCELERATOR;
 #else
 		return ResourceType::CPU;

@@ -18,7 +18,7 @@
 
 #define BBQUE_PP_MANGO_PLATFORM_ID   ".mango"
 
-#ifndef CONFIG_MANGO_GN_EMULATION
+#ifndef CONFIG_TARGET_EMULATED_ACCELERATION
 #define BBQUE_PP_MANGO_HARDWARE_ID   "prodesign-fpga"
 #else
 #define BBQUE_PP_MANGO_HARDWARE_ID   "emulated"

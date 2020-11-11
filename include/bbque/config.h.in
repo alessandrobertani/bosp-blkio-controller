@@ -119,8 +119,11 @@
 /** Target platform: ARM Architecture */
 #cmakedefine CONFIG_TARGET_ARM
 
-/** Simulated Test Platform */
+/** Simulated Test Platform: host side */
 #cmakedefine CONFIG_TARGET_EMULATED_HOST
+
+/** Simulated Test Platform: acceleration side */
+#cmakedefine CONFIG_TARGET_EMULATED_ACCELERATION
 
 /** Target platform: Linux-MANGO */
 #cmakedefine CONFIG_TARGET_LINUX_MANGO
@@ -223,11 +226,12 @@
 /** Enable GPU Power Management support for ARM Mali */
 #cmakedefine CONFIG_BBQUE_PM_GPU_ARM_MALI
 
-/** Enable GPU Power Management support for H2020 MANGO */
+/** Enable Power Management support for H2020 MANGO */
 #cmakedefine CONFIG_BBQUE_PM_MANGO
 
-/** Enable GPU Power Management support for H2020 RECIPE */
+/** Enable Power Management support for H2020 RECIPE */
 #cmakedefine CONFIG_BBQUE_PM_RECIPE
+
 
 /** Distributed systems mode */
 #cmakedefine CONFIG_BBQUE_DIST_MODE
@@ -317,8 +321,6 @@
 /*******************************************************************************
  * MANGO H2020 project related
  ******************************************************************************/
-
-#cmakedefine CONFIG_MANGO_GN_EMULATION
 
 #define MANGO_DEVICE_NAME   "${CONFIG_MANGO_DEVICE}"
 #define MANGO_PEAK_OS       "${CONFIG_MANGO_ROOT_PATH}/usr/share/peakos.img"
