@@ -106,6 +106,13 @@ config  BBQUE_PM_RECIPE
   Enable the support for the management of a H2020-RECIPE platform from the
   power management point of view.
 
+config BBQUE_LIBFPGAMON_PATH
+  string "FPGA Monitoring library installation path"
+  depends on BBQUE_PM_RECIPE
+  default /opt/libfpgamon
+  ---help---
+  Installation path of the FPGA Monitoring library for the H2020-RECIPE
+  platforms.
 
 config BBQUE_PM_GPU
   bool

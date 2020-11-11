@@ -19,6 +19,7 @@
 
 #include "bbque/pm/power_manager.h"
 #include <CL/cl.h>
+#include "fpgamon/fpgamon.h"
 
 namespace bu = bbque::utils;
 
@@ -31,19 +32,19 @@ namespace bbque {
  * the runtime information from hardware included in the H2020-RECIPE
  * project prototype.
  */
-class RecipePowerManager: public PowerManager {
-
+class RecipePowerManager : public PowerManager
+{
 public:
 
 	RecipePowerManager();
 
 	virtual ~RecipePowerManager();
 
+	PMResult GetLoad(br::ResourcePathPtr_t const & rp, uint32_t &perc);
 
-	/** Temperature */
+	PMResult GetTemperature(br::ResourcePathPtr_t const & rp, uint32_t &celsius);
 
-	PMResult GetTemperature(
-		br::ResourcePathPtr_t const & rp, uint32_t &celsius);
+	PMResult GetPowerUsage(br::ResourcePathPtr_t const & rp, uint32_t &mwatt);
 
 protected:
 
@@ -53,6 +54,7 @@ protected:
 
 	cl_device_id * ocl_devices = nullptr;
 
+	fpgamon_context_t ctx;
 
 	/**
 	 * Error handler function
@@ -60,6 +62,8 @@ protected:
 	 * @param err an optional error value returned by the HW-specific function call
 	 */
 	PMResult ErrorHandler(int acc_id, int err = 0);
+
+	PMResult GetPlatformAndDeviceIds(br::ResourcePathPtr_t const & rp, int & plat_id, int & dev_id) const;
 
 };
 

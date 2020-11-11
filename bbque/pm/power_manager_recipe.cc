@@ -24,7 +24,6 @@
 
 #include "bbque/pm/power_manager_recipe.h"
 #include "CL/cl.h"
-#include "CL/cl_ext_upv.h"
 
 using namespace bbque::res;
 
@@ -94,15 +93,19 @@ RecipePowerManager::RecipePowerManager()
 				dev_id, dev_name);
 		}
 	}
-}
 
+	// FPGA Monitoring library initialization
+	fpgamon_platform_ids_t platform_ids[] = { FPGAMON_PLATFORM_DUMMY };
+	fpgamon_init(&this->ctx, 1, platform_ids);
+
+}
 
 RecipePowerManager::~RecipePowerManager()
 {
+	fpgamon_shutdown(&this->ctx);
 	delete ocl_platforms;
 	delete ocl_devices;
 }
-
 
 PowerManager::PMResult RecipePowerManager::ErrorHandler(int acc_id, int err)
 {
@@ -123,60 +126,69 @@ PowerManager::PMResult RecipePowerManager::ErrorHandler(int acc_id, int err)
 }
 
 PowerManager::PMResult
-RecipePowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius)
+RecipePowerManager::GetLoad(ResourcePathPtr_t const & rp, uint32_t &perc)
 {
-	// The RECIPE OpenCL platform must have been found
-	if (this->recipe_ocl_platform == nullptr) {
-		logger->Error("GetTemperature: RECIPE platform not available");
-		return PMResult::ERR_NOT_INITIALIZED;
+	int plat_id, dev_id;
+	auto ret = GetPlatformAndDeviceIds(rp, plat_id, dev_id);
+	if (ret != PMResult::OK) {
+		logger->Error("GetLoad: invalid resource path");
+		return ret;
 	}
 
-	// TODO: Check that the GROUP id actually maps the RECIPE OpenCL platform...
+	perc = fpgamon_get_load(&this->ctx, plat_id, dev_id);
+	return PMResult::OK;
+}
 
-	// Accelerator ID
-	int acc_id = rp->GetID(br::ResourceType::ACCELERATOR);
-	if (acc_id < 0) {
-		logger->Warn("GetTemperature: no resource of type ACCELERATOR");
+PowerManager::PMResult
+RecipePowerManager::GetTemperature(ResourcePathPtr_t const & rp, uint32_t &celsius)
+{
+	int plat_id, dev_id;
+	auto ret = GetPlatformAndDeviceIds(rp, plat_id, dev_id);
+	if (ret != PMResult::OK) {
+		logger->Error("GetTemperature: invalid resource path");
+		return ret;
+	}
+
+	celsius = fpgamon_get_temperature(&this->ctx, plat_id, dev_id);
+	return PMResult::OK;
+}
+
+PowerManager::PMResult
+RecipePowerManager::GetPowerUsage(ResourcePathPtr_t const & rp, uint32_t &mwatt)
+{
+	int plat_id, dev_id;
+	auto ret = GetPlatformAndDeviceIds(rp, plat_id, dev_id);
+	if (ret != PMResult::OK) {
+		logger->Error("GetPowerUsage: invalid resource path");
+		return ret;
+	}
+
+	mwatt = fpgamon_get_power(&this->ctx, plat_id, dev_id);
+	return PMResult::OK;
+}
+
+PowerManager::PMResult
+RecipePowerManager::GetPlatformAndDeviceIds(br::ResourcePathPtr_t const & rp,
+					    int & plat_id,
+					    int & dev_id) const
+{
+	plat_id = rp->GetID(br::ResourceType::GROUP);
+	if (plat_id < 0) {
+		logger->Error("GetPlatformAndDeviceIds: <%s> -> platform id = %d",
+			rp->ToString().c_str(), plat_id);
 		return PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
-	assert(this->ocl_devices);
-
-	logger->Info("GetTemperature: device accelerator id=%d", acc_id);
-
-#ifdef BBQUE_DEBUG
-	char dev_name[64];
-	auto status = clGetDeviceInfo(
-				this->ocl_devices[acc_id],
-				CL_DEVICE_NAME,
-				sizeof(dev_name),
-				dev_name,
-				NULL);
-	if (status == CL_SUCCESS) {
-		logger->Info("GetTemperature:: device %d:%s",
-			acc_id, dev_name);
-	}
-#endif
-
-	int16_t temp_value = 0;
-	size_t nb = 0;
-	int err = clGetDeviceInfo(
-				this->ocl_devices[acc_id],
-				CL_DEVICE_CORE_TEMPERATURE_RECIPE,
-				sizeof(temp_value),
-				&temp_value,
-				&nb);
-
-	if (err == 0) {
-		celsius = temp_value;
-		return PMResult::OK;
+	dev_id = rp->GetID(br::ResourceType::ACCELERATOR);
+	if (dev_id) {
+		logger->Error("GetPlatformAndDeviceIds: <%s> -> device id = %d",
+			rp->ToString().c_str(), dev_id);
+		return PMResult::ERR_RSRC_INVALID_PATH;
 	}
 
-	logger->Error("GetTemperature: <%s> runtime error", rp->ToString().c_str());
-	return ErrorHandler(acc_id, err);
+	return PMResult::OK;
 }
 
-}
 
 } // namespace bbque
 

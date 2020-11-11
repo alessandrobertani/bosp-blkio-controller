@@ -53,14 +53,15 @@ endif ()
 # H2020-RECIPE power manager
 if (CONFIG_BBQUE_PM_RECIPE)
 	set (POWER_MANAGER_SRC power_manager_recipe ${POWER_MANAGER_SRC})
+        message (STATUS "FPGA Monitoring Library path...: ${CONFIG_BBQUE_LIBFPGAMON_PATH}")
 	include_directories(
-	      ${CONFIG_MANGO_ROOT_PATH}/include
+	      ${CONFIG_BBQUE_LIBFPGAMON_PATH}/include
 	)
 
 	find_library(LIBFPGAMON fpgamon
 		      HINTS ${CONFIG_BBQUE_LIBFPGAMON_PATH}
 		      PATH_SUFFIXES lib)
-	message (STATUS "FPGA Monitoring Library......: ${LIBFPGAMON}")
+	message (STATUS "FPGA Monitoring Library........: ${LIBFPGAMON}")
 	set (POWER_MANAGER_LIBS ${LIBFPGAMON} ${POWER_MANAGER_LIBS})
 endif ()
 
