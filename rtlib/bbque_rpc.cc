@@ -2363,15 +2363,15 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(const RTLIB_EXCHandler_t exc_ha
 		rtlib_configuration.runtime_profiling.rt_profile_wait_for_sync_ms;
 	exc->is_waiting_for_sync = true;
 
-	// Get the profling values
+	// Get the profiling values
 #ifdef CONFIG_BBQUE_CGROUPS_DISTRIBUTED_ACTUATION
 	float cpu_usage = 100.0f * exc->cg_budget.cpu_budget_shared;
 #else
 	float cpu_usage = exc->cpu_usage_stats.GetMean();
 #endif
 	float cps_goal_gap = exc->runtime_profiling.cpu_goal_gap;
-	float cycle_time_avg_ms = exc->cycletime_stats_system.GetMean() +
-		exc->cycletime_stats_system.GetConfidenceInterval99();
+	float cycle_time_avg_ms = exc->cycletime_stats_user.GetMean()
+		+ exc->cycletime_stats_user.GetConfidenceInterval99();
 
 	logger->Notice("ForwardRuntimeProfile: [%s] "
 		"{CPS_GGAP=%.2f, CPU=%.2f (round=%.0f), Cycle-time=%.2fms}",
@@ -3210,8 +3210,7 @@ RTLIB_ExitCode_t BbqueRPC::SetCPS(
 	return RTLIB_OK;
 }
 
-float BbqueRPC::GetCPS(
-		       RTLIB_EXCHandler_t exc_handler)
+float BbqueRPC::GetCPS(RTLIB_EXCHandler_t exc_handler)
 {
 	pRegisteredEXC_t exc;
 	float ctime = 0;
