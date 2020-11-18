@@ -82,10 +82,10 @@ TestSchedPol::TestSchedPol() :
 	logger = bu::Logger::GetLogger("bq.sp.test");
 	assert(logger);
 	if (logger)
-		logger->Info("test: Built a new dynamic object[%p]", this);
+		logger->Debug("TestSchedPol: built a new dynamic object[%p]", this);
 	else
 		fprintf(stderr,
-			FI("test: Built new dynamic object [%p]\n"), (void *) this);
+			FD("TestSchedPol: built new dynamic object [%p]\n"), (void *) this);
 }
 
 TestSchedPol::~TestSchedPol() { }
@@ -271,10 +271,13 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	if (papp->Running()) {
 		auto prof = papp->GetRuntimeProfile();
 		logger->Info("AssignWorkingMode: [%s] "
-			"cpu_usage=%d c_time=%d, ggap=%d [valid=%d]",
+			"cpu_usage=%d, "
+			"cycle_time=%dms, cycle_count=%d, "
+			"cps_goal_gap=%d [updated=%d]",
 			papp->StrId(),
 			prof.cpu_usage.curr,
 			prof.cycle_time_ms,
+			prof.cycle_count,
 			prof.ggap_percent,
 			prof.is_updated);
 	}
@@ -411,7 +414,7 @@ TestSchedPol::AssignResourcesWithTaskGraphMapping(bbque::app::AppCPtr_t papp,
 	}
 
 	// Working mode filling
-	pawm->AddResourcesFromTaskGraph(task_graph,ref_num);
+	pawm->AddResourcesFromTaskGraph(task_graph, ref_num);
 
 	// Update task-graph on disk
 	papp->SetTaskGraph(task_graph);
@@ -420,11 +423,10 @@ TestSchedPol::AssignResourcesWithTaskGraphMapping(bbque::app::AppCPtr_t papp,
 	return SCHED_OK;
 }
 
-
 SchedulerPolicyIF::ExitCode_t
 TestSchedPol::MapTaskToFirstPrefProcessor(TaskPtr_t task, TaskRequirements const & task_reqs)
 {
-	for (auto const & arch: task_reqs.ArchPreferences()) {
+	for (auto const & arch : task_reqs.ArchPreferences()) {
 
 		logger->Debug("MapTaskToFirstPrefProcessor: task=%d target preference=%s",
 			task->Id(), GetStringFromArchType(arch));
@@ -490,13 +492,11 @@ TestSchedPol::MapTaskToFirstPrefProcessor(TaskPtr_t task, TaskRequirements const
 
 #endif // CONFIG_BBQUE_TG_PROG_MODEL
 
-
-
 br::ResourcePathPtr_t
 TestSchedPol::GetFirstAvailable(std::list<br::ResourcePathPtr_t> const & resource_path_list,
 				uint32_t amount) const
 {
-	for (auto const & rp: resource_path_list) {
+	for (auto const & rp : resource_path_list) {
 		if (sys->ResourceAvailable(rp, sched_status_view) >= amount)
 			return rp;
 	}
