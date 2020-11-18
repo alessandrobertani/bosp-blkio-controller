@@ -131,9 +131,9 @@ static RTLIB_ExitCode_t rtlib_clear(
 
 static RTLIB_ExitCode_t rtlib_ggap(
         RTLIB_EXCHandler_t exc_handler,
-        int gap)
+        int cps_goal_gap)
 {
-	return rpc->SetExplicitGoalGap(exc_handler, gap);
+	return rpc->SetExplicitGoalGap(exc_handler, cps_goal_gap);
 }
 
 /*******************************************************************************

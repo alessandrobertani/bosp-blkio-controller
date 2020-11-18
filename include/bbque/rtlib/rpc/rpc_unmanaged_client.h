@@ -108,14 +108,18 @@ protected:
 		return RTLIB_OK;
 	}
 
-	RTLIB_ExitCode_t _RTNotify(pRegisteredEXC_t exc, int gap,
-							   int cusage, int ctime_ms)
+	RTLIB_ExitCode_t _RTNotify(pRegisteredEXC_t exc,
+				int cps_ggap_perc,
+				int cpu_usage,
+				int cycle_time_ms,
+				int cycle_count)
 	{
 		// Remove compilation warning
-		(void)exc;
-		(void)gap;
-		(void)cusage;
-		(void)ctime_ms;
+		(void) exc;
+		(void) cps_ggap_perc;
+		(void) cpu_usage;
+		(void) cycle_time_ms;
+		(void) cycle_count;
 		return RTLIB_OK;
 	}
 

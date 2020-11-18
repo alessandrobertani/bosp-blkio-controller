@@ -970,10 +970,11 @@ protected:
 	virtual RTLIB_ExitCode_t _Clear(pRegisteredEXC_t exc) = 0;
 
 	virtual RTLIB_ExitCode_t _RTNotify(
-	        pRegisteredEXC_t exc,
-	        int percent,
-	        int cusage,
-	        int ctime_ms) = 0;
+					pRegisteredEXC_t exc,
+					int cps_ggap_perc,
+					int cpu_usage,
+					int cycle_time_ms,
+					int cycle_time) = 0;
 
 	virtual RTLIB_ExitCode_t _ScheduleRequest(pRegisteredEXC_t exc) = 0;
 

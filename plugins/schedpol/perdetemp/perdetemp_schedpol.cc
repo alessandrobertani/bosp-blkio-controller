@@ -403,7 +403,7 @@ void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app)
 
 	// Best case: (partially) known application
 	// Compute quota according to runtime performance measurements
-	logger->Debug("[%s] Valid runtime measurements {GGAP %d, CUSAGE %d}",
+	logger->Debug("[%s] Valid runtime measurements {GGAP %d, cpu_usage %d}",
 	              app.name.c_str(), app.runtime.ggap_percent,
 	              app.runtime.cpu_usage.curr);
 

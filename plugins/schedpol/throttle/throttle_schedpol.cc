@@ -361,7 +361,7 @@ ThrottleSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp) {
 
 	ApplicationInfo app_info(papp);
 
-	if(app_info.runtime.is_valid){ 
+	if(app_info.runtime.is_updated){ 
 		logger->Debug("AssignWorkingMode: app info is valid");
 		/* 3 case: the ggap is negligible */
 		if (abs(app_info.runtime.ggap_percent) < GAP_THRESHOLD){
@@ -599,7 +599,7 @@ int32_t ThrottleSchedPol::DoCPUBinding(
 
 void ThrottleSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app){
 	logger->Debug("[APP %s] Runtime Profile", app.name.c_str());
-	logger->Debug("Runtime valid: %s", app.runtime.is_valid ? "yes" : "no");
+	logger->Debug("Runtime valid: %s", app.runtime.is_updated ? "yes" : "no");
 	logger->Debug("  Goal Gap: %d", app.runtime.ggap_percent);
 	logger->Debug("  Lower allocation boundary: [CPU: <%d>, exp GGAP: <%d>], ETA <%d>",
 				app.runtime.gap_history.lower_cpu,

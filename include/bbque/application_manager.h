@@ -491,10 +491,14 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t SetRuntimeProfile(AppPid_t pid,
-				uint8_t exc_id, struct app::RuntimeProfiling_t profile);
+				uint8_t exc_id,
+				struct app::RuntimeProfiling_t profile);
 
 	ExitCode_t SetRuntimeProfile(AppPid_t pid, uint8_t exc_id,
-				int gap, int cusage, int ctime);
+				int cps_goal_gap,
+				int cpu_usage,
+				int ctime,
+				int cycle_count);
 
 	/**
 	 * @see ApplicationManagerConfIF

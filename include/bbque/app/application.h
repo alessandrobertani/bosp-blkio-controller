@@ -82,7 +82,8 @@ struct RuntimeProfiling_t
 	bool is_updated = false;
 
 	/** Cycle time */
-	int ctime_ms = 0;
+	int cycle_time_ms = 0;
+	int cycle_count = 0;
 
 	/** The current Goal-Gap value, must be in [-100,100] */
 	int ggap_percent = 0;

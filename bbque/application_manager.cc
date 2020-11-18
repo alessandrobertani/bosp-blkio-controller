@@ -1311,28 +1311,25 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 ApplicationManager::ExitCode_t
 ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 				      uint8_t exc_id,
-				      int gap,
-				      int cusage,
-				      int ctime_ms)
+				      int cps_goal_gap,
+				      int cpu_usage,
+				      int cycle_time_ms,
+				      int cycle_count)
 {
 	// Getting current runtime profile information
-	ExitCode_t result;
 	struct app::RuntimeProfiling_t rt_prof;
-	result = GetRuntimeProfile(pid, exc_id, rt_prof);
+	auto result = GetRuntimeProfile(pid, exc_id, rt_prof);
 	if (result != AM_SUCCESS)
 		return AM_ABORT;
-
-	// Updating runtime information with the received values
-	rt_prof.ggap_percent_prev = rt_prof.ggap_percent;
-	rt_prof.ggap_percent = gap;
-	rt_prof.cpu_usage.prev = rt_prof.cpu_usage.curr;
-
-	rt_prof.cpu_usage.curr =
-		(cusage > 0) ? cusage : rt_prof.cpu_usage.predicted;
-
-	rt_prof.ctime_ms = ctime_ms;
 	rt_prof.is_updated = true;
 
+	// Cycle profiling data
+	rt_prof.cycle_time_ms = cycle_time_ms;
+	rt_prof.cycle_count = cycle_count;
+
+	// CPS performance goal-gap
+	rt_prof.ggap_percent_prev = rt_prof.ggap_percent;
+	rt_prof.ggap_percent = cps_goal_gap;
 	if (rt_prof.ggap_percent < 0) {
 		// Update lower bound value and age
 		rt_prof.gap_history.lower_cpu = rt_prof.cpu_usage.curr;
@@ -1360,6 +1357,11 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 		else if (rt_prof.gap_history.lower_age >= 0)
 			rt_prof.gap_history.lower_age++;
 	}
+
+	// CPU usage observed
+	rt_prof.cpu_usage.prev = rt_prof.cpu_usage.curr;
+	rt_prof.cpu_usage.curr =
+		(cpu_usage > 0) ? cpu_usage : rt_prof.cpu_usage.predicted;
 
 	// Checking if a new schedule is needed
 	result = IsReschedulingRequired(pid, exc_id, rt_prof);

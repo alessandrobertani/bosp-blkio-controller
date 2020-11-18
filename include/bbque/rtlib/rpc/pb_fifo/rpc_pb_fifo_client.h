@@ -77,7 +77,11 @@ protected:
 	RTLIB_ExitCode_t _Clear(pRegisteredEXC_t exc);
 
 	RTLIB_ExitCode_t _RTNotify(
-	        pRegisteredEXC_t exc, int gap, int cusage, int ctime_ms);
+				pRegisteredEXC_t exc,
+				int cps_goal_gap,
+				int cpu_usage,
+				int cycle_time_ms,
+				int cycle_count);
 
 	void _Exit();
 

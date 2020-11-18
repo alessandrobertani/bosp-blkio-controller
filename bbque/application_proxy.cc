@@ -1391,11 +1391,17 @@ void ApplicationProxy::RpcExcRuntimeProfileNotify(prqsSn_t prqs)
 
 	logger->Info("RpcExcRuntimeProfileNotify: Profile received for EXC "
 		"[app: %s, pid: %d, exc: %d]"
-		" ggap=%d cpu_usage=%d cycle_time=%d ms",
+		" ggap=%d cpu_usage=%d cycle_time=%dms cycle_count=%d",
 		pcon->app_name, pcon->app_pid, pmsg_hdr->exc_id,
-		pmsg_pyl->gap, pmsg_pyl->cusage, pmsg_pyl->ctime_ms);
+		pmsg_pyl->cps_goal_gap,
+		pmsg_pyl->cpu_usage,
+		pmsg_pyl->cycle_time_ms,
+		pmsg_pyl->cycle_count);
 	result = am.SetRuntimeProfile(pcon->app_pid, pmsg_hdr->exc_id,
-				pmsg_pyl->gap, pmsg_pyl->cusage, pmsg_pyl->ctime_ms);
+				pmsg_pyl->cps_goal_gap,
+				pmsg_pyl->cpu_usage,
+				pmsg_pyl->cycle_time_ms,
+				pmsg_pyl->cycle_count);
 
 	switch (result) {
 	case ApplicationManager::AM_SUCCESS:

@@ -540,15 +540,19 @@ RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_Clear(pRegisteredEXC_t prec)
 	return (RTLIB_ExitCode_t) chResp.result();
 }
 
-RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int gap,
-                int cpu_usage, int cycle_time_ms)
+RTLIB_ExitCode_t BbqueRPC_PB_FIFO_Client::_RTNotify(pRegisteredEXC_t prec,
+						    int cps_goal_gap,
+						    int cpu_usage,
+						    int cycle_time_ms,
+						    int cycle_count)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
 	PB_rpc_msg msg;
 	PBMessageFactory::pb_set_header(msg, RPC_EXC_RTNOTIFY, RpcMsgToken(), application_pid, prec->id);
-	msg.set_gap(gap);
-	msg.set_cusage(cpu_usage);
-	msg.set_ctime_ms(cycle_time_ms);
+	msg.set_cps_goal_gap(cps_goal_gap);
+	msg.set_cpu_usage(cpu_usage);
+	msg.set_cycle_time_ms(cycle_time_ms);
+	msg.set_cycle_count(cycle_count);
 	rpc_fifo_EXC_RTNOTIFY_t rf_EXC_RTNOTIFY = {
 		{
 			FIFO_PKT_SIZE(EXC_RTNOTIFY),

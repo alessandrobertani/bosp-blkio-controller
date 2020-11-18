@@ -32,19 +32,20 @@ message PB_rpc_msg {
     string recipe = 8;
     uint32 lang = 9;
     repeated PB_constraint constraints = 10;
-    sint32 gap = 11;
-    sint32 cusage = 12;
-    sint32 ctime_ms = 13;
-    uint32 event = 14;
-    sint32 awm = 15;
-    uint64 cpu_ids = 16;
-    uint64 cpu_ids_isolation = 17;
-    uint64 mem_ids = 18;
-    uint32 nr_sys = 19;
-    google.protobuf.Timestamp timeout = 20;
-    bool is_ocl = 21;
-    uint32 exec_time = 22;
-    uint32 mem_time = 23;
+    sint32 cps_goal_gap = 11;
+    sint32 cpu_usage = 12;
+    sint32 cycle_time_ms = 13;
+    sint32 cycle_count = 14;
+    uint32 event = 15;
+    sint32 awm = 16;
+    uint64 cpu_ids = 17;
+    uint64 cpu_ids_isolation = 18;
+    uint64 mem_ids = 19;
+    uint32 nr_sys = 20;
+    google.protobuf.Timestamp timeout = 21;
+    bool is_ocl = 22;
+    uint32 exec_time = 23;
+    uint32 mem_time = 24;
 }
 
 

@@ -185,9 +185,10 @@ typedef struct rpc_msg_EXC_RTNOTIFY {
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The asserted Goal-Gap */
-	int gap;
-	int cusage;
-	int ctime_ms;
+	int cps_goal_gap;
+	int cpu_usage;
+	int cycle_time_ms;
+	int cycle_count;
 } rpc_msg_EXC_RTNOTIFY_t;
 
 /**

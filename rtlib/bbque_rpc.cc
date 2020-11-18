@@ -2369,23 +2369,25 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(const RTLIB_EXCHandler_t exc_ha
 #else
 	float cpu_usage = exc->cpu_usage_stats.GetMean();
 #endif
-	float goal_gap = exc->runtime_profiling.cpu_goal_gap;
+	float cps_goal_gap = exc->runtime_profiling.cpu_goal_gap;
 	float cycle_time_avg_ms = exc->cycletime_stats_system.GetMean() +
 		exc->cycletime_stats_system.GetConfidenceInterval99();
 
 	logger->Notice("ForwardRuntimeProfile: [%s] "
-		"{GAP: %.2f, CPU: %.2f (round=%.0f), Cycle-time: %.2f ms}",
+		"{CPS_GGAP=%.2f, CPU=%.2f (round=%.0f), Cycle-time=%.2fms}",
 		exc->name.c_str(),
-		goal_gap,
-		cpu_usage, std::round(cpu_usage),
+		cps_goal_gap,
+		cpu_usage,
+		std::round(cpu_usage),
 		cycle_time_avg_ms);
 
 	// Send the runtime profile to the resource manager
 	RTLIB_ExitCode_t result =
 		_RTNotify(exc,
-			std::round(goal_gap),
+			std::round(cps_goal_gap),
 			std::round(cpu_usage),
-			std::round(cycle_time_avg_ms));
+			std::round(cycle_time_avg_ms),
+			exc->cycles_count);
 	if (result != RTLIB_OK) {
 		logger->Error("ForwardRuntimeProfile: [%s] "
 			"FAILED to send (Error %d: %s)",

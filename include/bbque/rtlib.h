@@ -530,7 +530,7 @@ typedef RTLIB_ExitCode_t(*RTLIB_ClearConstraints_t)(
  */
 typedef RTLIB_ExitCode_t(*RTLIB_SetGoalGap_t)(
 					      RTLIB_EXCHandler_t exc_handler,
-					      int gap);
+					      int cps_goal_gap);
 /**@}*/
 
 /**

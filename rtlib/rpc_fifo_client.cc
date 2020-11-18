@@ -588,8 +588,11 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_Clear(pRegisteredEXC_t prec)
 	return (RTLIB_ExitCode_t) chResp.result;
 }
 
-RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int gap,
-						 int cpu_usage, int cycle_time_ms)
+RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_RTNotify(pRegisteredEXC_t prec,
+						 int cps_ggap_perc,
+						 int cpu_usage,
+						 int cycle_time_ms,
+						 int cycles_count)
 {
 	std::unique_lock<std::mutex> chCommand_ul(chCommand_mtx);
 	rpc_fifo_EXC_RTNOTIFY_t rf_EXC_RTNOTIFY = {
@@ -605,9 +608,10 @@ RTLIB_ExitCode_t BbqueRPC_FIFO_Client::_RTNotify(pRegisteredEXC_t prec, int gap,
 				application_pid,
 				prec->id
 			},
-			gap,
+			cps_ggap_perc,
 			cpu_usage,
 			cycle_time_ms,
+			cycles_count
 		}
 	};
 	logger->Debug("_RTNotify: Set Goal-Gap for EXC [%d:%d]...",

@@ -282,9 +282,10 @@ ssize_t PBFifoRPC::RecvMessage(rpc_msg_ptr_t & msg)
 				}
 			} else if (pb_msg.hdr().typ() == bl::RPC_EXC_RTNOTIFY) {
 				bl::rpc_msg_EXC_RTNOTIFY_t *struct_msg = (bl::rpc_msg_EXC_RTNOTIFY_t *)pyl_buffer;
-				struct_msg->gap = pb_msg.gap();
-				struct_msg->cusage = pb_msg.cusage();
-				struct_msg->ctime_ms = pb_msg.ctime_ms();
+				struct_msg->cps_goal_gap = pb_msg.cps_goal_gap();
+				struct_msg->cpu_usage = pb_msg.cpu_usage();
+				struct_msg->cycle_time_ms = pb_msg.cycle_time_ms();
+				struct_msg->cycle_count = pb_msg.cycle_count();
 			} else if (pb_msg.hdr().typ() == bl::RPC_BBQ_RESP) {
 				if (pb_msg.hdr().resp_type() == UNDEF) {
 					bl::rpc_msg_resp_t *struct_msg = (bl::rpc_msg_resp_t *)pyl_buffer;
