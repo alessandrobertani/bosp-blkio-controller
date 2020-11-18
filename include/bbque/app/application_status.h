@@ -159,7 +159,7 @@ public:
 	/**
 	 * @brief SetRuntime Profile information for this app
 	 */
-	virtual  void SetAllocationInfo(
+	virtual  void UpdateRuntimePredictions(
 	        int cpu_usage_prediction, int goal_gap_prediction = 0) = 0;
 
 	/**

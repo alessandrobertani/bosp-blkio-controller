@@ -183,7 +183,7 @@ void AdaptiveCPUSchedPol::ComputeNextCPUQuota(AppInfo_t * ainfo)
 		return;
 	}
 
-	// if cpu_usage == quota we push a forfait delta
+	// if cpu_usage.curr == quota we push a forfait delta
 	if (ainfo->prev_used >= ainfo->prev_quota - THRESHOLD) {
 		ainfo->prev_delta = neg_delta;
 	}
@@ -262,7 +262,7 @@ AppInfo_t AdaptiveCPUSchedPol::InitializeAppInfo(bbque::app::AppCPtr_t papp)
 	ainfo.next_quota = 0;
 
 	auto prof = papp->GetRuntimeProfile();
-	ainfo.prev_used  = prof.cpu_usage;
+	ainfo.prev_used  = prof.cpu_usage.curr;
 	ainfo.prev_delta = ainfo.prev_quota - ainfo.prev_used;
 	logger->Info("InitializeAppInfo: [%s] next_quota=%ld, prev_quota=%ld, "
 		"prev_used=%ld, delta=%ld, available_cpu=%ld",
@@ -290,9 +290,9 @@ AdaptiveCPUSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	if (papp->Running()) {
 		auto prof = papp->GetRuntimeProfile();
 		logger->Info("AssignWorkingMode: [%s] "
-			"cpu_usage=%d c_time=%d, ggap=%d [valid=%d]",
+			"cpu_usage.curr=%d c_time=%d, ggap=%d [valid=%d]",
 			papp->StrId(),
-			prof.cpu_usage,
+			prof.cpu_usage.curr,
 			prof.ctime_ms,
 			prof.ggap_percent,
 			prof.is_valid);

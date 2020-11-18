@@ -609,8 +609,8 @@ void ThrottleSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app){
 				app.runtime.gap_history.upper_cpu,
 				app.runtime.gap_history.upper_gap,
 				app.runtime.gap_history.upper_age);
-	logger->Debug("  Last measured CPU Usage: <%d>", app.runtime.cpu_usage);
-	logger->Debug("  Last allocated CPU Usage: <%d>", app.runtime.cpu_usage_prediction);
+	logger->Debug("  Last measured CPU Usage: <%d>", app.runtime.cpu_usage.curr);
+	logger->Debug("  Last allocated CPU Usage: <%d>", app.runtime.cpu_usage.predicted);
 }
 
 } // namespace plugins

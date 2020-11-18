@@ -83,6 +83,8 @@ struct RuntimeProfiling_t
 {
 	bool is_valid = false;
 
+	/** Cycle time */
+	int ctime_ms = 0;
 	/** The current Goal-Gap value, must be in [-100,100] */
 	int ggap_percent = 0;
 	int ggap_percent_prev = 0;
@@ -100,17 +102,17 @@ struct RuntimeProfiling_t
 
 	/** The current CPU Usage of an application. It should be received as a
 	 * feedback from the rtlib. */
-	int cpu_usage = 0;
-	int cpu_usage_prev = 0;
 
-	/** Cycle time */
-	int ctime_ms = 0;
-
-	/** The maximum CPU Usage allocated to an application. It should be
-	 * set by the scheduling policy and optionally compared with the variable
-	 * `cpu_usage` */
-	int cpu_usage_prediction = 0;
-	int cpu_usage_prediction_old = 0;
+	struct
+	{
+		int curr = 0;
+		int prev = 0;
+		/** The maximum CPU Usage allocated to an application. It should be
+		 * set by the scheduling policy and optionally compared with the variable
+		 * `cpu_usage` */
+		int predicted = 0;
+		int predicted_prev = 0;
+	} cpu_usage;
 };
 
 /**
@@ -402,11 +404,11 @@ public:
 	 * @param cpu_usage_prediction The expected amount of CPU usage
 	 * @param goal_gap_prediction The expected goal gap
 	 */
-	void SetAllocationInfo(int cpu_usage_prediction, int goal_gap_prediction = 0)
+	void UpdateRuntimePredictions(int cpu_usage_prediction, int goal_gap_prediction = 0)
 	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
-		rt_prof.cpu_usage_prediction_old = rt_prof.cpu_usage_prediction;
-		rt_prof.cpu_usage_prediction = cpu_usage_prediction;
+		rt_prof.cpu_usage.predicted_prev = rt_prof.cpu_usage.predicted;
+		rt_prof.cpu_usage.predicted = cpu_usage_prediction;
 		rt_prof.ggap_percent_prediction = goal_gap_prediction;
 	}
 

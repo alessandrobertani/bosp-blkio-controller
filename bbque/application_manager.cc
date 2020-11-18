@@ -1325,17 +1325,17 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 	// Updating runtime information with the received values
 	rt_prof.ggap_percent_prev = rt_prof.ggap_percent;
 	rt_prof.ggap_percent = gap;
-	rt_prof.cpu_usage_prev = rt_prof.cpu_usage;
+	rt_prof.cpu_usage.prev = rt_prof.cpu_usage.curr;
 
-	rt_prof.cpu_usage =
-		(cusage > 0) ? cusage : rt_prof.cpu_usage_prediction;
+	rt_prof.cpu_usage.curr =
+		(cusage > 0) ? cusage : rt_prof.cpu_usage.predicted;
 
 	rt_prof.ctime_ms = ctime_ms;
 	rt_prof.is_valid = true;
 
 	if (rt_prof.ggap_percent < 0) {
 		// Update lower bound value and age
-		rt_prof.gap_history.lower_cpu = rt_prof.cpu_usage;
+		rt_prof.gap_history.lower_cpu = rt_prof.cpu_usage.curr;
 		rt_prof.gap_history.lower_gap = rt_prof.ggap_percent;
 		rt_prof.gap_history.lower_age = 0;
 
@@ -1349,7 +1349,7 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 	}
 	else {
 		// Update upper bound value and age
-		rt_prof.gap_history.upper_cpu = rt_prof.cpu_usage;
+		rt_prof.gap_history.upper_cpu = rt_prof.cpu_usage.curr;
 		rt_prof.gap_history.upper_gap = rt_prof.ggap_percent;
 		rt_prof.gap_history.upper_age = 0;
 

@@ -273,7 +273,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 		logger->Info("AssignWorkingMode: [%s] "
 			"cpu_usage=%d c_time=%d, ggap=%d [valid=%d]",
 			papp->StrId(),
-			prof.cpu_usage,
+			prof.cpu_usage.curr,
 			prof.ctime_ms,
 			prof.ggap_percent,
 			prof.is_valid);
