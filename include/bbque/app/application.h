@@ -47,13 +47,11 @@
 
 namespace bu = bbque::utils;
 
-namespace bbque
-{
+namespace bbque {
 
 class ApplicationManager;
 
-namespace res
-{
+namespace res {
 class Resource;
 class ResourcePath;
 class ResourceConstraint;
@@ -66,8 +64,7 @@ using ResourceAssignmentMapPtr_t = std::shared_ptr<ResourceAssignmentMap_t>;
 
 namespace br = bbque::res;
 
-namespace app
-{
+namespace app {
 
 class Recipe;
 
@@ -85,6 +82,7 @@ struct RuntimeProfiling_t
 
 	/** Cycle time */
 	int ctime_ms = 0;
+
 	/** The current Goal-Gap value, must be in [-100,100] */
 	int ggap_percent = 0;
 	int ggap_percent_prev = 0;
