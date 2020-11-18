@@ -91,7 +91,7 @@ struct ApplicationInfo {
 		awm->SetOwner(papp);
 		runtime = papp->GetRuntimeProfile(true);
 
-		if (runtime.is_valid == true) {
+		if (runtime.is_updated == true) {
 			runtime.ggap_percent =
 			        std::max(PERDETEMP_GGAP_MIN,
 			                 std::min(runtime.ggap_percent, PERDETEMP_GGAP_MAX));

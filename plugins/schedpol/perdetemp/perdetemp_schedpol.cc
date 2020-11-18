@@ -369,7 +369,7 @@ SchedulerPolicyIF::ExitCode_t PerdetempSchedPol::PreProcessQueue(int priority)
 void PerdetempSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app)
 {
 	logger->Debug("[APP %s] Runtime Profile", app.name.c_str());
-	logger->Debug("Runtime valid: %s", app.runtime.is_valid ? "yes" : "no");
+	logger->Debug("Runtime valid: %s", app.runtime.is_updated ? "yes" : "no");
 	logger->Debug("  Goal Gap: %d", app.runtime.ggap_percent);
 	logger->Debug("  Lower allocation boundary: [CPU: %d, exp GGAP: %d], ETA %d",
 	              app.runtime.gap_history.lower_cpu,
@@ -387,7 +387,7 @@ void PerdetempSchedPol::DumpRuntimeProfileStats(ApplicationInfo &app)
 void PerdetempSchedPol::ComputeRequiredCPU(ApplicationInfo &app)
 {
 	// Worst case: have not valid runtime info
-	if (app.runtime.is_valid == false) {
+	if (app.runtime.is_updated == false) {
 		// If application had been already scheduled, for now the allocation
 		// will not change
 		if (app.runtime.cpu_usage.curr > 0)

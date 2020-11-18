@@ -276,7 +276,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 			prof.cpu_usage.curr,
 			prof.ctime_ms,
 			prof.ggap_percent,
-			prof.is_valid);
+			prof.is_updated);
 	}
 
 	// Create or re-initialize the working mode data structure

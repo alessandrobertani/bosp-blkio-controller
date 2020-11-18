@@ -1331,7 +1331,7 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 		(cusage > 0) ? cusage : rt_prof.cpu_usage.predicted;
 
 	rt_prof.ctime_ms = ctime_ms;
-	rt_prof.is_valid = true;
+	rt_prof.is_updated = true;
 
 	if (rt_prof.ggap_percent < 0) {
 		// Update lower bound value and age

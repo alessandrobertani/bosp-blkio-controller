@@ -78,7 +78,8 @@ typedef std::pair<br::ResourcePathPtr_t, ConstrPtr_t> ConstrPair_t;
  */
 struct RuntimeProfiling_t
 {
-	bool is_valid = false;
+	// Update flag
+	bool is_updated = false;
 
 	/** Cycle time */
 	int ctime_ms = 0;
@@ -88,6 +89,7 @@ struct RuntimeProfiling_t
 	int ggap_percent_prev = 0;
 	int ggap_percent_prediction = 0;
 
+	/** Goal-gap historical data */
 	struct
 	{
 		int upper_cpu = -1;
@@ -98,16 +100,12 @@ struct RuntimeProfiling_t
 		int lower_age = -1;
 	} gap_history;
 
-	/** The current CPU Usage of an application. It should be received as a
-	 * feedback from the rtlib. */
-
+	/** CPU usage profiling retrieved from the RTLIB and predictions carried
+	 * out by the scheduling policy */
 	struct
 	{
 		int curr = 0;
 		int prev = 0;
-		/** The maximum CPU Usage allocated to an application. It should be
-		 * set by the scheduling policy and optionally compared with the variable
-		 * `cpu_usage` */
 		int predicted = 0;
 		int predicted_prev = 0;
 	} cpu_usage;
@@ -381,7 +379,7 @@ public:
 	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		if (mark_acknowledged)
-			rt_prof.is_valid = false;
+			rt_prof.is_updated = false;
 		return rt_prof;
 	}
 
