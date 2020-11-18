@@ -571,7 +571,7 @@ uint64_t CPUPowerManager::StopEnergyMonitor(br::ResourcePathPtr_t const & rp)
 	std::lock_guard<std::mutex>(this->mutex_energy);
 
 	auto curr_energy_value = GetEnergyFromIntelRAPL(rp);
-	float energy_diff_value = curr_energy_value - this->energy_start_values[rp];
+	uint64_t energy_diff_value = curr_energy_value - this->energy_start_values[rp];
 	logger->Info("StopEnergyMonitor: <%s> consumption=%llu [uJ]",
 		rp->ToString().c_str(), energy_diff_value);
 
