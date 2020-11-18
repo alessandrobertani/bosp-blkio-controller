@@ -330,25 +330,22 @@ void ResourceManager::Optimize()
 {
 	static bu::Timer optimization_tmr;
 	double period;
-	bool active_apps = true;
 
+	// Locking mechanism
 	SetReady(false);
-	// If the optimization has been triggered by a platform event (BBQ_PLAT)
-	// the policy must be  executed anyway. To the contrary, if it is an
-	// application event (BBQ_OPTS) check if there are actually active
-	// applications
-	if (!plat_event && !sys.HasSchedulablesToRun()) {
-		logger->Debug("Optimize: no applications or processes to schedule");
-		active_apps = false;
+
+	if (this->plat_event) {
+		logger->Debug("Optimize: execution triggered by a platform event");
+		this->plat_event = false;
 	}
-	plat_event = false;
 
 #ifdef CONFIG_BBQUE_ENERGY_MONITOR
 	EnergyMonitor & eym(EnergyMonitor::GetInstance());
 	eym.StopSamplingResourceConsumption();
 #endif
 
-	if (active_apps) {
+	// Schedule and synchronize if there are applications/processes
+	if (sys.HasSchedulablesToRun()) {
 		sys.PrintStatus(true);
 		logger->Info("Optimize: scheduler invocation...");
 
@@ -358,10 +355,10 @@ void ResourceManager::Optimize()
 
 		//--- Scheduling
 		optimization_tmr.start();
-		SchedulerManager::ExitCode_t schedResult = sm.Schedule();
+		SchedulerManager::ExitCode_t sched_result = sm.Schedule();
 		optimization_tmr.stop();
 
-		switch (schedResult) {
+		switch (sched_result) {
 		case SchedulerManager::MISSING_POLICY:
 		case SchedulerManager::FAILED:
 			logger->Warn("Optimize: scheduling FAILED "
@@ -375,12 +372,15 @@ void ResourceManager::Optimize()
 			SetReady(true);
 			return;
 		default:
-			assert(schedResult == SchedulerManager::DONE);
+			assert(sched_result == SchedulerManager::DONE);
 		}
 
 		logger->Notice("Optimize: scheduling time: %11.3f[us]",
 			optimization_tmr.getElapsedTimeUs());
 		sys.PrintStatus(true, sys.GetScheduledResourceStateView());
+	}
+	else {
+		logger->Debug("Optimize: no applications or processes to schedule");
 	}
 
 #ifdef CONFIG_BBQUE_PM
@@ -404,9 +404,9 @@ void ResourceManager::Optimize()
 
 		//--- Synchronization
 		optimization_tmr.start();
-		SynchronizationManager::ExitCode_t syncResult = ym.SyncSchedule();
+		SynchronizationManager::ExitCode_t sync_result = ym.SyncSchedule();
 		optimization_tmr.stop();
-		if (syncResult != SynchronizationManager::OK) {
+		if (sync_result != SynchronizationManager::OK) {
 			RM_COUNT_EVENT(metrics, RM_SYNCH_FAILED);
 			// FIXME here we should implement some countermeasure to
 			// ensure consistency
