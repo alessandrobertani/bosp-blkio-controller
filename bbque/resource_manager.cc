@@ -417,12 +417,6 @@ void ResourceManager::Optimize()
 			optimization_tmr.getElapsedTimeUs());
 	}
 
-
-#ifdef CONFIG_BBQUE_ENERGY_MONITOR
-	// (Re-)start energy monitoring
-	eym.StartSamplingResourceConsumption();
-#endif
-
 #ifdef CONFIG_BBQUE_SCHED_PROFILING
 	//--- Profiling
 	logger->Debug(LNPROB);
@@ -446,6 +440,11 @@ void ResourceManager::Optimize()
 		logger->Warn("Optimize: power configuration setting failed");
 	}
 #endif // CONFIG_BBQUE_PM
+
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+	// (Re-)start energy monitoring
+	eym.StartSamplingResourceConsumption();
+#endif
 
 	SetReady(true);
 
