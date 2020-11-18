@@ -20,10 +20,8 @@
 
 #include "bbque/rtlib.h"
 
-namespace bbque
-{
-namespace rtlib
-{
+namespace bbque {
+namespace rtlib {
 
 /**
  * @class BbqueRPC_UNMANAGED_Client
@@ -31,8 +29,8 @@ namespace rtlib
  * @brief Client side of the RPC Umnanaged channel
  *
  * An Unmanaged client is a BBQ client which is completely detached by the
- * BarbequeRTRM. This allows, for example, to run Bbque integrated
- * applications in case the BBQ daemon is not runinng. This is a convenient
+ * BarbequeRTRM. This allows, for example, to run AEM-integrated
+ * applications in case the daemon is not running. This is a convenient
  * execution mode especially useful to run testing and simulations.
  *
  * NOTE: Unmanaged clients always get assigned AWM 0.
@@ -40,12 +38,11 @@ namespace rtlib
  */
 class BbqueRPC_UNMANAGED_Client : public BbqueRPC
 {
-
 public:
 
-	BbqueRPC_UNMANAGED_Client() {};
+	BbqueRPC_UNMANAGED_Client() { };
 
-	~BbqueRPC_UNMANAGED_Client() {};
+	~BbqueRPC_UNMANAGED_Client() { };
 
 protected:
 
@@ -59,52 +56,53 @@ protected:
 	RTLIB_ExitCode_t _Register(pRegisteredEXC_t exc)
 	{
 		// Remove compilation warning
-		(void)exc;
+		(void) exc;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _Unregister(pRegisteredEXC_t exc)
 	{
 		// Remove compilation warning
-		(void)exc;
+		(void) exc;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _Enable(pRegisteredEXC_t exc)
 	{
 		// Remove compilation warning
-		(void)exc;
+		(void) exc;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _Disable(pRegisteredEXC_t exc)
 	{
 		// Remove compilation warning
-		(void)exc;
+		(void) exc;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _ScheduleRequest(pRegisteredEXC_t exc)
 	{
 		// Remove compilation warning
-		(void)exc;
+		(void) exc;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _Set(pRegisteredEXC_t exc,
-						  RTLIB_Constraint * constraints, uint8_t count)
+			RTLIB_Constraint * constraints,
+			uint8_t count)
 	{
 		// Remove compilation warning
-		(void)exc;
-		(void)count;
-		(void)constraints;
+		(void) exc;
+		(void) count;
+		(void) constraints;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _Clear(pRegisteredEXC_t exc)
 	{
 		// Remove compilation warning
-		(void)exc;
+		(void) exc;
 		return RTLIB_OK;
 	}
 
@@ -123,23 +121,23 @@ protected:
 		return RTLIB_OK;
 	}
 
-	void _Exit() {}
+	void _Exit() { }
 
 	/******************************************************************************
 	 * Runtime profiling
 	 ******************************************************************************/
 
 	RTLIB_ExitCode_t _GetRuntimeProfileResp(
-		rpc_msg_token_t token,
-		pRegisteredEXC_t exc,
-		uint32_t exc_time,
-		uint32_t mem_time)
+						rpc_msg_token_t token,
+						pRegisteredEXC_t exc,
+						uint32_t exc_time,
+						uint32_t mem_time)
 	{
 		// Remove compilation warning
-		(void)token;
-		(void)exc;
-		(void)exc_time;
-		(void)mem_time;
+		(void) token;
+		(void) exc;
+		(void) exc_time;
+		(void) mem_time;
 		return RTLIB_OK;
 	}
 
@@ -148,38 +146,38 @@ protected:
 	 ******************************************************************************/
 
 	RTLIB_ExitCode_t _SyncpPreChangeResp(
-		rpc_msg_token_t token,
-		pRegisteredEXC_t exc,
-		uint32_t syncLatency)
+					rpc_msg_token_t token,
+					pRegisteredEXC_t exc,
+					uint32_t syncLatency)
 	{
 		// Remove compilation warning
-		(void)exc;
-		(void)token;
-		(void)syncLatency;
+		(void) exc;
+		(void) token;
+		(void) syncLatency;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _SyncpSyncChangeResp(
-		rpc_msg_token_t token,
-		pRegisteredEXC_t exc,
-		RTLIB_ExitCode_t sync)
+					rpc_msg_token_t token,
+					pRegisteredEXC_t exc,
+					RTLIB_ExitCode_t sync)
 	{
 		// Remove compilation warning
-		(void)exc;
-		(void)token;
-		(void)sync;
+		(void) exc;
+		(void) token;
+		(void) sync;
 		return RTLIB_OK;
 	}
 
 	RTLIB_ExitCode_t _SyncpPostChangeResp(
-		rpc_msg_token_t token,
-		pRegisteredEXC_t exc,
-		RTLIB_ExitCode_t result)
+					rpc_msg_token_t token,
+					pRegisteredEXC_t exc,
+					RTLIB_ExitCode_t result)
 	{
 		// Remove compilation warning
-		(void)exc;
-		(void)token;
-		(void)result;
+		(void) exc;
+		(void) token;
+		(void) result;
 		return RTLIB_OK;
 	}
 

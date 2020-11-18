@@ -23,10 +23,8 @@
 
 #define RPC_PKT_SIZE(type) sizeof(bbque::rtlib::rpc_msg_##type##_t)
 
-namespace bbque
-{
-namespace rtlib
-{
+namespace bbque {
+namespace rtlib {
 
 /**
  * @brief The RPC message identifier
@@ -34,37 +32,37 @@ namespace rtlib
  * The value of the message identifier is used to give priority to messages.
  * The higer the message id the higer the message priority.
  */
-typedef enum rpc_msg_type {
-
-//--- Application Originated Messages
+typedef enum rpc_msg_type
+{
+	//--- Application Originated Messages
 	RPC_APP_PAIR = 0,
 	RPC_APP_EXIT,
 
-	RPC_APP_RESP,       ///< Response to an APP request
+	RPC_APP_RESP, ///< Response to an APP request
 	RPC_APP_MSGS_COUNT, ///< The number of APP originated messages
 
-//--- Execution Context Originated Messages
+	//--- Execution Context Originated Messages
 	RPC_EXC_SCHEDULE,
-	RPC_EXC_START,     // 5
+	RPC_EXC_START, // 5
 	RPC_EXC_SET,
 	RPC_EXC_CLEAR,
 	RPC_EXC_STOP,
 	RPC_EXC_REGISTER,
-	RPC_EXC_RTNOTIFY,  // 10
+	RPC_EXC_RTNOTIFY, // 10
 	RPC_EXC_UNREGISTER,
-	RPC_EXC_RESP,       ///< Response to an EXC request
+	RPC_EXC_RESP, ///< Response to an EXC request
 	RPC_EXC_MSGS_COUNT, ///< The number of EXC originated messages
 
-//--- BarbequeRTRM Originated Messages
+	//--- BarbequeRTRM Originated Messages
 	RPC_BBQ_SYNCP_POSTCHANGE,
-	RPC_BBQ_SYNCP_DOCHANGE,    // 15
+	RPC_BBQ_SYNCP_DOCHANGE, // 15
 	RPC_BBQ_SYNCP_SYNCCHANGE,
 	RPC_BBQ_SYNCP_PRECHANGE,
 
 	RPC_BBQ_STOP_EXECUTION,
 	RPC_BBQ_GET_PROFILE,
 
-	RPC_BBQ_RESP,      ///< Response to a BBQ command
+	RPC_BBQ_RESP, ///< Response to a BBQ command
 	RPC_BBQ_MSGS_COUNT ///< The number of EXC originated messages
 
 } rpc_msg_type_t;
@@ -74,19 +72,20 @@ typedef uint32_t rpc_msg_token_t;
 /**
  * @brief The RPC message header
  */
-typedef struct rpc_msg_header {
+typedef struct rpc_msg_header
+{
 	/** The command to execute (defines the message "payload" type) */
 	uint8_t typ;
 
 	/** A token used by the message sender to match responses */
 	rpc_msg_token_t token;
 
-//FIXME These is maybe superflous... it is required just for the pairing
-// Than it is better to exchange a communication token ;-)
+	//FIXME These is maybe superflous... it is required just for the pairing
+	// Than it is better to exchange a communication token ;-)
 	/** The application ID (thread ID) */
 	pid_t app_pid;
 
-// FIXME This is required just by EXC related messages: better to move there
+	// FIXME This is required just by EXC related messages: better to move there
 	/** The execution context ID */
 	uint8_t exc_id;
 
@@ -95,7 +94,8 @@ typedef struct rpc_msg_header {
 /**
  * @brief The response to a command
  */
-typedef struct rpc_msg_resp {
+typedef struct rpc_msg_resp
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The RTLIB command exit code */
@@ -110,7 +110,8 @@ typedef struct rpc_msg_resp {
 /**
  * @brief Command to register a new execution context.
  */
-typedef struct rpc_msg_APP_PAIR {
+typedef struct rpc_msg_APP_PAIR
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The RPC protocol major version */
@@ -124,7 +125,8 @@ typedef struct rpc_msg_APP_PAIR {
 /**
  * @brief Command to notify an application is exiting.
  */
-typedef struct rpc_msg_APP_EXIT {
+typedef struct rpc_msg_APP_EXIT
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_APP_EXIT_t;
@@ -137,7 +139,8 @@ typedef struct rpc_msg_APP_EXIT {
 /**
  * @brief Command to register a new execution context.
  */
-typedef struct rpc_msg_EXC_REGISTER {
+typedef struct rpc_msg_EXC_REGISTER
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The name of the registered execution context */
@@ -146,12 +149,14 @@ typedef struct rpc_msg_EXC_REGISTER {
 	char recipe[RTLIB_RECIPE_NAME_LENGTH];
 	/** The code language class */
 	RTLIB_ProgrammingLanguage_t lang;
+
 } rpc_msg_EXC_REGISTER_t;
 
 /**
  * @brief Command to unregister an execution context.
  */
-typedef struct rpc_msg_EXC_UNREGISTER {
+typedef struct rpc_msg_EXC_UNREGISTER
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The name of the execution context */
@@ -159,9 +164,22 @@ typedef struct rpc_msg_EXC_UNREGISTER {
 } rpc_msg_EXC_UNREGISTER_t;
 
 /**
+ * @brief Command to register a new execution context.
+ */
+typedef struct rpc_msg_EXC_RESTORE
+{
+	/** The RPC fifo command header */
+	rpc_msg_header_t hdr;
+
+	/** Restore pid, in case the application has to be restored */
+	pid_t pid;
+} rpc_msg_EXC_RESTORE_t;
+
+/**
  * @brief Command to set constraints on an execution context.
  */
-typedef struct rpc_msg_EXC_SET {
+typedef struct rpc_msg_EXC_SET
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The count of following contraints */
@@ -173,7 +191,8 @@ typedef struct rpc_msg_EXC_SET {
 /**
  * @brief Command to clear constraints on an execution context.
  */
-typedef struct rpc_msg_EXC_CLEAR {
+typedef struct rpc_msg_EXC_CLEAR
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_EXC_CLEAR_t;
@@ -181,7 +200,8 @@ typedef struct rpc_msg_EXC_CLEAR {
 /**
  * @brief Command to set a Goal-Gap on an execution context.
  */
-typedef struct rpc_msg_EXC_RTNOTIFY {
+typedef struct rpc_msg_EXC_RTNOTIFY
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The asserted Goal-Gap */
@@ -194,7 +214,8 @@ typedef struct rpc_msg_EXC_RTNOTIFY {
 /**
  * @brief Command to start an execution context.
  */
-typedef struct rpc_msg_EXC_START {
+typedef struct rpc_msg_EXC_START
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_EXC_START_t;
@@ -202,7 +223,8 @@ typedef struct rpc_msg_EXC_START {
 /**
  * @brief Command to stop an execution context.
  */
-typedef struct rpc_msg_EXC_STOP {
+typedef struct rpc_msg_EXC_STOP
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_EXC_STOP_t;
@@ -214,7 +236,8 @@ typedef struct rpc_msg_EXC_STOP {
  * (as soon as possible). The RTRM should identify the best AWM to be assigned
  * for the requesting execution context.
  */
-typedef struct rpc_msg_EXC_SCHEDULE {
+typedef struct rpc_msg_EXC_SCHEDULE
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_EXC_SCHEDULE_t;
@@ -229,7 +252,8 @@ typedef struct rpc_msg_EXC_SCHEDULE {
 /**
  * @brief Synchronization Protocol PreChange command
  */
-typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
+typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** Synchronization Action required */
@@ -249,8 +273,8 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE {
 
 } rpc_msg_BBQ_SYNCP_PRECHANGE_t;
 
-typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM {
-
+typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM
+{
 	/** The system number */
 	int16_t sys_id;
 
@@ -267,7 +291,7 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM {
 #ifdef CONFIG_TARGET_OPENCL
 	/** Assigned OpenCL platform/device */
 	int32_t ocl_platform_id;
-	int8_t  ocl_device_id;
+	int8_t ocl_device_id;
 #endif
 
 } rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t;
@@ -275,7 +299,8 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM {
 /**
  * @brief Synchronization Protocol PreChange response
  */
-typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_RESP {
+typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_RESP
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** An extimation of the Synchronization Latency */
@@ -290,7 +315,8 @@ typedef struct rpc_msg_BBQ_SYNCP_PRECHANGE_RESP {
 /**
  * @brief Synchronization Protocol SyncChange command
  */
-typedef struct rpc_msg_BBQ_SYNCP_SYNCCHANGE {
+typedef struct rpc_msg_BBQ_SYNCP_SYNCCHANGE
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_BBQ_SYNCP_SYNCCHANGE_t;
@@ -298,7 +324,8 @@ typedef struct rpc_msg_BBQ_SYNCP_SYNCCHANGE {
 /**
  * @brief Synchronization Protocol SyncChange response
  */
-typedef struct rpc_msg_BBQ_SYNCP_SYNCCHANGE_RESP {
+typedef struct rpc_msg_BBQ_SYNCP_SYNCCHANGE_RESP
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The RTLIB command exit code */
@@ -311,7 +338,8 @@ typedef struct rpc_msg_BBQ_SYNCP_SYNCCHANGE_RESP {
 /**
  * @brief Synchronization Protocol DoChange command
  */
-typedef struct rpc_msg_BBQ_SYNCP_DOCHANGE {
+typedef struct rpc_msg_BBQ_SYNCP_DOCHANGE
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_BBQ_SYNCP_DOCHANGE_t;
@@ -322,7 +350,8 @@ typedef struct rpc_msg_BBQ_SYNCP_DOCHANGE {
 /**
  * @brief Synchronization Protocol PostChange command
  */
-typedef struct rpc_msg_BBQ_SYNCP_POSTCHANGE {
+typedef struct rpc_msg_BBQ_SYNCP_POSTCHANGE
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 } rpc_msg_BBQ_SYNCP_POSTCHANGE_t;
@@ -330,7 +359,8 @@ typedef struct rpc_msg_BBQ_SYNCP_POSTCHANGE {
 /**
  * @brief Synchronization Protocol PostChange response
  */
-typedef struct rpc_msg_BBQ_SYNCP_POSTCHANGE_RESP {
+typedef struct rpc_msg_BBQ_SYNCP_POSTCHANGE_RESP
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The RTLIB command exit code */
@@ -345,7 +375,8 @@ typedef struct rpc_msg_BBQ_SYNCP_POSTCHANGE_RESP {
 /**
  * @brief Command to STOP an application execution context.
  */
-typedef struct rpc_msg_BBQ_STOP {
+typedef struct rpc_msg_BBQ_STOP
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** The Timeout for stopping the application */
@@ -355,7 +386,8 @@ typedef struct rpc_msg_BBQ_STOP {
 /**
  * @brief Command to STOP an application execution context.
  */
-typedef struct rpc_msg_BBQ_GET_PROFILE {
+typedef struct rpc_msg_BBQ_GET_PROFILE
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** OpenCL EXC flag */
@@ -390,7 +422,8 @@ inline char const * RPC_MessageStr(uint8_t typ)
 /**
  * @brief Response message to the runtime profiling request
  */
-typedef struct rpc_msg_BBQ_GET_PROFILE_RESP {
+typedef struct rpc_msg_BBQ_GET_PROFILE_RESP
+{
 	/** The RPC fifo command header */
 	rpc_msg_header_t hdr;
 	/** Time spent for useful execution */
