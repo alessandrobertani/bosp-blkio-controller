@@ -1360,8 +1360,7 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 
 	// CPU usage observed
 	rt_prof.cpu_usage.prev = rt_prof.cpu_usage.curr;
-	rt_prof.cpu_usage.curr =
-		(cpu_usage > 0) ? cpu_usage : rt_prof.cpu_usage.predicted;
+	rt_prof.cpu_usage.curr = cpu_usage / 1e3;
 
 	// Checking if a new schedule is needed
 	result = IsReschedulingRequired(pid, exc_id, rt_prof);

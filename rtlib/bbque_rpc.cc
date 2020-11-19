@@ -2385,7 +2385,7 @@ RTLIB_ExitCode_t BbqueRPC::ForwardRuntimeProfile(const RTLIB_EXCHandler_t exc_ha
 	RTLIB_ExitCode_t result =
 		_RTNotify(exc,
 			std::round(cps_goal_gap),
-			std::round(cpu_usage),
+			std::round(cpu_usage * 1e3), // passing an integer without loosing the decimal part
 			std::round(cycle_time_avg_ms),
 			exc->cycles_count);
 	if (result != RTLIB_OK) {

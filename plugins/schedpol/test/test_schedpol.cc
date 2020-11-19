@@ -271,7 +271,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 	if (papp->Running()) {
 		auto prof = papp->GetRuntimeProfile();
 		logger->Info("AssignWorkingMode: [%s] "
-			"cpu_usage=%d, "
+			"cpu_usage=%.2f, "
 			"cycle_time=%dms, cycle_count=%d, "
 			"cps_goal_gap=%d [updated=%d]",
 			papp->StrId(),

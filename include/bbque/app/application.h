@@ -93,11 +93,11 @@ struct RuntimeProfiling_t
 	/** Goal-gap historical data */
 	struct
 	{
-		int upper_cpu = -1;
+		float upper_cpu = -1.0;
+		float lower_cpu = -1.0;
 		int upper_gap = -1;
-		int upper_age = -1;
-		int lower_cpu = -1;
 		int lower_gap = -1;
+		int upper_age = -1;
 		int lower_age = -1;
 	} gap_history;
 
@@ -105,10 +105,10 @@ struct RuntimeProfiling_t
 	 * out by the scheduling policy */
 	struct
 	{
-		int curr = 0;
-		int prev = 0;
-		int predicted = 0;
-		int predicted_prev = 0;
+		float curr = 0;
+		float prev = 0;
+		float predicted = 0;
+		float predicted_prev = 0;
 	} cpu_usage;
 };
 
