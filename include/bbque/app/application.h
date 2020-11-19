@@ -68,10 +68,8 @@ namespace app {
 
 class Recipe;
 
-/** Shared pointer to Recipe object */
-typedef std::shared_ptr<Recipe> RecipePtr_t;
-/** Pair contained in the resource constraints map  */
-typedef std::pair<br::ResourcePathPtr_t, ConstrPtr_t> ConstrPair_t;
+using RecipePtr_t = std::shared_ptr<Recipe>;
+using ConstrPair_t = std::pair<br::ResourcePathPtr_t, ConstrPtr_t>;
 
 /**
  * @brief Collect the runtime profiling data from the RTLib
@@ -262,8 +260,7 @@ public:
 	/**
 	 * @see ApplicationStatusIF
 	 */
-	uint64_t GetResourceRequestStat(
-					std::string const & rsrc_path,
+	uint64_t GetResourceRequestStat(std::string const & rsrc_path,
 					ApplicationStatusIF::ResourceUsageStatType_t ru_stat);
 
 

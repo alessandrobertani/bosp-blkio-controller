@@ -30,10 +30,8 @@
 
 namespace bu = bbque::utils;
 
-namespace bbque
-{
-namespace app
-{
+namespace bbque {
+namespace app {
 
 
 class ApplicationStatusIF;
@@ -52,25 +50,25 @@ typedef std::list<AwmPtr_t> AwmPtrList_t;
  * name, priority, current  working mode and scheduled state, next working
  * mode and scheduled state, and the list of all the active working modes
  */
-class ApplicationStatusIF: public app::Schedulable
+class ApplicationStatusIF : public app::Schedulable
 {
-
 public:
 
 	/**
 	 * @brief Type of resource usage statistics
 	 */
-	enum ResourceUsageStatType_t {
-	        RU_STAT_MIN,
-	        RU_STAT_AVG,
-	        RU_STAT_MAX
+	enum ResourceUsageStatType_t
+	{
+		RU_STAT_MIN,
+		RU_STAT_AVG,
+		RU_STAT_MAX
 	};
 
 	ApplicationStatusIF(
-		std::string const & name,
-		AppPid_t pid,
-		Schedulable::Type type):
-	 Schedulable(name, pid, type) { }
+			std::string const & name,
+			AppPid_t pid,
+			Schedulable::Type type) :
+	    Schedulable(name, pid, type) { }
 
 	/**
 	 * @brief Get the ID of this Execution Context
@@ -87,28 +85,32 @@ public:
 	/**
 	 * @brief Get the UID of the current application
 	 */
-	AppUid_t Uid() const override {
-		return (Pid() << BBQUE_UID_SHIFT) + ExcId();
+	AppUid_t Uid() const override
+	{
+		return (Pid() << BBQUE_UID_SHIFT) +ExcId();
 	};
 
 	/**
 	 * @brief Get the UID of an application given its PID and EXC
 	 */
-	static AppUid_t Uid(AppPid_t pid, uint8_t exc_id) {
-		return (pid << BBQUE_UID_SHIFT) + exc_id;
+	static AppUid_t Uid(AppPid_t pid, uint8_t exc_id)
+	{
+		return (pid << BBQUE_UID_SHIFT) +exc_id;
 	};
 
 	/**
 	 * @brief Get the PID of an application given its UID
 	 */
-	static AppPid_t Uid2Pid(AppUid_t uid) {
+	static AppPid_t Uid2Pid(AppUid_t uid)
+	{
 		return (uid >> BBQUE_UID_SHIFT);
 	};
 
 	/**
 	 * @brief Get the EID of an application given its UID
 	 */
-	static uint8_t Uid2Eid(AppUid_t uid) {
+	static uint8_t Uid2Eid(AppUid_t uid)
+	{
 		return (uid & BBQUE_UID_MASK);
 	};
 
@@ -157,10 +159,11 @@ public:
 								bool mark_outdated = false) = 0;
 
 	/**
-	 * @brief SetRuntime Profile information for this app
+	 * @brief SetRuntime Profile information for this application
 	 */
-	virtual  void UpdateRuntimePredictions(
-	        int cpu_usage_prediction, int goal_gap_prediction = 0) = 0;
+	virtual void UpdateRuntimePredictions(
+					int cpu_usage_prediction,
+					int goal_gap_prediction = 0) = 0;
 
 	/**
 	 * @brief Statics about a specific resource usage requirement
@@ -172,7 +175,7 @@ public:
 	 * among all the enabled working modes
 	 */
 	virtual uint64_t GetResourceRequestStat(std::string const & rsrc_path,
-	                                        ResourceUsageStatType_t ru_stat) = 0;
+						ResourceUsageStatType_t ru_stat) = 0;
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
