@@ -153,8 +153,8 @@ public:
 	 *
 	 * @return runtime information collected during app execution
 	 */
-	virtual struct RuntimeProfiling_t GetRuntimeProfile(
-	        bool mark_outdated = false) = 0;
+	virtual struct RuntimeProfiling_t const & GetRuntimeProfile(
+								bool mark_outdated = false) = 0;
 
 	/**
 	 * @brief SetRuntime Profile information for this app

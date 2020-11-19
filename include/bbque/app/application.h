@@ -376,7 +376,7 @@ public:
 	 * @param mark_acknowledged
 	 * @return A data structure of type RuntimeProfiling_t
 	 */
-	RuntimeProfiling_t GetRuntimeProfile(bool mark_acknowledged = false)
+	RuntimeProfiling_t const & GetRuntimeProfile(bool mark_acknowledged = false)
 	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		if (mark_acknowledged)
