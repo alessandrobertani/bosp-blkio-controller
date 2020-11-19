@@ -73,6 +73,16 @@ public:
 	EnergySampleType GetValue(br::ResourcePathPtr_t resource_path) const;
 
 	/**
+	 * @brief Get the energy consumption values of all the monitored resources
+	 *
+	 * @return a read-only reference to the map of <resource path, values>
+	 */
+	std::map<br::ResourcePathPtr_t, EnergySampleType> const & GetValues() const
+	{
+		return this->values;
+	}
+
+	/**
 	 * @brief Command handlers dispatcher
 	 */
 	int CommandsCb(int argc, char *argv[]) override;
