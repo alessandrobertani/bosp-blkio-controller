@@ -195,7 +195,6 @@ public:
 		return am.LowestPriority();
 	}
 
-
 	void LoadTaskGraphs()
 	{
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
@@ -348,7 +347,7 @@ public:
 				ba::SchedPtr_t papp,
 				br::RViewToken_t status_view = 0) const
 	{
-		return ra.UsedBy(ppath, papp, ResourceAccounter::UNDEFINED, status_view);
+		return ra.UsedBy(ppath, papp, ResourceAccounter::MIXED, status_view);
 	}
 
 	uint64_t ResourceUsedBy(br::ResourcePtrList_t & rsrc_list,
@@ -441,7 +440,8 @@ public:
 		return ra.ExistResourcePathsOfArch(arch_type);
 	}
 
-	std::list<br::ResourcePathPtr_t> const & GetResourcePathListByArch(ArchType arch_type) const {
+	std::list<br::ResourcePathPtr_t> const & GetResourcePathListByArch(ArchType arch_type) const
+	{
 		return ra.GetResourcePathListByArch(arch_type);
 	}
 
