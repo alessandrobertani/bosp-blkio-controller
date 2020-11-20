@@ -1257,8 +1257,7 @@ void BbqueRPC::ResetRuntimeProfileStats(RTLIB_EXCHandler_t exc_handler)
 	exc->is_waiting_for_sync = false;
 }
 
-void BbqueRPC::StartPCountersMonitoring(
-					RTLIB_EXCHandler_t exc_handler)
+void BbqueRPC::StartPCountersMonitoring(RTLIB_EXCHandler_t exc_handler)
 {
 	assert(exc_handler);
 	pRegisteredEXC_t exc = getRegistered(exc_handler);
@@ -1285,8 +1284,7 @@ void BbqueRPC::StartPCountersMonitoring(
  *   Synchronization functions
  **********************************************************************/
 
-void BbqueRPC::UpdateWorkingModeAssignments(
-					    pRegisteredEXC_t exc,
+void BbqueRPC::UpdateWorkingModeAssignments(pRegisteredEXC_t exc,
 					    RTLIB_WorkingModeParams_t * wm)
 {
 	wm->awm_id = exc->current_awm_id;
@@ -1303,8 +1301,7 @@ void BbqueRPC::UpdateWorkingModeAssignments(
 	}
 }
 
-RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
-						  pRegisteredEXC_t exc,
+RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(pRegisteredEXC_t exc,
 						  RTLIB_WorkingModeParams_t * wm)
 {
 	UNUSED(wm);
@@ -1343,8 +1340,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedWorkingMode(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(
-					      pRegisteredEXC_t exc,
+RTLIB_ExitCode_t BbqueRPC::WaitForWorkingMode(pRegisteredEXC_t exc,
 					      RTLIB_WorkingModeParams_t * wm)
 {
 	std::unique_lock<std::mutex> exc_u_lock(exc->exc_mutex);
@@ -1407,8 +1403,7 @@ RTLIB_ExitCode_t BbqueRPC::WaitForSyncDone(pRegisteredEXC_t exc)
  *   Utility functions
  **********************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
-						RTLIB_EXCHandler_t exc_handler,
+RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(RTLIB_EXCHandler_t exc_handler,
 						const RTLIB_WorkingModeParams_t * wm,
 						RTLIB_ResourceType_t r_type,
 						int32_t & r_amount)
@@ -1482,8 +1477,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
-					   RTLIB_EXCHandler_t exc_handler,
+RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(RTLIB_EXCHandler_t exc_handler,
 					   const RTLIB_WorkingModeParams_t * wm,
 					   int32_t * ids_vector,
 					   int vector_size)
@@ -1511,8 +1505,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAffinityMask(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
-						RTLIB_EXCHandler_t exc_handler,
+RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(RTLIB_EXCHandler_t exc_handler,
 						const RTLIB_WorkingModeParams_t * wm,
 						RTLIB_ResourceType_t r_type,
 						int32_t * resources,
@@ -1585,8 +1578,7 @@ RTLIB_ExitCode_t BbqueRPC::GetAssignedResources(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(
-					  const RTLIB_EXCHandler_t exc_handler,
+RTLIB_ExitCode_t BbqueRPC::GetWorkingMode(const RTLIB_EXCHandler_t exc_handler,
 					  RTLIB_WorkingModeParams_t * working_mode_params,
 					  RTLIB_SyncType_t synch_type)
 {
@@ -1762,8 +1754,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(pRegisteredEXC_t exc)
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify( rpc_msg_BBQ_SYNCP_PRECHANGE_t
-						 msg,
+RTLIB_ExitCode_t BbqueRPC::SyncP_PreChangeNotify(rpc_msg_BBQ_SYNCP_PRECHANGE_t msg,
 						 std::vector<rpc_msg_BBQ_SYNCP_PRECHANGE_SYSTEM_t> & systems)
 {
 	RTLIB_ExitCode_t result;
@@ -1972,8 +1963,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(pRegisteredEXC_t exc)
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(
-						  rpc_msg_BBQ_SYNCP_SYNCCHANGE_t & msg)
+RTLIB_ExitCode_t BbqueRPC::SyncP_SyncChangeNotify(rpc_msg_BBQ_SYNCP_SYNCCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
 
@@ -2017,8 +2007,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(pRegisteredEXC_t exc)
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(
-						rpc_msg_BBQ_SYNCP_DOCHANGE_t & msg)
+RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(rpc_msg_BBQ_SYNCP_DOCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -2040,12 +2029,11 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_DoChangeNotify(
 RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(pRegisteredEXC_t exc)
 {
 	// TODO Wait for the apps to end its reconfiguration
-	// TODO Collect stats on reconfiguraiton time
+	// TODO Collect stats on reconfiguration time
 	return WaitForSyncDone(exc);
 }
 
-RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
-						  rpc_msg_BBQ_SYNCP_POSTCHANGE_t & msg)
+RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(rpc_msg_BBQ_SYNCP_POSTCHANGE_t & msg)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc = getRegistered(msg.hdr.exc_id);
@@ -2073,8 +2061,7 @@ RTLIB_ExitCode_t BbqueRPC::SyncP_PostChangeNotify(
  * Channel Independant interface
  ******************************************************************************/
 
-RTLIB_ExitCode_t BbqueRPC::SetAWMConstraints(
-					     const RTLIB_EXCHandler_t exc_handler,
+RTLIB_ExitCode_t BbqueRPC::SetAWMConstraints(const RTLIB_EXCHandler_t exc_handler,
 					     RTLIB_Constraint_t * constraints,
 					     uint8_t count)
 {
@@ -2103,8 +2090,7 @@ RTLIB_ExitCode_t BbqueRPC::SetAWMConstraints(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
-					       const RTLIB_EXCHandler_t exc_handler)
+RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(const RTLIB_EXCHandler_t exc_handler)
 {
 	RTLIB_ExitCode_t result;
 	pRegisteredEXC_t exc;
@@ -2131,8 +2117,7 @@ RTLIB_ExitCode_t BbqueRPC::ClearAWMConstraints(
 	return RTLIB_OK;
 }
 
-RTLIB_ExitCode_t BbqueRPC::UpdateRuntimeProfile(
-						const RTLIB_EXCHandler_t exc_handler)
+RTLIB_ExitCode_t BbqueRPC::UpdateRuntimeProfile(const RTLIB_EXCHandler_t exc_handler)
 {
 	// Get the execution context ///////////////////////////////////////////////
 	assert(exc_handler);
