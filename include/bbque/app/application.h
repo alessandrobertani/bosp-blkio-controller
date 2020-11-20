@@ -182,7 +182,7 @@ public:
 	}
 
 	/**
-	 * @brief This returns all the informations loaded from the recipe and
+	 * @brief This returns all the information loaded from the recipe and
 	 * stored in a specific object
 	 * @return A shared pointer to the recipe object
 	 */
@@ -539,13 +539,13 @@ private:
 	 */
 	struct WorkingModesInfo
 	{
-		AwmPtrVect_t recipe_vect;  // All the working modes
+		AwmPtrVect_t recipe_vect; // All the working modes
 		AwmPtrList_t enabled_list; // Enabled working modes
 		std::bitset<MAX_NUM_AWM> enabled_bset; // Enabled AWM bitset
-		uint8_t low_id;         // Lower AWM ID
-		uint8_t upp_id;         // Upper AWM ID
-		uint8_t max_id;         // Max ID value
-		bool curr_inv;          // Current AWM invalidated by constraint
+		uint8_t low_id; // Lower AWM ID
+		uint8_t upp_id; // Upper AWM ID
+		uint8_t max_id; // Max ID value
+		bool curr_inv; // Current AWM invalidated by constraint
 	} awms;
 
 	/**
