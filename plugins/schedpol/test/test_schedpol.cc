@@ -278,8 +278,7 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 			prof.cpu_usage.curr,
 			prof.cycle_time_ms,
 			prof.cycle_count,
-			prof.ggap_percent,
-			prof.is_updated);
+			prof.ggap_percent);
 	}
 
 	// Create or re-initialize the working mode data structure

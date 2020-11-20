@@ -76,12 +76,11 @@ using ConstrPair_t = std::pair<br::ResourcePathPtr_t, ConstrPtr_t>;
  */
 struct RuntimeProfiling_t
 {
-	// Update flag
-	bool is_updated = false;
-
-	/** Cycle time */
+	/** Cycle information */
 	int cycle_time_ms = 0;
+	int cycle_time_ms_prev = 0;
 	int cycle_count = 0;
+	int cycle_count_prev = 0;
 
 	/** The current Goal-Gap value, must be in [-100,100] */
 	int ggap_percent = 0;
@@ -368,16 +367,11 @@ public:
 	// ---------------------- Profiling management ---------------------- //
 
 	/**
-	 * @brief Get the profiling data collected at runtime by the RTLib
-	 *
-	 * @param mark_acknowledged
-	 * @return A data structure of type RuntimeProfiling_t
+	 * @brief Get runtime profiling information for this application
 	 */
 	RuntimeProfiling_t const & GetRuntimeProfile(bool mark_acknowledged = false)
 	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
-		if (mark_acknowledged)
-			rt_prof.is_updated = false;
 		return rt_prof;
 	}
 

@@ -1321,10 +1321,11 @@ ApplicationManager::SetRuntimeProfile(AppPid_t pid,
 	auto result = GetRuntimeProfile(pid, exc_id, rt_prof);
 	if (result != AM_SUCCESS)
 		return AM_ABORT;
-	rt_prof.is_updated = true;
 
 	// Cycle profiling data
+	rt_prof.cycle_count_prev = rt_prof.cycle_time_ms;
 	rt_prof.cycle_time_ms = cycle_time_ms;
+	rt_prof.cycle_count_prev = rt_prof.cycle_count;
 	rt_prof.cycle_count = cycle_count;
 
 	// CPS performance goal-gap

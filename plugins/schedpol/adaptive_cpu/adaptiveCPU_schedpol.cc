@@ -294,8 +294,7 @@ AdaptiveCPUSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 			papp->StrId(),
 			prof.cpu_usage.curr,
 			prof.cycle_time_ms,
-			prof.ggap_percent,
-			prof.is_updated);
+			prof.ggap_percent);
 	}
 
 	// It initializes a structure with all the info about the app,
