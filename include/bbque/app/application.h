@@ -107,6 +107,15 @@ struct RuntimeProfiling_t
 		float predicted = 0;
 		float predicted_prev = 0;
 	} cpu_usage;
+
+	/** Energy consumption profiling */
+	struct
+	{
+		uint64_t last_uj;
+		uint64_t prev_uj;
+		int last_cycle_count;
+		uint64_t epc; // Energy-per-cycle
+	} energy;
 };
 
 /**
@@ -398,6 +407,22 @@ public:
 		rt_prof.cpu_usage.predicted_prev = rt_prof.cpu_usage.predicted;
 		rt_prof.cpu_usage.predicted = cpu_usage_prediction;
 		rt_prof.ggap_percent_prediction = goal_gap_prediction;
+	}
+
+	void UpdateEstimatedEnergyConsumption(uint64_t updated_value_uj)
+	{
+		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
+		unsigned int delta_nr_cycles = rt_prof.cycle_count - rt_prof.energy.last_cycle_count;
+		if (delta_nr_cycles > 0) {
+			rt_prof.energy.last_cycle_count = rt_prof.cycle_count;
+			rt_prof.energy.prev_uj = rt_prof.energy.last_uj;
+			rt_prof.energy.last_uj = updated_value_uj;
+			rt_prof.energy.epc = updated_value_uj / (delta_nr_cycles);
+		}
+		else { // We are still in the same execution cycle
+			rt_prof.energy.last_uj += updated_value_uj;
+			rt_prof.energy.epc += updated_value_uj;
+		}
 	}
 
 	// -------------------------- Task-graph management ------------------------------------- //
