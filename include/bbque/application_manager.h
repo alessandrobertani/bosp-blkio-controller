@@ -475,25 +475,45 @@ public:
 	 * @see ApplicationManagerConfIF
 	 */
 	ExitCode_t GetRuntimeProfile(
-				AppPid_t pid, uint8_t exc_id, struct app::RuntimeProfiling_t &profile);
+				AppPid_t pid,
+				uint8_t exc_id,
+				struct app::RuntimeProfiling_t &profile);
 
 	/**
 	 * @see ApplicationManagerConfIF
 	 */
 	inline ExitCode_t GetRuntimeProfile(AppPtr_t papp,
-					struct app::RuntimeProfiling_t &profile)
+					struct app::RuntimeProfiling_t & profile)
 	{
 		profile = papp->GetRuntimeProfile();
 		return AM_SUCCESS;
 	}
 
 	/**
-	 * @see ApplicationManagerConfIF
+	 * Retrieve and application descriptor and store the profiling info
+	 *
+	 * @param pid Application process id
+	 * @param exc_id Execution context id
+	 * @param profile RuntimeProfile_t data structure
+	 * @return AM_SUCCESS or AM_ABORT in case of failure due to a rescheduling
+	 * required
 	 */
 	ExitCode_t SetRuntimeProfile(AppPid_t pid,
 				uint8_t exc_id,
 				struct app::RuntimeProfiling_t profile);
 
+	/**
+	 * Set the runtime profiling information collected by the RTLIB
+	 *
+	 * @param pid Application process id
+	 * @param exc_id Execution context id
+	 * @param cps_goal_gap observed CPS goal gap
+	 * @param cpu_usage observed usage level of the CPU
+	 * @param ctime observed execution cycle time
+	 * @param cycle_count counter of the execution cycles completed
+	 * @return AM_SUCCESS or AM_ABORT in case of failure due to a rescheduling
+	 * required
+	 */
 	ExitCode_t SetRuntimeProfile(AppPid_t pid, uint8_t exc_id,
 				int cps_goal_gap,
 				int cpu_usage,
@@ -501,10 +521,15 @@ public:
 				int cycle_count);
 
 	/**
-	 * @see ApplicationManagerConfIF
+	 * Store the profiling info in the given application descriptor
+	 *
+	 * @param papp Application descriptor (shared pointer)
+	 * @param profile RuntimeProfile_t data structure
+	 * @return AM_SUCCESS or AM_ABORT in case of failure due to a rescheduling
+	 * required
 	 */
 	inline ExitCode_t SetRuntimeProfile(AppPtr_t papp,
-					struct app::RuntimeProfiling_t profile)
+					struct app::RuntimeProfiling_t & profile)
 	{
 		papp->SetRuntimeProfile(profile);
 		return AM_SUCCESS;
@@ -832,10 +857,10 @@ private:
 	 * @brief Clean-up all disabled EXCs
 	 *
 	 * Once an EXC is disabled and released, all the time consuming
-	 * operations realted to releasing internal data structures (e.g.
-	 * platform specific data) are performed by an anynchronous call to
+	 * operations related to releasing internal data structures (e.g.
+	 * platform specific data) are performed by an asynchronous call to
 	 * this method.
-	 * An exeution of this method, which is managed as a deferrable task,
+	 * An execution of this method, which is managed as a deferrable task,
 	 * is triggered by the DestroyEXC, this approach allows to:
 	 * 1. keep short the critical path related to respond to an RTLib command
 	 * 2. aggregate time consuming operations to be performed
