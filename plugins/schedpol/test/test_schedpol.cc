@@ -273,12 +273,16 @@ TestSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 		logger->Info("AssignWorkingMode: [%s] "
 			"cpu_usage=%.2f, "
 			"cycle_time=%dms, cycle_count=%d, "
-			"cps_goal_gap=%d [updated=%d]",
+			"cps_goal_gap=%d",
 			papp->StrId(),
 			prof.cpu_usage.curr,
 			prof.cycle_time_ms,
 			prof.cycle_count,
 			prof.ggap_percent);
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+		logger->Info("AssignWorkingMode: [%s] E=%luuJ EpC=%.2fJ",
+			papp->StrId(), prof.energy.last_uj, prof.energy.epc / 1e6);
+#endif
 	}
 
 	// Create or re-initialize the working mode data structure
