@@ -369,7 +369,7 @@ public:
 	/**
 	 * @brief Get runtime profiling information for this application
 	 */
-	RuntimeProfiling_t const & GetRuntimeProfile(bool mark_acknowledged = false)
+	RuntimeProfiling_t GetRuntimeProfile()
 	{
 		std::unique_lock<std::mutex> rtp_lock(rt_prof_mtx);
 		return rt_prof;

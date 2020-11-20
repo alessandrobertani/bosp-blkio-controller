@@ -148,15 +148,11 @@ public:
 	virtual AwmPtr_t const & HighValueAWM() = 0;
 
 	/**
-	 * @brief Get Runtime Profile information for this app
-	 *
-	 * @param mark_outdated if true, mark runtime profile as outdated, aka
-	 * already read and not useful anymore
+	 * @brief Get runtime profiling information for this application
 	 *
 	 * @return runtime information collected during app execution
 	 */
-	virtual struct RuntimeProfiling_t const & GetRuntimeProfile(
-								bool mark_outdated = false) = 0;
+	virtual struct RuntimeProfiling_t GetRuntimeProfile() = 0;
 
 	/**
 	 * @brief SetRuntime Profile information for this application
