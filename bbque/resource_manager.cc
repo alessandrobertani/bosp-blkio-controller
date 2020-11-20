@@ -19,7 +19,6 @@
 #include "bbque/resource_manager.h"
 
 #include "bbque/configuration_manager.h"
-#include "bbque/energy_monitor.h"
 #include "bbque/signals_manager.h"
 #include "bbque/utils/utility.h"
 
@@ -141,6 +140,9 @@ ResourceManager::ResourceManager() :
 #endif
 #ifdef CONFIG_BBQUE_PM
     pm(PowerManager::GetInstance()),
+#endif
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+    eym(EnergyMonitor::GetInstance()),
 #endif
     cm(CommandManager::GetInstance()),
     sm(SchedulerManager::GetInstance()),
@@ -340,7 +342,6 @@ void ResourceManager::Optimize()
 	}
 
 #ifdef CONFIG_BBQUE_ENERGY_MONITOR
-	EnergyMonitor & eym(EnergyMonitor::GetInstance());
 	eym.StopSamplingResourceConsumption();
 #endif
 
@@ -352,6 +353,11 @@ void ResourceManager::Optimize()
 		// Account for a new schedule activation
 		RM_COUNT_EVENT(metrics, RM_SCHED_TOTAL);
 		RM_GET_PERIOD(metrics, RM_SCHED_PERIOD, period);
+
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+		// Energy consumption profiles of the running applications...
+		UpdateEnergyConsumptionProfiles();
+#endif
 
 		//--- Scheduling
 		optimization_tmr.start();
@@ -446,12 +452,126 @@ void ResourceManager::Optimize()
 	eym.StartSamplingResourceConsumption();
 #endif
 
+	// Ready again for processing next events
 	SetReady(true);
 
 #ifdef CONFIG_BBQUE_DM
 	dm.NotifyUpdate(stat::EVT_SCHEDULING);
 #endif
 }
+
+
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+
+void ResourceManager::UpdateEnergyConsumptionProfiles()
+{
+	// Last energy consumption values for each monitored HW resource
+	auto energy_values = eym.GetValues();
+
+	// Iterate over the running applications
+	logger->Debug("UpdateEnergyConsumptionProfiles: %d running application(s)",
+		sys.ApplicationsCount(app::Schedulable::RUNNING));
+	AppsUidMapIt app_it;
+	auto papp = sys.GetFirstRunning(app_it);
+	while (papp) {
+		br::ResourcePtr_t gpu_rsrc;
+		uint64_t gpu_used = 0;
+		uint32_t gpu_load;
+		float gpu_div = 1.0;
+		uint64_t cpu_total = 0;
+		uint64_t acc_used = 0;
+		uint64_t gpu_energy_uj = 0;
+		uint64_t cpu_energy_uj = 0;
+		uint64_t acc_energy_uj = 0;
+		float per_app_energy_uj = 0.0;
+
+
+		// For each assigned resource estimate the application contribution
+		for (auto const & ev_entry : energy_values) {
+			auto const & resource_path(ev_entry.first);
+			switch (resource_path->ParentType()) {
+			case br::ResourceType::GPU:
+				gpu_rsrc = sys.GetResource(resource_path);
+				if (gpu_rsrc == nullptr) {
+					logger->Error("UpdateEnergyConsumptionProfiles:"
+						"[%s] <%s> object missing",
+						papp->StrId(),
+						resource_path->ToString().c_str());
+					continue;
+				}
+
+				gpu_div = 1.0 / gpu_rsrc->ApplicationsCount();
+				gpu_used += sys.ResourceUsedBy(resource_path, papp);
+				//if (gpu_used > 0 && (pm.GetLoad(resource_path, gpu_load) == PowerManager::PMResult::OK)) {
+				if (gpu_used > 0) {
+					gpu_load = gpu_rsrc->GetPowerInfo(
+									PowerManager::InfoType::LOAD,
+									br::Resource::MEAN);
+					gpu_energy_uj += (ev_entry.second * gpu_load * gpu_div);
+				}
+				logger->Info("UpdateEnergyConsumptionProfiles: [%s] <%s> "
+					"gpu_load=%d gpu_div=%.2f E=(+%lu)",
+					papp->StrId(),
+					resource_path->ToString().c_str(),
+					gpu_load,
+					gpu_div,
+					gpu_energy_uj);
+				break;
+			case br::ResourceType::CPU:
+				// More than one CPU could have been assigned
+				cpu_total += sys.ResourceTotal(resource_path);
+				cpu_energy_uj += ev_entry.second;
+				logger->Debug("UpdateEnergyConsumptionProfiles: [%s] <%s> "
+					"cpu_total=(+%lu) E=(+%lu)",
+					papp->StrId(),
+					resource_path->ToString().c_str(),
+					cpu_total,
+					cpu_energy_uj);
+				break;
+			case br::ResourceType::ACCELERATOR:
+				// Typically accelerators are assigned exclusively (100%)
+				acc_used = sys.ResourceUsedBy(resource_path, papp);
+				acc_energy_uj += acc_used > 0 ? ev_entry.second : 0;
+				logger->Debug("UpdateEnergyConsumptionProfiles: [%s] <%s>=(+%lu) E=(+%lu)",
+					papp->StrId(),
+					resource_path->ToString().c_str(),
+					acc_used,
+					acc_energy_uj);
+				break;
+			default:
+				break;
+			}
+		}
+
+		// Run-time profiling information (mainly for CPU usage)
+		auto prof = papp->GetRuntimeProfile();
+		logger->Debug("UpdateEnergyConsumptionProfiles: [%s] CPU=[%.2f/%lu=%.2f] CPU_e=%lu uJ",
+			papp->StrId(),
+			prof.cpu_usage.curr,
+			cpu_total,
+			prof.cpu_usage.curr / cpu_total,
+			cpu_energy_uj);
+
+		// Overall energy consumption of the application
+		assert(cpu_total > 0);
+		per_app_energy_uj += gpu_energy_uj
+			+ (prof.cpu_usage.curr / cpu_total) * cpu_energy_uj
+			+ acc_energy_uj;
+		logger->Info("UpdateEnergyConsumptionProfiles: [%s] E=%.0f uJ",
+			papp->StrId(),
+			per_app_energy_uj);
+
+		// Put the value in the application profiling data structure
+		papp->UpdateEstimatedEnergyConsumption(per_app_energy_uj);
+		logger->Debug("UpdateEnergyConsumptionProfiles: [%s] energy consumption updated",
+			papp->StrId());
+
+		papp = sys.GetNextRunning(app_it);
+	}
+
+}
+
+#endif // Energy monitor
 
 void ResourceManager::EvtExcStart()
 {

@@ -26,6 +26,7 @@
 #include "bbque/binding_manager.h"
 #include "bbque/command_manager.h"
 #include "bbque/data_manager.h"
+#include "bbque/energy_monitor.h"
 #include "bbque/platform_manager.h"
 #include "bbque/platform_services.h"
 #include "bbque/plugin_manager.h"
@@ -210,6 +211,10 @@ private:
 	PowerManager & pm;
 #endif
 
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+	EnergyMonitor & eym;
+#endif
+
 	CommandManager & cm;
 
 	SchedulerManager & sm;
@@ -360,7 +365,7 @@ private:
 	void SetReady(bool value);
 
 	/**
-	 * @brief   Run on optimization cycle (i.e. Schedule and Synchronization)
+	 * @brief Run on optimization cycle (i.e. Schedule and Synchronization)
 	 * Once an event happens which impacts on resources usage or availability
 	 * an optimization cycle could be triggered by calling this method.
 	 * An optimization cycles involve a run of the resource scheduler policy
@@ -369,6 +374,14 @@ private:
 	 */
 	void Optimize();
 
+#ifdef CONFIG_BBQUE_ENERGY_MONITOR
+
+	/**
+	 * @brief Update the energy consumption profile estimated for each
+	 * running application
+	 */
+	void UpdateEnergyConsumptionProfiles();
+#endif
 	/**
 	 * @brief   The run-time resource manager setup routine
 	 * This provides all the required playground setup to run the BarbequeRTRM.
