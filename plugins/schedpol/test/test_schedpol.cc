@@ -215,22 +215,32 @@ SchedulerPolicyIF::ExitCode_t
 TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 {
 	// CPU quota
-	uint32_t cpu_quota = proc->GetScheduleRequestInfo()->cpu_cores * 100;
+	std::string cpu_pe_path_str("sys.cpu.pe");
+	uint64_t cpu_pe_quota = proc->GetScheduleRequestInfo()->cpu_cores * 100;
 	logger->Debug("AddResourceRequests: [%s] requested cpu_quota = %d",
-		proc->StrId(), cpu_quota);
-	if (cpu_quota == 0) {
-		pawm->AddResourceRequest("sys.cpu.pe", CPU_QUOTA_TO_ALLOCATE,
+		proc->StrId(), cpu_pe_quota);
+
+	if (cpu_pe_quota == 0) {
+		// Priority-proportional CPU assignment (by default)
+		cpu_pe_quota = GetPrioProportionalResourceQuota(
+								cpu_pe_path_str,
+								proc->Priority());
+		logger->Info("AddResourceRequests: [%s] prio=%d amount of <%s> assigned = %4d",
+			proc->StrId(),
+			proc->Priority(),
+			cpu_pe_path_str.c_str(),
+			cpu_pe_quota);
+		pawm->AddResourceRequest(cpu_pe_path_str,
+					cpu_pe_quota,
 					br::ResourceAssignment::Policy::BALANCED);
-		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %lu",
-			proc->StrId(), CPU_QUOTA_TO_ALLOCATE);
 	}
 	else {
-		pawm->AddResourceRequest("sys.cpu.pe",
-					cpu_quota,
+		pawm->AddResourceRequest(cpu_pe_path_str,
+					cpu_pe_quota,
 					br::ResourceAssignment::Policy::BALANCED);
-		logger->Debug("AddResourceRequests: [%s] <sys.cpu.pe> = %lu",
-			proc->StrId(), cpu_quota);
 	}
+	logger->Debug("AddResourceRequests: [%s] <%s> = %lu",
+		proc->StrId(), cpu_pe_path_str, cpu_pe_quota);
 
 	// GPUs
 #ifdef CONFIG_TARGET_NVIDIA
@@ -515,8 +525,17 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 		"<sys.cpu.pe>",
 		papp->StrId());
 
-	pawm->AddResourceRequest("sys.cpu.pe",
-				CPU_QUOTA_TO_ALLOCATE,
+	std::string cpu_pe_path_str("sys.cpu.pe");
+	uint64_t cpu_pe_quota = GetPrioProportionalResourceQuota(cpu_pe_path_str,
+								papp->Priority());
+	logger->Info("AddResourceRequests: [%s] prio=%d amount of <%s> assigned = %4d",
+		papp->StrId(),
+		papp->Priority(),
+		cpu_pe_path_str.c_str(),
+		cpu_pe_quota);
+
+	pawm->AddResourceRequest(cpu_pe_path_str,
+				cpu_pe_quota,
 				br::ResourceAssignment::Policy::BALANCED);
 
 	logger->Debug("AddResourceRequests: [%s] language = %d",
