@@ -502,20 +502,29 @@ void ResourceManager::UpdateEnergyConsumptionProfiles()
 
 				gpu_div = 1.0 / gpu_rsrc->ApplicationsCount();
 				gpu_used += sys.ResourceUsedBy(resource_path, papp);
-				//if (gpu_used > 0 && (pm.GetLoad(resource_path, gpu_load) == PowerManager::PMResult::OK)) {
+				logger->Error("UpdateEnergyConsumptionProfiles:"
+						"[%s] <%s> gpu_used=%d apps_count=%d",
+						papp->StrId(),
+						resource_path->ToString().c_str(),
+						gpu_used,
+						gpu_rsrc->ApplicationsCount());
+
+
+			//	if ((gpu_used > 0) && (pm.GetLoad(resource_path, gpu_load) == PowerManager::PMResult::OK)) {
 				if (gpu_used > 0) {
 					gpu_load = gpu_rsrc->GetPowerInfo(
 									PowerManager::InfoType::LOAD,
 									br::Resource::MEAN);
 					gpu_energy_uj += (ev_entry.second * gpu_load * gpu_div);
+					logger->Info("UpdateEnergyConsumptionProfiles: [%s] <%s> "
+						"gpu_load=%d gpu_div=%.2f E=(+%lu)",
+						papp->StrId(),
+						resource_path->ToString().c_str(),
+						gpu_load,
+						gpu_div,
+						gpu_energy_uj);
+
 				}
-				logger->Info("UpdateEnergyConsumptionProfiles: [%s] <%s> "
-					"gpu_load=%d gpu_div=%.2f E=(+%lu)",
-					papp->StrId(),
-					resource_path->ToString().c_str(),
-					gpu_load,
-					gpu_div,
-					gpu_energy_uj);
 				break;
 			case br::ResourceType::CPU:
 				// More than one CPU could have been assigned
