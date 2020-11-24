@@ -270,6 +270,9 @@ protected:
 	/** An High-Resolution timer */
 	Timer timer;
 
+	/** Allocation unit for priority-proportional assignments */
+	uint32_t nr_slots;
+
 	/**
 	 * @brief General scheduling policy initialization code
 	 */
@@ -285,6 +288,10 @@ protected:
 		assert(ra_result == ResourceAccounterStatusIF::RA_SUCCESS);
 		if (ra_result != ResourceAccounterStatusIF::RA_SUCCESS)
 			return SCHED_ERROR_VIEW;
+
+		// Slots computation for priority-proportional resource assignment
+		if (sys->HasSchedulables(ApplicationStatusIF::READY))
+			this->nr_slots = GetSlots();
 
 		// Policy-specific initialization
 		return _Init();
@@ -404,6 +411,37 @@ protected:
 
 #endif
 
+	/**
+	 * Compute a priority-proportional amount of quota for a given resource
+	 *
+	 * @param resource_path_str Resource path string format
+	 * @param priority schedulable priority
+	 * @return a fraction of resource quota proportional to the priority
+	 */
+	uint64_t GetPrioProportionalResourceQuota(std::string resource_path_str,
+						bbque::app::AppPrio_t priority) const
+	{
+		assert(this->nr_slots > 0);
+		auto resource_path = sys->GetResourcePath(resource_path_str);
+		return GetPrioProportionalResourceQuota(resource_path, priority);
+	}
+
+	/**
+	 * Compute a priority-proportional amount of quota for a given resource
+	 *
+	 * @param resource_path_str Resource path object (shared_pointer)
+	 * @param priority schedulable priority
+	 * @return a fraction of resource quota proportional to the priority
+	 */
+	uint64_t GetPrioProportionalResourceQuota(br::ResourcePathPtr_t resource_path,
+						bbque::app::AppPrio_t priority) const
+	{
+		assert(this->nr_slots > 0);
+		uint64_t resource_slot_size =
+			sys->ResourceTotal(resource_path) / this->nr_slots;
+		return (sys->ApplicationLowestPriority() - priority + 1)
+			* resource_slot_size;
+	}
 };
 
 } // namespace plugins
