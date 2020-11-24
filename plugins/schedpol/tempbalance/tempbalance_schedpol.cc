@@ -95,9 +95,7 @@ SchedulerPolicyIF::ExitCode_t TempBalanceSchedPol::_Init()
 	SortProcessingElements();
 #endif
 
-	// Compute the number of slots for priority-proportional assignments
-	if (sys->HasApplications(ApplicationStatusIF::READY))
-		nr_slots = GetSlots();
+	// Number of slots for priority-proportional assignments (computed in Init())
 	logger->Debug("Init: number of assignable slots = %d", nr_slots);
 
 	return SCHED_OK;
@@ -163,7 +161,15 @@ TempBalanceSchedPol::AssignWorkingMode(bbque::app::AppCPtr_t papp)
 
 	// Processing element quota
 	std::string resource_path_str("sys.cpu.pe");
-	uint64_t assigned_quota = ComputeResourceQuota(resource_path_str, papp);
+	uint64_t assigned_quota = GetPrioProportionalResourceQuota(
+								resource_path_str,
+								papp->Priority());
+	logger->Info("Assign: [%s] prio=%d amount of <%s> assigned = %4d",
+		papp->StrId(),
+		papp->Priority(),
+		resource_path_str.c_str(),
+		assigned_quota);
+
 	if (assigned_quota == 0) {
 		logger->Warn("Assign: [%s] will have no resources", papp->StrId());
 		return SCHED_OK;
