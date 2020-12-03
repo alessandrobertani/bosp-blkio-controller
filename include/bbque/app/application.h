@@ -368,7 +368,7 @@ public:
 	 * @brief Dump on logger a list of valid AWMs
 	 *
 	 * The list of AWMs which are currently valid is dumped on log with the
-	 * Info loglevel.
+	 * Info log level.
 	 */
 	void DumpValidAWMs() const;
 

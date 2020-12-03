@@ -304,8 +304,7 @@ Application::ExitCode_t Application::SyncContinue()
  *  EXC Constraints Management
  ******************************************************************************/
 
-Application::ExitCode_t Application::SetWorkingModeConstraint(
-							      RTLIB_Constraint & constraint)
+Application::ExitCode_t Application::SetWorkingModeConstraint(RTLIB_Constraint & constraint)
 {
 	// Get a lock. The assertion may invalidate the current AWM.
 	std::unique_lock<std::recursive_mutex> schedule_ul(schedule.mtx);
@@ -366,8 +365,7 @@ void Application::DumpValidAWMs() const
 	logger->Info("SetConstraint (AWMs): enabled map/list = {%s}", buff);
 }
 
-Application::ExitCode_t Application::AddWorkingModeConstraint(
-							      RTLIB_Constraint & constraint)
+Application::ExitCode_t Application::AddWorkingModeConstraint(RTLIB_Constraint & constraint)
 {
 	// Check the type of constraint to set
 	switch (constraint.type) {
