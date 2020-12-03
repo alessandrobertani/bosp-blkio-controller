@@ -615,12 +615,12 @@ public:
 	 *******************************************************************************/
 
 	void AddResource(int system_id,
-			      int group_id,
-			      br::ResourceType parent_type,
-			      int parent_id,
-			      br::ResourceType resource_type,
-			      uint32_t amount,
-			      int32_t & binding_refnum);
+			int group_id,
+			br::ResourceType parent_type,
+			int parent_id,
+			br::ResourceType resource_type,
+			uint32_t amount,
+			int32_t & binding_refnum);
 
 #ifdef CONFIG_BBQUE_TG_PROG_MODEL
 
@@ -649,7 +649,7 @@ private:
 	{
 	public:
 
-		BindingInfo(): changed(false) { };
+		BindingInfo() : changed(false) { };
 
 		virtual ~BindingInfo() { };
 

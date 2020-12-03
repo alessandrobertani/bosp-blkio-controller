@@ -336,8 +336,6 @@ int32_t WorkingMode::BindResource(br::ResourcePathPtr_t resource_path,
 	return refn;
 }
 
-
-
 void WorkingMode::PrintBindingMap(br::ResourceAssignmentMapPtr_t bind_map) const
 {
 	for (auto & b_entry : *bind_map) {
@@ -346,7 +344,7 @@ void WorkingMode::PrintBindingMap(br::ResourceAssignmentMapPtr_t bind_map) const
 
 		logger->Debug("PrintBindingMap: <%s>: ",
 			resource_path->ToString().c_str());
-		for (auto const & ar: resource_assig->GetResourcesList()) {
+		for (auto const & ar : resource_assig->GetResourcesList()) {
 			logger->Debug("PrintBindingMap: |--> <%s> ",
 				ar->Path()->ToString().c_str());
 		}
@@ -570,7 +568,6 @@ bool WorkingMode::BindingChanged(const br::ResourceType & r_type) const
 	return mask_it->second.IsChanged();
 }
 
-
 void WorkingMode::AddResource(int system_id,
 			      int group_id,
 			      br::ResourceType parent_type,
@@ -616,9 +613,9 @@ void WorkingMode::AddResource(int system_id,
 		binding_refnum = BindResource(parent_type, parent_id, parent_id, binding_refnum);
 	else
 		binding_refnum = BindResource(br::ResourceType::GROUP,
-					      group_id, group_id,
-					      binding_refnum,
-					      parent_type, &per_group_ids);
+					group_id, group_id,
+					binding_refnum,
+					parent_type, &per_group_ids);
 	logger->Info("AddResource: %s -> resource <%s> binding completed",
 		StrId(), resource_path.c_str());
 }
@@ -645,8 +642,8 @@ WorkingMode::AddResourcesFromTaskGraph(std::shared_ptr<TaskGraph> task_graph, in
 			GetStringFromArchType(processor_arch));
 
 		AddResource(system_id, processor_group_id, processor_type, processor_id,
-			    br::ResourceType::PROC_ELEMENT, processor_amount,
-			    binding_refnum);
+			br::ResourceType::PROC_ELEMENT, processor_amount,
+			binding_refnum);
 	}
 
 	// Convert the buffer allocation into a set of memory resource requests
@@ -663,7 +660,7 @@ WorkingMode::AddResourcesFromTaskGraph(std::shared_ptr<TaskGraph> task_graph, in
 			StrId(), id, mem_id);
 
 		AddResource(system_id, mem_group_id, br::ResourceType::MEMORY, mem_id,
-			    br::ResourceType::UNDEFINED, mem_amount, binding_refnum);
+			br::ResourceType::UNDEFINED, mem_amount, binding_refnum);
 	}
 
 	return ExitCode_t::WM_SUCCESS;
