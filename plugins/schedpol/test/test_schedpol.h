@@ -107,7 +107,7 @@ private:
 
 	br::ResourcePtrList_t gpu_cuda_list;
 
-	br::ResourcePtrList_t gpu_opencl_list;
+	br::ResourcePtrList_t acc_opencl_list;
 
 	uint32_t local_sys_id;
 

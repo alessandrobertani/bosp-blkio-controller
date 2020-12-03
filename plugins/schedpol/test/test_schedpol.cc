@@ -116,9 +116,9 @@ SchedulerPolicyIF::ExitCode_t TestSchedPol::_Init()
 #endif
 
 #ifdef CONFIG_TARGET_OPENCL
-	if (this->gpu_opencl_list.empty()) {
-		this->gpu_opencl_list = sys->GetResources(BBQUE_OPENCL_GPU_PATH);
-		logger->Info("Init: %d OpenCL GPU(s) available", gpu_opencl_list.size());
+	if (this->acc_opencl_list.empty()) {
+		this->acc_opencl_list = sys->GetResources(BBQUE_OPENCL_ACC_PATH);
+		logger->Info("Init: %d OpenCL GPU(s) available", acc_opencl_list.size());
 	}
 #endif
 
@@ -215,9 +215,10 @@ SchedulerPolicyIF::ExitCode_t
 TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 {
 	// CPU quota
-	std::string cpu_pe_path_str("sys.cpu.pe");
+	// TODO: Consider the multi-socket
+	std::string cpu_pe_path_str("sys.cpu0.pe");
 	uint64_t cpu_pe_quota = proc->GetScheduleRequestInfo()->cpu_cores * 100;
-	logger->Debug("AddResourceRequests: [%s] requested cpu_quota = %d",
+	logger->Debug("AddResourceRequests: [%s] requested cpu_quota = %lu",
 		proc->StrId(), cpu_pe_quota);
 
 	if (cpu_pe_quota == 0) {
@@ -225,7 +226,7 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 		cpu_pe_quota = GetPrioProportionalResourceQuota(
 								cpu_pe_path_str,
 								proc->Priority());
-		logger->Info("AddResourceRequests: [%s] prio=%d amount of <%s> assigned = %4d",
+		logger->Info("AddResourceRequests: [%s] prio=%d amount of <%s> assigned = %lu",
 			proc->StrId(),
 			proc->Priority(),
 			cpu_pe_path_str.c_str(),
@@ -254,15 +255,17 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 	}
 #endif
 
+#ifdef CONFIG_TARGET_OPENCL
 	// Accelerators
 	uint32_t acc_quota = proc->GetScheduleRequestInfo()->acc_cores * 100;
 	if (acc_quota != 0) {
-		pawm->AddResourceRequest("sys.acc.pe",
+		pawm->AddResourceRequest(BBQUE_OPENCL_ACC_PATH,
 					acc_quota,
 					br::ResourceAssignment::Policy::BALANCED);
-		logger->Debug("AddResourceRequests: [%s] <sys.acc.pe> = %d",
+		logger->Debug("AddResourceRequests: [%s] <sys.grp.acc.pe> = %d",
 			proc->StrId(), acc_quota);
 	}
+#endif
 
 	return SCHED_OK;
 }
@@ -525,9 +528,11 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 		"<sys.cpu.pe>",
 		papp->StrId());
 
-	std::string cpu_pe_path_str("sys.cpu.pe");
+	// TODO: Consider the multi-socket
+	std::string cpu_pe_path_str("sys.cpu0.pe");
 	uint64_t cpu_pe_quota = GetPrioProportionalResourceQuota(cpu_pe_path_str,
 								papp->Priority());
+
 	logger->Info("AddResourceRequests: [%s] prio=%d amount of <%s> assigned = %4d",
 		papp->StrId(),
 		papp->Priority(),
@@ -552,10 +557,10 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 
 #ifdef CONFIG_TARGET_OPENCL
 	// OpenCL applications are under a different resource path
-	if (!gpu_opencl_list.empty() && (papp->Language() & RTLIB_LANG_OPENCL)) {
+	if (!acc_opencl_list.empty() && (papp->Language() & RTLIB_LANG_OPENCL)) {
 		logger->Debug("AddResourceRequests: [%s] adding resource request <%s>",
-			papp->StrId(), BBQUE_OPENCL_GPU_PATH);
-		pawm->AddResourceRequest(BBQUE_OPENCL_GPU_PATH, GPU_QUOTA_TO_ALLOCATE);
+			papp->StrId(), BBQUE_OPENCL_ACC_PATH);
+		pawm->AddResourceRequest(BBQUE_OPENCL_ACC_PATH, 100);
 	}
 #endif
 
@@ -566,51 +571,58 @@ SchedulerPolicyIF::ExitCode_t
 TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 				int32_t & ref_num)
 {
-	auto ret = this->BindResourceToFirstAvailable(pawm,
-						this->cpu_pe_list,
-						br::ResourceType::CPU,
-						pawm->GetRequestedAmount("sys.cpu.pe"),
-						ref_num);
-	if (ret != ExitCode_t::SCHED_OK) {
-		logger->Debug("DoResourceBinding: [%s] resource binding failed",
-			pawm->StrId());
-		return ret;
-	}
+	SchedulerPolicyIF::ExitCode_t ret;
 
-#ifdef CONFIG_TARGET_NVIDIA
-	auto gpu_cuda_amount = pawm->GetRequestedAmount(BBQUE_NVIDIA_GPU_PATH);
-	if (gpu_cuda_amount > 0) {
-		ret = this->BindResourceToFirstAvailable(pawm,
-							this->gpu_cuda_list,
-							br::ResourceType::GPU,
-							gpu_cuda_amount,
-							ref_num);
-	}
-#endif
+	for (auto const & request_entry: pawm->GetResourceRequests()) {
+		auto const & request_path(request_entry.first);
+		auto const & request_amount(request_entry.second->GetAmount());
 
-#ifdef CONFIG_TARGET_OPENCL
-	auto gpu_opencl_amount = pawm->GetRequestedAmount(BBQUE_OPENCL_GPU_PATH);
-	if (gpu_opencl_amount > 0) {
-		ret = this->BindToFirstAvailableOpenCL(pawm,
-						br::ResourceType::GPU,
-						gpu_opencl_amount,
-						ref_num);
+		auto resource_type = request_path->ParentType();
+		switch (resource_type) {
+
+		case br::ResourceType::CPU:
+			ret = this->BindResourceToFirstAvailable(pawm,
+								 this->cpu_pe_list,
+								 br::ResourceType::CPU,
+								 request_amount,
+								 ref_num);
+			if (ret != ExitCode_t::SCHED_OK) {
+				logger->Debug("DoResourceBinding: [%s] resource binding failed",
+					pawm->StrId());
+				return ret;
+			}
+			break;
+
+		case br::ResourceType::GPU:
+			ret = this->BindResourceToFirstAvailable(pawm,
+								 this->gpu_cuda_list,
+								 br::ResourceType::GPU,
+								 request_amount,
+								 ref_num);
+			break;
+
+		case br::ResourceType::ACCELERATOR:
+			ret = this->BindToFirstAvailableOpenCL(pawm,
+							       br::ResourceType::ACCELERATOR,
+							       request_amount,
+							       ref_num);
+
+		}
 	}
-#endif
 
 	return ExitCode_t::SCHED_OK;
 }
 
 SchedulerPolicyIF::ExitCode_t
 TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
-					   br::ResourcePtrList_t const & r_list,
+					   br::ResourcePtrList_t const & bind_list,
 					   br::ResourceType r_type,
 					   uint64_t amount,
 					   int32_t & ref_num)
 {
 	bool binding_done = false;
 
-	for (auto const & resource : r_list) {
+	for (auto const & resource : bind_list) {
 		auto bind_id = resource->Path()->GetID(r_type);
 		std::string resource_path_to_bind("sys"
 						+ std::to_string(local_sys_id) + "."
@@ -620,13 +632,14 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 
 		auto curr_quota_available = sys->ResourceAvailable(resource_path_to_bind,
 								sched_status_view);
-		logger->Debug("DoResourceBinding: <sys.%s%d.pe> available: %lu",
+		logger->Debug("BindResourceToFirstAvailable: <sys.%s%d.pe> amount=%lu (available=%lu)",
 			br::GetResourceTypeString(r_type),
 			bind_id,
+			amount,
 			curr_quota_available);
 
 		if (curr_quota_available >= amount) {
-			if (r_type == br::ResourceType::CPU) {
+			if ((r_type == br::ResourceType::CPU) && (amount <= 100)) {
 				BindToFirstAvailableProcessingElements(
 								pawm,
 								r_type,
@@ -642,7 +655,7 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 							ref_num);
 			}
 			binding_done = true;
-			logger->Debug("DoResourceBinding: <%s> -> <%s> done",
+			logger->Debug("BindResourceToFirstAvailable: <%s> -> <%s> done",
 				br::ResourcePathUtils::GetTemplate(resource_path_to_bind).c_str(),
 				resource_path_to_bind.c_str());
 			break;
@@ -650,7 +663,7 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 	}
 
 	if (!binding_done) {
-		logger->Debug("DoResourceBinding: <%s> not available",
+		logger->Debug("BindResourceToFirstAvailable: <%s> not available",
 			br::GetResourceTypeString(r_type));
 		return ExitCode::SCHED_R_UNAVAILABLE;
 	}
@@ -667,6 +680,7 @@ TestSchedPol::BindToFirstAvailableProcessingElements(bbque::app::AwmPtr_t pawm,
 {
 	br::ResourceBitset cpu_pes_bitset;
 	auto amount_to_assign = amount;
+	logger->Debug("BindToFirstAvailableProcessingElements: <%s> ...", pawm->StrId());
 
 	for (auto & pe_rsrc : this->cpu_pe_list) {
 		auto avail_amount = pe_rsrc->Available(nullptr, sched_status_view);
@@ -700,13 +714,13 @@ TestSchedPol::BindToFirstAvailableOpenCL(bbque::app::AwmPtr_t pawm,
 	uint32_t opencl_platform_id;
 	br::ResourceBitset opencl_devs_bitset;
 
-	for (auto const & ocl_gpu : this->gpu_opencl_list) {
-		if (amount > ocl_gpu->Available(nullptr, this->sched_status_view)) {
+	for (auto const & acc : this->acc_opencl_list) {
+		if (amount > acc->Available(nullptr, this->sched_status_view)) {
 			continue;
 		}
 
-		opencl_platform_id = ocl_gpu->Path()->GetID(br::ResourceType::GROUP);
-		opencl_devs_bitset.Set(ocl_gpu->Path()->GetID(dev_type));
+		opencl_platform_id = acc->Path()->GetID(br::ResourceType::GROUP);
+		opencl_devs_bitset.Set(acc->Path()->GetID(dev_type));
 
 		ref_num = pawm->BindResource(br::ResourceType::GROUP,
 					R_ID_ANY,
