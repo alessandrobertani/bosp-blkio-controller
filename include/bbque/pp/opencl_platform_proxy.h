@@ -41,6 +41,7 @@
 #define BBQUE_PP_OPENCL_PLATFORM_ID   ".opencl"
 #define BBQUE_PP_OPENCL_HARDWARE_ID   "khronos"
 
+#define BBQUE_OPENCL_ACC_PATH "sys.grp.acc.pe"
 #define BBQUE_OPENCL_GPU_PATH "sys.grp.gpu.pe"
 
 
