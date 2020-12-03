@@ -42,7 +42,7 @@ WorkingMode::WorkingMode() :
 	strncpy(str_id, "", 12);
 }
 
-WorkingMode::WorkingMode(int8_t _id,
+WorkingMode::WorkingMode(int32_t _id,
 			 std::string const & _name,
 			 float _value,
 			 SchedPtr_t _owner) :

@@ -61,7 +61,7 @@ public:
 	 * @param value The QoS value read from the recipe
 	 */
 	explicit WorkingMode(
-			int8_t id,
+			int32_t id,
 			std::string const & name,
 			float value,
 			SchedPtr_t owner = nullptr);
@@ -633,7 +633,7 @@ public:
 	 * of the inner resource binding process
 	 */
 	ExitCode_t AddResourcesFromTaskGraph(std::shared_ptr<bbque::TaskGraph> task_graph,
-						  int32_t & binding_refnum);
+					int32_t & binding_refnum);
 
 #endif
 
@@ -715,7 +715,7 @@ private:
 	SchedPtr_t owner;
 
 	/** A numerical ID  */
-	int8_t id = 0;
+	int32_t id = 0;
 
 	/** A descriptive name */
 	std::string name = "UNDEF";
