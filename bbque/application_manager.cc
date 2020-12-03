@@ -1589,7 +1589,7 @@ ApplicationManager::ScheduleRequest(ba::AppCPtr_t papp,
 
 	ResourceAccounter & ra(ResourceAccounter::GetInstance());
 	ResourceAccounter::ExitCode_t ra_result;
-	logger->Info("ScheduleRequest: [%s] schedule request for binding @[%d] view=%ld",
+	logger->Info("ScheduleRequest: [%s] schedule request for binding @[%d] view=%lu",
 		papp->StrId(), b_refn, status_view);
 
 	// AWM safety check
@@ -1686,7 +1686,7 @@ ApplicationManager::ExitCode_t
 ApplicationManager::ScheduleRequestAbort(ba::AppCPtr_t papp,
 					 br::RViewToken_t status_view)
 {
-	logger->Info("ScheduleRequestAbort: [%s] abort schedule request [view=%ld]",
+	logger->Info("ScheduleRequestAbort: [%s] abort schedule request [view=%lu]",
 		papp->StrId(), status_view);
 
 	// AWM safety check
