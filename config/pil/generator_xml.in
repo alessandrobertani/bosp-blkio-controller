@@ -171,6 +171,20 @@ function SetManagedPartition {
 	fi
 }
 
+function XML_GenStorageDevices {
+	bbqid=0
+	lsblk --output NAME,MAJ:MIN,SIZE,TYPE | grep disk | \
+	while read i
+	do
+		name=`echo $i | awk '{ print $1 }'`
+		devid=`echo $i | awk '{ print $2 }'`
+		size=`echo $i | awk '{ print $3 }' | sed s/[A-Z]//g` # not used
+		unit=`echo $i | awk '{ print $3 }' | sed s/[0-9]//g` # not used
+		echo "    <storage id=\"$bbqid\" dev=\"$devid\" name=\"$name\" quantity=\"$size\" unit=\"MB\" bw_unit=\"MB/s\" bandwidth=\"100\" type=\"HDD\"/>" >> $TMP_FOLDER/xml_disks
+		bbqid=`expr $bbqid + 1`
+	done
+}
+
 function XML_WriteHead {
 	echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" > $TARGET_SYS
 	echo "<system id=\""$SYSTEM_ID"\" hostname=\""$HOSTNAME"\" address=\""$MACHINE_IP"\">" >> $TARGET_SYS
@@ -180,6 +194,7 @@ function XML_WriteTail {
 	echo "    </cpu>" >> $TARGET_SYS
 	cat $TMP_FOLDER/xml_mems >> $TARGET_SYS
 	cat $TMP_FOLDER/xml_netifs >> $TARGET_SYS
+	cat $TMP_FOLDER/xml_disks >> $TARGET_SYS
 	echo "</system>" >> $TARGET_SYS
 }
 
@@ -349,6 +364,8 @@ while read lstopo_entry; do
 	esac
 
 done < $TMP_FOLDER/lstopo_description
+
+XML_GenStorageDevices
 
 XML_WriteTail # Write a part of the XML output on a file
 
