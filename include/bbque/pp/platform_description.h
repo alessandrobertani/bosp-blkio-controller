@@ -402,6 +402,16 @@ public:
 			this->quantity = quantity;
 		}
 
+		void SetDeviceId(std::string const & majmin)
+		{
+			this->device_id = majmin;
+		}
+
+		std::string GetDeviceId() const
+		{
+			return this->device_id;
+		}
+
 		StorageType_t GetStorageType() const
 		{
 			return this->storage_type;
@@ -414,9 +424,12 @@ public:
 
 		void SetType(res::ResourceType type) = delete;
 
-		private:
+	private:
+
+		std::string device_id;
 
 		uint64_t quantity;
+
 		StorageType_t storage_type;
 
 	};
