@@ -752,11 +752,11 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 			id = (short)std::stoi(id_attr->value());
 		}
 		catch (const std::invalid_argument& e) {
-			logger->Error("ID for <storage> is not a valid integer.");
+			logger->Error("ParseStorages: ID for <storage> is not a valid integer.");
 			return PL_LOGIC_ERROR;
 		}
 		catch (const std::out_of_range& e) {
-			logger->Error("ID for <storage> is out-of-range, please change your unit.");
+			logger->Error("ParseStorages: ID for <storage> is out-of-range, please change your unit.");
 			return PL_LOGIC_ERROR;
 		}
 
@@ -765,11 +765,11 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 			quantity = std::stoi(quantity_attr->value());
 		}
 		catch (const std::invalid_argument &e) {
-			logger->Error("Quantity for <storage> is not a valid integer.");
+			logger->Error("ParseStorages: 1uantity for <storage> is not a valid integer.");
 			return PL_LOGIC_ERROR;
 		}
 		catch (const std::out_of_range &e) {
-			logger->Error("Quantity for <storage> is out-of-range, please increase your unit.");
+			logger->Error("ParseStorages: quantity for <storage> is out-of-range, please increase your unit.");
 			return PL_LOGIC_ERROR;
 		}
 
@@ -791,7 +791,7 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 			exp = 40;
 			break;
 		default:
-			logger->Error("Invalid `unit` for <storage>.");
+			logger->Error("ParseStorages: invalid `unit` for <storage>.");
 			return PL_LOGIC_ERROR;
 			break;
 		}
@@ -801,11 +801,12 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 			bandwidth = std::stoi(bw_attr->value());
 		}
 		catch (const std::invalid_argument &e) {
-			logger->Error("Bandwidth for <storage> is not a valid integer.");
+			logger->Error("ParseStorages: bandwidth for <storage> is not a valid integer.");
 			return PL_LOGIC_ERROR;
 		}
 		catch (const std::out_of_range &e) {
-			logger->Error("Bandwidth for <storage> is out-of-range, please increase your unit.");
+			logger->Error("ParseStorages: bandwidth for <storage> is out-of-range,"
+				" please increase your unit.");
 			return PL_LOGIC_ERROR;
 		}
 
@@ -833,6 +834,8 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 
 		// type=""
 		if (type_attr != nullptr) {
+			logger->Debug("ParseStorages: <storage> type='%s'", type_attr->value());
+
 			switch (ConstHashString(type_attr->value())) {
 			case ConstHashString("hdd"):
 				storage.SetStorageType(pp::PlatformDescription::HDD);
@@ -842,15 +845,14 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 				break;
 			case ConstHashString("sd"):
 				storage.SetStorageType(pp::PlatformDescription::SD);
-				;
 				break;
 			case ConstHashString("emmc"):
 				storage.SetStorageType(pp::PlatformDescription::EMMC);
 				break;
 			default:
-				logger->Error("'%s' is not a valid value for `type` attribute.",
+				storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+				logger->Warn("ParseStorages: <storage> type='%s' -> setting CUSTOM",
 					type_attr->value());
-				return PL_LOGIC_ERROR;
 				break;
 			}
 		}
