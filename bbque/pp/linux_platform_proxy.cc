@@ -946,6 +946,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 		}
 #endif
 
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
 		logger->Debug("ScanPlatformDescription: [%s@%s] IO storage...",
 			sys.GetHostname().c_str(),
 			sys.GetNetAddress().c_str());
@@ -957,8 +958,8 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 					storage->GetId());
 				return result;
 			}
-
 		}
+#endif
 
 	}
 
@@ -1321,6 +1322,19 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 	}
 	else {
 		logger->Info("BuildCGroup: added net_cls controller");
+	}
+#endif
+
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+	pcgd->pc_blkio = cgroup_add_controller(pcgd->pcg, "blkio");
+	if (!pcgd->pc_blkio) {
+		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
+			"(Error: libcgroup, [blkio] \"controller\" "
+			"creation failed)");
+		return PLATFORM_MAPPING_FAILED;
+	}
+	else {
+		logger->Debug("BuildCGroup: added blkio controller");
 	}
 #endif
 

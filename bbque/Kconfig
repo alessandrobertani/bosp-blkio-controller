@@ -58,6 +58,15 @@ menu "Linux Resource Management"
       ---help---
       Enable the Control Groups memory controller for enforcing the memory
       assignment control.
+
+    config BBQUE_LINUX_CG_BLKIO
+      bool "Block I/O controller"
+      default n
+      depends on TARGET_LINUX
+      depends on !TARGET_EMULATED_HOST
+      ---help---
+      Enable the Control Groups blkio controller for enforcing the I/O
+      bandwidth assignment control.
     
     config BBQUE_LINUX_CG_NET_BANDWIDTH
       bool "Network bandwidth controller"

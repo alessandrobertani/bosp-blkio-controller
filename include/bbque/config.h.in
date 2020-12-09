@@ -175,7 +175,10 @@
 /* Enable Linux Control Groups 'memory' controller */
 #cmakedefine CONFIG_BBQUE_LINUX_CG_MEMORY
 
-/* Enable Linux Control Groups 'memory' controller */
+/* Enable Linux Control Groups 'blkio' controller */
+#cmakedefine CONFIG_BBQUE_LINUX_CG_BLKIO
+
+/* Enable Linux Control Groups 'net_cls' controller */
 #cmakedefine CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 
 /* Enable Linux Control Groups RTLib-level actuation */
