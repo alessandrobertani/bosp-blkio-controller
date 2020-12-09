@@ -931,6 +931,8 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 				this->memory_ids_all += std::to_string(mem->GetId()) + ',';
 			}
 		}
+
+#ifdef CONFIG_BBQUE_LINUX_CG_NET_BANDWIDTH
 		for (const auto net : sys.GetNetworkIFsAll()) {
 			ExitCode_t result = this->RegisterNET(*net, sys.IsLocal());
 			if (BBQUE_UNLIKELY(PLATFORM_OK != result)) {
@@ -942,6 +944,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 				return result;
 			}
 		}
+#endif
 
 		logger->Debug("ScanPlatformDescription: [%s@%s] IO storage...",
 			sys.GetHostname().c_str(),
