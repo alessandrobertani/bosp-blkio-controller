@@ -943,7 +943,7 @@ LinuxPlatformProxy::ScanPlatformDescription() noexcept
 			}
 		}
 
-		logger->Debug("ScanPlatformDescription: [%s@%s] IO storages...",
+		logger->Debug("ScanPlatformDescription: [%s@%s] IO storage...",
 			sys.GetHostname().c_str(),
 			sys.GetNetAddress().c_str());
 		for (const auto storage : sys.GetStoragesAll()) {
@@ -1256,7 +1256,7 @@ LinuxPlatformProxy::ExitCode_t
 LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 {
 
-	logger->Debug("BuildCGroup: Building CGroup [%s]...", pcgd->cgpath);
+	logger->Debug("BuildCGroup: building cgroup [%s]...", pcgd->cgpath);
 
 	// Setup CGroup path for this application
 	pcgd->pcg = cgroup_new_cgroup(pcgd->cgpath);
@@ -1274,6 +1274,9 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
+	else {
+		logger->Debug("BuildCGroup: added cpuset controller");
+	}
 
 #ifdef CONFIG_BBQUE_LINUX_CG_MEMORY
 	// memory controller
@@ -1283,6 +1286,9 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 			"(Error: libcgroup, [memory] \"controller\" "
 			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
+	}
+	else {
+		logger->Debug("BuildCGroup: added memory controller");
 	}
 #endif
 
@@ -1294,6 +1300,9 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 			"(Error: libcgroup, [cpu] \"controller\" "
 			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
+	}
+	else {
+		logger->Debug("BuildCGroup: added cpu controller");
 	}
 
 #endif
@@ -1307,12 +1316,15 @@ LinuxPlatformProxy::BuildCGroup(CGroupDataPtr_t &pcgd) noexcept
 			"creation failed)");
 		return PLATFORM_MAPPING_FAILED;
 	}
+	else {
+		logger->Info("BuildCGroup: added net_cls controller");
+	}
 #endif
 
 	// Create the kernel-space CGroup
 	// NOTE: the current libcg API is quite confuse and unclear
 	// regarding the "ignore_ownership" second parameter
-	logger->Info("BuildCGroup: Create kernel CGroup [%s]", pcgd->cgpath);
+	logger->Debug("BuildCGroup: cgroup [%s] created", pcgd->cgpath);
 	int result = cgroup_create_cgroup(pcgd->pcg, 0);
 	if (BBQUE_UNLIKELY(result && errno)) {
 		logger->Error("BuildCGroup: CGroup resource mapping FAILED "
@@ -1495,7 +1507,6 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 				cpus_quota);
 		}
 		else {
-
 			logger->Debug("SetupCGroup: CPU for [%s]: {period [%s], quota [-]}",
 				pcgd->papp->StrId(),
 				cfs_c);
