@@ -735,7 +735,7 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 		attr_ptr id_attr       = this->GetFirstAttribute(storage_tag, "id",       true);
 		attr_ptr quantity_attr = this->GetFirstAttribute(storage_tag, "quantity", true);
 		attr_ptr unit_attr     = this->GetFirstAttribute(storage_tag, "unit",     true);
-		attr_ptr bw_attr       = this->GetFirstAttribute(storage_tag, "bandwidth",true);
+		attr_ptr bw_attr       = this->GetFirstAttribute(storage_tag, "bandwidth", true);
 		attr_ptr bw_unit_attr  = this->GetFirstAttribute(storage_tag, "bw_unit",  true);
 		attr_ptr type_attr     = this->GetFirstAttribute(storage_tag, "type",     false);
 

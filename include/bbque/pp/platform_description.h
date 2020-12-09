@@ -27,49 +27,58 @@ namespace pp {
  *
  * @warning Non thread safe.
  */
-class PlatformDescription {
-
+class PlatformDescription
+{
 public:
-	typedef enum PartitionType {
-	        HOST,
-	        MDEV,
-	        SHARED
+
+	typedef enum PartitionType
+	{
+		HOST,
+		MDEV,
+		SHARED
 	} PartitionType_t;
 
-
-	class Resource {
+	class Resource
+	{
 	public:
-		Resource() {}
 
-		Resource(uint16_t id, res::ResourceType type = res::ResourceType::UNDEFINED):
-			id(id), type(type)
-		{}
+		Resource() { }
 
-		uint16_t GetId() const {
+		Resource(uint16_t id, res::ResourceType type = res::ResourceType::UNDEFINED) :
+		    id(id), type(type) { }
+
+		uint16_t GetId() const
+		{
 			return this->id;
 		}
 
-		void SetId(uint16_t id) {
+		void SetId(uint16_t id)
+		{
 			this->id = id;
 		}
 
-		res::ResourceType GetType() const {
+		res::ResourceType GetType() const
+		{
 			return this->type;
 		}
 
-		void SetType(res::ResourceType type) {
+		void SetType(res::ResourceType type)
+		{
 			this->type = type;
 		}
 
-		void SetPrefix(std::string prefix) {
+		void SetPrefix(std::string prefix)
+		{
 			this->prefix.assign(prefix + ".");
 		}
 
-		std::string const & GetPrefix() const {
+		std::string const & GetPrefix() const
+		{
 			return this->prefix;
 		}
 
-		std::string GetPath() const {
+		std::string GetPath() const
+		{
 			return prefix + res::GetResourceTypeString(type) +
 				std::to_string(id);
 		}
@@ -81,55 +90,60 @@ public:
 		std::string prefix = "";
 	};
 
-
-	class ProcessingElement : public Resource {
+	class ProcessingElement : public Resource
+	{
 	public:
 
 		ProcessingElement(
 				uint16_t id = 0,
 				res::ResourceType type = res::ResourceType::PROC_ELEMENT) :
-		Resource(id, type)
-		{}
+		    Resource(id, type) { }
 
 		ProcessingElement(
-		        uint16_t id,
-		        uint16_t core_id,
-		        uint8_t share,
-		        PartitionType_t ptype)
-			: Resource(id, res::ResourceType::PROC_ELEMENT),
-			core_id(core_id), share(share), ptype(ptype)
-		{}
+				uint16_t id,
+				uint16_t core_id,
+				uint8_t share,
+				PartitionType_t ptype)
+		    : Resource(id, res::ResourceType::PROC_ELEMENT),
+		    core_id(core_id), share(share), ptype(ptype) { }
 
-		uint16_t GetCoreId() const {
+		uint16_t GetCoreId() const
+		{
 			return this->core_id;
 		}
 
-		void SetCoreId(uint16_t core_id) {
+		void SetCoreId(uint16_t core_id)
+		{
 			this->core_id = core_id;
 		}
 
-		uint32_t GetQuantity() const {
+		uint32_t GetQuantity() const
+		{
 			return this->quantity;
 		}
 
-		void SetQuantity(uint32_t quantity) {
+		void SetQuantity(uint32_t quantity)
+		{
 			this->quantity = quantity;
 		}
 
-
-		uint8_t GetShare() const {
+		uint8_t GetShare() const
+		{
 			return this->share;
 		}
 
-		void SetShare(uint8_t share) {
+		void SetShare(uint8_t share)
+		{
 			this->share = share;
 		}
 
-		PartitionType_t GetPartitionType() const {
+		PartitionType_t GetPartitionType() const
+		{
 			return this->ptype;
 		}
 
-		void SetPartitionType(PartitionType_t ptype) {
+		void SetPartitionType(PartitionType_t ptype)
+		{
 			this->ptype = ptype;
 		}
 
@@ -142,22 +156,22 @@ public:
 		PartitionType_t ptype;
 	};
 
-
-	class Memory : public Resource {
-
+	class Memory : public Resource
+	{
 	public:
 
-		Memory(uint16_t id = 0): Resource(id, res::ResourceType::MEMORY) {}
+		Memory(uint16_t id = 0) : Resource(id, res::ResourceType::MEMORY) { }
 
 		Memory(uint16_t id, uint64_t quantity)
-			: Resource(id, res::ResourceType::MEMORY), quantity(quantity)
-		{}
+		    : Resource(id, res::ResourceType::MEMORY), quantity(quantity) { }
 
-		uint64_t GetQuantity() const {
+		uint64_t GetQuantity() const
+		{
 			return this->quantity;
 		}
 
-		void SetQuantity(uint64_t quantity) {
+		void SetQuantity(uint64_t quantity)
+		{
 			this->quantity = quantity;
 		}
 
@@ -172,41 +186,47 @@ public:
 
 	typedef std::shared_ptr<Memory> MemoryPtr_t;
 
-	class MulticoreProcessor : public Resource {
+	class MulticoreProcessor : public Resource
+	{
 	public:
 
 		MulticoreProcessor(
 				uint16_t id = 0,
-				res::ResourceType type = res::ResourceType::ACCELERATOR):
-			Resource(id, type)
-		{}
+				res::ResourceType type = res::ResourceType::ACCELERATOR) :
+		    Resource(id, type) { }
 
-		const std::string & GetArchitecture() const {
+		const std::string & GetArchitecture() const
+		{
 			return this->architecture;
 		}
 
-		void SetArchitecture(const std::string & arch) {
+		void SetArchitecture(const std::string & arch)
+		{
 			this->architecture = arch;
 		}
 
-		const std::vector<ProcessingElement> & GetProcessingElementsAll() const {
+		const std::vector<ProcessingElement> & GetProcessingElementsAll() const
+		{
 			return this->pes;
 		}
 
-		std::vector<ProcessingElement> & GetProcessingElementsAll() {
+		std::vector<ProcessingElement> & GetProcessingElementsAll()
+		{
 			return this->pes;
 		}
 
-
-		void AddProcessingElement(ProcessingElement & pe) {
+		void AddProcessingElement(ProcessingElement & pe)
+		{
 			this->pes.push_back(pe);
 		}
 
-		std::shared_ptr<Memory> GetMemory() const {
+		std::shared_ptr<Memory> GetMemory() const
+		{
 			return this->memory;
 		}
 
-		void SetMemory(std::shared_ptr<Memory> memory) {
+		void SetMemory(std::shared_ptr<Memory> memory)
+		{
 			this->memory = memory;
 		}
 
@@ -218,15 +238,19 @@ public:
 
 	typedef std::shared_ptr<MulticoreProcessor> MulticorePtr_t;
 
-	class CPU : public MulticoreProcessor {
+	class CPU : public MulticoreProcessor
+	{
 	public:
-		CPU(uint16_t id = 0): MulticoreProcessor(id, res::ResourceType::CPU) {}
 
-		uint16_t GetSocketId() const {
+		CPU(uint16_t id = 0) : MulticoreProcessor(id, res::ResourceType::CPU) { }
+
+		uint16_t GetSocketId() const
+		{
 			return this->socket_id;
 		}
 
-		void SetSocketId(uint16_t socket_id) {
+		void SetSocketId(uint16_t socket_id)
+		{
 			this->socket_id = socket_id;
 		}
 
@@ -236,44 +260,50 @@ public:
 		uint16_t socket_id;
 	};
 
-
-	class NetworkIF : public Resource {
-
+	class NetworkIF : public Resource
+	{
 	public:
 
 		NetworkIF(uint16_t id, std::string name)
-			: Resource(id, res::ResourceType::NETWORK_IF), name(name)
-		{}
+		    : Resource(id, res::ResourceType::NETWORK_IF), name(name) { }
 
-		std::string GetName() const {
+		std::string GetName() const
+		{
 			return this->name;
 		}
 
-		void SetName(std::string name) {
+		void SetName(std::string name)
+		{
 			this->name = name;
 		}
 
-		unsigned int GetFlags() const {
+		unsigned int GetFlags() const
+		{
 			return this->flags;
 		}
 
-		void SetFlags(unsigned int flags) {
+		void SetFlags(unsigned int flags)
+		{
 			this->flags = flags;
 		}
 
-		void SetOnline(bool online) {
+		void SetOnline(bool online)
+		{
 			this->online = online;
 		}
 
-		bool GetOnline() const {
+		bool GetOnline() const
+		{
 			return this->online;
 		}
 
-		void SetAddress(std::shared_ptr<struct sockaddr> address) {
+		void SetAddress(std::shared_ptr<struct sockaddr> address)
+		{
 			this->address = address;
 		}
 
-		std::shared_ptr<struct sockaddr> GetAddress() const {
+		std::shared_ptr<struct sockaddr> GetAddress() const
+		{
 			return this->address;
 		}
 
@@ -292,19 +322,20 @@ public:
 
 	typedef std::shared_ptr<NetworkIF> NetworkIF_t;
 
-	class InterConnect : public Resource {
-
+	class InterConnect : public Resource
+	{
 	public:
 
 		InterConnect(uint16_t id)
-			: Resource(id, res::ResourceType::INTERCONNECT)
-		{}
+		    : Resource(id, res::ResourceType::INTERCONNECT) { }
 
-		void SetBandwidth(uint64_t bandwidth) {
+		void SetBandwidth(uint64_t bandwidth)
+		{
 			this->bandwidth = bandwidth;
 		}
 
-		uint64_t GetBandwidth() const {
+		uint64_t GetBandwidth() const
+		{
 			return this->bandwidth;
 		}
 
@@ -320,18 +351,20 @@ public:
 
 	typedef std::shared_ptr<InterConnect> InterConnect_t;
 
-	class IO : public Resource {
-	
+	class IO : public Resource
+	{
 	public:
-		IO(uint16_t id = 0)
-			: Resource(id, res::ResourceType::IO)
-		{}
 
-		void SetBandwidth(uint64_t bandwidth) {
+		IO(uint16_t id = 0)
+		    : Resource(id, res::ResourceType::IO) { }
+
+		void SetBandwidth(uint64_t bandwidth)
+		{
 			this->bandwidth = bandwidth;
 		}
 
-		uint64_t GetBandwidth() const {
+		uint64_t GetBandwidth() const
+		{
 			return this->bandwidth;
 		}
 
@@ -343,35 +376,39 @@ public:
 
 	};
 
-	typedef enum StorageType {
-	        HDD,
-	        SSD,
-	        SD,
-	        FLASH,
-	        CUSTOM
+	typedef enum StorageType
+	{
+		HDD,
+		SSD,
+		SD,
+		FLASH,
+		CUSTOM
 	} StorageType_t;
 
-	class Storage : public IO {
-
+	class Storage : public IO
+	{
 	public:
 
 		Storage(uint16_t id = 0)
-			: IO(id)
-		{}
+		    : IO(id) { }
 
-		uint64_t GetQuantity() const {
+		uint64_t GetQuantity() const
+		{
 			return this->quantity;
 		}
 
-		void SetQuantity(uint64_t quantity) {
+		void SetQuantity(uint64_t quantity)
+		{
 			this->quantity = quantity;
 		}
 
-		StorageType_t GetStorageType() const {
+		StorageType_t GetStorageType() const
+		{
 			return this->storage_type;
 		}
 
-		void SetStorageType(StorageType_t type){
+		void SetStorageType(StorageType_t type)
+		{
 			this->storage_type = type;
 		}
 
@@ -386,127 +423,156 @@ public:
 
 	typedef std::shared_ptr<Storage> Storage_t;
 
-	class System :  public Resource {
+	class System : public Resource
+	{
 	public:
 
-		System(uint16_t id = 0): Resource(id, res::ResourceType::SYSTEM) {}
+		System(uint16_t id = 0) : Resource(id, res::ResourceType::SYSTEM) { }
 
-		bool IsLocal() const {
+		bool IsLocal() const
+		{
 			return this->local;
 		}
 
-		const std::string & GetHostname() const {
+		const std::string & GetHostname() const
+		{
 			return this->hostname;
 		}
 
-		const std::string & GetNetAddress() const {
+		const std::string & GetNetAddress() const
+		{
 			return this->net_address;
 		}
 
-		void SetLocal(bool local) {
+		void SetLocal(bool local)
+		{
 			this->local = local;
 		}
 
-		void SetHostname(const std::string & hostname) {
+		void SetHostname(const std::string & hostname)
+		{
 			this->hostname = hostname;
 		}
 
-		void SetNetAddress(const std::string & net_address) {
+		void SetNetAddress(const std::string & net_address)
+		{
 			this->net_address = net_address;
 		}
 
-		const std::vector<CPU> & GetCPUsAll() const {
+		const std::vector<CPU> & GetCPUsAll() const
+		{
 			return this->cpus;
 		}
 
-		std::vector<CPU> & GetCPUsAll() {
+		std::vector<CPU> & GetCPUsAll()
+		{
 			return this->cpus;
 		}
 
-		void AddCPU(CPU & cpu) {
+		void AddCPU(CPU & cpu)
+		{
 			this->cpus.push_back(cpu);
 		}
 
-		const std::vector<MulticoreProcessor> & GetGPUsAll() const {
+		const std::vector<MulticoreProcessor> & GetGPUsAll() const
+		{
 			return this->gpus;
 		}
 
-		std::vector<MulticoreProcessor> & GetGPUsAll() {
+		std::vector<MulticoreProcessor> & GetGPUsAll()
+		{
 			return this->gpus;
 		}
 
-		void AddGPU(MulticoreProcessor & gpu) {
+		void AddGPU(MulticoreProcessor & gpu)
+		{
 			gpu.SetType(res::ResourceType::GPU);
 			this->gpus.push_back(gpu);
 		}
 
-		const std::vector<MulticoreProcessor> & GetAcceleratorsAll() const {
+		const std::vector<MulticoreProcessor> & GetAcceleratorsAll() const
+		{
 			return this->accelerators;
 		}
 
-		std::vector<MulticoreProcessor> & GetAcceleratorsAll() {
+		std::vector<MulticoreProcessor> & GetAcceleratorsAll()
+		{
 			return this->accelerators;
 		}
 
-		void AddAccelerator(MulticoreProcessor & accelerator) {
+		void AddAccelerator(MulticoreProcessor & accelerator)
+		{
 			accelerator.SetType(res::ResourceType::ACCELERATOR);
 			this->accelerators.push_back(accelerator);
 		}
 
-		const std::vector<MemoryPtr_t> & GetMemoriesAll() const {
+		const std::vector<MemoryPtr_t> & GetMemoriesAll() const
+		{
 			return this->memories;
 		}
 
-		std::vector<MemoryPtr_t> & GetMemoriesAll() {
+		std::vector<MemoryPtr_t> & GetMemoriesAll()
+		{
 			return this->memories;
 		}
 
-		MemoryPtr_t GetMemoryById(short id) const noexcept {
+		MemoryPtr_t GetMemoryById(short id) const noexcept
+		{
 			for (auto x : memories) {
-				if ( x->GetId() == id )
+				if (x->GetId() == id)
 					return x;
 			}
 
 			return nullptr;
 		}
 
-		void AddMemory(MemoryPtr_t memory) {
+		void AddMemory(MemoryPtr_t memory)
+		{
 			this->memories.push_back(memory);
 		}
 
-		const std::vector<NetworkIF_t> & GetNetworkIFsAll() const {
+		const std::vector<NetworkIF_t> & GetNetworkIFsAll() const
+		{
 			return this->networkIFs;
 		}
 
-		std::vector<NetworkIF_t> & GetNetworkIFsAll() {
+		std::vector<NetworkIF_t> & GetNetworkIFsAll()
+		{
 			return this->networkIFs;
 		}
 
-		void AddNetworkIF(NetworkIF_t networkIF) {
+		void AddNetworkIF(NetworkIF_t networkIF)
+		{
 			this->networkIFs.push_back(networkIF);
 		}
 
-		const std::vector<InterConnect_t> & GetInterConnectsAll() const {
+		const std::vector<InterConnect_t> & GetInterConnectsAll() const
+		{
 			return this->icns;
 		}
 
-		std::vector<InterConnect_t> & GetInterConnectsAll() {
+		std::vector<InterConnect_t> & GetInterConnectsAll()
+		{
 			return this->icns;
 		}
 
-		void AddInterConnect(InterConnect_t icn) {
+		void AddInterConnect(InterConnect_t icn)
+		{
 			this->icns.push_back(icn);
 		}
 
-		const std::vector<Storage_t> & GetStoragesAll() const {
+		const std::vector<Storage_t> & GetStoragesAll() const
+		{
 			return this->storages;
 		}
 
-		std::vector<Storage_t> & GetStoragesAll() {
+		std::vector<Storage_t> & GetStoragesAll()
+		{
 			return this->storages;
 		}
 
-		void AddStorage(Storage_t storage) {
+		void AddStorage(Storage_t storage)
+		{
 			this->storages.push_back(storage);
 		}
 
@@ -527,7 +593,8 @@ public:
 		std::vector <Storage_t> storages;
 	};
 
-	const System & GetLocalSystem() const {
+	const System & GetLocalSystem() const
+	{
 		static std::shared_ptr<System> sys(nullptr);
 		if (!sys) {
 			for (auto & s_entry : this->GetSystemsAll()) {
@@ -540,28 +607,35 @@ public:
 		}
 		return *sys;
 	}
-	System & GetLocalSystem() {
-	        return const_cast<System&>(static_cast<const PlatformDescription*>(this)
-							->GetLocalSystem());
+
+	System & GetLocalSystem()
+	{
+		return const_cast<System&> (static_cast<const PlatformDescription*> (this)
+					->GetLocalSystem());
 	}
 
-	const std::map<uint16_t, System> & GetSystemsAll() const {
+	const std::map<uint16_t, System> & GetSystemsAll() const
+	{
 		return this->systems;
 	}
 
-	std::map<uint16_t, System> & GetSystemsAll() {
+	std::map<uint16_t, System> & GetSystemsAll()
+	{
 		return this->systems;
 	}
 
-	void AddSystem(const System & sys) {
+	void AddSystem(const System & sys)
+	{
 		this->systems.emplace(sys.GetId(), sys);
 	}
 
-	const System & GetSystem(uint16_t id) const {
+	const System & GetSystem(uint16_t id) const
+	{
 		return systems.at(id);
 	}
 
-	bool ExistSystem(uint16_t id) const {
+	bool ExistSystem(uint16_t id) const
+	{
 		return (systems.find(id) != systems.end());
 	}
 
@@ -570,7 +644,7 @@ private:
 
 }; // class PlatformDescription
 
-}   // namespace pp
-}   // namespace bbque
+} // namespace pp
+} // namespace bbque
 
 #endif // BBQUE_PLATFORM_DESCRIPTION_H_
