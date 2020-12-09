@@ -844,9 +844,8 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 				storage.SetStorageType(pp::PlatformDescription::SD);
 				;
 				break;
-			case ConstHashString("flash"):
-				storage.SetStorageType(pp::PlatformDescription::FLASH);
-				;
+			case ConstHashString("emmc"):
+				storage.SetStorageType(pp::PlatformDescription::EMMC);
 				break;
 			default:
 				logger->Error("'%s' is not a valid value for `type` attribute.",

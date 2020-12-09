@@ -381,7 +381,7 @@ public:
 		HDD,
 		SSD,
 		SD,
-		FLASH,
+		EMMC,
 		CUSTOM
 	} StorageType_t;
 
