@@ -27,7 +27,7 @@ endif (NOT DOC_TARGET)
 add_dependencies (doc doxygen)
 
 # install HTML API documentation and manual pages
-set (DOC_PATH "share/doc/${CPACK_PACKAGE_NAME}-${VERSION}")
+set (DOC_PATH "usr//share/doc/${CPACK_PACKAGE_NAME}-${VERSION}")
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/html
          DESTINATION ${DOC_PATH}

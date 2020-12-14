@@ -9,14 +9,14 @@
 
 find_path(CGroup_INCLUDE_DIR libcgroup.h
 	HINTS ${BOSP_SYSROOT}
-	PATH_SUFFIXES include
+	PATH_SUFFIXES include usr/include
 	NO_DEFAULT_PATH
 	NO_SYSTEM_ENVIRONMENT_PATH
 )
 
 find_library(CGroup_LIBRARIES cgroup
 	HINTS ${BOSP_SYSROOT}
-	PATH_SUFFIXES lib lib/bbque
+	PATH_SUFFIXES lib lib/bbque usr/lib
 	NO_DEFAULT_PATH
 	NO_SYSTEM_ENVIRONMENT_PATH
 )

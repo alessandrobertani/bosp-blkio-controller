@@ -1,6 +1,10 @@
-# Sources
-set (TARGET_NAME bbque_tg)
+
+cmake_minimum_required (VERSION 3.0 FATAL_ERROR)
+
 set (VERSION_STRING 1.0.0)
+set (TARGET_NAME bbque_tg)
+
+# Sources
 set (SOURCE task_graph partition)
 
 # Output: a shared library
@@ -32,7 +36,7 @@ set_property (TARGET ${TARGET_NAME} PROPERTY PUBLIC_HEADER
 
 set_target_properties(${TARGET_NAME} PROPERTIES
 	VERSION ${VERSION_STRING}
-	INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib;${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque"
+	INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_RTLIB};${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_LIBS}"
 	INSTALL_RPATH_USE_LINK TRUE)
 
 # Install the library

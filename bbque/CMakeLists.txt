@@ -215,7 +215,7 @@ endif (CONFIG_BBQUE_PIL_LOADER)
 
 # Use link path ad RPATH
 set_target_properties(barbeque PROPERTIES
-	INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib;${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque"
+	INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_LIBS};${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_RTLIB}"
 	INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # Install the configuration file
@@ -248,10 +248,10 @@ install (FILES "${PROJECT_BINARY_DIR}/config/bosp_init.env"
 		COMPONENT BarbequeRTRM)
 # Install the PIL configurations
 install (PROGRAMS "${PROJECT_BINARY_DIR}/config/pil/bbque-pil-generator"
-		DESTINATION ${BBQUE_PATH_BBQ}
+		DESTINATION ${BBQUE_PATH_TOOLS}
 		COMPONENT BarbequeRTRM)
 
 install (PROGRAMS "${PROJECT_BINARY_DIR}/config/bbque-layapp"
-		DESTINATION ${BBQUE_PATH_BBQ}
+		DESTINATION ${BBQUE_PATH_TOOLS}
 		COMPONENT BarbequeRTRM)
 

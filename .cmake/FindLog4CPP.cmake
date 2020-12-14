@@ -21,7 +21,7 @@ set(LOG4CPP_FOUND 0)
 if (LOG4CPP_INCLUDE_DIR)
   if (LOG4CPP_LIBRARIES)
     set(LOG4CPP_FOUND 1)
-    message(STATUS "Log4CPP location: ${LOG4CPP_LIBRARIES}")
+    message(STATUS "Log4CPP location ............: ${LOG4CPP_LIBRARIES}")
   endif (LOG4CPP_LIBRARIES)
 endif (LOG4CPP_INCLUDE_DIR)
 

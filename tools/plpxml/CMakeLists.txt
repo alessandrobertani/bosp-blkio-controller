@@ -8,7 +8,6 @@ if (CONFIG_BBQUE_PIL_LOADER)
 	#----- Add thereafter all the regression tests we want to run
 	set(BBQUE_PLPXML_SRC plp_translator plpxml)
 
-
 	#----- Add "bbque-plp" target application
 	add_executable(bbque-plp ${BBQUE_PLPXML_SRC})
 
@@ -16,11 +15,11 @@ if (CONFIG_BBQUE_PIL_LOADER)
 		${Boost_LIBRARIES})
 
 	set_target_properties(${TARGET_NAME} PROPERTIES
-		INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib;${CONFIG_BOSP_RUNTIME_PATH}/lib/bbque"
+		INSTALL_RPATH "${CONFIG_BOSP_RUNTIME_PATH}/lib;${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_LIBS};${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_RTLIB};"
 		INSTALL_RPATH_USE_LINK TRUE)
 
         install(TARGETS bbque-plp
-                DESTINATION ${BBQUE_PATH_BBQ}
+                DESTINATION ${BBQUE_PATH_TOOLS}
                 COMPONENT BarbequeTOOLS)
 
 endif (CONFIG_BBQUE_PIL_LOADER)

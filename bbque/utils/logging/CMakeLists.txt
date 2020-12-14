@@ -17,6 +17,8 @@ if (CONFIG_TARGET_ANDROID)
 	set (BBQUE_LOGGER_LIBS -llog)
 endif (CONFIG_TARGET_ANDROID)
 
+message (STATUS "Logger libraries ...........: " ${BBQUE_LOGGER_LIBS})
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 #----- Add static library
@@ -26,11 +28,12 @@ add_library(bbque_logger STATIC ${BBQUE_LOGGER_SRC})
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--gc-sections")
 
+
 #----- Linking dependencies
 if (BBQUE_LOGGER_LIBS)
 	target_link_libraries(bbque_logger ${BBQUE_LOGGER_LIBS})
 endif (BBQUE_LOGGER_LIBS)
 
 install(TARGETS bbque_logger ARCHIVE
-	DESTINATION "${PROJECT_BINARY_DIR}/lib/bbque")
+	DESTINATION "${PROJECT_BINARY_DIR}/${BBQUE_PATH_RTLIB}")
 

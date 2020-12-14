@@ -9,7 +9,7 @@ set (BBQUE_TOOLS_INSTALL_DIR "sbin/bbque/")
 #----- Deploy the PIL Layouts parser and CGroup generator script
 if (CONFIG_BBQUE_PIL_LEGACY)
 	install(PROGRAMS bbquePlatformLayoutParser.awk
-		DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+		DESTINATION ${BBQUE_PATH_TOOLS}
 		COMPONENT BarbequeTOOLS
 		RENAME bbque-plp)
 endif (CONFIG_BBQUE_PIL_LEGACY)
@@ -28,7 +28,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbque-release-agent"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-release-agent)
 
@@ -40,7 +40,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueConsole.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-console)
 
@@ -52,7 +52,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/test/bbqueStressTest.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-test-stress)
 
@@ -63,7 +63,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueRecipeGenerator.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	RENAME bbque-recipegen)
 
 
@@ -74,14 +74,14 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/test/bbqueTestappLauncher.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-testapp-launcher)
 
 
 #----- Deploy the BBQ OP List generator script
 install(PROGRAMS "${PROJECT_SOURCE_DIR}/tools/bbqueOpListBuilder.awk"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-oplb)
 
@@ -99,11 +99,11 @@ configure_file (
 )
 
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueLogParser.awk"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-logparser)
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueLogPlots.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-logplots)
 
@@ -120,10 +120,10 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDumpParser.awk"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	RENAME bbque-cpu-parser)
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbqueCpuUsageDump.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	RENAME bbque-cpu-load)
 
 
@@ -134,7 +134,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueStabilityAnalysisPlotter.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-stability-analysis)
 
@@ -146,7 +146,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/development/bbquePluginDev.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	RENAME bbque-dev-plugin
 )
 
@@ -157,7 +157,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/development/bbqueCodeStyle.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	RENAME bbque-dev-codestyler
 )
 install(FILES
@@ -175,14 +175,14 @@ configure_file (
 )
 install(
 	DIRECTORY ${PROJECT_SOURCE_DIR}/tools/pysched/
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}/pysched/
+	DESTINATION ${BBQUE_PATH_TOOLS}/pysched/
 	USE_SOURCE_PERMISSIONS
 	FILES_MATCHING
 	PATTERN "*.py"
 	PATTERN "*.conf"
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/pysched/modules/barbeque_utils.py"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}/pysched/modules/
+	DESTINATION ${BBQUE_PATH_TOOLS}/pysched/modules/
 )
 
 # ------- Deploy the BarbequeRTRM power traces plotter
@@ -192,11 +192,11 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/monitor/bbquePlotPowerTrace.py"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	RENAME bbque-plotrace)
 install(PROGRAMS
 	"${PROJECT_SOURCE_DIR}/tools/monitor/bbqueCpuThermalPlotter.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	RENAME bbque-cpu-temp)
 
 
@@ -207,7 +207,7 @@ configure_file (
 	@ONLY
 )
 install(PROGRAMS "${PROJECT_BINARY_DIR}/tools/bbqueSystemdSetup.sh"
-	DESTINATION ${BBQUE_TOOLS_INSTALL_DIR}
+	DESTINATION ${BBQUE_PATH_TOOLS}
 	COMPONENT BarbequeUTILS
 	RENAME bbque-systemd-setup)
 

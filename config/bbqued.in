@@ -38,13 +38,12 @@ BBQUE_LOCKFILE="${BBQUE_LOCKFILE:-$LOCKFILE}"
 BBQUE_PILSETUPS="${BBQUE_PILSETUPS:-$PILSETUPS}"
 BBQUE_PILLAYOUT="${BBQUE_PILLAYOUT:-$PILLAYOUT}"
 BBQUE_PILPARSER="${BBQUE_PILPARSER:-$PILPARSER}"
+BBQUE_PILGENERATOR="${BBQUE_PILGENERATOR:-$PILGENERATOR}"
 # CGroups Configurations and Tools
 BBQUE_CGMOUNT="${BBQUE_CGMOUNT:-$CGMOUNT}"
 BBQUE_CGCONFS="${BBQUE_CGCONFS:-$CGCONFS}"
 BBQUE_CGPARSER="${BBQUE_CGPARSER:-$CGPARSER}"
 BBQUE_CGAGENT="${BBQUE_CGAGENT:-$CGAGENT}"
-# PIL generator (in case not specified)
-PIL_GENERATE=$SYSROOT"/sbin/bbque-pil-generator"
 
 # Check mouting status of required controllers
 check_controllers() {
@@ -129,7 +128,7 @@ setup() {
 }
 
 gen_platform_descr() {
-	bbqued_info "PIL generator: " $PIL_GENERATE
+	bbqued_info "PIL generator: " $BBQUE_PILGENERATOR
 	if [ ! -f $BBQUE_PILSETUPS/$PILNAME ]; then
 		# Generating the bpl file on the fly, exploiting menuconfig info
 		bbqued_info "Generating PIL layout"
@@ -139,9 +138,9 @@ gen_platform_descr() {
 		[ -z "@CONFIG_BBQUE_MEMLOC_L2@" ] || HIERARCHY_DEPTH="L2"
 
 		# Make the generator executable
-		sudo chmod a+x $PIL_GENERATE
+		sudo chmod a+x $BBQUE_PILGENERATOR
 		# Launch the generator
-		$PIL_GENERATE $HIERARCHY_DEPTH
+		$BBQUE_PILGENERATOR $HIERARCHY_DEPTH
 	else
 		bbqued_info "Platform description already available"
 	fi

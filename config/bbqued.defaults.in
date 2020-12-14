@@ -37,20 +37,23 @@ PILLAYOUT='default'
 # The PIL file containing the processor partitioning
 PILNAME='${BBQUE_PIL_FILE}'
 #
+# The PILD layout generator
+PILGENERATOR='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_TOOLS}/bbque-pil-generator'
+#
 # The PIL Layout parser (distributed with BarbequeRTRM)
-PILPARSER='${CONFIG_BOSP_RUNTIME_PATH}/sbin/bbque-plp'
+PILPARSER='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_TOOLS}/bbque-plp'
 #
 # The folder containing (compiled) CGroups configuration
 CGCONFS='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_VAR}'
 #
 # The CGroup configuration parser (part of libcgroup library)
-CGPARSER='${CONFIG_BOSP_RUNTIME_PATH}/sbin/cgconfigparser'
+CGPARSER='${CONFIG_BOSP_RUNTIME_PATH}/usr/${BBQUE_PATH_BBQ}/cgconfigparser'
 #
 # The mountpoint of the BBQ CGroup hierarchy
 CGMOUNT='${BBQUE_CGMOUNT_DIR}'
 #
 # The BBQ CGroups Release Agent
-CGAGENT='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_BBQ}/bbque-release-agent'
+CGAGENT='${CONFIG_BOSP_RUNTIME_PATH}/${BBQUE_PATH_TOOLS}/bbque-release-agent'
 #
 # The prefix for the BBQ installation
 SYSROOT='${CONFIG_BOSP_RUNTIME_PATH}'

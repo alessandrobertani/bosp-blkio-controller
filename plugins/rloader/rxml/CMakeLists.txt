@@ -22,6 +22,6 @@ target_link_libraries(bbque_rloader_rxml
 )
 
 set_target_properties(bbque_rloader_rxml PROPERTIES
-	CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
+	CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${BBQUE_PATH_LIBS}/"
 	CMAKE_INSTALL_RPATH_USE_LINK TRUE)
 
