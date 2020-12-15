@@ -290,7 +290,7 @@ protected:
 			return SCHED_ERROR_VIEW;
 
 		// Slots computation for priority-proportional resource assignment
-		if (sys->HasSchedulables(ApplicationStatusIF::READY))
+		if (sys->HasSchedulables(ba::ApplicationStatusIF::READY))
 			this->nr_slots = GetSlots();
 
 		// Policy-specific initialization
