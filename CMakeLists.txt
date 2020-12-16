@@ -291,7 +291,6 @@ add_subdirectory (rtlib)
 add_subdirectory (plugins)
 add_subdirectory (bbque)
 add_subdirectory (tools)
-add_subdirectory (demos)
 
 if (CONFIG_BBQUE_TG_PROG_MODEL)
 	add_subdirectory(libpms) # Programming model support for task-graph based applications
