@@ -102,17 +102,6 @@ config BBQUE_SCHED_PROFILING
   mean and variance of the AWM from the scheduled applications, fairness
   index, etc...)
 
-config BBQUE_BUILD_TESTS
-  bool "Build the TEST suite"
-  default n
-  ---help---
-  Build the BarbequeRTRM test suite.
-
-  This will build also the set of regression tests used to verify framework
-  stability during development.
-  NOTE: this is an experimental and not completed feaure, leave un-selected is
-  unsure.
-
 config BBQUE_EM
   bool "Event Manager"
   default n
