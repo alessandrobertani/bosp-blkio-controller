@@ -1,9 +1,0 @@
-config BBQUE_SCHEDPOL_YAMS
-  bool "YaMS"
-  default y
-  ---help---
-  Single binding domain (e.g. single multi-core CPU) resource allocation
-  policy, featuring multiple (weighted) contributions in the AWM evaluation
-  and resource binding choice (value, reconfiguration overhead, fairness,
-  migration, congestion).
-
