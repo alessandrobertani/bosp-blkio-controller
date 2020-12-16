@@ -49,14 +49,6 @@ endmenu # Bindings Configuration
 # Profiling support
 ################################################################################
 
-#config BBQUE_RTLIB_MONITORS
-#  bool "Monitor library (AS-RTM)"
-#  default n
-#  ---help---
-#  Monitor library (also called ARGO). It consists of a framework to manage the
-#  reconfiguration space of an application including several paramenters and
-#  a wide range of possible values.
-
 comment "Profiling Support"
 
 config BBQUE_RTLIB_PERF_SUPPORT
