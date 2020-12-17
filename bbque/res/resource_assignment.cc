@@ -55,8 +55,11 @@ void ResourceAssignment::SetResourcesList(ResourcePtrList_t & r_list,
 	mask.Reset();
 
 	for (auto & candidate_resource : r_list) {
-		if ((filter_rtype == candidate_resource->Type()) && (filter_mask.Test((candidate_resource->ID()))))
+		auto parent_type = candidate_resource->Path()->ParentType();
+		if ((filter_mask.Test(candidate_resource->ID())) &&
+		   ((filter_rtype == candidate_resource->Type()) || (filter_rtype == parent_type))) {
 			resources.push_back(candidate_resource);
+		}
 	}
 }
 
