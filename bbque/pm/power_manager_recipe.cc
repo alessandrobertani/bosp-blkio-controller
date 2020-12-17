@@ -20,7 +20,9 @@
  * $ hn_daemon -P <port> -R
  */
 
+#include <array>
 #include <cstring>
+#include <string>
 
 #include "bbque/pm/power_manager_recipe.h"
 #include "CL/cl.h"
@@ -40,11 +42,15 @@ RecipePowerManager::RecipePowerManager()
 		return;
 	}
 
+
+	logger->Info("RecipePowerManager: nr. platform(s) found: %d", num_platforms);
+	std::array<fpgamon_platform_ids_t, 4> platform_ids;
+
 	this->ocl_platforms = new cl_platform_id[num_platforms];
 	status = clGetPlatformIDs(num_platforms, ocl_platforms, NULL);
 
 	for (cl_uint id = 0; id < num_platforms; ++id) {
-		char platform_name[20];
+		char platform_name[50];
 		status = clGetPlatformInfo(
 					ocl_platforms[id],
 					CL_PLATFORM_NAME,
@@ -52,51 +58,54 @@ RecipePowerManager::RecipePowerManager()
 					platform_name,
 					NULL);
 
-		if (strncmp(platform_name, "RECIPE", sizeof(platform_name)) == 0) {
-			logger->Info("RecipePowerManager: platform id=%d  is %s", id, platform_name);
-			recipe_ocl_platform = ocl_platforms[id];
-			break;
+		// Initialization data for libfpgamon
+		std::string pn(platform_name);
+		if (pn.find("Intel(R) FPGA") != std::string::npos) {
+			logger->Info("RecipePowerManager: platform [%s] -> PROFPGA monitoring",
+				platform_name);
+			platform_ids[id] = FPGAMON_PLATFORM_PROFPGA;
 		}
-	}
+		else {
+			platform_ids[id] = FPGAMON_PLATFORM_DUMMY;
+		}
 
-	if (recipe_ocl_platform == nullptr) {
-		logger->Error("RecipePowerManager: missing RECIPE OpenCL platform");
-		assert(recipe_ocl_platform);
-	}
+		// Get devices
+		cl_uint num_devices;
+		status = clGetDeviceIDs(this->ocl_platforms[id], CL_DEVICE_TYPE_ALL, 0, NULL, &num_devices);
+		if (status != CL_SUCCESS) {
+			logger->Error("RecipePowerManager: device ids error %d", status);
+			return;
+		}
+		logger->Info("RecipePowerManager: platform [%s] includes %d device(s)",
+			platform_name, num_devices);
 
-	// Get devices
-	cl_uint num_devices;
-	status = clGetDeviceIDs(recipe_ocl_platform, CL_DEVICE_TYPE_ALL, 0, NULL, &num_devices);
-	if (status != CL_SUCCESS) {
-		logger->Error("RecipePowerManager: device ids error %d", status);
-		return;
-	}
-	logger->Info("RecipePowerManager: RECIPE includes %d device(s)", num_devices);
-
-	this->ocl_devices = new cl_device_id[num_devices];
-	status = clGetDeviceIDs(this->recipe_ocl_platform,
-				CL_DEVICE_TYPE_ALL,
-				num_devices,
-				ocl_devices,
-				NULL);
-
-	for (uint16_t dev_id = 0; dev_id < num_devices; ++dev_id) {
-		char dev_name[64];
-		status = clGetDeviceInfo(
-					this->ocl_devices[dev_id],
-					CL_DEVICE_NAME,
-					sizeof(dev_name),
-					dev_name,
+		this->ocl_devices = new cl_device_id[num_devices];
+		status = clGetDeviceIDs(this->ocl_platforms[id],
+					CL_DEVICE_TYPE_ALL,
+					num_devices,
+					ocl_devices,
 					NULL);
-		if (status == CL_SUCCESS) {
-			logger->Info("RecipePowerManager: device %d:%s",
-				dev_id, dev_name);
+
+		for (uint16_t dev_id = 0; dev_id < num_devices; ++dev_id) {
+			char dev_name[64];
+			status = clGetDeviceInfo(
+						this->ocl_devices[dev_id],
+						CL_DEVICE_NAME,
+						sizeof(dev_name),
+						dev_name,
+						NULL);
+			if (status == CL_SUCCESS) {
+				logger->Info("RecipePowerManager: device %d:%s",
+					dev_id, dev_name);
+			}
 		}
+
+
+
 	}
 
 	// FPGA Monitoring library initialization
-	fpgamon_platform_ids_t platform_ids[] = { FPGAMON_PLATFORM_DUMMY };
-	fpgamon_init(&this->ctx, 1, platform_ids);
+	fpgamon_init(&this->ctx, num_platforms, platform_ids.data());
 
 }
 
