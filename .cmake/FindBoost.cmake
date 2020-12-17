@@ -561,6 +561,7 @@ else(_boost_IN_CACHE)
 
   if( BOOST_ROOT )
     set(_boost_INCLUDE_SEARCH_DIRS
+      ${BOOST_ROOT}/usr/include
       ${BOOST_ROOT}/include
       ${BOOST_ROOT}
       ${_boost_INCLUDE_SEARCH_DIRS})
@@ -807,6 +808,7 @@ else(_boost_IN_CACHE)
   if(BOOST_ROOT)
     set(_boost_LIBRARY_SEARCH_DIRS_ALWAYS
       ${BOOST_ROOT}/lib
+      ${BOOST_ROOT}/usr/lib
       ${BOOST_ROOT}/stage/lib)
   endif()
   set(_boost_LIBRARY_SEARCH_DIRS_ALWAYS
