@@ -262,7 +262,7 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 		pawm->AddResourceRequest(BBQUE_OPENCL_ACC_PATH,
 					acc_quota,
 					br::ResourceAssignment::Policy::BALANCED);
-		logger->Debug("AddResourceRequests: [%s] <sys.grp.acc.pe> = %d",
+		logger->Debug("AddResourceRequests: [%s] <sys.grp0.acc.pe> = %d",
 			proc->StrId(), acc_quota);
 	}
 #endif
@@ -560,7 +560,7 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 	if (!acc_opencl_list.empty() && (papp->Language() & RTLIB_LANG_OPENCL)) {
 		logger->Debug("AddResourceRequests: [%s] adding resource request <%s>",
 			papp->StrId(), BBQUE_OPENCL_ACC_PATH);
-		pawm->AddResourceRequest(BBQUE_OPENCL_ACC_PATH, 100);
+		pawm->AddResourceRequest("sys.grp0.acc.pe", 100);
 	}
 #endif
 
@@ -713,14 +713,22 @@ TestSchedPol::BindToFirstAvailableOpenCL(bbque::app::AwmPtr_t pawm,
 {
 	uint32_t opencl_platform_id;
 	br::ResourceBitset opencl_devs_bitset;
+	logger->Debug("BindToFirstAvailableOpenCL: looking for an available OpenCL accelerator...");
 
 	for (auto const & acc : this->acc_opencl_list) {
-		if (amount > acc->Available(nullptr, this->sched_status_view)) {
+		auto acc_avail_amount = acc->Available(nullptr, this->sched_status_view);
+		logger->Debug("BindToFirstAvailableOpenCL: group=%d acc_id=%d available=%lu",
+			acc->Path()->GetID(br::ResourceType::GROUP),
+			acc->Path()->GetID(br::ResourceType::ACCELERATOR),
+			acc_avail_amount);
+		if (amount > acc_avail_amount) {
 			continue;
 		}
 
 		opencl_platform_id = acc->Path()->GetID(br::ResourceType::GROUP);
 		opencl_devs_bitset.Set(acc->Path()->GetID(dev_type));
+		logger->Debug("BindToFirstAvailableOpenCL: accelerator(s) bitset=%s",
+			opencl_devs_bitset.ToString().c_str());
 
 		ref_num = pawm->BindResource(br::ResourceType::GROUP,
 					R_ID_ANY,
