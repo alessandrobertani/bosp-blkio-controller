@@ -222,8 +222,6 @@ message ( STATUS "Checking dependencies..." )
 set (BOOST_NO_SYSTEM_PATHS      ON)
 set (BOOST_DETAILED_FAILURE_MSG ON)
 set (BOOST_ROOT       ${BOSP_SYSROOT})
-set (BOOST_LIBRARYDIR ${BOSP_SYSROOT}/usr/lib)
-set (BOOST_INCLUDEDIR ${BOSP_SYSROOT}/usr/include/boost)
 find_package (Boost 1.64 REQUIRED
 	system
 	program_options
