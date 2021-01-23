@@ -180,7 +180,15 @@ function XML_GenStorageDevices {
 		devid=`echo $i | awk '{ print $2 }'`
 		size=`echo $i | awk '{ print $3 }' | sed s/[A-Z]//g` # not used
 		unit=`echo $i | awk '{ print $3 }' | sed s/[0-9]//g` # not used
-		echo "    <storage id=\"$bbqid\" dev=\"$devid\" name=\"$name\" quantity=\"$size\" unit=\"MB\" bw_unit=\"MB/s\" bandwidth=\"100\" type=\"HDD\"/>" >> $TMP_FOLDER/xml_disks
+		
+		type=""
+		if [ $(cat /sys/block/$name/queue/rotational) -eq 0 ]; then
+			type="SSD"
+		else
+			type="HDD"
+		fi
+
+		echo "    <storage id=\"$bbqid\" dev=\"$devid\" name=\"$name\" quantity=\"$size\" unit=\"MB\" bw_unit=\"MB/s\" bandwidth=\"100\" type=\"$type\"/>" >> $TMP_FOLDER/xml_disks
 		bbqid=`expr $bbqid + 1`
 	done
 }
