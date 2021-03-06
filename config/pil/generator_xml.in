@@ -181,13 +181,25 @@ function XML_GenStorageDevices {
 		size=`echo $i | awk '{ print $3 }' | sed s/[A-Z]//g` # not used
 		unit=`echo $i | awk '{ print $3 }' | sed s/[0-9]//g` # not used
 		
-		type=""
-		types=(HDD SSD)
+		TYPE=""
+		R_BW=100
+		W_BW=100
+
+		XML_GetStorageDeviceType
+		XML_TestReadWriteBW
+
+		echo "    <storage id=\"$bbqid\" dev=\"$devid\" name=\"$name\" quantity=\"$size\" unit=\"MB\" bw_unit=\"MB/s\" read_bandwidth=\"$R_BW\" write_bandwidth=\"$W_BW\" type=\"$TYPE\"/>" >> $TMP_FOLDER/xml_disks
+		bbqid=`expr $bbqid + 1`
+	done
+}
+
+function XML_GetStorageDeviceType {
+	TYPES=(HDD SSD)
 		if [ -e /sys/block/$name/queue/rotational ]; then
 			if [ $(cat /sys/block/$name/queue/rotational) -eq 0 ]; then
-				type=${types[1]}
+				TYPE=${TYPES[1]}
 			else
-				type=${types[0]}
+				TYPE=${TYPES[0]}
 			fi
 		else
 			dialog --radiolist "It was not possible to automatically detect the kind of disk. Select it manually" \
@@ -196,17 +208,15 @@ function XML_GenStorageDevices {
 				2 SSD off 2> $DIALOG_TEMP_FILE
 			clear
 			SELECTED=$(cat $DIALOG_TEMP_FILE)
-			type=${types[$(($SELECTED - 1))]}
+			TYPE=${TYPES[$(($SELECTED - 1))]}
 
 			if [ "$SELECTED" == "" ]; then
 				echo "No disk type selected. Aborting."
 				CloseGenerator
 			fi
 		fi
+}
 
-		echo "    <storage id=\"$bbqid\" dev=\"$devid\" name=\"$name\" quantity=\"$size\" unit=\"MB\" bw_unit=\"MB/s\" bandwidth=\"100\" type=\"$type\"/>" >> $TMP_FOLDER/xml_disks
-		bbqid=`expr $bbqid + 1`
-	done
 }
 
 function XML_WriteHead {
