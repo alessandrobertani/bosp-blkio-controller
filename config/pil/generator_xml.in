@@ -217,6 +217,41 @@ function XML_GetStorageDeviceType {
 		fi
 }
 
+function XML_TestReadWriteBW {
+    NUM_ITERS=10
+	TEMP_FILE=tempfile
+	R_BW=0
+	W_BW=0
+
+	for (( i = 1; i <= $NUM_ITERS; i++ ))
+        do
+        # echo "Read test no. $i"
+		CURR_R_BW=$(sudo hdparm -t /dev/$name | awk 'NR==3 {print $11}')
+		CURR_R_BW=${CURR_R_BW%.*}
+		R_BW=$(($R_BW + $CURR_R_BW))
+
+        # echo "Write test no. $i"
+		DD_OUT=$(dd if=/dev/zero of=./$TEMP_FILE bs=4k count=250k conv=fdatasync 2>&1 >/dev/null | awk 'NR==3{print $10, $11}')
+		CURR_W_BW=$(echo $DD_OUT | awk '{print $1}' | tr ',' '.')
+		if [ "$(echo $DD_OUT | awk '{print $2}')" == "GB/s" ]; then
+			CURR_W_BW=$(($CURR_W_BW * 1000))
+		fi	
+		
+		# echo $CURR_W_BW
+		CURR_W_BW=${CURR_W_BW%.*}
+		W_BW=$(($W_BW + $CURR_W_BW))
+
+        rm ./$TEMP_FILE
+
+        done
+    
+    R_BW=$(echo $R_BW / $NUM_ITERS | bc -l)
+    R_BW=${R_BW%.*}
+
+
+    W_BW=$(echo $W_BW / $NUM_ITERS | bc -l)
+    W_BW=${W_BW%.*}
+
 }
 
 function XML_WriteHead {
