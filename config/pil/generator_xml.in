@@ -223,35 +223,61 @@ function XML_TestReadWriteBW {
 	R_BW=0
 	W_BW=0
 
-	for (( i = 1; i <= $NUM_ITERS; i++ ))
+	COUNT=0
+	(
+		for (( i = 1; i <= $NUM_ITERS; i++ ))
         do
-        # echo "Read test no. $i"
+
+		echo "XXX"
+    	echo "Read test n. $i"
+    	echo "XXX"
+		echo $COUNT
+
 		CURR_R_BW=$(sudo hdparm -t /dev/$name | awk 'NR==3 {print $11}')
 		CURR_R_BW=${CURR_R_BW%.*}
 		R_BW=$(($R_BW + $CURR_R_BW))
+		COUNT=$(($COUNT + 5))
+		
 
         # echo "Write test no. $i"
+		echo "XXX"
+    	echo "Write test n. $i"
+    	echo "XXX"
+		echo $COUNT
+
 		DD_OUT=$(dd if=/dev/zero of=./$TEMP_FILE bs=4k count=250k conv=fdatasync 2>&1 >/dev/null | awk 'NR==3{print $10, $11}')
 		CURR_W_BW=$(echo $DD_OUT | awk '{print $1}' | tr ',' '.')
-		if [ "$(echo $DD_OUT | awk '{print $2}')" == "GB/s" ]; then
-			CURR_W_BW=$(($CURR_W_BW * 1000))
+		if [[ "$(echo $DD_OUT | awk '{print $2}')" == "GB/s" ]]; then
+			CURR_W_BW=$((CURR_W_BW * 1000))
 		fi	
+		COUNT=$(($COUNT + 5))
 		
-		# echo $CURR_W_BW
 		CURR_W_BW=${CURR_W_BW%.*}
-		W_BW=$(($W_BW + $CURR_W_BW))
+		W_BW=$(($W_BW + CURR_W_BW))
 
         rm ./$TEMP_FILE
+    	done
 
-        done
-    
+		echo "$R_BW" > ./$TEMP_FILE
+		echo "$W_BW" >> ./$TEMP_FILE
+
+	) | dialog --title "Bandwidth Test" --gauge "Testing read and write bandwidth of the disk /dev/$name" 15 70 0;
+	
+	R_BW=$(cat ./$TEMP_FILE | awk 'NR==1{print $1}')
     R_BW=$(echo $R_BW / $NUM_ITERS | bc -l)
     R_BW=${R_BW%.*}
 
-
+	W_BW=$(cat ./$TEMP_FILE | awk 'NR==2{print $1}')
     W_BW=$(echo $W_BW / $NUM_ITERS | bc -l)
     W_BW=${W_BW%.*}
 
+	dialog --title "Summary" --colors --msgbox 'The following parameters were detected.
+    * \ZbRead Bandwidth\ZB: '"$R_BW"' MB/s
+    * \ZbWrite Bandwidth\ZB: '"$W_BW"' MB/s
+
+	Press OK to exit.' 15 70;
+	clear
+	rm ./$TEMP_FILE
 }
 
 function XML_WriteHead {
