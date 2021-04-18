@@ -202,7 +202,7 @@ function XML_GetStorageDeviceType {
 				TYPE=${TYPES[0]}
 			fi
 		else
-			dialog --radiolist "It was not possible to automatically detect the kind of disk. Select it manually" \
+			dialog --radiolist "It was not possible to automatically detect the type of disk. Select it manually" \
 				20 75 15 \
 				1 HDD on \
 				2 SSD off 2> $DIALOG_TEMP_FILE
@@ -261,7 +261,7 @@ function XML_TestReadWriteBW {
 		echo "$R_BW" > ./$TEMP_FILE
 		echo "$W_BW" >> ./$TEMP_FILE
 
-	) | dialog --title "Bandwidth Test" --gauge "Testing read and write bandwidth of the disk /dev/$name" 15 70 0;
+	) | dialog --gauge "Testing read and write bandwidth of the disk /dev/$name" 15 70 0;
 	
 	R_BW=$(cat ./$TEMP_FILE | awk 'NR==1{print $1}')
     R_BW=$(echo $R_BW / $NUM_ITERS | bc -l)
@@ -271,7 +271,7 @@ function XML_TestReadWriteBW {
     W_BW=$(echo $W_BW / $NUM_ITERS | bc -l)
     W_BW=${W_BW%.*}
 
-	dialog --title "Summary" --colors --msgbox 'The following parameters were detected.
+	dialog --colors --msgbox 'The following parameters were detected.
     * \ZbRead Bandwidth\ZB: '"$R_BW"' MB/s
     * \ZbWrite Bandwidth\ZB: '"$W_BW"' MB/s
 
