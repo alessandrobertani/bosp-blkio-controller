@@ -14,6 +14,7 @@ static const char * r_type_str[] = {
 	"mem" ,
 	"net" ,
 	"icn" ,
+	"blk" ,
 	"io"  ,
 	"cst"
 };

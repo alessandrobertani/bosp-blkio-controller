@@ -14,8 +14,9 @@
 #define R_TYPE_MEMORY        16
 #define R_TYPE_ACCELERATOR   32
 #define R_TYPE_INTERCONNECT  64
-#define R_TYPE_IO            128
-#define R_TYPE_NETWORK_IF    256
+#define R_TYPE_BLOCK		 128
+#define R_TYPE_IO            256
+#define R_TYPE_NETWORK_IF    512
 
 #define R_ID_ANY            -1
 #define R_ID_NONE           -2
@@ -47,6 +48,7 @@ enum class ResourceType
 	MEMORY       ,
 	NETWORK_IF   ,
 	INTERCONNECT ,
+	BLOCK 		 ,
 	IO           ,
 	CUSTOM       ,
 };
