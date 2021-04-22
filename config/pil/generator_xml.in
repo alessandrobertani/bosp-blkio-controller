@@ -220,6 +220,11 @@ function XML_TestReadWriteBW {
 	R_BW=0
 	W_BW=0
 
+	dialog --title "Storage Bandwidth Test" --colors --msgbox \
+	'A read/write bandwidth test will now be executed on the storage device '"$name"'.
+	It may take several minutes, depending on the actual bandwidth of the device.
+	Press OK to start the test.' 15 70;
+
 	COUNT=0
 	(
 		for (( i = 1; i <= $NUM_ITERS; i++ ))
@@ -243,7 +248,7 @@ function XML_TestReadWriteBW {
 		echo "$R_BW" > ./$TEMP_FILE
 		echo "$W_BW" >> ./$TEMP_FILE
 
-	) | dialog --gauge "Testing read and write bandwidth of the disk /dev/$name" 15 70 0;
+	) | dialog --title "Bandwidth Test" --gauge "Testing read and write bandwidth of the disk /dev/$name" 15 70 0;
 	
 	R_BW=$(cat ./$TEMP_FILE | awk 'NR==1{print $1}')
     R_BW=$(echo $R_BW / $NUM_ITERS | bc -l)
@@ -253,7 +258,7 @@ function XML_TestReadWriteBW {
     W_BW=$(echo $W_BW / $NUM_ITERS | bc -l)
     W_BW=${W_BW%.*}
 
-	dialog --colors --msgbox 'The following parameters were detected.
+	dialog --title "Summary" --colors --msgbox 'The following parameters were detected.
     * \ZbRead Bandwidth\ZB: '"$R_BW"' MB/s
     * \ZbWrite Bandwidth\ZB: '"$W_BW"' MB/s
 
