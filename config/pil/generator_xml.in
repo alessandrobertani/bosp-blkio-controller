@@ -161,7 +161,6 @@ function SetManagedPartition {
 
 	dialog --checklist "Select which PUs will be used to run MANAGED applications" \
 		20 75 15 $OPTIONS 2> $DIALOG_TEMP_FILE
-	clear
 
 	MDEV_PES=$(cat $DIALOG_TEMP_FILE)
 
