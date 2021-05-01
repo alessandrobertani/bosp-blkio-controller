@@ -197,7 +197,7 @@ function XML_GetStorageDeviceType {
 function ReadTest {
 	CURR_R_BW=$(sudo hdparm -t /dev/$name | awk 'NR==3 {print $11}')
 	CURR_R_BW=${CURR_R_BW%.*}
-	R_BW=$(($R_BW + $CURR_R_BW))
+	echo $CURR_R_BW >> ./$R_RES_FILE
 	COUNT=$(($COUNT + 5))
 }
 
@@ -205,17 +205,37 @@ function WriteTest {
 	DD_OUT=$(dd if=/dev/zero of=./$TEMP_FILE bs=4k count=250k conv=fdatasync 2>&1 >/dev/null | awk 'NR==3{print $10, $11}')
 	CURR_W_BW=$(echo $DD_OUT | awk '{print $1}' | tr ',' '.')
 	if [[ "$(echo $DD_OUT | awk '{print $2}')" == "GB/s" ]]; then
-		CURR_W_BW=$((CURR_W_BW * 1000))
+		CURR_W_BW=$(echo "$CURR_W_BW * 1000" | bc -l)
 	fi	
-	COUNT=$(($COUNT + 5))
-	
 	CURR_W_BW=${CURR_W_BW%.*}
-	W_BW=$(($W_BW + CURR_W_BW))
+	echo $CURR_W_BW >> ./$W_RES_FILE
+	COUNT=$(($COUNT + 5))
+}
+
+function Compute_Avg_Variance {
+	cat ./$TEMP_FILE | awk '{
+ 		sum = $1;       
+  		for (n=2; n <= NF; n++) { 
+    		sum += $n;              
+  		}
+		avg = sum/NF;
+		
+		sum = ($1 - avg) * ($1 - avg);
+		for (n=2; n <= NF; n++) {
+			sum += ($n - avg) * ($n - avg);
+		}
+		var = sum/(NF-1);
+  		print avg " " var
+	}' > ./$RES_FILE
+	cat ./$RES_FILE >> logfile
 }
 
 function XML_TestReadWriteBW {
     NUM_ITERS=10
 	TEMP_FILE=tempfile
+	R_RES_FILE=r_resfile
+	W_RES_FILE=w_resfile
+	RES_FILE=resfile
 	R_BW=0
 	W_BW=0
 
@@ -243,26 +263,27 @@ function XML_TestReadWriteBW {
 		
         rm ./$TEMP_FILE
     	done
-
-		echo "$R_BW" > ./$TEMP_FILE
-		echo "$W_BW" >> ./$TEMP_FILE
-
 	) | dialog --title "Bandwidth Test" --gauge "Testing read and write bandwidth of the disk /dev/$name" 15 70 0;
 	
-	R_BW=$(cat ./$TEMP_FILE | awk 'NR==1{print $1}')
-    R_BW=$(echo $R_BW / $NUM_ITERS | bc -l)
-    R_BW=${R_BW%.*}
+	cat ./$R_RES_FILE | tr '\n' ' ' > ./$TEMP_FILE
+	Compute_Avg_Variance
+	R_BW=$(cat ./$RES_FILE | awk 'NR==1{print $1}')
+	R_VAR=$(cat ./$RES_FILE | awk 'NR==1{print $2}')
 
-	W_BW=$(cat ./$TEMP_FILE | awk 'NR==2{print $1}')
-    W_BW=$(echo $W_BW / $NUM_ITERS | bc -l)
-    W_BW=${W_BW%.*}
+	cat ./$W_RES_FILE | tr '\n' ' ' > ./$TEMP_FILE
+	Compute_Avg_Variance
+	W_BW=$(cat ./$RES_FILE | awk 'NR==1{print $1}')
+	W_VAR=$(cat ./$RES_FILE | awk 'NR==1{print $2}')
 
 	dialog --title "Summary" --colors --msgbox 'The following parameters were detected.
-    * \ZbRead Bandwidth\ZB: '"$R_BW"' MB/s
-    * \ZbWrite Bandwidth\ZB: '"$W_BW"' MB/s
+    * \ZbRead Bandwidth\ZB: '"$R_BW"' MB/s, variance: '"$R_VAR"'
+    * \ZbWrite Bandwidth\ZB: '"$W_BW"' MB/s, variance: '"$W_VAR"'
 
 	Press OK to exit.' 15 70;
 	clear
+	rm ./$R_RES_FILE
+	rm ./$W_RES_FILE
+	rm ./$RES_FILE
 	rm ./$TEMP_FILE
 }
 
