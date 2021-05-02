@@ -227,7 +227,6 @@ function Compute_Avg_Variance {
 		var = sum/(NF-1);
   		print avg " " var
 	}' > ./$RES_FILE
-	cat ./$RES_FILE >> logfile
 }
 
 function XML_TestReadWriteBW {
