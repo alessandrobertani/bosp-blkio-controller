@@ -732,17 +732,19 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 	node_ptr storage_tag = this->GetFirstChild(root, "storage", false) ;
 	while ( storage_tag != NULL ) {
 		pp::PlatformDescription::Storage storage;
-		attr_ptr id_attr       = this->GetFirstAttribute(storage_tag, "id",       true);
-		attr_ptr quantity_attr = this->GetFirstAttribute(storage_tag, "quantity", true);
-		attr_ptr unit_attr     = this->GetFirstAttribute(storage_tag, "unit",     true);
-		attr_ptr bw_attr       = this->GetFirstAttribute(storage_tag, "bandwidth", true);
-		attr_ptr bw_unit_attr  = this->GetFirstAttribute(storage_tag, "bw_unit",  true);
-		attr_ptr type_attr     = this->GetFirstAttribute(storage_tag, "type",     false);
+		attr_ptr id_attr       = this->GetFirstAttribute(storage_tag, "id",       		true);
+		attr_ptr quantity_attr = this->GetFirstAttribute(storage_tag, "quantity",	 	true);
+		attr_ptr unit_attr     = this->GetFirstAttribute(storage_tag, "unit",    		true);
+		attr_ptr r_bw_attr     = this->GetFirstAttribute(storage_tag, "read_bandwidth", true);
+		attr_ptr w_bw_attr     = this->GetFirstAttribute(storage_tag, "write_bandwidth",true);
+		attr_ptr bw_unit_attr  = this->GetFirstAttribute(storage_tag, "bw_unit",  		true);
+		attr_ptr type_attr     = this->GetFirstAttribute(storage_tag, "type",     		false);
 
 		short        id;
 		int          quantity;
 		int_fast16_t exp;
-		uint64_t     bandwidth;
+		uint64_t	 read_bandwidth;
+		uint64_t     write_bandwidth;
 		int_fast16_t bw_exp;
 
 		// id=""
@@ -796,16 +798,30 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 			break;
 		}
 
-		// bandwidth=""
+		// read_bandwidth=""
 		try {
-			bandwidth = std::stoi(bw_attr->value());
+			read_bandwidth = std::stoi(r_bw_attr->value());
 		}
 		catch (const std::invalid_argument &e) {
-			logger->Error("ParseStorages: bandwidth for <storage> is not a valid integer.");
+			logger->Error("ParseStorages: read bandwidth for <storage> is not a valid integer.");
 			return PL_LOGIC_ERROR;
 		}
 		catch (const std::out_of_range &e) {
-			logger->Error("ParseStorages: bandwidth for <storage> is out-of-range,"
+			logger->Error("ParseStorages: read bandwidth for <storage> is out-of-range,"
+				" please increase your unit.");
+			return PL_LOGIC_ERROR;
+		}
+
+		// write_bandwidth=""
+		try {
+			write_bandwidth = std::stoi(w_bw_attr->value());
+		}
+		catch (const std::invalid_argument &e) {
+			logger->Error("ParseStorages: write bandwidth for <storage> is not a valid integer.");
+			return PL_LOGIC_ERROR;
+		}
+		catch (const std::out_of_range &e) {
+			logger->Error("ParseStorages: write bandwidth for <storage> is out-of-range,"
 				" please increase your unit.");
 			return PL_LOGIC_ERROR;
 		}
@@ -865,7 +881,7 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 		storage.SetPrefix(sys.GetPath());
 		storage.SetId(id);
 		storage.SetQuantity(((int64_t)quantity) << exp);
-		storage.SetBandwidth((uint64_t)bandwidth << bw_exp);
+		storage.SetBandwidth((uint64_t)read_bandwidth << bw_exp);
 		sys.AddStorage(std::make_shared<pp::PlatformDescription::Storage>(storage));
 
 		storage_tag = storage_tag->next_sibling("storage");
