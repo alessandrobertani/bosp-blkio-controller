@@ -731,7 +731,10 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 	// other tags, due to reference to memories inside them.
 	node_ptr storage_tag = this->GetFirstChild(root, "storage", false) ;
 	while ( storage_tag != NULL ) {
-		pp::PlatformDescription::Storage storage;
+		pp::PlatformDescription::Block block_dev;
+		pp::PlatformDescription::Storage read_storage;
+		pp::PlatformDescription::Storage write_storage;
+
 		attr_ptr id_attr       = this->GetFirstAttribute(storage_tag, "id",       		true);
 		attr_ptr quantity_attr = this->GetFirstAttribute(storage_tag, "quantity",	 	true);
 		attr_ptr unit_attr     = this->GetFirstAttribute(storage_tag, "unit",    		true);
@@ -854,19 +857,24 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 
 			switch (ConstHashString(type_attr->value())) {
 			case ConstHashString("hdd"):
-				storage.SetStorageType(pp::PlatformDescription::HDD);
+				read_storage.SetStorageType(pp::PlatformDescription::HDD);
+				write_storage.SetStorageType(pp::PlatformDescription::HDD);
 				break;
 			case ConstHashString("ssd"):
-				storage.SetStorageType(pp::PlatformDescription::SSD);
+				read_storage.SetStorageType(pp::PlatformDescription::SSD);
+				write_storage.SetStorageType(pp::PlatformDescription::SSD);
 				break;
 			case ConstHashString("sd"):
-				storage.SetStorageType(pp::PlatformDescription::SD);
+				read_storage.SetStorageType(pp::PlatformDescription::SD);
+				write_storage.SetStorageType(pp::PlatformDescription::SD);
 				break;
 			case ConstHashString("emmc"):
-				storage.SetStorageType(pp::PlatformDescription::EMMC);
+				read_storage.SetStorageType(pp::PlatformDescription::EMMC);
+				write_storage.SetStorageType(pp::PlatformDescription::EMMC);
 				break;
 			default:
-				storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+				read_storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+				write_storage.SetStorageType(pp::PlatformDescription::CUSTOM);
 				logger->Warn("ParseStorages: <storage> type='%s' -> setting CUSTOM",
 					type_attr->value());
 				break;
@@ -874,15 +882,28 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 		}
 		else {
 			// If not specified the default is custom.
-			storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+			read_storage.SetStorageType(pp::PlatformDescription::CUSTOM);
+			write_storage.SetStorageType(pp::PlatformDescription::CUSTOM);
 		}
 
+		block_dev.SetPrefix(sys.GetPath());
+		block_dev.SetId(id);
 
-		storage.SetPrefix(sys.GetPath());
-		storage.SetId(id);
-		storage.SetQuantity(((int64_t)quantity) << exp);
-		storage.SetBandwidth((uint64_t)read_bandwidth << bw_exp);
-		sys.AddStorage(std::make_shared<pp::PlatformDescription::Storage>(storage));
+		read_storage.SetPrefix(block_dev.GetPath());
+		read_storage.SetId(0);
+		read_storage.SetQuantity(((int64_t)quantity) << exp);
+		read_storage.SetBandwidth((uint64_t)read_bandwidth << bw_exp);
+		sys.AddStorage(std::make_shared<pp::PlatformDescription::Storage>(read_storage));
+
+		write_storage.SetPrefix(block_dev.GetPath());
+		write_storage.SetId(1);
+		write_storage.SetQuantity(((int64_t)quantity) << exp);
+		write_storage.SetBandwidth((uint64_t)write_bandwidth << bw_exp);
+		sys.AddStorage(std::make_shared<pp::PlatformDescription::Storage>(write_storage));
+
+		block_dev.SetReadDevice(std::make_shared<pp::PlatformDescription::Storage>(read_storage));
+		block_dev.SetWriteDevice(std::make_shared<pp::PlatformDescription::Storage>(write_storage));
+
 
 		storage_tag = storage_tag->next_sibling("storage");
 	}
