@@ -436,6 +436,27 @@ public:
 
 	typedef std::shared_ptr<Storage> Storage_t;
 
+	class Block : public Resource
+	{
+	public:
+		Block(uint16_t id = 0)
+			: Resource(id, res::ResourceType::BLOCK) { }
+
+		void SetReadDevice(Storage_t device)
+		{
+			read_device = device;
+		}
+
+		void SetWriteDevice(Storage_t device)
+		{
+			write_device = device;
+		}
+
+	private:
+		Storage_t read_device;
+		Storage_t write_device;
+	};
+
 	class System : public Resource
 	{
 	public:
