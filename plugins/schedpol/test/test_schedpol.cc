@@ -267,6 +267,24 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 	}
 #endif
 
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+	uint32_t r_bw_quota = 1; // The Process class still does not have these parameters.
+	uint32_t w_bw_quota = 1; // They have to be added.
+	if (r_bw_quota != 0 && w_bw_quota != 0) {
+		pawm -> AddResourceRequest("sys.blk0.io0",
+					r_bw_quota,
+					br::ResourceAssignment::Policy::BALANCED);
+		pawm -> AddResourceRequest("sys.blk0.io1",
+					w_bw_quota,
+					br::ResourceAssignment::Policy::BALANCED);
+
+		logger->Debug("AddResourceRequests: [%s] <sys.blk0.io0> = %d",
+			proc->StrId(), r_bw_quota);
+		logger->Debug("AddResourceRequests: [%s] <sys.blk0.io1> = %d",
+			proc->StrId(), w_bw_quota);
+	}
+#endif // CONFIG_BBQUE_LINUX_CG_BLKIO
+
 	return SCHED_OK;
 }
 
@@ -564,6 +582,7 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 	}
 #endif
 
+	// Add an ifdef for the block I/O controller 
 	return SCHED_OK;
 }
 
