@@ -271,8 +271,6 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 	uint32_t r_bw_quota = 100; // The Process class still does not have these parameters.
 	uint32_t w_bw_quota = 100; // They have to be added.
 
-	uint32_t r_bw_quota = 1; // The Process class still does not have these parameters.
-	uint32_t w_bw_quota = 1; // They have to be added.
 	if (r_bw_quota != 0 && w_bw_quota != 0) {
 		pawm -> AddResourceRequest("sys.blk0.io0",
 					r_bw_quota,
@@ -286,6 +284,24 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 		logger->Debug("AddResourceRequests: [%s] <sys.blk0.io1> = %d",
 			proc->StrId(), w_bw_quota);
 	}
+
+	// Add a call to pawm->BindResource() for each one of them.
+
+	br::ResourcePath r_bw_path = br::ResourcePath("sys.blk0.io0");
+	br::ResourcePath w_bw_path = br::ResourcePath("sys.blk0.io1");
+
+	pawm -> BindResource(
+		br::ResourceType::IO,
+		R_ID_ANY,
+		r_bw_path.GetID()
+	);
+
+	pawm -> BindResource(
+		br::ResourceType::IO,
+		R_ID_ANY,
+		w_bw_path.GetID()
+	);
+
 #endif // CONFIG_BBQUE_LINUX_CG_BLKIO
 
 	return SCHED_OK;
