@@ -82,6 +82,8 @@
 #define BBQUE_PP_LINUX_MEM_EXCLUSIVE_PARAM  "cpuset.mem_exclusive"
 #define BBQUE_PP_LINUX_PROCS_PARAM          "cgroup.procs"
 #define BBQUE_PP_LINUX_NETCLS_PARAM         "net_cls.classid"
+#define BBQUE_PP_LINUX_R_IO_PARAM			"blkio.throttle.read_bps_device"
+#define BBQUE_PP_LINUX_W_IO_PARAM			"blkio.throttle.write_bps_device"
 
 #define BBQUE_PP_LINUX_SYS_MEMINFO "/proc/meminfo"
 
