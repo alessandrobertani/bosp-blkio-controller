@@ -293,13 +293,13 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 	pawm -> BindResource(
 		br::ResourceType::IO,
 		R_ID_ANY,
-		r_bw_path.GetID()
+		r_bw_path.GetID(br::ResourceType::IO)
 	);
 
 	pawm -> BindResource(
 		br::ResourceType::IO,
 		R_ID_ANY,
-		w_bw_path.GetID()
+		w_bw_path.GetID(br::ResourceType::IO)
 	);
 
 #endif // CONFIG_BBQUE_LINUX_CG_BLKIO
