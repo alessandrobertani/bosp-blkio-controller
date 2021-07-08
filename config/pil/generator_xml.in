@@ -239,7 +239,7 @@ function XML_TestReadWriteBW {
 	W_BW=0
 
 	dialog --title "Storage Bandwidth Test" --colors --msgbox \
-	'A read/write bandwidth test will now be executed on the storage device '"$name"'.
+	'A read/write bandwidth test will now be executed on the storage device /dev/'"$name"'.
 	It may take several minutes, depending on the actual bandwidth of the device.
 	Press OK to start the test.' 15 70;
 
