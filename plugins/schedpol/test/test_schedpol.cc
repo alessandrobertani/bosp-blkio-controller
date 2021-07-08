@@ -268,6 +268,9 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 #endif
 
 #ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+	uint32_t r_bw_quota = 100; // The Process class still does not have these parameters.
+	uint32_t w_bw_quota = 100; // They have to be added.
+
 	uint32_t r_bw_quota = 1; // The Process class still does not have these parameters.
 	uint32_t w_bw_quota = 1; // They have to be added.
 	if (r_bw_quota != 0 && w_bw_quota != 0) {
