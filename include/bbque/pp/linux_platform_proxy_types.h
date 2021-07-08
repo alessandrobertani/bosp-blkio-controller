@@ -55,6 +55,16 @@ namespace bbque {
 namespace pp {
 
 /**
+ * @brief Stores major and minor numbers of the device, and resource path pointers for both bandwidth attributes
+ */
+struct IODevInfo_t
+{
+	std::string dev = NULL;
+	br::ResourcePathPtr_t r_bw_path = NULL;
+	br::ResourcePathPtr_t w_bw_path = NULL;
+}
+
+/**
  * @brief Resource assignment bindings on a Linux machine
  */
 struct RLinuxBindings_t
