@@ -64,6 +64,8 @@ struct IODevInfo_t
 	br::ResourcePathPtr_t w_bw_path = NULL;
 }
 
+using IODevInfoPtr_t = std::shared_ptr<IODevInfo_t>;
+
 /**
  * @brief Resource assignment bindings on a Linux machine
  */
