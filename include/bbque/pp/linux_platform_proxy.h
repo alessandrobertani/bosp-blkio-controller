@@ -199,6 +199,31 @@ private:
 	void RegisterForEnergyMonitoring(std::string const & resource_path);
 
 #endif
+
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+	/**
+	 * @brief A vector of objects holding information about the IO devices.
+	 */
+	std::vector<IODevInfoPtr_t> dev_info;
+
+	/**
+	 * @brief Adds a new IO device to the vector dev_info.
+	 * @param dev The major:minor string to be stored.
+	 */
+	ExitCode_t MakeNewIODev(std::string const & dev);
+	
+	/**
+	 * @brief Adds the device path to the first available slot.
+	 * @param resource_path The resource path.
+	 */
+	ExitCode_t AddDevicePath(br::ResourcePathPtr_t resource_path);
+
+	/**
+	 * @brief Read the platform description and initialize the IO device information.
+	*/
+	void InitIODevInfo();
+
+#endif
 	/**
 	 * @brief Load values from the configuration file
 	 */
