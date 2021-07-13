@@ -164,7 +164,7 @@ function SetManagedPartition {
 
 	MDEV_PES=$(cat $DIALOG_TEMP_FILE)
 
-	if [ "$HOST_PES" == "" ]; then
+	if [ "$MDEV_PES" == "" ]; then
 		echo "No managed device selected. Aborting."
 		CloseGenerator
 	fi
