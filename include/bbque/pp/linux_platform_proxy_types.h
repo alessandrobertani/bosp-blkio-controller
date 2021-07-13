@@ -62,7 +62,7 @@ struct IODevInfo_t
 	std::string dev = NULL;
 	br::ResourcePathPtr_t r_bw_path = NULL;
 	br::ResourcePathPtr_t w_bw_path = NULL;
-}
+};
 
 using IODevInfoPtr_t = std::shared_ptr<IODevInfo_t>;
 
