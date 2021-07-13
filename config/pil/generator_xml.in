@@ -286,9 +286,42 @@ function XML_TestReadWriteBW {
 	rm ./$TEMP_FILE
 }
 
+function SelectDevices {
+	TEMP_FILE="tempfile"
+	DISKS_FILE="disks"
+	DEVS_FILE="selected_devs"
+
+	lsblk --output NAME,MAJ:MIN,SIZE,TYPE | grep disk  > ./$DISKS_FILE
+    cat $DISKS_FILE | awk '{ print NR" /dev/"$1" off"}' > ./$TEMP_FILE
+
+    dialog --checklist "Select which disks will be managed." \
+		20 75 15 $(cat ./$TEMP_FILE) 2> ./$TEMP_FILE
+
+	SELECTED_DEVS=$(cat ./$TEMP_FILE)
+
+	if [ "$SELECTED_DEVS" == "" ]; then
+		echo "No host device selected. Aborting."
+		exit
+	fi
+
+	DISKS=($(cat $DISKS_FILE | awk '{ print $1 }'))
+	SELECTED_DEVS=($(echo $SELECTED_DEVS))
+	
+	for i in "${SELECTED_DEVS}"
+	do
+		sed "${i}q;d" $DISKS_FILE >> $DEVS_FILE
+	done
+
+	rm ./$TEMP_FILE
+	rm ./$DISKS_FILE
+}
+
 function XML_GenStorageDevices {
 	bbqid=0
-	lsblk --output NAME,MAJ:MIN,SIZE,TYPE | grep disk | \
+
+	SelectDevices
+
+	cat $DEVS_FILE | \
 	while read i
 	do
 		name=`echo $i | awk '{ print $1 }'`
@@ -306,6 +339,7 @@ function XML_GenStorageDevices {
 		echo "    <storage id=\"$bbqid\" dev=\"$devid\" name=\"$name\" quantity=\"$size\" unit=\"GB\" bw_unit=\"MB/s\" read_bandwidth=\"$R_BW\" write_bandwidth=\"$W_BW\" type=\"$TYPE\"/>" >> $TMP_FOLDER/xml_disks
 		bbqid=`expr $bbqid + 1`
 	done
+	rm ./$DEVS_FILE
 }
 
 
