@@ -152,6 +152,10 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 	InitNetworkManagement();
 #endif
 
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+	// InitIODevInfo();
+#endif
+
 }
 
 LinuxPlatformProxy::~LinuxPlatformProxy()
@@ -408,6 +412,45 @@ LinuxPlatformProxy::HTBParseClassOpt(unsigned rate, struct nlmsghdr *n)
 	addattr_l(n, 2024, TCA_HTB_PARMS, &opt, sizeof (opt));
 	tail->rta_len = (char *) NLMSG_TAIL(n) - (char *) tail;
 	return PLATFORM_OK;
+}
+
+#endif
+
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+
+void LinuxPlatformProxy::InitIODevInfo()
+{
+	// Create an RXMLPlatformLoader
+	// Use its platform_dir parameter to access systems.xml, then use its utility functions to retrieve the nodes.
+}
+
+LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeNewIODev(std::string const & dev)
+{
+	// Creates a new element and adds it to the vector this -> dev_info.
+	IODevInfoPtr_t new_info = std::make_shared<IODevInfo_t>;
+	new_info->dev = dev;
+
+	this->dev_info.push_back(new_info);
+
+	return LinuxPlatformProxy::PLATFORM_OK;
+}
+
+LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::AddDevicePath(br::ResourcePathPtr_t resource_path)
+{
+	// Search the first available bandwidth path and set it to resource_path.
+	for(auto & dev: this->dev_info) {
+		if(dev->r_bw_path = NULL){
+			dev->r_bw_path = resource_path;
+			return LinuxPlatformProxy::PLATFORM_OK;
+		}
+
+		if(dev->w_bw_path = NULL){
+			dev->w_bw_path = resource_path;
+			return LinuxPlatformProxy::PLATFORM_OK;
+		}
+	}
+
+	return LinuxPlatformProxy::PLATFORM_GENERIC_ERROR;
 }
 
 #endif
