@@ -1164,7 +1164,9 @@ LinuxPlatformProxy::RegisterIODev(const PlatformDescription::IO &io_dev,
 		ra.UpdateResource(resource_path, "", bps);
 	}
 	else {
-		ra.RegisterResource(resource_path, "", bps);
+		// May save the returned resource path pointers to use them in MapResources
+		bbque::res::ResourcePtr_t res_ptr = ra.RegisterResource(resource_path, "", bps);
+		AddDevicePath(res_ptr->Path());
 	}
 	logger->Debug("RegisterIODev: Registration of <%s> successfully performed",
 		resource_path.c_str());
