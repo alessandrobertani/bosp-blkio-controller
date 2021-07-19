@@ -153,7 +153,7 @@ LinuxPlatformProxy::LinuxPlatformProxy() :
 #endif
 
 #ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
-	// InitIODevInfo();
+	InitIODevInfo();
 #endif
 
 }
@@ -422,12 +422,15 @@ void LinuxPlatformProxy::InitIODevInfo()
 {
 	// Create an RXMLPlatformLoader
 	// Use its platform_dir parameter to access systems.xml, then use its utility functions to retrieve the nodes.
+
+	// This is for testing purposes only.
+	MakeNewIODev("259:0");
 }
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeNewIODev(std::string const & dev)
 {
 	// Creates a new element and adds it to the vector this -> dev_info.
-	IODevInfoPtr_t new_info = std::make_shared<IODevInfo_t>;
+	IODevInfoPtr_t new_info = std::make_shared<IODevInfo_t>();
 	new_info->dev = dev;
 
 	this->dev_info.push_back(new_info);
