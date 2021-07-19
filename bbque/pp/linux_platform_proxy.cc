@@ -905,6 +905,32 @@ LinuxPlatformProxy::GetResourceMapping(SchedPtr_t papp,
 	logger->Debug("GetResourceMapping: cpu[%d] network bandwidth: { %lld }",
 		node_id, prlb->amount_net_bw);
 
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+	uint64_t r_bw = ra.GetAssignedAmount(
+					 assign_map,
+					 papp, rvt,
+					 dev_info[0]->r_bw_path);
+
+	uint64_t w_bw =  ra.GetAssignedAmount(
+					 assign_map,
+					 papp, rvt,
+					 dev_info[0]->w_bw_path);
+
+	if(r_bw > 0) prlb -> amount_read_bw = r_bw;
+	else prlb -> amount_read_bw = -1;
+
+	if(w_bw > 0) prlb -> amount_write_bw = w_bw;
+	else prlb -> amount_write_bw = -1;
+
+#else
+	prlb -> amount_read_bw = -1;
+	prlb -> amount_write_bw = -1;
+#endif
+	logger->Debug("GetResourceMapping: cpu[%d] read bandwidth: { %lld }",
+		node_id, prlb->amount_read_bw);
+	logger->Debug("GetResourceMapping: cpu[%d] write bandwidth: { %lld }",
+		node_id, prlb->amount_write_bw);
+
 	return PLATFORM_OK;
 }
 
@@ -1582,6 +1608,39 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 	else {
 		logger->Warn("SetupCGroup: CFS quota enforcement not supported by the kernel");
 	}
+#endif
+
+	/**********************************************************************
+	 *    Block I/O Controller
+	 **********************************************************************/
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
+	assert(prlb->amount_read_bw >= -1);
+	assert(prlb->amount_read_bw >= -1);
+
+	std::string dev = dev_info[0] -> dev;
+
+	char quota[] = "9223372036854775807";
+	// Set the assigned READ BANDWIDTH amount
+	if (prlb->amount_read_bw > 0)
+		sprintf(quota, "%s %lu", dev.c_str(), prlb->amount_read_bw * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
+	else
+		sprintf(quota, "%s -1", dev.c_str());
+
+	cgroup_set_value_string(pcgd->pc_blkio, BBQUE_PP_LINUX_R_IO_PARAM, quota);
+
+	logger->Debug("SetupCGroup: READ BANDWIDTH for [%s]: {maj:min bytes_limit [%s] bps}",
+		pcgd->papp->StrId(), quota);
+
+	// Set the assigned WRITE BANDWIDTH amount
+	if (prlb->amount_write_bw > 0)
+		sprintf(quota, "%s %lu", dev.c_str(), prlb->amount_write_bw * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
+	else
+		sprintf(quota, "%s -1", dev.c_str());
+
+	cgroup_set_value_string(pcgd->pc_blkio, BBQUE_PP_LINUX_W_IO_PARAM, quota);
+
+	logger->Debug("SetupCGroup: WRITE BANDWIDTH for [%s]: {maj:min bytes_limit [%s] bps}",
+		pcgd->papp->StrId(), quota);
 #endif
 
 	/**********************************************************************
