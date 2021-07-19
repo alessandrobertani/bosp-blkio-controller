@@ -653,6 +653,24 @@ ResourceAccounter::GetAssignedAmount(br::ResourceAssignmentMap_t const & assign_
 	return amount;
 }
 
+uint64_t
+ResourceAccounter::GetAssignedAmount(br::ResourceAssignmentMapPtr_t const & assign_map,
+					ba::SchedPtr_t papp,
+					br::RViewToken_t status_view,
+					br::ResourcePathPtr_t resource_path)
+{
+	uint64_t amount = 0;
+	for (auto & ru_entry : *assign_map){
+		if (ru_entry.first->ToString() != resource_path->ToString())
+			continue;
+		
+		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
+		amount += r_assign->GetAmount();
+	}
+
+	return amount;
+}
+
 ResourceAccounter::ExitCode_t
 ResourceAccounter::CheckAvailability(br::ResourceAssignmentMapPtr_t const & assign_map,
 				     br::RViewToken_t status_view,

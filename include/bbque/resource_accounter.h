@@ -296,6 +296,25 @@ public:
 				BBQUE_RID_TYPE r_scope_id = R_ID_ANY) const;
 
 	/**
+	 * @brief Get the cumulative amount of resource usage
+	 * 
+	 * This version should be used to perform a query on a specific
+	 * resource, given its path.
+	 * 
+	 * @param assign_map A map of Usage pointers
+	 * @param papp The application requiring resource assignments
+	 * @param status_view The token referencing the resource state view
+	 * @param resource_path The path to the resource
+	 * 
+	 * @return The amount of resource usage
+	 */
+	uint64_t GetAssignedAmount(
+				br::ResourceAssignmentMapPtr_t const & assign_map,
+				ba::SchedPtr_t papp,
+				br::RViewToken_t status_view,
+				br::ResourcePathPtr_t resource_path);
+
+	/**
 	 * @brief Show the system resources status
 	 *
 	 * This is an utility function for debug purpose that print out all the
