@@ -268,27 +268,27 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 #endif
 
 #ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
-	uint32_t r_bw_quota = 100; // The Process class still does not have these parameters.
-	uint32_t w_bw_quota = 100; // They have to be added.
+	uint32_t r_bw_quota = 100; // Test values
+	uint32_t w_bw_quota = 100; 
 
 	if (r_bw_quota != 0 && w_bw_quota != 0) {
-		pawm -> AddResourceRequest("sys.blk0.io0",
+		pawm -> AddResourceRequest("sys0.blk0.io0",
 					r_bw_quota,
 					br::ResourceAssignment::Policy::BALANCED);
-		pawm -> AddResourceRequest("sys.blk0.io1",
+		pawm -> AddResourceRequest("sys0.blk0.io1",
 					w_bw_quota,
 					br::ResourceAssignment::Policy::BALANCED);
 
-		logger->Debug("AddResourceRequests: [%s] <sys.blk0.io0> = %d",
+		logger->Debug("AddResourceRequests: [%s] <sys0.blk0.io0> = %d",
 			proc->StrId(), r_bw_quota);
-		logger->Debug("AddResourceRequests: [%s] <sys.blk0.io1> = %d",
+		logger->Debug("AddResourceRequests: [%s] <sys0.blk0.io1> = %d",
 			proc->StrId(), w_bw_quota);
 	}
 
 	// Add a call to pawm->BindResource() for each one of them.
 
-	br::ResourcePath r_bw_path = br::ResourcePath("sys.blk0.io0");
-	br::ResourcePath w_bw_path = br::ResourcePath("sys.blk0.io1");
+	br::ResourcePath r_bw_path = br::ResourcePath("sys0.blk0.io0");
+	br::ResourcePath w_bw_path = br::ResourcePath("sys0.blk0.io1");
 
 	pawm -> BindResource(
 		br::ResourceType::IO,
