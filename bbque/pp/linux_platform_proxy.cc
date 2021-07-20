@@ -430,12 +430,10 @@ void LinuxPlatformProxy::InitIODevInfo()
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeNewIODev(std::string const & dev)
 {
 	// Creates a new element and adds it to the vector this -> dev_info.
-	IODevInfoPtr_t new_info = std::make_shared<IODevInfo_t>();
-	new_info->dev = dev;
-
+	IODevInfoPtr_t new_info = std::make_shared<IODevInfo_t>(dev);
 	this->dev_info.push_back(new_info);
 
-	return LinuxPlatformProxy::PLATFORM_OK;
+	return PLATFORM_OK;
 }
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::AddDevicePath(br::ResourcePathPtr_t resource_path)
