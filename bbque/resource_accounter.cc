@@ -659,13 +659,17 @@ ResourceAccounter::GetAssignedAmount(br::ResourceAssignmentMapPtr_t const & assi
 					br::RViewToken_t status_view,
 					br::ResourcePathPtr_t resource_path)
 {
+	logger->Debug("GetAssignedAmount: searching for resource %s", resource_path->ToString().c_str());
 	uint64_t amount = 0;
 	for (auto & ru_entry : *assign_map){
-		if (ru_entry.first->ToString() != resource_path->ToString())
-			continue;
 		
+		if (!ru_entry.first->ToString().compare(resource_path->ToString()))
+			continue;
+	
 		br::ResourceAssignmentPtr_t const & r_assign(ru_entry.second);
-		amount += r_assign->GetAmount();
+		amount = r_assign->GetAmount();
+		logger->Debug("GetAssignedAmount: entry %s, qty %d", ru_entry.first->ToString().c_str(), amount);
+
 	}
 
 	return amount;
