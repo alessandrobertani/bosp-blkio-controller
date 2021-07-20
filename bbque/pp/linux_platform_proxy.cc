@@ -420,11 +420,29 @@ LinuxPlatformProxy::HTBParseClassOpt(unsigned rate, struct nlmsghdr *n)
 
 void LinuxPlatformProxy::InitIODevInfo()
 {
-	// Create an RXMLPlatformLoader
-	// Use its platform_dir parameter to access systems.xml, then use its utility functions to retrieve the nodes.
+	const PlatformDescription *pd;
 
-	// This is for testing purposes only.
-	MakeNewIODev("259:0");
+	try {
+		pd = &this->GetPlatformDescription();
+	}
+	catch (const std::runtime_error& e) {
+		UNUSED(e);
+		logger->Fatal("ScanPlatformDescription: PlatformDescription object missing");
+	}
+
+	for(const auto & sys_entry : pd->GetSystemsAll()) {
+		auto sys = sys_entry.second;
+
+		for(const auto storage : sys.GetStoragesAll()) {
+			if(storage -> GetId() == 0) MakeNewIODev(storage->GetDev());
+		}
+	}
+
+	logger->Debug("InitIODevInfo: found %d storage device(s).", this->dev_info.size());
+	for (const auto device : this->dev_info) {
+		logger->Debug("InitIODevInfo: %s", 
+						device->dev.c_str());
+	}
 }
 
 LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::MakeNewIODev(std::string const & dev)
