@@ -59,9 +59,14 @@ namespace pp {
  */
 struct IODevInfo_t
 {
-	std::string dev = NULL;
+	std::string dev = "";
 	br::ResourcePathPtr_t r_bw_path = NULL;
 	br::ResourcePathPtr_t w_bw_path = NULL;
+
+	IODevInfo_t(std::string const & dev)
+	{
+		this->dev = dev;
+	}
 };
 
 using IODevInfoPtr_t = std::shared_ptr<IODevInfo_t>;
