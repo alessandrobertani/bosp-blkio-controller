@@ -741,6 +741,7 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 		attr_ptr r_bw_attr     = this->GetFirstAttribute(storage_tag, "read_bandwidth", true);
 		attr_ptr w_bw_attr     = this->GetFirstAttribute(storage_tag, "write_bandwidth",true);
 		attr_ptr bw_unit_attr  = this->GetFirstAttribute(storage_tag, "bw_unit",  		true);
+		attr_ptr dev		   = this->GetFirstAttribute(storage_tag, "dev", 			true);
 		attr_ptr type_attr     = this->GetFirstAttribute(storage_tag, "type",     		false);
 
 		short        id;
@@ -841,7 +842,7 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 			bw_exp = 20;
 			break;
 		case ConstHashString("GB/s"):
-			bw_exp = 20;
+			bw_exp = 30;
 			break;
 		case ConstHashString("TB/s"):
 			bw_exp = 40;
@@ -893,12 +894,14 @@ RXMLPlatformLoader::ParseStorages(node_ptr root,
 		read_storage.SetId(0);
 		read_storage.SetQuantity(((int64_t)quantity) << exp);
 		read_storage.SetBandwidth((uint64_t)read_bandwidth << bw_exp);
+		read_storage.SetDev(std::string(dev->value()));
 		sys.AddStorage(std::make_shared<pp::PlatformDescription::Storage>(read_storage));
 
 		write_storage.SetPrefix(block_dev.GetPath());
 		write_storage.SetId(1);
 		write_storage.SetQuantity(((int64_t)quantity) << exp);
 		write_storage.SetBandwidth((uint64_t)write_bandwidth << bw_exp);
+		write_storage.SetDev(std::string(dev->value()));
 		sys.AddStorage(std::make_shared<pp::PlatformDescription::Storage>(write_storage));
 
 		block_dev.SetReadDevice(std::make_shared<pp::PlatformDescription::Storage>(read_storage));

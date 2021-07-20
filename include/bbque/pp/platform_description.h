@@ -422,11 +422,23 @@ public:
 			this->storage_type = type;
 		}
 
+		std::string GetDev() const
+		{
+			return this->dev;
+		}
+
+		void SetDev(std::string dev)
+		{
+			this->dev = dev;
+		}
+
 		void SetType(res::ResourceType type) = delete;
 
 	private:
 
 		std::string device_id;
+
+		std::string dev; /** Major and minor number of the device */
 
 		uint64_t quantity;
 
