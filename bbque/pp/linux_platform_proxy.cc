@@ -458,13 +458,15 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::AddDevicePath(br::ResourcePat
 {
 	// Search the first available bandwidth path and set it to resource_path.
 	for(auto & dev: this->dev_info) {
-		if(dev->r_bw_path = NULL){
+		if(dev->r_bw_path == NULL){
 			dev->r_bw_path = resource_path;
+			logger->Debug("AddDevicePath: set %s as read bw path of %s", resource_path->ToString().c_str(), dev->dev.c_str());
 			return LinuxPlatformProxy::PLATFORM_OK;
 		}
 
-		if(dev->w_bw_path = NULL){
+		if(dev->w_bw_path == NULL){
 			dev->w_bw_path = resource_path;
+			logger->Debug("AddDevicePath: set %s as write bw path of %s", resource_path->ToString().c_str(), dev->dev.c_str());
 			return LinuxPlatformProxy::PLATFORM_OK;
 		}
 	}
