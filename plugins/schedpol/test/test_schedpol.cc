@@ -285,22 +285,6 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 			proc->StrId(), w_bw_quota);
 	}
 
-	// Add a call to pawm->BindResource() for each one of them.
-
-	br::ResourcePath r_bw_path = br::ResourcePath("sys0.blk0.io0");
-	br::ResourcePath w_bw_path = br::ResourcePath("sys0.blk0.io1");
-
-	pawm -> BindResource(
-		br::ResourceType::IO,
-		R_ID_ANY,
-		r_bw_path.GetID(br::ResourceType::IO)
-	);
-
-	pawm -> BindResource(
-		br::ResourceType::IO,
-		R_ID_ANY,
-		w_bw_path.GetID(br::ResourceType::IO)
-	);
 
 #endif // CONFIG_BBQUE_LINUX_CG_BLKIO
 
@@ -616,8 +600,16 @@ TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 		auto const & request_amount(request_entry.second->GetAmount());
 
 		auto resource_type = request_path->ParentType();
-		switch (resource_type) {
 
+		if(resource_type == br::ResourceType::UNDEFINED) {
+			resource_type = br::ResourceType::BLOCK;
+			logger->Debug("DoResourceBinding: looking for ResourceType BLOCK");
+		}
+		
+		logger->Fatal("DoResourceBinding: type %s, path %s", br::GetResourceTypeString(resource_type), request_path->ToString().c_str());
+		
+		switch (resource_type) {
+		
 		case br::ResourceType::CPU:
 			ret = this->BindResourceToFirstAvailable(pawm,
 								 this->cpu_pe_list,
@@ -644,7 +636,16 @@ TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 							       br::ResourceType::ACCELERATOR,
 							       request_amount,
 							       ref_num);
+			break;
 
+		case br::ResourceType::BLOCK:
+			logger->Debug("DoResourceBinding: BLOCK resource, %s", request_path->ToString().c_str());
+			pawm -> BindResource(
+				br::ResourceType::IO,
+				request_path->GetID(br::ResourceType::IO),
+				request_path->GetID(br::ResourceType::IO),
+				ref_num
+			);
 		}
 	}
 
