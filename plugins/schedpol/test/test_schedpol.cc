@@ -241,7 +241,7 @@ TestSchedPol::AddResourceRequests(ProcPtr_t proc, ba::AwmPtr_t pawm)
 					br::ResourceAssignment::Policy::BALANCED);
 	}
 	logger->Debug("AddResourceRequests: [%s] <%s> = %lu",
-		proc->StrId(), cpu_pe_path_str, cpu_pe_quota);
+		proc->StrId(), cpu_pe_path_str.c_str(), cpu_pe_quota);
 
 	// GPUs
 #ifdef CONFIG_TARGET_NVIDIA
@@ -585,7 +585,7 @@ TestSchedPol::AddResourceRequests(bbque::app::AppCPtr_t papp,
 	}
 #endif
 
-	// Add an ifdef for the block I/O controller 
+	 
 	return SCHED_OK;
 }
 
@@ -678,7 +678,8 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 			curr_quota_available);
 
 		if (curr_quota_available >= amount) {
-			if ((r_type == br::ResourceType::CPU) && (amount <= 100)) {
+			if ((r_type == br::ResourceType::CPU) && (amount < 100)) {
+				logger->Debug("BindResourceToFirstAvailable: CPU amount < 100 (%d)", amount);
 				BindToFirstAvailableProcessingElements(
 								pawm,
 								r_type,
@@ -687,6 +688,7 @@ TestSchedPol::BindResourceToFirstAvailable(bbque::app::AwmPtr_t pawm,
 								ref_num);
 			}
 			else {
+				logger->Debug("BindResourceToFirstAvailable: not CPU or amount >= 100 (%d)", amount);
 				ref_num = pawm->BindResource(
 							r_type,
 							R_ID_ANY,
