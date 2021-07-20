@@ -84,7 +84,7 @@ struct RLinuxBindings_t
 	int_fast64_t amount_memb = 0; /** Amount of socket MEMORY assigned (byte) */
 	int_fast64_t amount_net_bw = 0; /** Amount of network bandwidth assigned (bps) */
 	int_fast64_t amount_read_bw = 0; /** Amount of read bandwidth assigned (MB/s)*/
-	int_fast64_t amount_write_bw = 0; /* Amount of write bandwidth assigned (MB/s)*/
+	int_fast64_t amount_write_bw = 0; /** Amount of write bandwidth assigned (MB/s)*/
 
 	RLinuxBindings_t(const uint_fast8_t MaxCpusCount,
 			const uint_fast8_t MaxMemsCount)
