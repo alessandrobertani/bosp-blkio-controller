@@ -935,30 +935,30 @@ LinuxPlatformProxy::GetResourceMapping(SchedPtr_t papp,
 		node_id, prlb->amount_net_bw);
 
 #ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
-	uint64_t r_bw = ra.GetAssignedAmount(
-					 assign_map,
-					 papp, rvt,
-					 dev_info[0]->r_bw_path);
+	for (auto dev : dev_info) {
+		uint64_t r_bw = ra.GetAssignedAmount(
+						assign_map,
+						papp, rvt,
+						dev->r_bw_path);
 
-	uint64_t w_bw =  ra.GetAssignedAmount(
-					 assign_map,
-					 papp, rvt,
-					 dev_info[0]->w_bw_path);
+		uint64_t w_bw =  ra.GetAssignedAmount(
+						assign_map,
+						papp, rvt,
+						dev->w_bw_path);
 
-	if(r_bw > 0) prlb -> amount_read_bw = r_bw;
-	else prlb -> amount_read_bw = -1;
+		if(r_bw > 0) {
+			prlb -> read_devs.push_back(std::make_pair(dev->r_bw_path, r_bw));
+			logger->Debug("GetResourceMapping: cpu[%d] read bandwidth for %s: { %lld }",
+				node_id, dev->r_bw_path->ToString().c_str(), r_bw);
+		}
 
-	if(w_bw > 0) prlb -> amount_write_bw = w_bw;
-	else prlb -> amount_write_bw = -1;
-
-#else
-	prlb -> amount_read_bw = -1;
-	prlb -> amount_write_bw = -1;
+		if(w_bw > 0) {
+			prlb -> write_devs.push_back(std::make_pair(dev->w_bw_path, w_bw));
+			logger->Debug("GetResourceMapping: cpu[%d] write bandwidth for %s: { %lld }",
+				node_id, dev->w_bw_path->ToString().c_str(), w_bw);
+		}
+	}
 #endif
-	logger->Debug("GetResourceMapping: cpu[%d] read bandwidth: { %lld }",
-		node_id, prlb->amount_read_bw);
-	logger->Debug("GetResourceMapping: cpu[%d] write bandwidth: { %lld }",
-		node_id, prlb->amount_write_bw);
 
 	return PLATFORM_OK;
 }
@@ -1643,33 +1643,47 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 	 *    Block I/O Controller
 	 **********************************************************************/
 #ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
-	assert(prlb->amount_read_bw >= -1);
-	assert(prlb->amount_read_bw >= -1);
-
-	std::string dev = dev_info[0] -> dev;
 
 	char quota[] = "9223372036854775807";
-	// Set the assigned READ BANDWIDTH amount
-	if (prlb->amount_read_bw > 0)
-		sprintf(quota, "%s %lu", dev.c_str(), prlb->amount_read_bw * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
-	else
-		sprintf(quota, "%s -1", dev.c_str());
+	for (auto r_dev : prlb->read_devs) {
+		br::ResourcePathPtr_t dev_path = r_dev.first;
+		int_fast64_t amount = r_dev.second;
 
-	cgroup_set_value_string(pcgd->pc_blkio, BBQUE_PP_LINUX_R_IO_PARAM, quota);
+		std::string dev = GetDevFromPath(dev_path);
 
-	logger->Debug("SetupCGroup: READ BANDWIDTH for [%s]: {maj:min bytes_limit [%s] bps}",
-		pcgd->papp->StrId(), quota);
+		// Set the assigned READ BANDWIDTH amount
+		if (dev.compare(""))
+			sprintf(quota, "%s %lu", dev.c_str(), amount * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
+		else {
+			logger->Warn("SetupCGroup: dev not found for %s, search returned %s", dev_path->ToString().c_str(), dev.c_str());
+			return PLATFORM_MAPPING_FAILED;
+		}
 
-	// Set the assigned WRITE BANDWIDTH amount
-	if (prlb->amount_write_bw > 0)
-		sprintf(quota, "%s %lu", dev.c_str(), prlb->amount_write_bw * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
-	else
-		sprintf(quota, "%s -1", dev.c_str());
+		cgroup_set_value_string(pcgd->pc_blkio, BBQUE_PP_LINUX_R_IO_PARAM, quota);
 
-	cgroup_set_value_string(pcgd->pc_blkio, BBQUE_PP_LINUX_W_IO_PARAM, quota);
+		logger->Debug("SetupCGroup: READ BANDWIDTH for [%s]: {maj:min bytes_limit [%s] bps}",
+			pcgd->papp->StrId(), quota);
+	}
 
-	logger->Debug("SetupCGroup: WRITE BANDWIDTH for [%s]: {maj:min bytes_limit [%s] bps}",
-		pcgd->papp->StrId(), quota);
+	for (auto w_dev : prlb->write_devs) {
+		br::ResourcePathPtr_t dev_path = w_dev.first;
+		int_fast64_t amount = w_dev.second;
+
+		std::string dev = GetDevFromPath(dev_path);
+
+		// Set the assigned WRITE BANDWIDTH amount
+		if (dev.compare(""))
+			sprintf(quota, "%s %lu", dev.c_str(), amount * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
+		else {
+			logger->Warn("SetupCGroup: dev not found for %s, search returned %s", dev_path->ToString().c_str(), dev.c_str());
+			return PLATFORM_MAPPING_FAILED;
+		}
+
+		cgroup_set_value_string(pcgd->pc_blkio, BBQUE_PP_LINUX_W_IO_PARAM, quota);
+
+		logger->Debug("SetupCGroup: WRITE BANDWIDTH for [%s]: {maj:min bytes_limit [%s] bps}",
+			pcgd->papp->StrId(), quota);
+	}
 #endif
 
 	/**********************************************************************
@@ -1704,6 +1718,20 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 		prlb->amount_cpus,
 		prlb->mems,
 		prlb->amount_memb);
+	for (auto r_dev : prlb->read_devs){
+		logger->Info("SetupCGroup: [%s] => {read_bw [%s: %ld MB/s]}",
+			pcgd->papp->StrId(),
+			r_dev.first->ToString().c_str(),
+			r_dev.second);
+	}
+
+	for (auto w_dev : prlb->write_devs){
+		logger->Info("SetupCGroup: [%s] => {write_bw [%s: %ld MB/s]}",
+			pcgd->papp->StrId(),
+			w_dev.first->ToString().c_str(),
+			w_dev.second);
+	}
+	
 	cgroup_set_value_uint64(
 				pcgd->pc_cpuset, BBQUE_PP_LINUX_PROCS_PARAM, pcgd->papp->Pid());
 
