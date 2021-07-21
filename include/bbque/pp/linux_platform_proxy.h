@@ -219,6 +219,14 @@ private:
 	ExitCode_t AddDevicePath(br::ResourcePathPtr_t resource_path);
 
 	/**
+	 * @brief Gets the dev attribute for a given resource path.
+	 * @param resource_path The resource path.
+	 * 
+	 * @return The string with major:minor numbers for the given path.
+	 */
+	std::string GetDevFromPath(br::ResourcePathPtr_t const & resource_path);
+
+	/**
 	 * @brief Read the platform description and initialize the IO device information.
 	*/
 	void InitIODevInfo();

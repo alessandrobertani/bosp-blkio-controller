@@ -474,6 +474,17 @@ LinuxPlatformProxy::ExitCode_t LinuxPlatformProxy::AddDevicePath(br::ResourcePat
 	return LinuxPlatformProxy::PLATFORM_GENERIC_ERROR;
 }
 
+std::string LinuxPlatformProxy::GetDevFromPath(br::ResourcePathPtr_t const & resource_path)
+{
+	for(auto dev : this->dev_info) {
+		if (!dev->r_bw_path->ToString().compare(resource_path->ToString()) 
+		 || !dev->w_bw_path->ToString().compare(resource_path->ToString())) {
+			return dev->dev;
+		}
+	}
+	return "";
+}
+
 #endif
 
 bool
