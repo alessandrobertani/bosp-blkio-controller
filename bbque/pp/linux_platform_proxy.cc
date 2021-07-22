@@ -1224,7 +1224,9 @@ LinuxPlatformProxy::RegisterIODev(const PlatformDescription::IO &io_dev,
 	else {
 		// May save the returned resource path pointers to use them in MapResources
 		bbque::res::ResourcePtr_t res_ptr = ra.RegisterResource(resource_path, "", bps);
+#ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
 		AddDevicePath(res_ptr->Path());
+#endif
 	}
 	logger->Debug("RegisterIODev: Registration of <%s> successfully performed",
 		resource_path.c_str());
@@ -1644,7 +1646,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 	 **********************************************************************/
 #ifdef CONFIG_BBQUE_LINUX_CG_BLKIO
 
-	char quota[] = "9223372036854775807";
+	char quota[30];
 	for (auto r_dev : prlb->read_devs) {
 		br::ResourcePathPtr_t dev_path = r_dev.first;
 		int_fast64_t amount = r_dev.second;
@@ -1653,7 +1655,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 
 		// Set the assigned READ BANDWIDTH amount
 		if (dev.compare(""))
-			sprintf(quota, "%s %lu", dev.c_str(), amount * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
+			sprintf(quota, "%s %lu", dev.c_str(), amount << 20); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
 		else {
 			logger->Warn("SetupCGroup: dev not found for %s, search returned %s", dev_path->ToString().c_str(), dev.c_str());
 			return PLATFORM_MAPPING_FAILED;
@@ -1673,7 +1675,7 @@ LinuxPlatformProxy::SetupCGroup(CGroupDataPtr_t & pcgd,
 
 		// Set the assigned WRITE BANDWIDTH amount
 		if (dev.compare(""))
-			sprintf(quota, "%s %lu", dev.c_str(), amount * 1000000); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
+			sprintf(quota, "%s %lu", dev.c_str(), amount << 20); // The bandwidth is stored in MB/s, the blkio parameter is in Bps.
 		else {
 			logger->Warn("SetupCGroup: dev not found for %s, search returned %s", dev_path->ToString().c_str(), dev.c_str());
 			return PLATFORM_MAPPING_FAILED;
