@@ -606,8 +606,6 @@ TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 			logger->Debug("DoResourceBinding: looking for ResourceType BLOCK");
 		}
 		
-		logger->Fatal("DoResourceBinding: type %s, path %s", br::GetResourceTypeString(resource_type), request_path->ToString().c_str());
-		
 		switch (resource_type) {
 		
 		case br::ResourceType::CPU:
@@ -639,7 +637,6 @@ TestSchedPol::DoResourceBinding(bbque::app::AwmPtr_t pawm,
 			break;
 
 		case br::ResourceType::BLOCK:
-			logger->Debug("DoResourceBinding: BLOCK resource, %s", request_path->ToString().c_str());
 			pawm -> BindResource(
 				br::ResourceType::IO,
 				request_path->GetID(br::ResourceType::IO),
