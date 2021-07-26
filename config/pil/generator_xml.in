@@ -363,7 +363,7 @@ function SelectDevices {
 	DISKS=($(cat $DISKS_FILE | awk '{ print $1 }'))
 	SELECTED_DEVS=($(echo $SELECTED_DEVS))
 	
-	for i in "${SELECTED_DEVS}"
+	for i in "${SELECTED_DEVS[@]}"
 	do
 		sed "${i}q;d" $DISKS_FILE >> $DEVS_FILE
 	done
