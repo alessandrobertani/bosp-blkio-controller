@@ -319,7 +319,22 @@ function SelectDevices {
 function XML_GenStorageDevices {
 	bbqid=0
 
+	TEMP_FILE="BBQUE_tempfile"
+	TEMP_MOUNT="BBQUE_mnt"
+
+	dialog --title "Disk selection and test" --colors --msgbox 'Now you will be prompted to select the devices that will be managed by Barbeque.
+In order for Barbeque to be able to perform a write test, any device different from the one on which the root partition resides should have an unmounted partition (possibly empty) with at least 1GB of free space.
+For each such device, you will be also prompted to select the partition on which the test will be performed.
+
+	Press OK to continue.' 15 70;
+
+	dialog --title "Disk selection and test" --colors --msgbox 'Be careful!
+If there is already a file on the selected partition called '"$TEMP_FILE"' it will be overwritten during the speed test.
+
+	Press OK to continue.' 15 70;
+
 	SelectDevices
+	mkdir /tmp/$TEMP_MOUNT
 
 	cat $DEVS_FILE | \
 	while read i
@@ -339,6 +354,8 @@ function XML_GenStorageDevices {
 		echo "    <storage id=\"$bbqid\" dev=\"$devid\" name=\"$name\" quantity=\"$size\" unit=\"GB\" bw_unit=\"MB/s\" read_bandwidth=\"$R_BW\" write_bandwidth=\"$W_BW\" type=\"$TYPE\"/>" >> $TMP_FOLDER/xml_disks
 		bbqid=`expr $bbqid + 1`
 	done
+
+	rm -r /tmp/$TEMP_MOUNT
 	rm ./$DEVS_FILE
 }
 
