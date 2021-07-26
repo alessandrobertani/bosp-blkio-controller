@@ -194,6 +194,44 @@ function XML_GetStorageDeviceType {
 		fi
 }
 
+function TestRootPartition {
+	CONTAINS_ROOT=BBQUE_contains_root
+
+	echo "0" > $CONTAINS_ROOT
+
+	df -h | grep /dev/$name | \
+	while read i
+	do
+		part=$(echo $i | awk '{print $6}')
+		if [ "$part" == "/" ]; then
+			echo "1" > $CONTAINS_ROOT
+		fi
+	done
+}
+
+function SelectPartition {
+	PARTITION_LIST=BBQUE_partition_list
+	PARTITION_TEMP=BBQUE_partition_temp
+	PARTITION=BBQUE_partition
+
+	lsblk -l | grep $name | grep part | awk '{ print $1 }' > $PARTITION_LIST
+	cat $PARTITION_LIST | awk '{ print NR" /dev/"$1" off" }' > $PARTITION_TEMP
+
+	dialog --radiolist "Select which partition will be mounted and used for testing the write bandwidth." \
+		20 75 15 $(cat ./$PARTITION_TEMP) 2> ./$PARTITION_TEMP
+
+	SELECTED_PART=$(cat ./$PARTITION_TEMP)
+	if [ "$SELECTED_PART" == "" ]; then
+		echo "No host device selected. Aborting."
+		exit
+	fi
+
+	sed "${SELECTED_PART}q;d" $PARTITION_LIST >> $PARTITION
+
+	rm ./$PARTITION_LIST
+	rm ./$PARTITION_TEMP
+}
+
 function ReadTest {
 	CURR_R_BW=$(sudo hdparm -t /dev/$name | awk 'NR==3 {print $11}')
 	CURR_R_BW=${CURR_R_BW%.*}
@@ -202,7 +240,7 @@ function ReadTest {
 }
 
 function WriteTest {
-	DD_OUT=$(dd if=/dev/zero of=./$TEMP_FILE bs=4k count=250k conv=fdatasync 2>&1 >/dev/null | awk 'NR==3{print $10, $11}')
+	DD_OUT=$(sudo dd if=/dev/zero of=$TEMP_FILE bs=4k count=250k conv=fdatasync 2>&1 >/dev/null | awk 'NR==3{print $10, $11}')
 	CURR_W_BW=$(echo $DD_OUT | awk '{print $1}' | tr ',' '.')
 	if [[ "$(echo $DD_OUT | awk '{print $2}')" == "GB/s" ]]; then
 		CURR_W_BW=$(echo "$CURR_W_BW * 1000" | bc -l)
@@ -238,6 +276,14 @@ function XML_TestReadWriteBW {
 	R_BW=0
 	W_BW=0
 
+	TestRootPartition
+
+	if [ "$(cat $CONTAINS_ROOT)" == "0" ]; then
+		SelectPartition
+		sudo mount /dev/$(cat $PARTITION) /tmp/$TEMP_MOUNT
+		TEMP_FILE="/tmp/$TEMP_MOUNT/$TEMP_FILE"
+	fi 
+
 	dialog --title "Storage Bandwidth Test" --colors --msgbox \
 	'A read/write bandwidth test will now be executed on the storage device /dev/'"$name"'.
 	It may take several minutes, depending on the actual bandwidth of the device.
@@ -260,10 +306,13 @@ function XML_TestReadWriteBW {
 		echo $COUNT
 		WriteTest
 		
-        rm ./$TEMP_FILE
+        sudo rm $TEMP_FILE
     	done
 	) | dialog --title "Bandwidth Test" --gauge "Testing read and write bandwidth of the disk /dev/$name" 15 70 0;
 	
+
+	TEMP_FILE=BBQUE_tempfile
+
 	cat ./$R_RES_FILE | tr '\n' ' ' > ./$TEMP_FILE
 	Compute_Avg_Variance
 	R_BW=$(cat ./$RES_FILE | awk 'NR==1{print $1}')
@@ -274,16 +323,23 @@ function XML_TestReadWriteBW {
 	W_BW=$(cat ./$RES_FILE | awk 'NR==1{print $1}')
 	W_VAR=$(cat ./$RES_FILE | awk 'NR==1{print $2}')
 
-	dialog --title "Summary" --colors --msgbox 'The following parameters were detected.
+	dialog --title "Summary" --colors --msgbox 'The following parameters were detected for /dev'"$name"'.
     * \ZbRead Bandwidth\ZB: '"$R_BW"' MB/s, variance: '"$R_VAR"'
     * \ZbWrite Bandwidth\ZB: '"$W_BW"' MB/s, variance: '"$W_VAR"'
 
 	Press OK to exit.' 15 70;
 	clear
+
+	if [ "$(cat $CONTAINS_ROOT)" == "0" ]; then
+		sudo umount -l /tmp/$TEMP_MOUNT
+	fi 
+
 	rm ./$R_RES_FILE
 	rm ./$W_RES_FILE
 	rm ./$RES_FILE
 	rm ./$TEMP_FILE
+	rm ./$CONTAINS_ROOT
+	rm ./$PARTITION
 }
 
 function SelectDevices {
