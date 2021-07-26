@@ -231,10 +231,10 @@ function Compute_Avg_Variance {
 
 function XML_TestReadWriteBW {
     NUM_ITERS=10
-	TEMP_FILE=tempfile
-	R_RES_FILE=r_resfile
-	W_RES_FILE=w_resfile
-	RES_FILE=resfile
+	TEMP_FILE=BBQUE_tempfile
+	R_RES_FILE=BBQUE_r_resfile
+	W_RES_FILE=BBQUE_w_resfile
+	RES_FILE=BBQUE_resfile
 	R_BW=0
 	W_BW=0
 
@@ -287,9 +287,9 @@ function XML_TestReadWriteBW {
 }
 
 function SelectDevices {
-	TEMP_FILE="tempfile"
-	DISKS_FILE="disks"
-	DEVS_FILE="selected_devs"
+	
+	DISKS_FILE="BBQUE_disks"
+	DEVS_FILE="BBQUE_selected_devs"
 
 	lsblk --output NAME,MAJ:MIN,SIZE,TYPE | grep disk  > ./$DISKS_FILE
     cat $DISKS_FILE | awk '{ print NR" /dev/"$1" off"}' > ./$TEMP_FILE
